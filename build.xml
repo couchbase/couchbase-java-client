@@ -20,7 +20,7 @@
   SOFTWARE.
 -->
 
-<project name="membase-client" default="package"
+<project name="couchbase-client" default="package"
     xmlns:artifact="urn:maven-artifact-ant"
     xmlns:ivy="antlib:org.apache.ivy.ant">
 
@@ -31,7 +31,7 @@
     </classpath>
   </taskdef>
 
-  <property name="name" value="membase-client"/>
+  <property name="name" value="couchbase-client"/>
   <property name="copyright" value="2006-2011 Dustin Sallings, Matt Ingenthron" />
   <property name="group" value="membase" />
 
@@ -73,8 +73,8 @@
 
   <!-- maven -->
   <property name="mvn.build.dir" value="${build.dir}/m2" />
-  <property name="membase-client.pom" value="${mvn.build.dir}/membase-client.pom" />
-  <property name="membase-client-test.pom" value="${mvn.build.dir}/membase-client-test.pom" />
+  <property name="couchbase-client.pom" value="${mvn.build.dir}/couchbase-client.pom" />
+  <property name="couchbase-client-test.pom" value="${mvn.build.dir}/couchbase-client-test.pom" />
 
   <!-- compilation -->
   <property name="javac.deprecation" value="off"/>
@@ -126,7 +126,7 @@
     <path location="${build.dir}" />
   </path>
 
-  <!-- The classpath for compiling and running membase-client -->
+  <!-- The classpath for compiling and running couchbase-client -->
 
   <path id="compile.classpath">
     <pathelement location="${build.classes}"/>
@@ -138,7 +138,7 @@
         Section: Initializing
        ====================================== -->
   <target name="init">
-  <!-- Path containing third-party libraries deployed directly with membase-client.
+  <!-- Path containing third-party libraries deployed directly with couchbase-client.
        This does not include anything that Ivy can retrieve for us.
     -->
     <path id="lib.path">
@@ -233,7 +233,7 @@
   </target>
 
   <target name="test" depends="compile, compile-test"
-      description="Run membase-client unit tests">
+      description="Run couchbase-client unit tests">
     <echo>IPV4 address ${server.address_v4}</echo>
     <echo>IPV6 address ${server.address_v6}</echo>
     <delete dir="${junit.dir}"/>
@@ -449,13 +449,13 @@
 
     <!-- generate our poms from our ivy files. -->
     <mkdir dir="${mvn.build.dir}" />
-    <ivy:makepom ivyfile="ivy/membase-client.xml" pomfile="${membase-client.pom}"
+    <ivy:makepom ivyfile="ivy/couchbase-client.xml" pomfile="${couchbase-client.pom}"
         settingsRef="${name}.ivy.settings">
       <mapping conf="default" scope="compile" />
       <mapping conf="runtime" scope="runtime" />
     </ivy:makepom>
 
-    <ivy:makepom ivyfile="ivy/membase-client-test.xml" pomfile="${membase-client-test.pom}"
+    <ivy:makepom ivyfile="ivy/couchbase-client-test.xml" pomfile="${couchbase-client-test.pom}"
         settingsRef="${name}.ivy.settings">
       <mapping conf="default" scope="compile" />
       <mapping conf="runtime" scope="runtime" />
@@ -472,8 +472,8 @@
   </target>
 
   <target name="mvn-install" depends="jar,srcjar,package,mvn-prep"
-      description="Install membase-client in local m2 repository">
-    <artifact:pom id="membase-client" file="${membase-client.pom}" />
+      description="Install couchbase-client in local m2 repository">
+    <artifact:pom id="couchbase-client" file="${couchbase-client.pom}" />
     <artifact:install file="${build.dir}/${name}-${version}.jar">
       <pom refid="${name}" />
       <attach file="${build.dir}/${name}-${version}-sources.jar"
@@ -481,7 +481,7 @@
     <attach file="${build.dir}/${name}-${version}-javadoc.jar"
           classifier="javadocs" />
     </artifact:install>
-    <artifact:pom id="membase-client-test" file="${membase-client-test.pom}" />
+    <artifact:pom id="couchbase-client-test" file="${couchbase-client-test.pom}" />
     <artifact:install file="${build.dir}/${name}-test-${version}.jar">
         <pom refid="${name}-test" />
         <attach file="${build.dir}/${name}-test-${version}-sources.jar"
