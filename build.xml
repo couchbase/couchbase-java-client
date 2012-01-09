@@ -33,7 +33,7 @@
 
   <property name="name" value="couchbase-client"/>
   <property name="copyright" value="2006-2011 Dustin Sallings, Matt Ingenthron" />
-  <property name="group" value="membase" />
+  <property name="group" value="couchbase" />
 
   <property name="base.src.dir" value="${basedir}/src" />
   <property name="build.dir" value="${basedir}/build" />
@@ -56,9 +56,9 @@
   <property name="ivy.settings.dir" value="${basedir}/ivy" />
   <property name="ivy.pom.url"
       value="http://www.couchbase.org/code/couchbase/java" />
-  <property name="ivy.pom.groupId" value="membase" />
+  <property name="ivy.pom.groupId" value="couchbase" />
   <property name="ivy.pom.description"
-   value = "A client library for Couchbase Server, Membase Server and memcached.  This client includes functionality for accessing Couchbase Views in Couchbase Server 2.0 or later as well as backwards compatibility with Membase Server and memcached." />
+   value = "A client library for Couchbase Server" />
   <path id="test.classpath">
     <pathelement location="${build.classes}" />
     <fileset dir="${lib.dir}">

@@ -40,7 +40,7 @@ import net.spy.memcached.ops.Operation;
 import net.spy.memcached.transcoders.Transcoder;
 
 /**
- * MembaseConnectionFactoryBuilder.
+ * CouchbaseConnectionFactoryBuilder.
  *
  */
 
@@ -57,8 +57,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   }
 
   /**
-   * Get the MembaseConnectionFactory set up with the provided parameters. Note
-   * that a MembaseConnectionFactory requires the failure mode is set to retry,
+   * Get the CouchbaseConnectionFactory set up with the provided parameters. Note
+   * that a CouchbaseConnectionFactory requires the failure mode is set to retry,
    * and the locator type is discovered dynamically based on the cluster you are
    * connecting to. As a result, these values will be overridden upon calling
    * this function.
@@ -67,10 +67,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
    * @param bucketName the name of the bucket to connect to
    * @param usr the username for the bucket
    * @param pwd the password for the bucket
-   * @return a MembaseConnectionFactory object
+   * @return a CouchbaseConnectionFactory object
    * @throws IOException
    */
-  public CouchbaseConnectionFactory buildMembaseConnection(
+  public CouchbaseConnectionFactory buildCouchbaseConnection(
       final List<URI> baseList, final String bucketName, final String usr,
       final String pwd) throws IOException {
     return new CouchbaseConnectionFactory(baseList, bucketName, pwd) {

@@ -24,7 +24,7 @@ package com.couchbase.client.vbucket;
 
 /**
  * An unchecked exception that signals that a configuration error
- * has occured while communicating with Membase.
+ * has occurred while communicating with Couchbase.
  */
 public class ConfigurationException extends RuntimeException {
 

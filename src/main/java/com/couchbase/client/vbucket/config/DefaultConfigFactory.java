@@ -109,7 +109,7 @@ public class DefaultConfigFactory extends SpyObject implements ConfigFactory {
     return config;
   }
 
-  /* ep is for ep-engine, a.k.a. membase */
+  /* ep is for ep-engine, a.k.a. couchbase */
   private Config parseEpJSON(JSONObject jsonObject) throws JSONException {
     JSONObject vbMap = jsonObject.getJSONObject("vBucketServerMap");
     String algorithm = vbMap.getString("hashAlgorithm");

@@ -30,7 +30,7 @@ import net.spy.memcached.transcoders.Transcoder;
 
 /**
  * This interface is provided as a helper for testing clients of the
- * MembaseClient.
+ * CouchbaseClient.
  */
 public interface CouchbaseClientIF extends MemcachedClientIF {
 

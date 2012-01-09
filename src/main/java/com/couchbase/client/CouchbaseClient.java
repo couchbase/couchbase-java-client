@@ -45,7 +45,7 @@ import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.transcoders.Transcoder;
 
 /**
- * A client for Membase Server.
+ * A client for Couchbase Server.
  */
 public class CouchbaseClient extends MemcachedClient
   implements CouchbaseClientIF, Reconfigurable {
@@ -53,7 +53,7 @@ public class CouchbaseClient extends MemcachedClient
   protected volatile boolean reconfiguring = false;
 
   /**
-   * Get a MembaseClient based on the REST response from a Membase server.
+   * Get a CouchbaseClient based on the REST response from a Couchbase server.
    *
    * This constructor is merely a convenience for situations where the bucket
    * name is the same as the user name. This is commonly the case.
@@ -77,8 +77,8 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
-   * Get a MembaseClient based on the REST response from a Membase server where
-   * the username is different than the bucket name.
+   * Get a CouchbaseClient based on the REST response from a Couchbase server
+   * where the username is different than the bucket name.
    *
    * To connect to the "default" special bucket for a given cluster, use an
    * empty string as the password.
@@ -101,8 +101,8 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
-   * Get a MembaseClient based on the REST response from a Membase server where
-   * the username is different than the bucket name.
+   * Get a CouchbaseClient based on the REST response from a Couchbase server
+   * where the username is different than the bucket name.
    *
    * Note that when specifying a ConnectionFactory you must specify a
    * BinaryConnectionFactory. Also the ConnectionFactory's protocol and locator
@@ -125,8 +125,8 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
-   * Get a MembaseClient based on the REST response from a Membase server where
-   * the username is different than the bucket name.
+   * Get a CouchbaseClient based on the REST response from a Couchbase server
+   * where the username is different than the bucket name.
    *
    * Note that when specifying a ConnectionFactory you must specify a
    * BinaryConnectionFactory. Also the ConnectionFactory's protocol and locator
@@ -141,7 +141,7 @@ public class CouchbaseClient extends MemcachedClient
    *
    * The subscribe variable is determines whether or not we will subscribe to
    * the configuration changes feed. This constructor should be used when
-   * calling super from subclasses of MembaseClient since the subclass might
+   * calling super from subclasses of CouchbaseClient since the subclass might
    * want to start the changes feed later.
    *
    * @param cf the ConnectionFactory to use to create connections

@@ -37,7 +37,7 @@ import net.spy.memcached.TestConfig;
 /**
  * A VBucketMemcachedClientTest.
  */
-public class VBucketMembaseClientTest extends TestCase {
+public class VBucketCouchbaseClientTest extends TestCase {
   public void testOps() throws Exception {
     CouchbaseClient mc = null;
     try {

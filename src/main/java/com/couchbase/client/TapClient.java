@@ -47,7 +47,7 @@ import net.spy.memcached.tapmessage.ResponseMessage;
 import net.spy.memcached.tapmessage.TapOpcode;
 
 /**
- * A tap client for memcached, Membase, and Couchbase server.
+ * A tap client for Couchbase server.
  */
 public class TapClient {
   private boolean vBucketAware;
@@ -199,8 +199,8 @@ public class TapClient {
    * @param message the custom tap message that will be used to initiate the tap
    *          stream.
    * @return the operation that controls the tap stream.
-   * @throws ConfigurationException a bad configuration was recieved from the
-   *           Membase cluster.
+   * @throws ConfigurationException a bad configuration was received from the
+   *           Couchbase cluster.
    * @throws IOException if there are errors connecting to the cluster.
    */
   public Operation tapCustom(String id, RequestMessage message)
@@ -248,8 +248,8 @@ public class TapClient {
    *          backfill.
    * @param timeunit the unit of time for the runtime parameter.
    * @return the operation that controls the tap stream.
-   * @throws ConfigurationException a bad configuration was recieved from the
-   *           Membase cluster.
+   * @throws ConfigurationException a bad configuration was received from the
+   *           Couchbase cluster.
    * @throws IOException If there are errors connecting to the cluster.
    */
   public Operation tapBackfill(String id, final int runTime,
@@ -269,8 +269,8 @@ public class TapClient {
    *          backfill.
    * @param timeunit the unit of time for the runtime parameter.
    * @return the operation that controls the tap stream.
-   * @throws ConfigurationException a bad configuration was recieved from the
-   *           Membase cluster.
+   * @throws ConfigurationException a bad configuration was received from the
+   *           Couchbase cluster.
    * @throws IOException If there are errors connecting to the cluster.
    */
   public Operation tapBackfill(final String id, final long date,

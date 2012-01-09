@@ -25,7 +25,7 @@ package com.couchbase.client.vbucket.config;
 /**
  * Config may have types. These types are associated with the individual bucket
  * types as discerned from the configuration for the bucket served up by the
- * Membase server.
+ * Couchbase server.
  */
 public enum ConfigType {
   /**
@@ -33,7 +33,7 @@ public enum ConfigType {
    */
   MEMCACHE,
   /**
-   * Membase bucket type.
+   * Couchbase bucket type.
    */
-  MEMBASE;
+  COUCHBASE;
 }

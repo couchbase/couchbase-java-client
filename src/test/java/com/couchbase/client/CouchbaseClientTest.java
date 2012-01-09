@@ -54,7 +54,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
 
   @Override
   public void testAvailableServers() {
-    // MembaseClient tracks hostname and ip address of servers need to
+    // CouchbaseClient tracks hostname and ip address of servers need to
     // make sure the available server list is 2 * (num servers)
     try {
       Thread.sleep(10); // Let the client warm up

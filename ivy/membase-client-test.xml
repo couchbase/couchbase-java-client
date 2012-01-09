@@ -26,7 +26,7 @@
     <license name="Apache 2.0"/>
     <ivyauthor name="Couchbase" url="http://github.com/membase/java-membase-client" />
     <description>
-        Membase Client tests
+        Couchbase Client tests
     </description>
   </info>
   <configurations defaultconfmapping="default">
