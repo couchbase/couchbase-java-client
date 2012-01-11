@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -294,9 +294,7 @@ public class CouchbaseClient extends MemcachedClient
   public boolean shutdown(long timeout, TimeUnit unit) {
     boolean shutdownResult = super.shutdown(timeout, unit);
     CouchbaseConnectionFactory cf = (CouchbaseConnectionFactory) connFactory;
-    if (cf.getConfigurationProvider() != null) {
-      cf.getConfigurationProvider().shutdown();
-    }
+    cf.getConfigurationProvider().shutdown();
     return shutdownResult;
   }
 }
