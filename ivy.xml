@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2009-2011  Couchbase, Inc.
+Copyright (c) 2009-2012  Couchbase, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 
-<ivy-module version="2.0">
-  <info organisation="Couchbase" module="${name}"/>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
+  <info organisation="couchbase" module="${name}" revision="${version}"/>
 
-  <configurations defaultconfmapping="default">
+  <configurations>
     <!--these match the Maven configurations-->
     <conf name="default" extends="master,runtime"/>
     <conf name="master" description="contains artifact but no dependencies"/>
@@ -34,9 +34,18 @@ SOFTWARE.
 
     <conf name="common" visibility="private" extends="runtime"
       description="artifacts needed to compile/test the application"/>
+    <conf name="sources"/>
   </configurations>
 
-  <dependencies>
+  <!-- Added publications for JAR files and POMs -->
+  <publications>
+    <artifact type="pom" ext="pom" conf="default"/>
+    <artifact type="jar" ext="jar" conf="default"/>
+    <artifact type="source" ext="jar" conf="sources" m:classifier="sources"/>
+    <artifact type="javadoc" ext="jar" conf="sources" m:classifier="javadocs"/>
+  </publications>
+
+  <dependencies defaultconfmapping="%->default,sources()">
     <dependency org="junit" name="junit" rev="${junit.version}"
         conf="common->master" />
     <dependency org="org.jboss.netty" name="netty" rev="${netty.version}"
@@ -56,7 +65,7 @@ SOFTWARE.
     <dependency org="junit-addons" name="junit-addons"
         rev="${junit-addons.version}" conf="common->master" />
     <dependency org="spy" name="spymemcached"
-        rev="${spymemcached.version}" conf="common->default"/>
+        rev="${spymemcached.version}" conf="common->default" />
     <dependency org="spy" name="spymemcached-test"
         rev="${spymemcached-test.version}" conf="common->default" transitive="true"/>
     <dependency org="checkstyle" name="checkstyle" rev="${checkstyle.version}"

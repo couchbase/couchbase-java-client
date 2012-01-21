@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2009-2011  Couchbase, Inc.
+  Copyright (c) 2009-2012  Couchbase, Inc.
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of
   this software and associated documentation files (the "Software"), to deal in
@@ -40,6 +40,11 @@
   <settings defaultResolver="default"/>
 
   <resolvers>
+
+    <filesystem name="share-m2" m2compatible="true">
+      <artifact pattern="${user.home}/mvn-stage/[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"/>
+    </filesystem>
+
     <chain name="default">
       <ibiblio name="maven2" root="${repo.maven.org}"
         pattern="${maven2.pattern.ext}" m2compatible="true"/>

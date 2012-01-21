@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2009-2011  Couchbase, Inc.
+  Copyright (c) 2009-2012  Couchbase, Inc.
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of
   this software and associated documentation files (the "Software"), to deal in
@@ -72,9 +72,7 @@
   <property name="build.test.classes" location="${build.test}/classes" />
 
   <!-- maven -->
-  <property name="mvn.build.dir" value="${build.dir}/m2" />
-  <property name="couchbase-client.pom" value="${mvn.build.dir}/couchbase-client.pom" />
-  <property name="couchbase-client-test.pom" value="${mvn.build.dir}/couchbase-client-test.pom" />
+  <property name="mvn.build.dir" value="${build.dir}" />
 
   <!-- compilation -->
   <property name="javac.deprecation" value="off"/>
@@ -317,7 +315,7 @@
       use="true"
       windowtitle="${name} ${version} API"
       doctitle="${name} ${version} API"
-      bottom="Copyright &amp;copy; 2006-2009 Dustin Sallings, 2009-2011 Couchbase, Inc.">
+      bottom="Copyright &amp;copy; 2006-2009 Dustin Sallings, 2009-2012 Couchbase, Inc.">
       <packageset dir="${src.dir}">
         <include name="**" />
       </packageset>
@@ -329,7 +327,7 @@
 
   <target name="docsjar" depends="docs"
       description="Create the documentation jar">
-    <zip destfile="${build.dir}/${name}-${version}-javadoc.jar"
+    <zip destfile="${build.dir}/javadocs/${name}-${version}.jar"
         basedir="${build.javadoc}" />
   </target>
 
@@ -385,17 +383,17 @@
   <target name="srcjar" depends="init,jar"
       description="Create source jars">
     <mkdir dir="${build.dir}" />
-    <jar jarfile="${build.dir}/${name}-${version}-sources.jar">
+    <jar jarfile="${build.dir}/sources/${name}-${version}.jar">
       <fileset dir="${src.dir}" />
       <fileset dir="${build.src.dir}" />
     </jar>
-    <jar jarfile="${build.dir}/${name}-test-${version}-sources.jar">
+    <jar jarfile="${build.dir}/sources/${name}-test-${version}.jar">
       <fileset dir="${test.dir}" />
     </jar>
   </target>
 
-  <target name="jar" depends="compile,compile-test" description="Creates a jar file for the plugin">
-    <jar jarfile="${build.dir}/${name}-${version}.jar" basedir="${build.classes}">
+  <target name="jar" depends="compile,compile-test" description="Creates a jar file for the library">
+    <jar jarfile="${build.dir}/jars/${name}-${version}.jar" basedir="${build.classes}">
       <manifest>
         <attribute name="Implementation-Title" value="java memcached client" />
         <attribute name="Implementation-Version" value="${version}" />
@@ -404,7 +402,7 @@
         <attribute name="Main-Class" value="com.couchbase.client.BuildInfo" />
       </manifest>
     </jar>
-    <jar jarfile="${build.dir}/${name}-test-${version}.jar" basedir="${build.test.classes}"/>
+    <jar jarfile="${build.dir}/jars/${name}-test-${version}.jar" basedir="${build.test.classes}"/>
   </target>
 
   <target name="package" depends="jar,srcjar,docsjar"
@@ -439,6 +437,8 @@
   <target name="mvn-prep" depends="gen-version, ivy-init"
       description="Creates maven files">
 
+    <property name="couchbase-client.pom" value="${mvn.build.dir}/poms/couchbase-client-${version}.pom" />
+    <property name="couchbase-client-test.pom" value="${mvn.build.dir}/poms/couchbase-client-test-${version}.pom" />
     <!-- Download maven -->
     <mkdir dir="${build.dir}" />
     <get src="${mvn_repo_url}" dest="${mvn.jar}" usetimestamp="true" />
@@ -450,14 +450,16 @@
         classpathref="mvn-ant-task.classpath"/>
 
     <!-- generate our poms from our ivy files. -->
-    <mkdir dir="${mvn.build.dir}" />
-    <ivy:makepom ivyfile="ivy/couchbase-client.xml" pomfile="${couchbase-client.pom}"
+    <mkdir dir="${mvn.build.dir}/poms" />
+    <ivy:makepom ivyfile="ivy/couchbase-client.xml"
+        pomfile="${couchbase-client.pom}"
         settingsRef="${name}.ivy.settings">
       <mapping conf="default" scope="compile" />
       <mapping conf="runtime" scope="runtime" />
     </ivy:makepom>
 
-    <ivy:makepom ivyfile="ivy/couchbase-client-test.xml" pomfile="${couchbase-client-test.pom}"
+    <ivy:makepom ivyfile="ivy/couchbase-client-test.xml"
+        pomfile="${couchbase-client-test.pom}"
         settingsRef="${name}.ivy.settings">
       <mapping conf="default" scope="compile" />
       <mapping conf="runtime" scope="runtime" />
@@ -467,7 +469,7 @@
     <replaceregexp>
       <regexp pattern="&lt;version&gt;.*&lt;/version&gt;" />
       <substitution expression="&lt;version&gt;${version}&lt;/version&gt;" />
-      <fileset dir="${mvn.build.dir}">
+      <fileset dir="${mvn.build.dir}/poms">
         <include name="*.pom" />
       </fileset>
     </replaceregexp>
@@ -490,6 +492,16 @@
           classifier="sources" />
     </artifact:install>
   </target>
+
+  <!-- ======================================
+        Section: Stage Maven locally
+       ====================================== -->
+  <target name="mvn-stage" depends="package,ivy-init,mvn-prep" description="publish jar/source to maven repo mounted at ~/repo">
+    <ivy:publish resolver="share-m2" forcedeliver="true" overwrite="true" publishivy="false">
+      <artifacts pattern="build/[type]s/[artifact]-[revision].[ext]" />
+    </ivy:publish>
+  </target>
+
 
   <!-- ======================================
         Section: Findbugs Integration
