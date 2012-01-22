@@ -378,8 +378,8 @@
         deprecation="${javac.deprecation}">
       <classpath refid="${name}.common.classpath"/>
     </javac>
-    <move file="${build.src.dir}/net/spy/memcached/changelog.txt"
-        tofile="${build.classes}/net/spy/memcached/changelog.txt" />
+    <move file="${build.src.dir}/com/couchbase/client/changelog.txt"
+        tofile="${build.classes}/com/couchbase/client/changelog.txt" />
   </target>
 
   <target name="srcjar" depends="init,jar"
@@ -401,7 +401,7 @@
         <attribute name="Implementation-Version" value="${version}" />
         <attribute name="Implementation-Vendor" value="${copyright}" />
         <attribute name="Copyright" value="${copyright}" />
-        <attribute name="Main-Class" value="net.spy.memcached.BuildInfo" />
+        <attribute name="Main-Class" value="com.couchbase.client.BuildInfo" />
       </manifest>
     </jar>
     <jar jarfile="${build.dir}/${name}-test-${version}.jar" basedir="${build.test.classes}"/>

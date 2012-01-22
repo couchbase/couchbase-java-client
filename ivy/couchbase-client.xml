@@ -22,9 +22,9 @@
   SOFTWARE.
 -->
 <ivy-module version="1.0">
-  <info organisation="Couchbase" module="${name}">
+  <info organisation="couchbase" module="${name}" revision="${version}">
     <license name="Apache 2.0"/>
-    <ivyauthor name="Couchbase" url="http://github.com/membase/java-membase-client" />
+    <ivyauthor name="couchbase" url="http://github.com/couchbase/java-couchbase-client" />
     <description>
         Couchbase Client
     </description>
