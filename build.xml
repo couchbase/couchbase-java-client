@@ -477,18 +477,19 @@
 
   <target name="mvn-install" depends="jar,srcjar,package,mvn-prep"
       description="Install couchbase-client in local m2 repository">
+    <!-- @todo: change to use ivy publish -->
     <artifact:pom id="couchbase-client" file="${couchbase-client.pom}" />
-    <artifact:install file="${build.dir}/${name}-${version}.jar">
+    <artifact:install file="${build.dir}/jars/${name}-${version}.jar">
       <pom refid="${name}" />
-      <attach file="${build.dir}/${name}-${version}-sources.jar"
+      <attach file="${build.dir}/sources/${name}-${version}.jar"
           classifier="sources" />
-    <attach file="${build.dir}/${name}-${version}-javadoc.jar"
+    <attach file="${build.dir}/javadocs/${name}-${version}.jar"
           classifier="javadocs" />
     </artifact:install>
     <artifact:pom id="couchbase-client-test" file="${couchbase-client-test.pom}" />
-    <artifact:install file="${build.dir}/${name}-test-${version}.jar">
+    <artifact:install file="${build.dir}/jars/${name}-test-${version}.jar">
         <pom refid="${name}-test" />
-        <attach file="${build.dir}/${name}-test-${version}-sources.jar"
+        <attach file="${build.dir}/sources/${name}-test-${version}.jar"
           classifier="sources" />
     </artifact:install>
   </target>
