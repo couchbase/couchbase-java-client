@@ -65,9 +65,9 @@ SOFTWARE.
     <dependency org="junit-addons" name="junit-addons"
         rev="${junit-addons.version}" conf="common->master" />
     <dependency org="spy" name="spymemcached"
-        rev="${spymemcached.version}" conf="common->master"/>
+        rev="${spymemcached.version}" conf="common->default"/>
     <dependency org="spy" name="spymemcached-test"
-        rev="${spymemcached-test.version}" conf="common->master" />
+        rev="${spymemcached-test.version}" conf="common->default" />
     <dependency org="checkstyle" name="checkstyle" rev="${checkstyle.version}"
         conf="checkstyle->default" />
     <dependency org="com.google.code.findbugs" name="findbugs"
