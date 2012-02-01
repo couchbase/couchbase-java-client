@@ -26,6 +26,7 @@ package com.couchbase.client;
 import java.net.URI;
 import java.util.Arrays;
 import net.spy.memcached.BinaryClientTest;
+import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.TestConfig;
 
@@ -103,6 +104,17 @@ public class CouchbaseClientTest extends BinaryClientTest {
       : "Key was locked for too long";
   }
 
+  public void testSimpleUnlock() throws Exception {
+    assertNull(client.get("getunltest"));
+    client.set("getunltest", 0, "value");
+    CASValue<Object> casv =
+        ((CouchbaseClient)client).getAndLock("getunltest", 6);
+    assert !client.set("getunltest", 1, "newvalue").get().booleanValue()
+      : "Key wasn't locked for the right amount of time";
+    ((CouchbaseClient)client).unlock("getunltest", casv.getCas());
+    assert client.set("getunltest", 1, "newvalue").get().booleanValue()
+      : "Key was locked for too long";
+  }
   public void testGetStatsSlabs() throws Exception {
     // Empty
   }

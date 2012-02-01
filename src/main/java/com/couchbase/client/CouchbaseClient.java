@@ -41,6 +41,7 @@ import net.spy.memcached.OperationTimeoutException;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.GetlOperation;
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.transcoders.Transcoder;
 
@@ -277,6 +278,93 @@ public class CouchbaseClient extends MemcachedClient
    */
   public CASValue<Object> getAndLock(String key, int exp) {
     return getAndLock(key, exp, transcoder);
+  }
+
+  /**
+   * Unlock the given key asynchronously from the cache.
+   *
+   * @param key the key to unlock
+   * @param casId the CAS identifier
+   * @param tc the transcoder to serialize and unserialize value
+   * @return whether or not the operation was performed
+   * @throws IllegalStateException in the rare circumstance where queue is too
+   *           full to accept any more requests
+   */
+  public <T> OperationFuture<Boolean> asyncUnlock(final String key,
+          long casId, final Transcoder<T> tc) {
+    final CountDownLatch latch = new CountDownLatch(1);
+    final OperationFuture<Boolean> rv = new OperationFuture<Boolean>(key,
+            latch, operationTimeout);
+    Operation op = opFact.unlock(key, casId, new OperationCallback() {
+
+      @Override
+      public void receivedStatus(OperationStatus s) {
+        rv.set(s.isSuccess(), s);
+      }
+
+      @Override
+      public void complete() {
+        latch.countDown();
+      }
+    });
+    rv.setOperation(op);
+    mconn.enqueueOperation(key, op);
+    return rv;
+  }
+
+  /**
+   * Unlock the given key asynchronously from the cache with the default
+   * transcoder.
+   *
+   * @param key the key to unlock
+   * @param casId the CAS identifier
+   * @return whether or not the operation was performed
+   * @throws IllegalStateException in the rare circumstance where queue is too
+   *           full to accept any more requests
+   */
+  public OperationFuture<Boolean> asyncUnlock(final String key,
+          long casId) {
+    return asyncUnlock(key, casId, transcoder);
+  }
+
+  /**
+   * Unlock the given key synchronously from the cache.
+   *
+   * @param key the key to unlock
+   * @param casId the CAS identifier
+   * @param tc the transcoder to serialize and unserialize value
+   * @return whether or not the operation was performed
+   * @throws IllegalStateException in the rare circumstance where queue is too
+   *           full to accept any more requests
+   */
+  public <T> Boolean unlock(final String key,
+          long casId, final Transcoder<T> tc) {
+    try {
+      return asyncUnlock(key, casId, tc).get(operationTimeout,
+          TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted waiting for value", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Exception waiting for value", e);
+    } catch (TimeoutException e) {
+      throw new OperationTimeoutException("Timeout waiting for value", e);
+    }
+
+  }
+  /**
+   * Unlock the given key synchronously from the cache with the default
+   * transcoder.
+   *
+   * @param key the key to unlock
+   * @param casId the CAS identifier
+   * @return whether or not the operation was performed
+   * @throws IllegalStateException in the rare circumstance where queue is too
+   *           full to accept any more requests
+   */
+
+  public Boolean unlock(final String key,
+          long casId) {
+    return unlock(key, casId, transcoder);
   }
 
   /**
