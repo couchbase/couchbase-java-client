@@ -22,6 +22,7 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.vbucket.ConfigurationProvider;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
 
@@ -33,7 +34,6 @@ import javax.naming.ConfigurationException;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionObserver;
-import net.spy.memcached.ops.Operation;
 
 /**
  * A TapConnectionProvider for Couchbase Server.
@@ -41,6 +41,8 @@ import net.spy.memcached.ops.Operation;
 public class TapConnectionProvider
   extends net.spy.memcached.TapConnectionProvider
   implements Reconfigurable {
+
+  private final ConfigurationProvider cp;
 
   /**
    * Get a tap connection based on the REST response from a Couchbase server.
@@ -67,11 +69,8 @@ public class TapConnectionProvider
   public TapConnectionProvider(CouchbaseConnectionFactory cf)
     throws IOException, ConfigurationException{
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
-    cf.getConfigurationProvider().subscribe(cf.getBucketName(), this);
-  }
-
-  protected void addOp(final Operation op) {
-    conn.enqueueOperation("TStream", op);
+    cp = cf.getConfigurationProvider();
+    cp.subscribe(cf.getBucketName(), this);
   }
 
   /**
