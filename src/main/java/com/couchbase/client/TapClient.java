@@ -40,6 +40,7 @@ import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.TapOperation;
 import net.spy.memcached.tapmessage.RequestMessage;
 import net.spy.memcached.tapmessage.ResponseMessage;
+import net.spy.memcached.tapmessage.TapAck;
 import net.spy.memcached.tapmessage.TapOpcode;
 import net.spy.memcached.tapmessage.TapStream;
 
@@ -101,8 +102,8 @@ public class TapClient extends net.spy.memcached.TapClient {
         return (ResponseMessage) m;
       } else if (m instanceof TapAck) {
         TapAck ack = (TapAck) m;
-        tapAck(ack.getConn(), ack.getNode(), ack.getOpcode(), ack.getOpaque(),
-            ack.getCallback());
+        tapAck((com.couchbase.client.TapConnectionProvider)ack.getConn(),
+            ack.getNode(), ack.getOpcode(), ack.getOpaque(), ack.getCallback());
         return null;
       } else {
         throw new RuntimeException("Unexpected tap message type");
@@ -347,43 +348,6 @@ public class TapClient extends net.spy.memcached.TapClient {
    */
   public long getMessagesRead() {
     return messagesRead;
-  }
-
-  class TapAck {
-    private final TapConnectionProvider conn;
-    private final MemcachedNode node;
-    private final TapOpcode opcode;
-    private final int opaque;
-    private final OperationCallback cb;
-
-    public TapAck(TapConnectionProvider conn, MemcachedNode node,
-        TapOpcode opcode, int opaque, OperationCallback cb) {
-      this.conn = conn;
-      this.node = node;
-      this.opcode = opcode;
-      this.opaque = opaque;
-      this.cb = cb;
-    }
-
-    public TapConnectionProvider getConn() {
-      return conn;
-    }
-
-    public MemcachedNode getNode() {
-      return node;
-    }
-
-    public TapOpcode getOpcode() {
-      return opcode;
-    }
-
-    public int getOpaque() {
-      return opaque;
-    }
-
-    public OperationCallback getCallback() {
-      return cb;
-    }
   }
 }
 
