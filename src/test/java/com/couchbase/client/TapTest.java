@@ -29,9 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.ClientBaseCase;
-import net.spy.memcached.FailureMode;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.tapmessage.ResponseMessage;
 
@@ -47,17 +45,9 @@ public class TapTest extends ClientBaseCase {
 
   @Override
   protected void initClient() throws Exception {
-    initClient(new BinaryConnectionFactory() {
-      @Override
-      public long getOperationTimeout() {
-        return 15000;
-      }
-
-      @Override
-      public FailureMode getFailureMode() {
-        return FailureMode.Retry;
-      }
-    });
+    List<URI> uris = new LinkedList<URI>();
+    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
+    client = new CouchbaseClient(uris, "default", "");
   }
 
 
@@ -88,23 +78,23 @@ public class TapTest extends ClientBaseCase {
   }
 
   public void testTapDump() throws Exception {
-    List<URI> uris = new LinkedList<URI>();
-    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
-    TapClient tc = new TapClient(uris, "default", "");
     HashMap<String, Boolean> items = new HashMap<String, Boolean>();
     for (int i = 0; i < 25; i++) {
-      client.set("key" + i, 0, "value" + i).get();
+      assert(client.set("key" + i, 0, "value" + i).get());
       items.put("key" + i + ",value" + i, new Boolean(false));
     }
-    tc.tapDump(null);
+    List<URI> uris = new LinkedList<URI>();
+    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
+    TapClient tapClient = new TapClient(uris, "default", "");
+    tapClient.tapDump(null);
 
     long st = System.currentTimeMillis();
-    while (tc.hasMoreMessages()) {
+    while (tapClient.hasMoreMessages()) {
       if ((System.currentTimeMillis() - st) > TAP_DUMP_TIMEOUT) {
         fail("Tap dump took too long");
       }
       ResponseMessage m;
-      if ((m = tc.getNextMessage()) != null) {
+      if ((m = tapClient.getNextMessage()) != null) {
         String key = m.getKey() + "," + new String(m.getValue());
         if (items.containsKey(key)) {
           items.put(key, new Boolean(true));
@@ -118,14 +108,16 @@ public class TapTest extends ClientBaseCase {
   }
 
   public void testTapBucketDoesNotExist() throws Exception {
-    TapClient client =
-        new TapClient(Arrays.asList(new URI("http://" + TestConfig.IPV4_ADDR
-            + ":8091/pools")), "abucket", "apassword");
-
+    TapClient tapClient = null;
+    tapClient = new TapClient(Arrays.asList(new URI("http://"
+      + TestConfig.IPV4_ADDR + ":8091/pools")), "abucket", "apassword");
     try {
-      client.tapBackfill(null, 5, TimeUnit.SECONDS);
+      tapClient.tapBackfill(null, 5, TimeUnit.SECONDS);
+      fail("TAP started with a misconfiguration on " + tapClient);
     } catch (RuntimeException e) {
-      System.err.println(e.getMessage());
+      // expected
+      System.err.println("Expected tap of non existent bucket "
+        + "failure:\n" + e.getMessage());
       return;
     }
   }
@@ -133,8 +125,10 @@ public class TapTest extends ClientBaseCase {
   private void checkTapKeys(HashMap<String, Boolean> items) {
     for (Entry<String, Boolean> kv : items.entrySet()) {
       if (!kv.getValue().booleanValue()) {
-        fail();
+        fail("Failed to receive one of the previously set items: \""
+          + kv.getKey() + "\". Number of items received: " + items.size());
       }
     }
+    System.err.println("Received " + items.size() + " items over TAP.");
   }
 }
