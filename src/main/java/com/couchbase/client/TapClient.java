@@ -146,6 +146,11 @@ public class TapClient extends net.spy.memcached.TapClient {
   /**
    * Allows the user to specify a custom tap message.
    *
+   * This API for TAP is still evolving, and only recommended for advanced
+   * usage.
+   *
+   * See http://www.couchbase.com/wiki/display/couchbase/TAP+Protocol
+   *
    * @param id the named tap id that can be used to resume a disconnected tap
    *          stream
    * @param message the custom tap message that will be used to initiate the tap
