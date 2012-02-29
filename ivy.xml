@@ -68,6 +68,10 @@ SOFTWARE.
         rev="${spymemcached.version}" conf="common->default"/>
     <dependency org="spy" name="spymemcached-test"
         rev="${spymemcached-test.version}" conf="common->default" />
+    <dependency org="org.apache.httpcomponents" name="httpcore"
+        rev="${httpcore.version}" conf="common->master"/>
+    <dependency org="org.apache.httpcomponents" name="httpcore-nio"
+        rev="${httpcore-nio.version}" conf="common->master"/>
     <dependency org="checkstyle" name="checkstyle" rev="${checkstyle.version}"
         conf="checkstyle->default" />
     <dependency org="com.google.code.findbugs" name="findbugs"

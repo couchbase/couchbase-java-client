@@ -39,30 +39,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.OperationFactory;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.VBucketAware;
 
 /**
- * Couchbase implementation of CouchbaseConnection.
+ * Maintains connections to each node in a cluster of Couchbase Nodes.
  *
  */
 public class CouchbaseConnection extends MemcachedConnection  implements
   Reconfigurable {
 
-  public CouchbaseConnection(int bufSize, ConnectionFactory f,
-      List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
-      FailureMode fm, OperationFactory opfactory) throws IOException {
-    super(bufSize, f, a, obs, fm, opfactory);
-  }
-
   protected volatile boolean reconfiguring = false;
+
+  public CouchbaseConnection(CouchbaseConnectionFactory cf,
+      List<InetSocketAddress> addrs, Collection<ConnectionObserver> obs)
+    throws IOException {
+    super(cf.getReadBufSize(), cf, addrs, obs, cf.getFailureMode(),
+        cf.getOperationFactory());
+  }
 
   public void reconfigure(Bucket bucket) {
     reconfiguring = true;

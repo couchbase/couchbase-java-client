@@ -22,6 +22,9 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.http.AsyncConnectionManager;
+import com.couchbase.client.protocol.views.HttpOperation;
+
 import com.couchbase.client.vbucket.ConfigurationException;
 import com.couchbase.client.vbucket.ConfigurationProvider;
 import com.couchbase.client.vbucket.ConfigurationProviderHTTP;
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.DefaultHashAlgorithm;
@@ -44,7 +48,6 @@ import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.NodeLocator;
 import net.spy.memcached.auth.AuthDescriptor;
 import net.spy.memcached.auth.PlainCallbackHandler;
-
 
 /**
  * Couchbase implementation of ConnectionFactory.
@@ -95,11 +98,23 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
         new ConfigurationProviderHTTP(baseList, bucketName, password);
   }
 
+  public ViewNode createViewNode(InetSocketAddress addr,
+      AsyncConnectionManager connMgr) {
+    return new ViewNode(addr, connMgr,
+        new LinkedBlockingQueue<HttpOperation>(opQueueLen),
+        getOpQueueMaxBlockTime(), getOperationTimeout());
+  }
+
   @Override
-  public MemcachedConnection createConnection(List<InetSocketAddress> addrs)
-    throws IOException {
-    return new CouchbaseConnection(getReadBufSize(), this, addrs,
-      getInitialObservers(), getFailureMode(), getOperationFactory());
+  public MemcachedConnection createConnection(
+      List<InetSocketAddress> addrs) throws IOException {
+    return new CouchbaseConnection(this, addrs, getInitialObservers());
+  }
+
+
+  public ViewConnection createViewConnection(
+      List<InetSocketAddress> addrs) throws IOException {
+    return new ViewConnection(this, addrs, getInitialObservers());
   }
 
   @Override
