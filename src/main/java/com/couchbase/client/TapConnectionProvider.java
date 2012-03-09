@@ -42,6 +42,7 @@ public class TapConnectionProvider
   extends net.spy.memcached.TapConnectionProvider
   implements Reconfigurable {
 
+  private final CouchbaseConnectionFactory cf;
   private final ConfigurationProvider cp;
 
   /**
@@ -69,6 +70,7 @@ public class TapConnectionProvider
   public TapConnectionProvider(CouchbaseConnectionFactory cf)
     throws IOException, ConfigurationException{
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
+    this.cf=cf;
     cp = cf.getConfigurationProvider();
     cp.subscribe(cf.getBucketName(), this);
   }
@@ -85,5 +87,10 @@ public class TapConnectionProvider
 
   public void reconfigure(Bucket bucket) {
     ((CouchbaseConnection)conn).reconfigure(bucket);
+  }
+
+  public void shutdown() {
+      super.shutdown();
+      cf.getConfigurationProvider().shutdown();
   }
 }
