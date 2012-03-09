@@ -33,6 +33,12 @@ public enum Stale {
     }
   },
 
+  FALSE {
+    public String toString() {
+      return "false";
+    }
+  },
+
   UPDATE_AFTER {
     public String toString() {
       return "update_after";
