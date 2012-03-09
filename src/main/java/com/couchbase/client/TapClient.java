@@ -60,7 +60,6 @@ public class TapClient extends net.spy.memcached.TapClient {
    *
    * @param baseList a list of servers to get the cluster configuration from.
    * @param bucketName the name of the bucket to tap.
-   * @param usr the buckets username.
    * @param pwd the buckets password.
    */
   public TapClient(final List<URI> baseList, final String bucketName,
