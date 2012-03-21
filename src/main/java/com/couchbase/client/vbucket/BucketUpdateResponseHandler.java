@@ -32,6 +32,7 @@ import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipelineCoverage;
+import org.jboss.netty.channel.ChannelState;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
@@ -77,7 +78,7 @@ public class BucketUpdateResponseHandler extends SimpleChannelUpstreamHandler {
           partialResponse = null;
           getLatch().countDown();
           if (monitor != null) {
-            monitor.invalidate();
+            monitor.replaceConfig();
           }
         } else {
           finerLog(curChunk);
@@ -175,9 +176,23 @@ public class BucketUpdateResponseHandler extends SimpleChannelUpstreamHandler {
   public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
     throws Exception {
     if (event instanceof ChannelStateEvent) {
-      LOGGER.log(Level.FINEST, "Channel state changed: " + event + "\n\n");
+      ChannelStateEvent csEvent = (ChannelStateEvent)event;
+      LOGGER.log(Level.FINEST, "Channel state changed: {0}\n\n", csEvent);
+      if (csEvent.getValue() == null
+              && csEvent.getState() == ChannelState.CONNECTED) { // a disconnect
+        LOGGER.log(Level.FINE, "Channel has been disconnected on us, "
+          + "restarting the monitor.");
+        monitor.notifyDisconnected(); // connection has been dropped
+      } else {
+        LOGGER.log(Level.FINER, "Channel state change is not a disconnect. "
+          + "Event value is {0} and Channel State is {1}.",
+          new Object[]{csEvent.getValue().toString(),
+            csEvent.getState().toString()});
+      }
     }
-    super.handleUpstream(context, event);
+    if (event.getChannel().isConnected()) {
+      super.handleUpstream(context, event);
+    }
   }
 
   protected void setBucketMonitor(BucketMonitor newMonitor) {
@@ -187,15 +202,21 @@ public class BucketUpdateResponseHandler extends SimpleChannelUpstreamHandler {
   /*
    * @todo we need to investigate why the exception occurs, and if there is a
    * better solution to the problem than just shutting down the connection. For
-   * now just invalidate the BucketMonitor, and the Client manager will recreate
-   * the connection.
+   * now just invalidate the BucketMonitor, and we will recreate the connection.
    */
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
     throws Exception {
-    LOGGER.log(Level.INFO, "Exception occurred: ");
+    Throwable ex = e.getCause();
+    LOGGER.log(Level.WARNING, "Exception occurred: " + ex.getMessage() + "\n");
+    StringBuilder sb = new StringBuilder();
+    for (StackTraceElement one : ex.getStackTrace()) {
+      sb.append(one.toString());
+      sb.append("\n");
+    }
+    LOGGER.log(Level.WARNING, sb.toString());
     if (monitor != null) {
-      monitor.invalidate();
+      monitor.replaceConfig();
     }
   }
 }

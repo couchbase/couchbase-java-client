@@ -24,6 +24,7 @@ package com.couchbase.client.vbucket.config;
 
 import java.net.URI;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Bucket configuration bean.
@@ -35,6 +36,9 @@ public class Bucket {
   private final Config configuration;
   // bucket's streaming uri
   private final URI streamingURI;
+  private volatile boolean isNotUpdating;
+  private static final Logger LOGGER = Logger.getLogger(
+         Bucket.class.getName());
 
   // nodes list
   private final List<Node> nodes;
@@ -45,6 +49,7 @@ public class Bucket {
     this.configuration = configuration;
     this.streamingURI = streamingURI;
     this.nodes = nodes;
+    this.isNotUpdating = false;
   }
 
   public String getName() {
@@ -89,5 +94,27 @@ public class Bucket {
     result = 31 * result + configuration.hashCode();
     result = 31 * result + nodes.hashCode();
     return result;
+  }
+
+  /**
+   * Indicates whether or not the bucket is being monitored for updates.
+   *
+   * @return the isNotUpdating
+   */
+  public boolean isNotUpdating() {
+    return isNotUpdating;
+  }
+
+  /**
+   * Mark this bucket as not receiving updates.  This means the config
+   * could be stale.
+   *
+   * This is intended for internal use only.
+   *
+   */
+  public final void setIsNotUpdating() {
+    this.isNotUpdating = true;
+    LOGGER.finest("Marking bucket as not updating,"
+      + " disconnected from config stream");
   }
 }

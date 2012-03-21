@@ -81,6 +81,8 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       new ConfigurationParserJSON();
   private Map<String, BucketMonitor> monitors =
       new HashMap<String, BucketMonitor>();
+  private static String reSubBucket;
+  private static Reconfigurable reSubRec;
 
   /**
    * Constructs a configuration provider with disabled authentication for the
@@ -100,10 +102,9 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * @param baseList list of urls to treat as base
    * @param restUsr username
    * @param restPwd password
-   * @throws IOException
    */
   public ConfigurationProviderHTTP(List<URI> baseList, String restUsr,
-      String restPwd) throws IOException {
+      String restPwd) {
     this.baseList = baseList;
     this.restUsr = restUsr;
     this.restPwd = restPwd;
@@ -209,6 +210,16 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     return AddrUtil.getAddresses(serversString.toString());
   }
 
+  public void finishResubscribe() {
+    monitors.clear();
+    subscribe(reSubBucket, reSubRec);
+  }
+
+  public void markForResubscribe(String bucketName, Reconfigurable rec) {
+    reSubBucket = bucketName; // can't subscribe here, must from user request
+    reSubRec = rec;
+  }
+
   /**
    * Subscribes for configuration updates.
    *
@@ -217,6 +228,9 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    */
   public void subscribe(String bucketName, Reconfigurable rec) {
     Bucket bucket = getBucketConfiguration(bucketName);
+
+    getLogger().debug("Subscribing an object for reconfiguration updates "
+      + rec.getClass().getName());
 
     ReconfigurableObserver obs = new ReconfigurableObserver(rec);
     BucketMonitor monitor = this.monitors.get(bucketName);

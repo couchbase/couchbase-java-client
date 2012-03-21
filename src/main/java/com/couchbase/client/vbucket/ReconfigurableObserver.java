@@ -26,12 +26,15 @@ import com.couchbase.client.vbucket.config.Bucket;
 
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Logger;
 
 /**
  * An implementation of the observer for calling reconfigure.
  */
 public class ReconfigurableObserver implements Observer {
   private final Reconfigurable rec;
+  private static final Logger LOGGER = Logger.getLogger(
+         ReconfigurableObserver.class.getName());
 
   public ReconfigurableObserver(Reconfigurable rec) {
     this.rec = rec;
@@ -44,6 +47,10 @@ public class ReconfigurableObserver implements Observer {
    * @param arg
    */
   public void update(Observable o, Object arg) {
+    LOGGER.finest("Received an update, notifying reconfigurables about a "
+      + arg.getClass().getName() + arg.toString());
+    LOGGER.finest("It says it is " + ((Bucket)arg).getName()
+      + " and it's talking to " + ((Bucket)arg).getStreamingURI());
     rec.reconfigure((Bucket) arg);
   }
 
