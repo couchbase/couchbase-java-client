@@ -48,5 +48,7 @@
     <dependency org="org.codehaus.jettison" name="jettison" rev="${jettison.version}" conf="default" />
     <dependency org="commons-codec" name="commons-codec" rev="${commons-codec.version}" conf="default" />
     <dependency org="spy" name="spymemcached" rev="${spymemcached.version}" conf="default" />
+    <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpcore.version}" conf="default" />
+    <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpcore-nio.version}" conf="default"/>
   </dependencies>
 </ivy-module>
