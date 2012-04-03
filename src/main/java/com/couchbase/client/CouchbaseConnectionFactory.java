@@ -111,7 +111,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     }
 
     if (config.getConfigType() == ConfigType.MEMCACHE) {
-      return new KetamaNodeLocator(nodes, getHashAlg());
+      return new KetamaNodeLocator(nodes, DefaultHashAlgorithm.KETAMA_HASH);
     } else if (config.getConfigType() == ConfigType.COUCHBASE) {
       return new VBucketNodeLocator(nodes, getVBucketConfig());
     } else {
