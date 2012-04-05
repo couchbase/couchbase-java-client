@@ -104,7 +104,8 @@ public class ViewConnection extends SpyThread  implements
           .setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK,
               false)
           .setBooleanParameter(CoreConnectionPNames.TCP_NODELAY, true)
-          .setParameter(CoreProtocolPNames.USER_AGENT, "Couchbase Java Client 1.0.2");
+          .setParameter(CoreProtocolPNames.USER_AGENT,
+              "Couchbase Java Client 1.0.2");
 
       HttpProcessor httpproc =
           new ImmutableHttpProcessor(new HttpRequestInterceptor[] {
