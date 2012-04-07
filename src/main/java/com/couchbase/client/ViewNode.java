@@ -95,32 +95,34 @@ public class ViewNode extends SpyObject {
 
   public void doWrites() {
     HttpOperation op;
-    while ((op = writeQ.poll()) != null) {
-      if (!op.isTimedOut() && !op.isCancelled()) {
-        AsyncConnectionRequest connRequest = connMgr.requestConnection();
-        try {
-          connRequest.waitFor();
-        } catch (InterruptedException e) {
-          getLogger().warn(
-              "Interrupted while trying to get a connection."
-                  + " Cancelling op");
-          op.cancel();
-          return;
-        }
-
-        NHttpClientConnection conn = connRequest.getConnection();
-        if (conn == null) {
-          getLogger().error("Failed to obtain connection. Cancelling op");
-          op.cancel();
-        } else {
-          HttpContext context = conn.getContext();
-          RequestHandle handle = new RequestHandle(connMgr, conn);
-          context.setAttribute("request-handle", handle);
-          context.setAttribute("operation", op);
-          conn.requestOutput();
+    try {
+      while ((op = writeQ.poll(10,TimeUnit.MILLISECONDS)) != null) {
+        if (!op.isTimedOut() && !op.isCancelled()) {
+          AsyncConnectionRequest connRequest = connMgr.requestConnection();
+          try {
+            connRequest.waitFor();
+          } catch (InterruptedException e) {
+            getLogger().warn(
+                "Interrupted while trying to get a connection."
+                    + " Cancelling op");
+            op.cancel();
+            return;
+          }
+	
+          NHttpClientConnection conn = connRequest.getConnection();
+          if (conn == null) {
+            getLogger().error("Failed to obtain connection. Cancelling op");
+            op.cancel();
+          } else {
+            HttpContext context = conn.getContext();
+            RequestHandle handle = new RequestHandle(connMgr, conn);
+            context.setAttribute("request-handle", handle);
+            context.setAttribute("operation", op);
+            conn.requestOutput();
+          }
         }
       }
-    }
+    } catch (InterruptedException e) {}
   }
 
   public Collection<HttpOperation> destroyWriteQueue() {
