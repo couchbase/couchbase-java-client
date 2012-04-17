@@ -186,6 +186,7 @@ public class ViewConnection extends SpyThread  implements
     for (ViewNode n : couchNodes) {
       if (n != null) {
         n.shutdown();
+        interrupt();
         if (n.hasWriteOps()) {
           getLogger().warn("Shutting down with ops waiting to be written");
         }
