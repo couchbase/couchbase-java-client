@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,27 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   public void setVBucketConfig(Config config) {
     this.vBucketConfig = config;
   }
+
+  /**
+   * Get the CouchbaseConnectionFactory set up with the provided parameters.
+   * Note that a CouchbaseConnectionFactory requires the failure mode is set
+   * to retry, and the locator type is discovered dynamically based on the
+   * cluster you are connecting to. As a result, these values will be
+   * overridden upon calling this function.
+   *
+   * @param baseList a list of URI's that will be used to connect to the cluster
+   * @param bucketName the name of the bucket to connect to, also used for
+   * username
+   * @param pwd the password for the bucket
+   * @return a CouchbaseConnectionFactory object
+   * @throws IOException
+   */
+  public CouchbaseConnectionFactory buildCouchbaseConnection(
+      final List<URI> baseList, final String bucketName, final String pwd)
+    throws IOException {
+    return this.buildCouchbaseConnection(baseList, bucketName, bucketName, pwd);
+  }
+
 
   /**
    * Get the CouchbaseConnectionFactory set up with the provided parameters.
