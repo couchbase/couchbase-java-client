@@ -159,8 +159,8 @@ public class CouchbaseConnection extends MemcachedConnection  implements
       if (placeIn == null) {
         placeIn = primary;
         this.getLogger().warn(
-            "Node exepcted to receive data is inactive.  This could be due to a"
-            + "failure within the cluster.  Will check for updated "
+            "Node exepcted to receive data is inactive.  This could be due to "
+            + "a failure within the cluster.  Will check for updated "
             + "configuration.  Key without a configured node is: %s.", key);
         cf.checkConfigUpdate();
       }
