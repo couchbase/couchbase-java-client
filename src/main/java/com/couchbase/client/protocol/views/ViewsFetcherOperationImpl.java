@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.spy.memcached.ops.ErrorCode;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
@@ -64,11 +63,10 @@ public class ViewsFetcherOperationImpl extends HttpOperationImpl
         List<View> views = parseDesignDocumentForViews(bucketName,
           designDocName, json);
         ((ViewsFetcherCallback) callback).gotData(views);
-        callback.receivedStatus(new OperationStatus(true, "OK",
-            ErrorCode.SUCCESS));
+        callback.receivedStatus(new OperationStatus(true, "OK"));
       } else {
         callback.receivedStatus(new OperationStatus(false,
-            Integer.toString(errorcode), ErrorCode.ERR_INVAL));
+            Integer.toString(errorcode)));
       }
     } catch (ParseException e) {
       exception = new OperationException(OperationErrorType.GENERAL,

@@ -26,7 +26,6 @@ import com.couchbase.client.protocol.views.HttpOperationImpl;
 
 import java.net.HttpURLConnection;
 
-import net.spy.memcached.ops.ErrorCode;
 import net.spy.memcached.ops.OperationStatus;
 
 import org.apache.http.HttpRequest;
@@ -48,11 +47,10 @@ public class TestOperationImpl extends HttpOperationImpl implements
     int errorcode = response.getStatusLine().getStatusCode();
     if (errorcode == HttpURLConnection.HTTP_OK) {
       ((TestCallback) callback).getData(json);
-      callback.receivedStatus(new OperationStatus(true, "OK",
-          ErrorCode.SUCCESS));
+      callback.receivedStatus(new OperationStatus(true, "OK"));
     } else {
       callback.receivedStatus(new OperationStatus(false,
-          Integer.toString(errorcode), ErrorCode.ERR_INVAL));
+          Integer.toString(errorcode)));
     }
     callback.complete();
   }

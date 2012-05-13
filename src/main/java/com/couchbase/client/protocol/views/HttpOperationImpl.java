@@ -25,7 +25,6 @@ package com.couchbase.client.protocol.views;
 import java.io.IOException;
 import java.text.ParseException;
 
-import net.spy.memcached.ops.ErrorCode;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
@@ -133,16 +132,15 @@ public abstract class HttpOperationImpl implements HttpOperation {
           if (base.has("reason")) {
             error += " Reason: " + base.getString("reason");
           }
-          return new OperationStatus(false, error, ErrorCode.ERR_INVAL);
+          return new OperationStatus(false, error);
         } else {
-          return new OperationStatus(true, "Error Code: " + errorcode,
-              ErrorCode.SUCCESS);
+          return new OperationStatus(true, "Error Code: " + errorcode);
         }
       } catch (JSONException e) {
         throw new ParseException("Cannot read json: " + json, 0);
       }
     }
     return new OperationStatus(false, "Error Code: " + errorcode
-        + "No entity", ErrorCode.ERR_INVAL);
+        + "No entity");
   }
 }

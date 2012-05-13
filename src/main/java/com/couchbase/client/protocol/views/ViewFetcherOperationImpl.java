@@ -26,7 +26,6 @@ import java.net.HttpURLConnection;
 import java.text.ParseException;
 import java.util.Iterator;
 
-import net.spy.memcached.ops.ErrorCode;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
@@ -64,11 +63,10 @@ public class ViewFetcherOperationImpl extends HttpOperationImpl implements
       int errorcode = response.getStatusLine().getStatusCode();
       if (errorcode == HttpURLConnection.HTTP_OK) {
         ((ViewFetcherCallback) callback).gotData(view);
-        callback.receivedStatus(new OperationStatus(true, "OK",
-            ErrorCode.SUCCESS));
+        callback.receivedStatus(new OperationStatus(true, "OK"));
       } else {
         callback.receivedStatus(new OperationStatus(false,
-            Integer.toString(errorcode), ErrorCode.ERR_INVAL));
+            Integer.toString(errorcode)));
       }
     } catch (ParseException e) {
       exception = new OperationException(OperationErrorType.GENERAL,
