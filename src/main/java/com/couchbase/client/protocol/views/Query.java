@@ -78,8 +78,7 @@ public class Query {
     return this;
   }
 
-  public Query setGroup(boolean group, int grouplevel) {
-    args.put(GROUP, new Boolean(group));
+  public Query setGroupLevel(int grouplevel) {
     args.put(GROUPLEVEL, Integer.valueOf((grouplevel)));
     return this;
   }
@@ -161,8 +160,7 @@ public class Query {
       query.setGroup(((Boolean)args.get(GROUP)).booleanValue());
     }
     if (args.containsKey(GROUPLEVEL)) {
-      query.setGroup(((Boolean)args.get(GROUP)).booleanValue(),
-          ((Integer)args.get(GROUPLEVEL)).intValue());
+      query.setGroupLevel(((Integer)args.get(GROUPLEVEL)).intValue());
     }
     if (args.containsKey(INCLUSIVEEND)) {
       query.setInclusiveEnd(((Boolean)args.get(INCLUSIVEEND)).booleanValue());

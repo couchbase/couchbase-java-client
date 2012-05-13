@@ -281,7 +281,7 @@ public class ViewTest {
     query.setReduce(true);
     View view = client.getView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
     HttpFuture<ViewResponse> future =
-        client.asyncQuery(view, query.setGroup(true, 1));
+        client.asyncQuery(view, query.setGroupLevel(1));
     ViewResponse response = future.get();
     assert response != null : future.getStatus();
   }
