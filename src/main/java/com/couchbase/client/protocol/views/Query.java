@@ -197,7 +197,7 @@ public class Query {
     if (args.containsKey(UPDATESEQ)) {
       query.setUpdateSeq(((Boolean)args.get(UPDATESEQ)).booleanValue());
     }
-    setIncludeDocs(willIncludeDocs());
+    query.setIncludeDocs(willIncludeDocs());
 
     return query;
   }
