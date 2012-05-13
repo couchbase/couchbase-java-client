@@ -31,9 +31,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.spy.memcached.OperationTimeoutException;
 import net.spy.memcached.compat.SpyObject;
+import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.ops.ErrorCode;
+import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 
 /**
@@ -86,7 +87,7 @@ public class HttpFuture<T> extends SpyObject implements Future<T> {
       throw new ExecutionException(op.getException());
     }
 
-    if (op.isCancelled()) {
+    if (op != null && op.isCancelled()) {
       status = new OperationStatus(false, "Operation Cancelled",
           ErrorCode.CANCELLED);
       throw new ExecutionException(new RuntimeException("Cancelled"));
@@ -94,8 +95,8 @@ public class HttpFuture<T> extends SpyObject implements Future<T> {
 
     if (op != null && op.isTimedOut()) {
       status = new OperationStatus(false, "Timed out", ErrorCode.TIMED_OUT);
-      throw new ExecutionException(new OperationTimeoutException(
-          "Operation timed out."));
+      throw new ExecutionException(new CheckedOperationTimeoutException(
+          "Operation timed out.", (Operation)op));
     }
 
     return objRef.get();
