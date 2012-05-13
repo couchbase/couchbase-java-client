@@ -131,13 +131,7 @@ public class Query {
   }
 
   public Query setStale(Stale stale) {
-    if (stale == Stale.OK) {
-      args.put(STALE, stale);
-    } else if (stale == Stale.UPDATE_AFTER) {
-      args.put(STALE, stale);
-    } else if (stale == Stale.FALSE) {
-      args.put(STALE, stale);
-    }
+    args.put(STALE, stale);
     return this;
   }
 
