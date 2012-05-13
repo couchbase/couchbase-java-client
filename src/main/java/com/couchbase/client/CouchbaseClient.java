@@ -65,6 +65,7 @@ import net.spy.memcached.CASValue;
 import net.spy.memcached.CachedData;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.OperationTimeoutException;
+import net.spy.memcached.compat.CloseUtil;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.GetlOperation;
 import net.spy.memcached.ops.Operation;
@@ -104,14 +105,20 @@ public class CouchbaseClient extends MemcachedClient
     String viewmode = properties.getProperty("viewmode", null);
 
     if (viewmode == null) {
+      FileInputStream fs = null;
       try {
         URL url =  ClassLoader.getSystemResource("cbclient.properties");
         if (url != null) {
-          properties.load(new FileInputStream(new File(url.getFile())));
+          fs = new FileInputStream(new File(url.getFile()));
+          properties.load(fs);
         }
         viewmode = properties.getProperty("viewmode");
       } catch (IOException e) {
         // Properties file doesn't exist. Error logged later.
+      } finally {
+        if (fs != null) {
+          CloseUtil.close(fs);
+        }
       }
     }
 
