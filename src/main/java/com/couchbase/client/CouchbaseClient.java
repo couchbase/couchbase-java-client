@@ -173,7 +173,13 @@ public class CouchbaseClient extends MemcachedClient
       cbcf.requestConfigReconnect(cbcf.getBucketName(), this);
     }
     try {
-      ((CouchbaseConnection)mconn).reconfigure(bucket);
+      if (mconn instanceof CouchbaseConnection) {
+        CouchbaseConnection cbConn = (CouchbaseConnection) mconn;
+        cbConn.reconfigure(bucket);
+      } else {
+        CouchbaseMemcachedConnection cbMConn= (CouchbaseMemcachedConnection) mconn;
+        cbMConn.reconfigure(bucket);
+      }
     } catch (IllegalArgumentException ex) {
       getLogger().warn(
           "Failed to reconfigure client, staying with previous configuration.",
