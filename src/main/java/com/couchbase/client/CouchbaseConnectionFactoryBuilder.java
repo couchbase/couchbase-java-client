@@ -29,6 +29,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.ConnectionObserver;
@@ -46,6 +47,8 @@ import net.spy.memcached.transcoders.Transcoder;
 public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
   private Config vBucketConfig;
+  private long reconnThresholdTimeMsecs =
+    CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL;
 
   public Config getVBucketConfig() {
     return vBucketConfig;
@@ -53,6 +56,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
   public void setVBucketConfig(Config config) {
     this.vBucketConfig = config;
+  }
+
+  public void setReconnectThresholdTime(long time, TimeUnit unit) {
+    reconnThresholdTimeMsecs = TimeUnit.MILLISECONDS.convert(time, unit);
   }
 
   /**
@@ -177,6 +184,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
       @Override
       public int getTimeoutExceptionThreshold() {
         return timeoutExceptionThreshold;
+      }
+
+      public long getMinReconnectInterval() {
+        return reconnThresholdTimeMsecs;
       }
 
     };

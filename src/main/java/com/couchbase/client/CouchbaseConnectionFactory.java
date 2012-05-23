@@ -79,6 +79,12 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    * Maximum length of the operation queue returned by this connection factory.
    */
   public static final int DEFAULT_OP_QUEUE_LEN = 16384;
+  /**
+   * Specify a default minimum reconnect interval of 0.5s.
+   * This means that if a reconnect is needed, it won't try to reconnect
+   * more frequently than 0.5s between tries
+   */
+  public static final long DEFAULT_MIN_RECONNECT_INTERVAL = 500;
 
   private volatile ConfigurationProvider configurationProvider;
   private final String bucket;
@@ -90,6 +96,8 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private volatile long thresholdLastCheck = System.nanoTime();
   private volatile int configThresholdCount = 0;
   private final int maxConfigCheck = 10; //maximum checks in 10 sec interval
+  private volatile long configProviderLastUpdateTimestamp;
+  private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, final String password)
@@ -163,8 +171,8 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
            .isNotUpdating()) {
         LOGGER.warning("Noticed bucket configuration to be disconnected, "
             + "will attempt to reconnect");
-        configurationProvider = new ConfigurationProviderHTTP(storedBaseList,
-            bucket, pass);
+        setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
+          bucket, pass));
       }
       return configurationProvider.getBucketConfiguration(bucket).getConfig();
     } catch (ConfigurationException e) {
@@ -181,13 +189,40 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     needsReconnect = true;
   }
 
+  void setConfigurationProvider(ConfigurationProvider configProvider) {
+    this.configProviderLastUpdateTimestamp = System.currentTimeMillis();
+    this.configurationProvider = configProvider;
+  }
+
+  void setMinReconnectInterval(long reconnIntervalMsecs) {
+    this.minReconnectInterval = reconnIntervalMsecs;
+  }
+
+
   void checkConfigUpdate() {
     if (needsReconnect || pastReconnThreshold()) {
+
+      long now = System.currentTimeMillis();
+      long intervalWaited = now - this.configProviderLastUpdateTimestamp;
+      if (intervalWaited < this.getMinReconnectInterval()) {
+        LOGGER.log(Level.FINE, "Ignoring config update check.  Only {0}ms out"
+                + " of a threshold of {1}ms since last update.",
+                new Object[]{intervalWaited, this.getMinReconnectInterval()});
+        return;
+      }
+
       LOGGER.log(Level.INFO,
                  "Attempting to resubscribe for cluster config updates.");
-      configurationProvider =
-        new ConfigurationProviderHTTP(storedBaseList, bucket, pass);
+      ConfigurationProvider oldConfigProvider = this.configurationProvider;
+      setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
+        bucket, pass));
       configurationProvider.finishResubscribe();
+
+      // cleanup the old config provider
+      if (null != oldConfigProvider) {
+        oldConfigProvider.shutdown();
+      }
+
     } else {
       LOGGER.log(Level.WARNING, "No reconnect required, though check requested."
               + " Current config check is {0} out of a threshold of {1}.",
@@ -207,6 +242,15 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Will return the minimum reconnect interval in milliseconds.
+   *
+   * @return the minReconnectInterval
+   */
+  public long getMinReconnectInterval() {
+    return minReconnectInterval;
   }
 
 }
