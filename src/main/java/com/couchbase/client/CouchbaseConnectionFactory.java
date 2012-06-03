@@ -148,6 +148,15 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see net.spy.memcached.ConnectionFactory#shouldOptimize()
+   */
+  public boolean shouldOptimize() {
+    return false;
+  }
+
   public AuthDescriptor getAuthDescriptor() {
     if (!configurationProvider.getAnonymousAuthBucket().equals(bucket)
         && bucket != null) {

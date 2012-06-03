@@ -162,7 +162,7 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
       @Override
       public boolean shouldOptimize() {
-        return shouldOptimize;
+        return false;
       }
 
       @Override
