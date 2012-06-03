@@ -216,7 +216,7 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
     }
   }
 
-  private class TotalConfig {
+  private static class TotalConfig {
     private Config config;
     private Map<String, MemcachedNode> nodesMap;
 
@@ -234,7 +234,7 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
     }
   }
 
-  class NullIterator<E> implements Iterator<MemcachedNode> {
+  private static class NullIterator<E> implements Iterator<MemcachedNode> {
 
     public boolean hasNext() {
       return false;
