@@ -170,11 +170,6 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
       }
 
       @Override
-      public AuthDescriptor getAuthDescriptor() {
-        return authDescriptor;
-      }
-
-      @Override
       public long getOpQueueMaxBlockTime() {
         return opQueueMaxBlockTime > -1 ? opQueueMaxBlockTime
             : super.getOpQueueMaxBlockTime();
