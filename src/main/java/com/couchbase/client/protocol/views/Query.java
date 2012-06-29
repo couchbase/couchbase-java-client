@@ -166,7 +166,7 @@ public class Query {
       query.setInclusiveEnd(((Boolean)args.get(INCLUSIVEEND)).booleanValue());
     }
     if (args.containsKey(KEY)) {
-      query.setEndkeyDocID(((String)args.get(KEY)));
+      query.setKey(((String)args.get(KEY)));
     }
     if (args.containsKey(LIMIT)) {
       query.setLimit(((Integer)args.get(LIMIT)).intValue());
