@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -273,6 +274,14 @@ public class ViewTest {
         client.asyncQuery(view, query.setGroup(true));
     ViewResponse response = future.get();
     assert response != null : future.getStatus();
+  }
+
+  @Test(expected = ExecutionException.class)
+  public void testQuerySetGroupNoReduce() throws Exception {
+    Query query = new Query();
+    query.setGroup(true);
+    View view = client.getView(DESIGN_DOC_WO_REDUCE, VIEW_NAME_WO_REDUCE);
+    client.asyncQuery(view, query).get();
   }
 
   @Test

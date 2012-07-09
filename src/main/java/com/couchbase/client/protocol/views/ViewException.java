@@ -22,52 +22,21 @@
 
 package com.couchbase.client.protocol.views;
 
-import java.text.ParseException;
-
-import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
-import net.spy.memcached.ops.OperationStatus;
-
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 
 /**
- * A ViewOperationImpl.
- *
+ * An exception thrown for non-200 server error codes.
  */
-public abstract class ViewOperationImpl extends HttpOperationImpl
-  implements ViewOperation {
+public class ViewException extends OperationException {
 
-  public ViewOperationImpl(HttpRequest r, OperationCallback cb) {
-    super(r, cb);
+  private static final long serialVersionUID = 5349443788429204015L;
+
+  public ViewException() {
+    super();
   }
 
-  @Override
-  public void handleResponse(HttpResponse response) {
-    String json = getEntityString(response);
-    int errorcode = response.getStatusLine().getStatusCode();
-    try {
-      OperationStatus status = parseViewForStatus(json, errorcode);
-      ViewResponse vr = null;
-      if (status.isSuccess()) {
-        vr = parseResult(json);
-      } else {
-        parseError(json, errorcode);
-      }
-
-      ((ViewCallback) callback).gotData(vr);
-      callback.receivedStatus(status);
-    } catch (ParseException e) {
-      exception = new OperationException(OperationErrorType.GENERAL,
-          "Error parsing JSON");
-    }
-    callback.complete();
+  public ViewException(String error, String reason) {
+    super(OperationErrorType.SERVER, error + " Reason: " + reason);
   }
-
-  protected abstract void parseError(String json, int errorcode)
-    throws ParseException;
-
-  protected abstract ViewResponse parseResult(String json)
-    throws ParseException;
 }
