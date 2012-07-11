@@ -59,8 +59,8 @@ public abstract class ViewOperationImpl extends HttpOperationImpl
       ((ViewCallback) callback).gotData(vr);
       callback.receivedStatus(status);
     } catch (ParseException e) {
-      exception = new OperationException(OperationErrorType.GENERAL,
-          "Error parsing JSON");
+      setException(new OperationException(OperationErrorType.GENERAL,
+          "Error parsing JSON"));
     }
     callback.complete();
   }
