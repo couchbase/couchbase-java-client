@@ -90,7 +90,7 @@ public class TapConnectionProvider
   }
 
   public void shutdown() {
-      super.shutdown();
-      cf.getConfigurationProvider().shutdown();
+    super.shutdown();
+    cf.getConfigurationProvider().shutdown();
   }
 }
