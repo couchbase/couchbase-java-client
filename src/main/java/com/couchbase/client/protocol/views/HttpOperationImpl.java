@@ -45,9 +45,9 @@ public abstract class HttpOperationImpl implements HttpOperation {
   private final HttpRequest request;
   protected final OperationCallback callback;
   protected OperationException exception;
-  private boolean cancelled;
-  private boolean errored;
-  private boolean timedOut;
+  private volatile boolean cancelled;
+  private volatile boolean errored;
+  private volatile boolean timedOut;
 
   public HttpOperationImpl(HttpRequest r, OperationCallback cb) {
     request = r;
