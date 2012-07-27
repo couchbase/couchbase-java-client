@@ -35,6 +35,9 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,11 +83,12 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    */
   public static final int DEFAULT_OP_QUEUE_LEN = 16384;
   /**
-   * Specify a default minimum reconnect interval of 0.5s.
+   * Specify a default minimum reconnect interval of 1.1s.
    * This means that if a reconnect is needed, it won't try to reconnect
-   * more frequently than 0.5s between tries
+   * more frequently than 1.1s between tries.  The initial HTTP connections
+   * under us take up to 500ms per request.
    */
-  public static final long DEFAULT_MIN_RECONNECT_INTERVAL = 500;
+  public static final long DEFAULT_MIN_RECONNECT_INTERVAL = 1100;
 
   private volatile ConfigurationProvider configurationProvider;
   private final String bucket;
@@ -92,12 +96,15 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private final List<URI> storedBaseList;
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactory.class.getName());
-  private boolean needsReconnect;
+  private volatile boolean needsReconnect;
+  private AtomicBoolean doingResubscribe = new AtomicBoolean(false);
   private volatile long thresholdLastCheck = System.nanoTime();
   private volatile int configThresholdCount = 0;
-  private final int maxConfigCheck = 10; //maximum checks in 10 sec interval
+  private final int maxConfigCheck = 10; //maximum allowed checks before we
+                                         // reconnect in a 10 sec interval
   private volatile long configProviderLastUpdateTimestamp;
   private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
+  private ExecutorService resubExec = Executors.newSingleThreadExecutor();
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, final String password)
@@ -211,38 +218,51 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   void checkConfigUpdate() {
     if (needsReconnect || pastReconnThreshold()) {
 
+      // past the threshold, but now we need to give the reconnect attempt
+      // a bit of time to complete setting itself up
       long now = System.currentTimeMillis();
       long intervalWaited = now - this.configProviderLastUpdateTimestamp;
       if (intervalWaited < this.getMinReconnectInterval()) {
-        LOGGER.log(Level.FINE, "Ignoring config update check.  Only {0}ms out"
+        LOGGER.log(Level.FINE, "Ignoring config update check. Only {0}ms out"
                 + " of a threshold of {1}ms since last update.",
                 new Object[]{intervalWaited, this.getMinReconnectInterval()});
         return;
       }
-
-      LOGGER.log(Level.INFO,
-                 "Attempting to resubscribe for cluster config updates.");
-      ConfigurationProvider oldConfigProvider = this.configurationProvider;
-      setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
-        bucket, pass));
-      configurationProvider.finishResubscribe();
-
-      // cleanup the old config provider
-      if (null != oldConfigProvider) {
-        oldConfigProvider.shutdown();
+      if (doingResubscribe.compareAndSet(false, true)) {
+        resubConfigUpdate();
+      } else {
+        LOGGER.log(Level.CONFIG, "Duplicate resubscribe for config updates"
+          + " suppressed.");
       }
 
     } else {
-      LOGGER.log(Level.WARNING, "No reconnect required, though check requested."
+      LOGGER.log(Level.FINE, "No reconnect required, though check requested."
               + " Current config check is {0} out of a threshold of {1}.",
               new Object[]{configThresholdCount, maxConfigCheck});
     }
   }
 
+  private synchronized void resubConfigUpdate() {
+    // synchronized shouldn't be needed here, just being defensive
+    LOGGER.log(Level.INFO, "Attempting to resubscribe for cluster config"
+      + " updates.");
+    resubExec.execute(new Resubscriber());
+
+
+  }
+
+  /**
+   * Check to see if we've gone beyond 10 secs since last reconnection
+   * attempt.
+   *
+   * @return true if it's been more than 10 seconds since we last tried
+   *         to connect
+   */
   private boolean pastReconnThreshold() {
     long currentTime = System.nanoTime();
     if (currentTime - thresholdLastCheck > 100000000) { //if longer than 10 sec
-      configThresholdCount = 0;
+      configThresholdCount = 0; // it's been more than 10 sec since last
+                                // tried, so don't try again just yet.
     }
     configThresholdCount++;
     thresholdLastCheck = currentTime;
@@ -260,6 +280,31 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    */
   public long getMinReconnectInterval() {
     return minReconnectInterval;
+  }
+
+  private class Resubscriber implements Runnable {
+
+    public void run() {
+      String threadNameBase = "couchbase cluster resubscriber - ";
+      Thread.currentThread().setName(threadNameBase + "running");
+      LOGGER.log(Level.CONFIG, "Starting resubscription for bucket {0}",
+        bucket);
+      LOGGER.log(Level.CONFIG, "Resubscribing for {0} using base list {1}",
+        new Object[]{bucket, storedBaseList});
+      ConfigurationProvider oldConfigProvider = configurationProvider;
+      setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
+        bucket, pass));
+      configurationProvider.finishResubscribe();
+    // cleanup the old config provider
+      if (null != oldConfigProvider) {
+        oldConfigProvider.shutdown();
+      }
+
+      if (!doingResubscribe.compareAndSet(true, false)) {
+        assert false : "Could not reset from doing a resubscribe.";
+      }
+        Thread.currentThread().setName(threadNameBase + "complete");
+    }
   }
 
 }
