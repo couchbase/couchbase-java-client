@@ -138,6 +138,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
    * @param key the key the operation is operating upon
    * @param o the operation
    */
+  @Override
   public void addOperation(final String key, final Operation o) {
     MemcachedNode placeIn = null;
     MemcachedNode primary = locator.getPrimary(key);
