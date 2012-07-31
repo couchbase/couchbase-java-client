@@ -95,6 +95,15 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
     return pNode;
   }
 
+  public MemcachedNode getServerByIndex(int k) {
+    TotalConfig totConfig = fullConfig.get();
+    Config config = totConfig.getConfig();
+    Map<String, MemcachedNode> nodesMap = totConfig.getNodesMap();
+
+    String server = config.getServer(k);
+    // choose appropriate MemcachedNode according to config data
+    return nodesMap.get(server);
+  }
   /**
    * {@inheritDoc}
    */
