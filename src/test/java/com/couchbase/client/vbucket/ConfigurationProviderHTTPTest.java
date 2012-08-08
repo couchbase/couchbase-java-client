@@ -24,7 +24,6 @@ package com.couchbase.client.vbucket;
 
 import com.couchbase.client.vbucket.config.Bucket;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -72,16 +71,5 @@ public class ConfigurationProviderHTTPTest extends TestCase {
 
   public void testGetAnonymousAuthBucket() throws Exception {
     assertEquals("default", configProvider.getAnonymousAuthBucket());
-  }
-
-  public void testBuildAuthHeader() throws UnsupportedEncodingException {
-    ConfigurationProviderHTTP.buildAuthHeader("foo", "bar");
-  }
-
-  public void testBuildAuthHeaderUTF8() throws UnsupportedEncodingException {
-    String result = ConfigurationProviderHTTP.buildAuthHeader("blahblah",
-        "bla@@h");
-    // string inspired by https://github.com/trondn/libcouchbase/issues/3
-    assertEquals("Basic YmxhaGJsYWg6YmxhQEBo", result);
   }
 }

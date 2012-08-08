@@ -95,6 +95,10 @@ public abstract class HttpOperationImpl implements HttpOperation {
     exception = e;
   }
 
+  public void addAuthHeader(String authzn) {
+    request.addHeader("Authorization", authzn);
+  }
+
   public abstract void handleResponse(HttpResponse response);
 
   protected String getEntityString(HttpResponse response) {

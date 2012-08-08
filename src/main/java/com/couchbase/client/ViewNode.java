@@ -24,11 +24,13 @@ package com.couchbase.client;
 
 import com.couchbase.client.http.AsyncConnectionManager;
 import com.couchbase.client.http.AsyncConnectionRequest;
+import com.couchbase.client.http.HttpUtil;
 import com.couchbase.client.http.RequestHandle;
 import com.couchbase.client.protocol.views.HttpOperation;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,15 +66,19 @@ public class ViewNode extends SpyObject {
   private final long opQueueMaxBlockTime;
   private final long defaultOpTimeout;
   private final BlockingQueue<HttpOperation> writeQ;
+  private final String user;
+  private final String pass;
 
   public ViewNode(InetSocketAddress a, AsyncConnectionManager mgr,
       LinkedBlockingQueue<HttpOperation> linkedBlockingQueue,
-      long maxBlockTime, long operationTimeout) {
+      long maxBlockTime, long operationTimeout, String usr, String pwd) {
     addr = a;
     connMgr = mgr;
     writeQ = linkedBlockingQueue;
     opQueueMaxBlockTime = maxBlockTime;
     defaultOpTimeout = operationTimeout;
+    user = usr;
+    pass = pwd;
   }
 
   public void init() throws IOReactorException {
@@ -114,6 +120,16 @@ public class ViewNode extends SpyObject {
             getLogger().error("Failed to obtain connection. Cancelling op");
             op.cancel();
           } else {
+            if (!user.equals("default")) {
+              try {
+                op.addAuthHeader(HttpUtil.buildAuthHeader(user, pass));
+              } catch (UnsupportedEncodingException ex) {
+                getLogger().error("Could not create auth header for request, "
+                  + "could not encode credentials into base64. Canceling op."
+                  + op, ex);
+                op.cancel();
+              }
+            }
             HttpContext context = conn.getContext();
             RequestHandle handle = new RequestHandle(connMgr, conn);
             context.setAttribute("request-handle", handle);
