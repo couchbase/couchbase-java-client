@@ -59,6 +59,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -806,6 +807,47 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
+   * Delete a value and Observe.
+   *
+   * @param key the key to set
+   * @param req the Persistence to Master value
+   * @param rep the Persistence to Replicas
+   * @return whether or not the operation was performed
+   *
+   */
+  public Future<Boolean> delete(String key,
+          PersistTo req, ReplicateTo rep) {
+    OperationFuture<Boolean> deleteOp = delete(key);
+    try {
+      if (deleteOp.get()) {
+        observePoll(key, 0L, req, rep);
+      }
+    } catch (InterruptedException e) {
+      deleteOp.set(false, deleteOp.getStatus());
+    } catch (ExecutionException e) {
+      deleteOp.set(false, deleteOp.getStatus());
+    } catch (TimeoutException e) {
+      deleteOp.set(false, deleteOp.getStatus());
+    } catch (IllegalArgumentException e) {
+      deleteOp.set(false, deleteOp.getStatus());
+    } catch (RuntimeException e) {
+      deleteOp.set(false, deleteOp.getStatus());
+    }
+    return (deleteOp);
+  }
+/**
+   * Delete a value with Observe.
+   *
+   * @param key the key to set
+   * @param req the Persistence to Master value
+   * @return whether or not the operation was performed
+   *
+   */
+  public Future<Boolean> delete(String key, PersistTo req) {
+    return delete(key, req, ReplicateTo.ZERO);
+  }
+
+  /**
    * Set a value and Observe.
    *
    * @param key the key to set
@@ -1028,6 +1070,7 @@ public class CouchbaseClient extends MemcachedClient
     // Other than Master
     switch (persist) {
     case MASTER:
+    case ONE:
       persists=0;
       break;
     case TWO:
@@ -1096,7 +1139,7 @@ public class CouchbaseClient extends MemcachedClient
       try {
         Thread.sleep(400);
       } catch (InterruptedException e) {
-         getLogger().error("Interrupted while in observe loop.", e);
+        getLogger().error("Interrupted while in observe loop.", e);
       }
     } while (loop++ < 10);
 
