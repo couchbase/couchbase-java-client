@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,8 @@
  */
 
 package com.couchbase.client.http;
+
+import com.couchbase.client.protocol.views.HttpOperation;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -60,16 +62,19 @@ public class AsyncConnectionManager extends SpyObject {
   private final Set<NHttpClientConnection> allConns;
   private final Queue<NHttpClientConnection> availableConns;
   private final Queue<AsyncConnectionRequest> pendingRequests;
+  private final RequeueOpCallback requeueCallback;
 
   private volatile boolean shutdown;
 
   public AsyncConnectionManager(HttpHost target, int maxConnections,
-      NHttpClientHandler handler, HttpParams params) throws IOReactorException {
+      NHttpClientHandler handler, HttpParams params, RequeueOpCallback cb)
+    throws IOReactorException {
     super();
     this.target = target;
     this.maxConnections = maxConnections;
     this.handler = handler;
     this.params = params;
+    this.requeueCallback = cb;
     this.lock = new Object();
     this.allConns = new HashSet<NHttpClientConnection>();
     this.availableConns = new LinkedList<NHttpClientConnection>();
@@ -84,13 +89,20 @@ public class AsyncConnectionManager extends SpyObject {
     this.ioreactor.execute(dispatch);
   }
 
+  public boolean hasPendingRequests() {
+    return pendingRequests.isEmpty();
+  }
+
   public void shutdown(long waitMs) throws IOException {
     synchronized (this.lock) {
       if (!this.shutdown) {
         this.shutdown = true;
         while (!this.pendingRequests.isEmpty()) {
           AsyncConnectionRequest request = this.pendingRequests.remove();
+          HttpOperation op = (HttpOperation)request.getConnection()
+              .getContext().getAttribute("operation");
           request.cancel();
+          requeueCallback.invoke(op);
         }
         this.availableConns.clear();
         this.allConns.clear();

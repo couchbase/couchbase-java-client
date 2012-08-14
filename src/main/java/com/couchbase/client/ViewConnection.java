@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@ package com.couchbase.client;
 import com.couchbase.client.ViewNode.EventLogger;
 import com.couchbase.client.ViewNode.MyHttpRequestExecutionHandler;
 import com.couchbase.client.http.AsyncConnectionManager;
+import com.couchbase.client.http.RequeueOpCallback;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
@@ -38,10 +39,12 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionObserver;
-import net.spy.memcached.compat.SpyThread;
+import net.spy.memcached.compat.SpyObject;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
@@ -65,7 +68,7 @@ import org.apache.http.protocol.RequestUserAgent;
  * Couchbase implementation of ViewConnection.
  *
  */
-public class ViewConnection extends SpyThread  implements
+public class ViewConnection extends SpyObject  implements
   Reconfigurable {
   private static final int NUM_CONNS = 1;
 
@@ -73,8 +76,11 @@ public class ViewConnection extends SpyThread  implements
   protected volatile boolean reconfiguring = false;
   protected volatile boolean running = true;
 
+  private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock();
+  private final Lock rlock = rwlock.readLock();
+  private final Lock wlock = rwlock.writeLock();
+
   private final CouchbaseConnectionFactory connFactory;
-  private final ConcurrentLinkedQueue<ViewNode> nodesToShutdown;
   private final Collection<ConnectionObserver> connObservers =
       new ConcurrentLinkedQueue<ConnectionObserver>();
   private List<ViewNode> couchNodes;
@@ -84,11 +90,9 @@ public class ViewConnection extends SpyThread  implements
       List<InetSocketAddress> addrs, Collection<ConnectionObserver> obs)
     throws IOException {
     connFactory = cf;
-    nodesToShutdown = new ConcurrentLinkedQueue<ViewNode>();
     connObservers.addAll(obs);
     couchNodes = createConnections(addrs);
     nextNode = 0;
-    start();
   }
 
   private List<ViewNode> createConnections(List<InetSocketAddress> addrs)
@@ -123,7 +127,7 @@ public class ViewConnection extends SpyThread  implements
       AsyncConnectionManager connMgr =
           new AsyncConnectionManager(
               new HttpHost(a.getHostName(), a.getPort()), NUM_CONNS,
-              protocolHandler, params);
+              protocolHandler, params, new RequeueOpCallback(this));
       getLogger().info("Added %s to connect queue", a);
 
       ViewNode node = connFactory.createViewNode(a, connMgr);
@@ -135,34 +139,18 @@ public class ViewConnection extends SpyThread  implements
   }
 
   public void addOp(final HttpOperation op) {
-    couchNodes.get(getNextNode()).addOp(op);
-  }
-
-  public void handleIO() {
-    for (ViewNode node : couchNodes) {
-      node.doWrites();
-    }
-
-    for (ViewNode qa : nodesToShutdown) {
-      nodesToShutdown.remove(qa);
-      Collection<HttpOperation> notCompletedOperations = qa.destroyWriteQueue();
-      try {
-        qa.shutdown();
-      } catch (IOException e) {
-        getLogger().error("Error shutting down connection to "
-            + qa.getSocketAddress());
+    rlock.lock();
+    try {
+      if (couchNodes.isEmpty()) {
+        getLogger().error("No server connections. Cancelling op.");
+        op.cancel();
+      } else {
+        ViewNode node = couchNodes.get(getNextNode());
+        node.writeOp(op);
       }
-      redistributeOperations(notCompletedOperations);
+    } finally {
+      rlock.unlock();
     }
-  }
-
-  private void redistributeOperations(Collection<HttpOperation> ops) {
-    int added = 0;
-    for (HttpOperation op : ops) {
-      addOp(op);
-      added++;
-    }
-    assert added > 0 : "Didn't add any new operations when redistributing";
   }
 
   private int getNextNode() {
@@ -173,7 +161,6 @@ public class ViewConnection extends SpyThread  implements
     if (shutDown) {
       throw new IllegalStateException("Shutting down");
     }
-    assert isAlive();
   }
 
   public boolean shutdown() throws IOException {
@@ -186,7 +173,6 @@ public class ViewConnection extends SpyThread  implements
     for (ViewNode n : couchNodes) {
       if (n != null) {
         n.shutdown();
-        interrupt();
         if (n.hasWriteOps()) {
           getLogger().warn("Shutting down with ops waiting to be written");
         }
@@ -208,68 +194,52 @@ public class ViewConnection extends SpyThread  implements
       }
 
       // split current nodes to "odd nodes" and "stay nodes"
-      ArrayList<ViewNode> oddNodes = new ArrayList<ViewNode>();
+      ArrayList<ViewNode> shutdownNodes = new ArrayList<ViewNode>();
       ArrayList<ViewNode> stayNodes = new ArrayList<ViewNode>();
       ArrayList<InetSocketAddress> stayServers =
           new ArrayList<InetSocketAddress>();
-      for (ViewNode current : couchNodes) {
-        if (newServerAddresses.contains(current.getSocketAddress())) {
-          stayNodes.add(current);
-          stayServers.add((InetSocketAddress) current.getSocketAddress());
-        } else {
-          oddNodes.add(current);
+
+      wlock.lock();
+      try {
+        for (ViewNode current : couchNodes) {
+          if (newServerAddresses.contains(current.getSocketAddress())) {
+            stayNodes.add(current);
+            stayServers.add((InetSocketAddress) current.getSocketAddress());
+          } else {
+            shutdownNodes.add(current);
+          }
+        }
+
+        // prepare a collection of addresses for new nodes
+        newServers.removeAll(stayServers);
+
+        // create a collection of new nodes
+        List<ViewNode> newNodes = createConnections(newServers);
+
+        // merge stay nodes with new nodes
+        List<ViewNode> mergedNodes = new ArrayList<ViewNode>();
+        mergedNodes.addAll(stayNodes);
+        mergedNodes.addAll(newNodes);
+
+        couchNodes = mergedNodes;
+      } finally {
+        wlock.unlock();
+      }
+
+      // shutdown for the oddNodes
+      for (ViewNode qa : shutdownNodes) {
+        try {
+          qa.shutdown();
+        } catch (IOException e) {
+          getLogger().error("Error shutting down connection to "
+              + qa.getSocketAddress());
         }
       }
 
-      // prepare a collection of addresses for new nodes
-      newServers.removeAll(stayServers);
-
-      // create a collection of new nodes
-      List<ViewNode> newNodes = createConnections(newServers);
-
-      // merge stay nodes with new nodes
-      List<ViewNode> mergedNodes = new ArrayList<ViewNode>();
-      mergedNodes.addAll(stayNodes);
-      mergedNodes.addAll(newNodes);
-
-      // call update locator with new nodes list and vbucket config
-      couchNodes = mergedNodes;
-
-      // schedule shutdown for the oddNodes
-      nodesToShutdown.addAll(oddNodes);
     } catch (IOException e) {
       getLogger().error("Connection reconfiguration failed", e);
     } finally {
       reconfiguring = false;
-    }
-  }
-
-  /**
-   * Infinitely loop processing IO.
-   */
-  @Override
-  public void run() {
-    while (running) {
-      if (!reconfiguring) {
-        try {
-          handleIO();
-        } catch (IllegalStateException e) {
-          logRunException(e);
-        } catch (Exception e) {
-          logRunException(e);
-        }
-      }
-    }
-    getLogger().info("Shut down Couchbase client");
-  }
-
-  private void logRunException(Exception e) {
-    if (shutDown) {
-      // There are a couple types of errors that occur during the
-      // shutdown sequence that are considered OK. Log at debug.
-      getLogger().debug("Exception occurred during shutdown", e);
-    } else {
-      getLogger().warn("Problem handling Couchbase IO", e);
     }
   }
 }
