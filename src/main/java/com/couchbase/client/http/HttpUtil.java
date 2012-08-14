@@ -27,7 +27,11 @@ import org.apache.commons.codec.binary.Base64;
 /**
  *
  */
-public class HttpUtil {
+public final class HttpUtil {
+
+  private HttpUtil() {
+    // Empty
+  }
 
   /**
    * Generate the payload of an authorization header given a username and
@@ -40,7 +44,7 @@ public class HttpUtil {
    * @return a value for an HTTP Basic Auth Header
    */
   public static String buildAuthHeader(String username, String password)
-          throws UnsupportedEncodingException {
+    throws UnsupportedEncodingException {
     // apparently netty isn't familiar with HTTP Basic Auth
     StringBuilder clearText = new StringBuilder(username);
     clearText.append(':');
