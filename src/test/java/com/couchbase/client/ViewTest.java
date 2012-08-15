@@ -102,6 +102,13 @@ public class ViewTest {
 
   @BeforeClass
   public static void before() throws Exception {
+    TestAdmin testAdmin = new TestAdmin(TestConfig.IPV4_ADDR,
+            CbTestConfig.CLUSTER_ADMINNAME,
+            CbTestConfig.CLUSTER_PASS,
+            "default",
+            "");
+    TestAdmin.reCreateDefaultBucket();
+
     // Create some design documents
     List<URI> uris = new LinkedList<URI>();
     uris.add(URI.create(SERVER_URI));
@@ -121,9 +128,19 @@ public class ViewTest {
       assert c.set(item.getKey(), 0,
           (String) item.getValue()).get().booleanValue();
     }
-    c.asyncHttpPut(docUri, view);
+    HttpFuture<String> asyncHttpPut = c.asyncHttpPut(docUri, view);
+    String response = asyncHttpPut.get();
+    OperationStatus status = asyncHttpPut.getStatus();
+    System.err.println("Operation Status is: " + status);
+    if (!status.isSuccess()) {
+      System.err.println("Operation Status is: " + status);
+      assert false : "Could not load views: " + status.getMessage()
+              + " with response " + response;
+    }
     c.shutdown();
-    Thread.sleep(15000);
+    System.out.println("Setup of design docs complete, "
+            + "sleeping until they propogate.");
+    Thread.sleep(5000);
   }
 
   @Before
@@ -156,7 +173,6 @@ public class ViewTest {
     rev = (new JSONObject(json)).getString("_rev");
     c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_WO_REDUCE + "?rev=" + rev).get();
-    assert c.flush().get().booleanValue();
   }
 
   private static String generateDoc(String type, String small, String large) {

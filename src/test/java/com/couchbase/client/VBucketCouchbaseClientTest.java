@@ -64,7 +64,7 @@ public class VBucketCouchbaseClientTest extends TestCase {
       assert (res.equals(i.toString()));
     }
 
-    assert mc.flush().get().booleanValue();
+    // assert mc.flush().get().booleanValue();
     mc.shutdown(3, TimeUnit.SECONDS);
   }
 }

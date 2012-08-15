@@ -24,7 +24,12 @@
 package com.couchbase.client;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import net.spy.memcached.BinaryClientTest;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
@@ -34,10 +39,19 @@ import net.spy.memcached.TestConfig;
  * A CouchbaseClientTest.
  */
 public class CouchbaseClientTest extends BinaryClientTest {
+
   @Override
   protected void initClient() throws Exception {
-    initClient(new CouchbaseConnectionFactory(Arrays.asList(URI.create("http://"
-        + TestConfig.IPV4_ADDR + ":8091/pools")), "default", ""));
+    TestAdmin testAdmin = new TestAdmin(TestConfig.IPV4_ADDR,
+              CbTestConfig.CLUSTER_ADMINNAME,
+              CbTestConfig.CLUSTER_PASS,
+              "default",
+              "");
+    TestAdmin.reCreateDefaultBucket();
+
+    initClient(new CouchbaseConnectionFactory(
+            Arrays.asList(URI.create("http://"
+          + TestConfig.IPV4_ADDR + ":8091/pools")), "default", ""));
   }
 
   @Override
@@ -64,6 +78,28 @@ public class CouchbaseClientTest extends BinaryClientTest {
     }
     assert (client.getAvailableServers().size() % 2) ==  0 : "Num servers "
             + client.getAvailableServers().size();
+  }
+
+  @Override
+  public void testGracefulShutdown() throws Exception {
+    for (int i = 0; i < 1000; i++) {
+      client.set("t" + i, 10, i);
+    }
+    assertTrue("Couldn't shut down within five seconds",
+        client.shutdown(5, TimeUnit.SECONDS));
+    // Initialize without recreating a bucket
+    initClient(new CouchbaseConnectionFactory(
+          Arrays.asList(URI.create("http://"
+          + TestConfig.IPV4_ADDR + ":8091/pools")), "default", ""));
+    Collection<String> keys = new ArrayList<String>();
+    for (int i = 0; i < 1000; i++) {
+      keys.add("t" + i);
+    }
+    Map<String, Object> m = client.getBulk(keys);
+    assertEquals(1000, m.size());
+    for (int i = 0; i < 1000; i++) {
+      assertEquals(i, m.get("t" + i));
+    }
   }
 
   public void testNumVBuckets() throws Exception {
