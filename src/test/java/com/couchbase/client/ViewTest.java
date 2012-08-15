@@ -182,6 +182,7 @@ public class ViewTest {
     query.setIncludeDocs(true);
     query.setStale(Stale.FALSE);
     View view = client.getView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
+    assert view != null : "Could not retrieve view";
     HttpFuture<ViewResponse> future = client.asyncQuery(view, query);
     ViewResponse response=null;
     try {

@@ -294,6 +294,7 @@ public class CouchbaseClient extends MemcachedClient
             });
     crv.setOperation(op);
     addOp(op);
+    assert crv != null : "Problem retrieving view";
     return crv;
   }
 
@@ -411,7 +412,14 @@ public class CouchbaseClient extends MemcachedClient
    */
   private HttpFuture<ViewResponse> asyncQueryAndIncludeDocs(View view,
       Query query) {
-    String uri = view.getURI() + query.toString();
+    assert view != null : "Who passed me a null view";
+    assert query != null : "who passed me a null query";
+    String viewUri = view.getURI();
+    String queryToRun = query.toString();
+    assert viewUri != null : "view URI seems to be null";
+    assert queryToRun != null  : "query seems to be null";
+    String uri = viewUri + queryToRun;
+    getLogger().info("lookin for:" + uri);
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final ViewFuture crv = new ViewFuture(couchLatch, 60000);
 
