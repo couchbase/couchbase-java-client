@@ -34,6 +34,7 @@ import net.spy.memcached.BinaryClientTest;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.TestConfig;
+import org.junit.Ignore;
 
 /**
  * A CouchbaseClientTest.
@@ -181,5 +182,29 @@ public class CouchbaseClientTest extends BinaryClientTest {
         return 1000000;
       }
     });
+  }
+
+  @Ignore
+  @Override
+  public void testDelayedFlush() throws Exception {
+    // TODO: re-add after RESTful flush added: Couchbase MB-5170
+  }
+
+  @Ignore
+  @Override
+  public void testFlush() throws Exception {
+    // TODO: re-add after RESTful flush added: Couchbase MB-5170
+  }
+
+  @Override
+  protected void tearDown() throws Exception {
+    // Can't use our CouchbaseClientBaseCase easily owing to inheritance.
+
+    // Shut down, null things out. Error tests have
+    // unpredictable timing issues.  See test from Spymemcached
+    // net.spy.memcached.ClientBaseCase
+    client.shutdown(200, TimeUnit.MILLISECONDS);
+    client = null;
+    System.gc();
   }
 }

@@ -22,7 +22,6 @@
 package com.couchbase.client;
 
 import java.io.BufferedReader;
-
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -160,8 +159,11 @@ public final class TestAdmin {
   }
   public static void reCreateDefaultBucket() throws Exception {
     try {
+      System.err.println("Deleting default bucket and sleeping 2 secs.");
       doDeleteDefault();
       Thread.sleep(2000);
+      System.err.println("Creating default bucket and sleeping 8 secs.");
+      // TODO: change the doCreateDefault256() to poll for bucket status
       doCreateDefault256();
       Thread.sleep(8000);
     } catch (Exception e) {
