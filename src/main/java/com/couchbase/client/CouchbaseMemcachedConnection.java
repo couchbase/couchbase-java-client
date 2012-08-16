@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,39 +31,41 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedSelectorException;
-import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.OperationFactory;
-import net.spy.memcached.ops.KeyedOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.VBucketAware;
 
 /**
- * Maintains connections to each node in a cluster of Couchbase Nodes.
+ * Couchbase implementation of CouchbaseConnection.
  *
+ * The behavior of a CouchbaseMemcached connection extends spy's
+ * MemcachedConnection by handling reconfiguration events.  In a Couchbase
+ * deployment scenario, reconfiguration updates may notify the client of
+ * nodes to be added to or removed from the cluster.
+ *
+ * This class provides that functionality by extending the MemcachedConnection
+ * and adding a method to handle reconfiguration of a bucket.
  */
-public class CouchbaseConnection extends MemcachedConnection  implements
+public class CouchbaseMemcachedConnection extends MemcachedConnection  implements
   Reconfigurable {
 
   protected volatile boolean reconfiguring = false;
   private final CouchbaseConnectionFactory cf;
 
-  public CouchbaseConnection(int bufSize, CouchbaseConnectionFactory f,
+  public CouchbaseMemcachedConnection(int bufSize, CouchbaseConnectionFactory f,
       List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
       FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
     this.cf = f;
   }
+
 
   public void reconfigure(Bucket bucket) {
     reconfiguring = true;
@@ -119,6 +121,11 @@ public class CouchbaseConnection extends MemcachedConnection  implements
         ((VBucketNodeLocator)locator).updateLocator(mergedNodes,
             bucket.getConfig());
       } else {
+        for (MemcachedNode node : mergedNodes) {
+          if (!node.isActive()) {
+            queueReconnect(node);
+          }
+        }
         locator.updateLocator(mergedNodes);
       }
 
@@ -129,93 +136,6 @@ public class CouchbaseConnection extends MemcachedConnection  implements
     } finally {
       reconfiguring = false;
     }
-  }
-
-  /**
-   * Add an operation to the given connection.
-   *
-   * @param key the key the operation is operating upon
-   * @param o the operation
-   */
-  @Override
-  public void addOperation(final String key, final Operation o) {
-    MemcachedNode placeIn = null;
-    MemcachedNode primary = locator.getPrimary(key);
-    if (primary.isActive() || failureMode == FailureMode.Retry) {
-      placeIn = primary;
-    } else if (failureMode == FailureMode.Cancel) {
-      o.cancel();
-    } else {
-      // Look for another node in sequence that is ready.
-      for (Iterator<MemcachedNode> i = locator.getSequence(key); placeIn == null
-          && i.hasNext();) {
-        MemcachedNode n = i.next();
-        if (n.isActive()) {
-          placeIn = n;
-        }
-      }
-      // If we didn't find an active node, queue it in the primary node
-      // and wait for it to come back online.
-      if (placeIn == null) {
-        placeIn = primary;
-        this.getLogger().warn(
-            "Node exepcted to receive data is inactive.  This could be due to "
-            + "a failure within the cluster.  Will check for updated "
-            + "configuration.  Key without a configured node is: %s.", key);
-        cf.checkConfigUpdate();
-      }
-    }
-
-    assert o.isCancelled() || placeIn != null : "No node found for key " + key;
-    if (placeIn != null) {
-      // add the vbucketIndex to the operation
-      if (locator instanceof VBucketNodeLocator) {
-        VBucketNodeLocator vbucketLocator = (VBucketNodeLocator) locator;
-        short vbucketIndex = (short) vbucketLocator.getVBucketIndex(key);
-        if (o instanceof VBucketAware) {
-          VBucketAware vbucketAwareOp = (VBucketAware) o;
-          vbucketAwareOp.setVBucket(key, vbucketIndex);
-          if (!vbucketAwareOp.getNotMyVbucketNodes().isEmpty()) {
-            MemcachedNode alternative =
-                vbucketLocator.getAlternative(key,
-                    vbucketAwareOp.getNotMyVbucketNodes());
-            if (alternative != null) {
-              placeIn = alternative;
-            }
-          }
-        }
-      }
-      addOperation(placeIn, o);
-    } else {
-      assert o.isCancelled() : "No node found for " + key
-          + " (and not immediately cancelled)";
-    }
-  }
-
-  public void addOperations(final Map<MemcachedNode, Operation> ops) {
-
-    for (Map.Entry<MemcachedNode, Operation> me : ops.entrySet()) {
-      final MemcachedNode node = me.getKey();
-      Operation o = me.getValue();
-      // add the vbucketIndex to the operation
-      if (locator instanceof VBucketNodeLocator) {
-        if (o instanceof KeyedOperation && o instanceof VBucketAware) {
-          Collection<String> keys = ((KeyedOperation) o).getKeys();
-          VBucketNodeLocator vbucketLocator = (VBucketNodeLocator) locator;
-          for (String key : keys) {
-            short vbucketIndex = (short) vbucketLocator.getVBucketIndex(key);
-            VBucketAware vbucketAwareOp = (VBucketAware) o;
-            vbucketAwareOp.setVBucket(key, vbucketIndex);
-          }
-        }
-      }
-      o.setHandlingNode(node);
-      o.initialize();
-      node.addOp(o);
-      addedQueue.offer(node);
-    }
-    Selector s = selector.wakeup();
-    assert s == selector : "Wakeup returned the wrong selector.";
   }
 
   /**

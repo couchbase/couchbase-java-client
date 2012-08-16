@@ -48,6 +48,8 @@ public interface ConfigurationProvider {
    */
   void subscribe(String bucketName, Reconfigurable rec);
 
+  void markForResubscribe(String bucketName, Reconfigurable rec);
+
   /**
    * Unsubscribe from updates on a given bucket and given reconfigurable.
    *
@@ -67,4 +69,6 @@ public interface ConfigurationProvider {
    * @return the anonymous bucket's name i.e. 'default'
    */
   String getAnonymousAuthBucket();
+
+  void finishResubscribe();
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,13 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.OperationFactory;
-import net.spy.memcached.auth.AuthDescriptor;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.transcoders.Transcoder;
 
@@ -47,6 +47,8 @@ import net.spy.memcached.transcoders.Transcoder;
 public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
   private Config vBucketConfig;
+  private long reconnThresholdTimeMsecs =
+    CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL;
 
   public Config getVBucketConfig() {
     return vBucketConfig;
@@ -55,6 +57,31 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   public void setVBucketConfig(Config config) {
     this.vBucketConfig = config;
   }
+
+  public void setReconnectThresholdTime(long time, TimeUnit unit) {
+    reconnThresholdTimeMsecs = TimeUnit.MILLISECONDS.convert(time, unit);
+  }
+
+  /**
+   * Get the CouchbaseConnectionFactory set up with the provided parameters.
+   * Note that a CouchbaseConnectionFactory requires the failure mode is set
+   * to retry, and the locator type is discovered dynamically based on the
+   * cluster you are connecting to. As a result, these values will be
+   * overridden upon calling this function.
+   *
+   * @param baseList a list of URI's that will be used to connect to the cluster
+   * @param bucketName the name of the bucket to connect to, also used for
+   * username
+   * @param pwd the password for the bucket
+   * @return a CouchbaseConnectionFactory object
+   * @throws IOException
+   */
+  public CouchbaseConnectionFactory buildCouchbaseConnection(
+      final List<URI> baseList, final String bucketName, final String pwd)
+    throws IOException {
+    return this.buildCouchbaseConnection(baseList, bucketName, bucketName, pwd);
+  }
+
 
   /**
    * Get the CouchbaseConnectionFactory set up with the provided parameters.
@@ -135,7 +162,7 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
       @Override
       public boolean shouldOptimize() {
-        return shouldOptimize;
+        return false;
       }
 
       @Override
@@ -149,11 +176,6 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
       }
 
       @Override
-      public AuthDescriptor getAuthDescriptor() {
-        return authDescriptor;
-      }
-
-      @Override
       public long getOpQueueMaxBlockTime() {
         return opQueueMaxBlockTime > -1 ? opQueueMaxBlockTime
             : super.getOpQueueMaxBlockTime();
@@ -162,6 +184,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
       @Override
       public int getTimeoutExceptionThreshold() {
         return timeoutExceptionThreshold;
+      }
+
+      public long getMinReconnectInterval() {
+        return reconnThresholdTimeMsecs;
       }
 
     };
