@@ -60,9 +60,10 @@ public class TestingClient extends CouchbaseClient {
 
     HttpRequest request = new BasicHttpEntityEnclosingRequest("PUT", uri,
         HttpVersion.HTTP_1_1);
+    request.setHeader(new BasicHeader("Content-Type", "application/json"));
     StringEntity entity = new StringEntity(document);
     ((BasicHttpEntityEnclosingRequest) request).setEntity(entity);
-    HttpOperationImpl op = new TestOperationImpl(request, new TestCallback() {
+    HttpOperationImpl op = new TestOperationPutImpl(request, new TestCallback() {
       private String json;
 
       @Override
