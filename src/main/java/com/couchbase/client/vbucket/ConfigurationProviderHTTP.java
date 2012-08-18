@@ -235,7 +235,8 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     /* @TODO: refactor all of this bucket and subscription behind the
      *        node locator
      */
-    if (null == bucketName || (null != reSubBucket && !bucketName.equals(reSubBucket))) {
+    if (null == bucketName || (null != reSubBucket
+      && !bucketName.equals(reSubBucket))) {
       throw new IllegalArgumentException("Bucket name cannot be null and must"
         + " never be re-set to a new object.");
     }

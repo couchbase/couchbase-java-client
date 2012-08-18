@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.BuildInfo;
-import net.spy.memcached.ClientBaseCase;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.internal.OperationFuture;

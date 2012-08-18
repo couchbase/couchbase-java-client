@@ -254,7 +254,8 @@ public class CouchbaseClient extends MemcachedClient
         CouchbaseConnection cbConn = (CouchbaseConnection) mconn;
         cbConn.reconfigure(bucket);
       } else {
-        CouchbaseMemcachedConnection cbMConn= (CouchbaseMemcachedConnection) mconn;
+        CouchbaseMemcachedConnection cbMConn =
+          (CouchbaseMemcachedConnection) mconn;
         cbMConn.reconfigure(bucket);
       }
     } catch (IllegalArgumentException ex) {
