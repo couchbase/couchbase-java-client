@@ -56,31 +56,32 @@ public class TestingClient extends CouchbaseClient {
     throws UnsupportedEncodingException {
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<String> crv = new HttpFuture<String>(couchLatch,
-        operationTimeout);
+            operationTimeout);
 
     HttpRequest request = new BasicHttpEntityEnclosingRequest("PUT", uri,
-        HttpVersion.HTTP_1_1);
+            HttpVersion.HTTP_1_1);
     request.setHeader(new BasicHeader("Content-Type", "application/json"));
     StringEntity entity = new StringEntity(document);
     ((BasicHttpEntityEnclosingRequest) request).setEntity(entity);
-    HttpOperationImpl op = new TestOperationPutImpl(request, new TestCallback() {
-      private String json;
+    HttpOperationImpl op = new TestOperationPutImpl(request,
+      new TestCallback() {
+        private String json;
 
-      @Override
-      public void receivedStatus(OperationStatus status) {
-        crv.set(json, status);
-      }
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          crv.set(json, status);
+        }
 
-      @Override
-      public void complete() {
-        couchLatch.countDown();
-      }
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
 
-      @Override
-      public void getData(String response) {
-        json = response;
-      }
-    });
+        @Override
+        public void getData(String response) {
+          json = response;
+        }
+      });
     crv.setOperation(op);
     addOp(op);
     return crv;
