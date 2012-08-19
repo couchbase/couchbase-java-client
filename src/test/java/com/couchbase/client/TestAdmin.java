@@ -133,7 +133,7 @@ public final class TestAdmin {
 
     } catch (FileNotFoundException ex) {
       System.err.println("Warning: bucket doesn't exist, could"
-              + "not be deleted.");
+              + " not be deleted.");
     }
 
     return true;
