@@ -59,7 +59,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -816,13 +815,13 @@ public class CouchbaseClient extends MemcachedClient
    * @return whether or not the operation was performed
    *
    */
-  public Future<Boolean> delete(String key,
+  public OperationFuture<Boolean> delete(String key,
           PersistTo req, ReplicateTo rep) {
     OperationFuture<Boolean> deleteOp = delete(key);
     try {
-      if (deleteOp.get()) {
-        observePoll(key, 0L, req, rep);
-      }
+      deleteOp.get();
+      deleteOp.set(true, deleteOp.getStatus());
+      observePoll(key, 0L, req, rep);
     } catch (InterruptedException e) {
       deleteOp.set(false, deleteOp.getStatus());
     } catch (ExecutionException e) {
@@ -844,7 +843,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return whether or not the operation was performed
    *
    */
-  public Future<Boolean> delete(String key, PersistTo req) {
+  public OperationFuture<Boolean> delete(String key, PersistTo req) {
     return delete(key, req, ReplicateTo.ZERO);
   }
 
@@ -897,16 +896,17 @@ public class CouchbaseClient extends MemcachedClient
    * Observe a key with a CAS.
    *
    * @param key the Key
-   * @param cas the CAS of the key
+   * @param cas the CAS of the key. A value of
+   * zero means it will be ignored.
    * @return ObserveReponse the Response on master and replicas
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
   public ObserveResponse[] observe(final String key, final long cas) {
-    final ObserveResponse[] observeResponse = new
+    final ObserveResponse[] ora = new
             ObserveResponse[VBucket.MAX_REPLICAS];
     for (int i=0; i < VBucket.MAX_REPLICAS; i++) {
-      observeResponse[i] = ObserveResponse.UNINITIALIZED;
+      ora[i] = ObserveResponse.UNINITIALIZED;
     }
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<ObserveResponse> rv =
@@ -931,7 +931,6 @@ public class CouchbaseClient extends MemcachedClient
             ArrayList<MemcachedNode>(1);
     List<MemcachedNode> replicaList = new
             ArrayList<MemcachedNode>(replicas);
-    List<MemcachedNode> allList = new ArrayList(allNodes);
 
     VBucketNodeLocator vbNodeLocator =
       ((VBucketNodeLocator)
@@ -948,7 +947,6 @@ public class CouchbaseClient extends MemcachedClient
       }
 
     }
-
     // Issue a Broadcast Op on the Master
     CountDownLatch blatch = broadcastOp(new BroadcastOpFactory() {
       public Operation newOp(final MemcachedNode n,
@@ -963,13 +961,14 @@ public class CouchbaseClient extends MemcachedClient
 
           public void gotData(String key, long retCas,
                   ObserveResponse or) {
-            observeResponse[0] = or;
+            ora[0] = or;
+            // If cas != 0 and cas modified set to modified
             if (((or == ObserveResponse.FOUND_PERSISTED)
                     || (or == ObserveResponse.FOUND_NOT_PERSISTED))
+                    && cas != 0
                     && retCas != cas) {
-              observeResponse[0] = ObserveResponse.MODIFIED;
+              ora[0] = ObserveResponse.MODIFIED;
             }
-            r = observeResponse[0];
           }
           public void complete() {
             latch.countDown();
@@ -992,21 +991,20 @@ public class CouchbaseClient extends MemcachedClient
         final SocketAddress sa = n.getSocketAddress();
         return opFact.observe(key, cas, vb, new ObserveOperation.Callback() {
 
-          private ObserveResponse r = null;
-
           public void receivedStatus(OperationStatus s) {
           }
 
           public void gotData(String key, long retCas,
                   ObserveResponse or) {
-            r = or;
             for (int i = 1; i <= replicas; i++) {
-              if (observeResponse[i] == ObserveResponse.UNINITIALIZED) {
-                r = observeResponse[i] = or;
+              // If cas != 0 and cas modified set to modified
+              if (ora[i] == ObserveResponse.UNINITIALIZED) {
+                ora[i] = or;
                 if (((or == ObserveResponse.FOUND_PERSISTED)
                         || (or == ObserveResponse.FOUND_NOT_PERSISTED))
+                        && cas != 0
                         && retCas != cas) {
-                  observeResponse[i] = ObserveResponse.MODIFIED;
+                  ora[i] = ObserveResponse.MODIFIED;
                 }
                 break;
               }
@@ -1024,7 +1022,7 @@ public class CouchbaseClient extends MemcachedClient
       blatch.await(operationTimeout, TimeUnit.MILLISECONDS);
       //       return rv.get(operationTimeout,
       //    TimeUnit.MILLISECONDS);
-      return observeResponse;
+      return ora;
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted waiting for value", e);
     }
@@ -1113,6 +1111,7 @@ public class CouchbaseClient extends MemcachedClient
       totPersists = totReplicas = 0;
 
       or = observe(key, cas);
+
       // Assume Persisted for all cases unless modified
       if ((or[0] != ObserveResponse.FOUND_NOT_PERSISTED)
               && (or[0] != ObserveResponse.NOT_FOUND_NOT_PERSISTED)) {
