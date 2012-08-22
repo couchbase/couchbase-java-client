@@ -162,17 +162,11 @@ public class ViewTest {
     List<URI> uris = new LinkedList<URI>();
     uris.add(URI.create(SERVER_URI));
     TestingClient c = new TestingClient(uris, "default", "");
-    String json = c.asyncHttpGet("/default/_design/"
-        + TestingClient.MODE_PREFIX + DESIGN_DOC_W_REDUCE).get();
-    String rev = (new JSONObject(json)).getString("_rev");
     c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
-        + DESIGN_DOC_W_REDUCE + "?rev=" + rev).get();
+        + DESIGN_DOC_W_REDUCE).get();
 
-    json = c.asyncHttpGet("/default/_design/" + TestingClient.MODE_PREFIX
-        + DESIGN_DOC_WO_REDUCE).get();
-    rev = (new JSONObject(json)).getString("_rev");
     c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
-        + DESIGN_DOC_WO_REDUCE + "?rev=" + rev).get();
+        + DESIGN_DOC_WO_REDUCE).get();
   }
 
   private static String generateDoc(String type, String small, String large) {
