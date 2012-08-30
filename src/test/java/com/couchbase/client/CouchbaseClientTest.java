@@ -102,6 +102,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
     }
     assertTrue("Couldn't shut down within five seconds",
         client.shutdown(5, TimeUnit.SECONDS));
+    Thread.sleep(5000);
     // Initialize without recreating a bucket
     initClient(new CouchbaseConnectionFactory(
           Arrays.asList(URI.create("http://"
@@ -172,13 +173,27 @@ public class CouchbaseClientTest extends BinaryClientTest {
     OperationFuture<Boolean> setOp =
             (((CouchbaseClient)client).set("observetest", 0, "value",
                 PersistTo.MASTER));
-    assert setOp.get().booleanValue()
-            : "Key was not persisted to master";
-    setOp = (((CouchbaseClient)client).set("observetest", 0, "value",
-            PersistTo.FOUR, ReplicateTo.THREE));
-    assert !setOp.get().booleanValue()
-            : "Was there really 4 servers with 3 replicas"
-            + "for a testing system?";
+    assert setOp.get()
+            : "Key set was not persisted to master : "
+            + setOp.getStatus().getMessage();
+    OperationFuture<Boolean> replaceOp =
+            (((CouchbaseClient)client).replace("observetest", 0, "value",
+                PersistTo.MASTER));
+    assert replaceOp.get()
+            : "Key replace was not persisted to master : "
+            + replaceOp.getStatus().getMessage();
+    OperationFuture<Boolean> deleteOp =
+            (((CouchbaseClient)client).delete("observetest",
+                PersistTo.MASTER));
+    assert deleteOp.get()
+            : "Key was not deleted on master : "
+            + deleteOp.getStatus().getMessage();
+    OperationFuture<Boolean> addOp =
+            (((CouchbaseClient)client).add("observetest", 0, "value",
+                PersistTo.MASTER, ReplicateTo.ZERO));
+    assert addOp.get()
+            : "Key add was not persisted to master : "
+            + addOp.getStatus().getMessage();
   }
   public void testGetStatsSlabs() throws Exception {
     // Empty
