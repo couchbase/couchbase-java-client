@@ -49,6 +49,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   private Config vBucketConfig;
   private long reconnThresholdTimeMsecs =
     CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL;
+  private long obsPollInterval;
+  private int obsPollMax;
 
   public Config getVBucketConfig() {
     return vBucketConfig;
@@ -62,6 +64,16 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
     reconnThresholdTimeMsecs = TimeUnit.MILLISECONDS.convert(time, unit);
   }
 
+  public CouchbaseConnectionFactoryBuilder
+    setObsPollInterval(long timeInterval) {
+    obsPollInterval = timeInterval;
+    return this;
+  }
+
+  public CouchbaseConnectionFactoryBuilder setObsPollMax(int maxPoll) {
+    obsPollMax = maxPoll;
+    return this;
+  }
   /**
    * Get the CouchbaseConnectionFactory set up with the provided parameters.
    * Note that a CouchbaseConnectionFactory requires the failure mode is set
@@ -190,6 +202,30 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
         return reconnThresholdTimeMsecs;
       }
 
+      @Override
+      public long getObsPollInterval() {
+        return obsPollInterval;
+      }
+
+      @Override
+      public int getObsPollMax() {
+        return obsPollMax;
+      }
+
     };
+  }
+
+  /**
+   * @return the obsPollInterval
+   */
+  public long getObsPollInterval() {
+    return obsPollInterval;
+  }
+
+  /**
+   * @return the obsPollMax
+   */
+  public int getObsPollMax() {
+    return obsPollMax;
   }
 }

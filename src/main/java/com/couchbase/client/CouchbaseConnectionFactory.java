@@ -106,6 +106,8 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private volatile long configProviderLastUpdateTimestamp;
   private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
   private ExecutorService resubExec = Executors.newSingleThreadExecutor();
+  private long obsPollInterval = 400;
+  private int obsPollMax = 10;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, final String password)
@@ -295,6 +297,14 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    */
   public long getMinReconnectInterval() {
     return minReconnectInterval;
+  }
+
+  long getObsPollInterval() {
+    return obsPollInterval;
+  }
+
+  int getObsPollMax() {
+    return obsPollMax;
   }
 
   private class Resubscriber implements Runnable {

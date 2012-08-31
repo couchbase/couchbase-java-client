@@ -104,6 +104,7 @@ public class CouchbaseClient extends MemcachedClient
 
   private ViewConnection vconn;
   protected volatile boolean reconfiguring = false;
+  private final CouchbaseConnectionFactory cbConnFactory;
 
   /**
    * Properties priority from highest to lowest:
@@ -227,6 +228,7 @@ public class CouchbaseClient extends MemcachedClient
   public CouchbaseClient(CouchbaseConnectionFactory cf)
     throws IOException {
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
+    cbConnFactory = cf;
     List<InetSocketAddress> addrs =
       AddrUtil.getAddressesFromURL(cf.getVBucketConfig().getCouchServers());
 
@@ -1248,6 +1250,9 @@ public class CouchbaseClient extends MemcachedClient
     int totPersists, totReplicas;
     boolean masterPersisted;
     int loop = 0;
+    long obsPollInt = cbConnFactory.getObsPollInterval();
+    int obsPollMax = cbConnFactory.getObsPollMax();
+
 
     int replicas = ((CouchbaseConnectionFactory)
             connFactory).getVBucketConfig().getReplicasCount();
@@ -1324,12 +1329,12 @@ public class CouchbaseClient extends MemcachedClient
         return;
       }
       try {
-        Thread.sleep(400);
+        Thread.sleep(obsPollInt);
       } catch (InterruptedException e) {
         getLogger().error("Interrupted while in observe loop.", e);
         throw new ObservedException("Observe was Interrupted ");
       }
-    } while (loop++ < 10);
+    } while (loop++ < obsPollMax);
 
     throw new ObservedTimeoutException("Observe Timeout - Polled"
             + " Unsuccessfully for over 4 seconds");
