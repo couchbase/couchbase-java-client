@@ -121,12 +121,14 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection  implement
         ((VBucketNodeLocator)locator).updateLocator(mergedNodes,
             bucket.getConfig());
       } else {
+        // We update the locator with the merged nodes
+        // before initiating a reconnect on the queue
+        locator.updateLocator(mergedNodes);
         for (MemcachedNode node : mergedNodes) {
           if (!node.isActive()) {
             queueReconnect(node);
           }
         }
-        locator.updateLocator(mergedNodes);
       }
 
       // schedule shutdown for the oddNodes
