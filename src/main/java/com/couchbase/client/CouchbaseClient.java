@@ -47,7 +47,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -56,12 +55,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -1096,13 +1093,6 @@ public class CouchbaseClient extends MemcachedClient
     for (int i=0; i < VBucket.MAX_REPLICAS; i++) {
       ora[i] = ObserveResponse.UNINITIALIZED;
     }
-    final CountDownLatch latch = new CountDownLatch(1);
-    final OperationFuture<ObserveResponse> rv =
-        new OperationFuture<ObserveResponse>(key, latch, operationTimeout);
-    final AtomicReference<ObserveResponse> observeResult =
-        new AtomicReference<ObserveResponse>(null);
-    final ConcurrentLinkedQueue<Operation> ops =
-        new ConcurrentLinkedQueue<Operation>();
     final int vb = ((VBucketNodeLocator)
             ((CouchbaseConnection) mconn).getLocator()).getVBucketIndex(key);
 
@@ -1112,8 +1102,6 @@ public class CouchbaseClient extends MemcachedClient
             connFactory).getVBucketConfig().getMaster(vb);
     replicas = ((CouchbaseConnectionFactory)
             connFactory).getVBucketConfig().getReplicasCount();
-
-    Collection allNodes = (mconn.getLocator()).getAll();
 
     List<MemcachedNode> masterList = new
             ArrayList<MemcachedNode>(1);
@@ -1139,10 +1127,7 @@ public class CouchbaseClient extends MemcachedClient
     CountDownLatch blatch = broadcastOp(new BroadcastOpFactory() {
       public Operation newOp(final MemcachedNode n,
           final CountDownLatch latch) {
-        final SocketAddress sa = n.getSocketAddress();
-        // rv.put(sa, new HashMap<String, String>());
         return opFact.observe(key, cas, vb, new ObserveOperation.Callback() {
-          private ObserveResponse r = null;
 
           public void receivedStatus(OperationStatus s) {
           }
@@ -1176,7 +1161,6 @@ public class CouchbaseClient extends MemcachedClient
 
       public Operation newOp(final MemcachedNode n,
               final CountDownLatch latch) {
-        final SocketAddress sa = n.getSocketAddress();
         return opFact.observe(key, cas, vb, new ObserveOperation.Callback() {
 
           public void receivedStatus(OperationStatus s) {
@@ -1197,7 +1181,6 @@ public class CouchbaseClient extends MemcachedClient
                 break;
               }
             }
-
           }
 
           public void complete() {
@@ -1208,8 +1191,6 @@ public class CouchbaseClient extends MemcachedClient
     }, replicaList);
     try {
       blatch.await(operationTimeout, TimeUnit.MILLISECONDS);
-      //       return rv.get(operationTimeout,
-      //    TimeUnit.MILLISECONDS);
       return ora;
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted waiting for value", e);
