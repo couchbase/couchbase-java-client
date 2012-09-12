@@ -65,7 +65,7 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   }
 
   public CouchbaseConnectionFactoryBuilder
-    setObsPollInterval(long timeInterval) {
+  setObsPollInterval(long timeInterval) {
     obsPollInterval = timeInterval;
     return this;
   }
