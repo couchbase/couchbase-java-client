@@ -22,18 +22,18 @@
 
 package com.couchbase.client;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedClientIF;
+import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ObserveResponse;
 import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.transcoders.Transcoder;
-
-
 
 /**
  * This interface is provided as a helper for testing clients of the
@@ -62,7 +62,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
   Boolean unlock(final String key,
           long casId);
 
-  ObserveResponse[] observe(final String key, long cas);
+  Map<MemcachedNode, ObserveResponse> observe(final String key, long cas);
 
   OperationFuture<Boolean> set(String key, int exp,
           String value, PersistTo persist);
