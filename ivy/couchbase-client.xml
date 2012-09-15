@@ -44,7 +44,7 @@
     <artifact conf="master"/>
   </publications>
   <dependencies>
-    <dependency org="org.jboss.netty" name="netty" rev="${netty.version}" conf="default" />
+    <dependency org="io.netty" name="netty" rev="${netty.version}" conf="default" />
     <dependency org="org.codehaus.jettison" name="jettison" rev="${jettison.version}" conf="default" />
     <dependency org="commons-codec" name="commons-codec" rev="${commons-codec.version}" conf="default" />
     <dependency org="spy" name="spymemcached" rev="${spymemcached.version}" conf="default" />

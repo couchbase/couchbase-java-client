@@ -48,7 +48,7 @@ SOFTWARE.
   <dependencies defaultconfmapping="%->default,sources()">
     <dependency org="junit" name="junit" rev="${junit.version}"
         conf="common->master" />
-    <dependency org="org.jboss.netty" name="netty" rev="${netty.version}"
+    <dependency org="io.netty" name="netty" rev="${netty.version}"
         conf="common->master" />
     <dependency org="org.codehaus.jettison" name="jettison"
         rev="${jettison.version}" conf="common->master" />
