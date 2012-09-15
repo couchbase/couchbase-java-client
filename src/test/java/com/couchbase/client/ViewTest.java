@@ -27,6 +27,7 @@ import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.protocol.views.NoDocsOperationImpl;
+import com.couchbase.client.protocol.views.OnError;
 import com.couchbase.client.protocol.views.Paginator;
 import com.couchbase.client.protocol.views.Query;
 import com.couchbase.client.protocol.views.ReducedOperationImpl;
@@ -410,6 +411,17 @@ public class ViewTest {
     View view = client.getView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
     HttpFuture<ViewResponse> future =
         client.asyncQuery(view, query.setUpdateSeq(true));
+    ViewResponse response = future.get();
+    assert response != null : future.getStatus();
+  }
+
+  @Test
+  public void testQuerySetOnError() throws Exception {
+    Query query = new Query();
+    query.setReduce(false);
+    View view = client.getView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
+    HttpFuture<ViewResponse> future =
+        client.asyncQuery(view, query.setOnError(OnError.CONTINUE));
     ViewResponse response = future.get();
     assert response != null : future.getStatus();
   }
