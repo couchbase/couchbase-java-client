@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ public class Query {
   private static final String GROUPLEVEL = "group_level";
   private static final String INCLUSIVEEND = "inclusive_end";
   private static final String KEY = "key";
+  private static final String KEYS = "keys";
   private static final String LIMIT = "limit";
   private static final String REDUCE = "reduce";
   private static final String SKIP = "skip";
@@ -94,11 +95,58 @@ public class Query {
     return this;
   }
 
+  /**
+   * Return only documents that match the specified key.
+   *
+   * The "key" param must be specified as a valid JSON string, but the
+   * ComplexKey class takes care of this. See the documentation of the
+   * ComplexKey class for more information on its usage.
+   *
+   * @param key The document key.
+   * @return The Query instance.
+   */
+  public Query setKey(ComplexKey key) {
+    args.put(KEY, key.toJson());
+    return this;
+  }
+
   public Query setKey(String key) {
     args.put(KEY, key);
     return this;
   }
 
+  /**
+   * Return only documents that match each of keys specified within the given
+   * array.
+   *
+   * The "keys" param must be specified as a valid JSON string, but the
+   * ComplexKey class takes care of this. See the documentation of the
+   * ComplexKey class for more information on its usage.
+   *
+   * Also, sorting is not applied when using this option.
+   *
+   * @param keys The document keys.
+   * @return The Query instance.
+   */
+  public Query setKeys(ComplexKey keys) {
+    args.put(KEYS, keys.toJson());
+    return this;
+  }
+
+  /**
+   * Return only documents that match each of keys specified within the given
+   * array.
+   *
+   * Note that the given key string has to be valid JSON! Also, sorting is not
+   * applied when using this option.
+   *
+   * @param keys The document keys.
+   * @return The Query instance.
+   */
+  public Query setKeys(String keys) {
+    args.put(KEYS, keys);
+    return this;
+  }
   public Query setLimit(int limit) {
     args.put(LIMIT, Integer.valueOf(limit));
     return this;
@@ -118,8 +166,40 @@ public class Query {
     return this;
   }
 
+  /**
+   * Returns records in the given key range.
+   *
+   * The range keys must be specified as a valid JSON strings, but the
+   * ComplexKey class takes care of this. See the documentation of the
+   * ComplexKey class for more information on its usage.
+   *
+   * @param startkey The start of the key range.
+   * @param endkey The end of the key range.
+   * @return The Query instance.
+   */
+  public Query setRange(ComplexKey startkey, ComplexKey endkey) {
+    args.put(ENDKEY, endkey.toJson());
+    args.put(STARTKEY, startkey.toJson());
+    return this;
+  }
+
   public Query setRangeStart(String startkey) {
     args.put(STARTKEY, startkey);
+    return this;
+  }
+
+  /**
+   * Return records with a value equal to or greater than the specified key.
+   *
+   * The range key must be specified as a valid JSON string, but the
+   * ComplexKey class takes care of this. See the documentation of the
+   * ComplexKey class for more information on its usage.
+   *
+   * @param startkey The start of the key range.
+   * @return The Query instance.
+   */
+  public Query setRangeStart(ComplexKey startkey) {
+    args.put(STARTKEY, startkey.toJson());
     return this;
   }
 
@@ -130,6 +210,21 @@ public class Query {
 
   public Query setRangeEnd(String endkey) {
     args.put(ENDKEY, endkey);
+    return this;
+  }
+
+  /**
+   * Stop returning records when the specified key is reached.
+   *
+   * The range key must be specified as a valid JSON string, but the
+   * ComplexKey class takes care of this. See the documentation of the
+   * ComplexKey class for more information on its usage.
+   *
+   * @param endkey The end of the key range.
+   * @return The Query instance.
+   */
+  public Query setRangeEnd(ComplexKey endkey) {
+    args.put(ENDKEY, endkey.toJson());
     return this;
   }
 
@@ -181,6 +276,9 @@ public class Query {
     }
     if (args.containsKey(KEY)) {
       query.setKey(((String)args.get(KEY)));
+    }
+    if (args.containsKey(KEYS)) {
+      query.setKeys(((String)args.get(KEYS)));
     }
     if (args.containsKey(LIMIT)) {
       query.setLimit(((Integer)args.get(LIMIT)).intValue());
