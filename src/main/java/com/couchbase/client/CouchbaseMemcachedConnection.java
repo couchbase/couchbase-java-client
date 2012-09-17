@@ -57,13 +57,11 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
   Reconfigurable {
 
   protected volatile boolean reconfiguring = false;
-  private final CouchbaseConnectionFactory cf;
 
   public CouchbaseMemcachedConnection(int bufSize, CouchbaseConnectionFactory f,
       List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
       FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
-    this.cf = f;
   }
 
 

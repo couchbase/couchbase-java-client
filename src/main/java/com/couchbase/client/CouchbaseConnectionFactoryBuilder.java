@@ -64,9 +64,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
     reconnThresholdTimeMsecs = TimeUnit.MILLISECONDS.convert(time, unit);
   }
 
-  public CouchbaseConnectionFactoryBuilder
-  setObsPollInterval(long timeInterval) {
-    obsPollInterval = timeInterval;
+  public CouchbaseConnectionFactoryBuilder setObsPollInterval(long interval) {
+    obsPollInterval = interval;
     return this;
   }
 

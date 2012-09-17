@@ -33,7 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-
 /**
  * Test for basic things in the CouchbaseConnectionFactoryBuilder.
  *
@@ -89,9 +88,9 @@ public class CouchbaseConnectionFactoryBuilderTest {
     CouchbaseConnectionFactoryBuilder instance =
       new CouchbaseConnectionFactoryBuilder();
     CouchbaseConnectionFactoryBuilder instanceResult
-      = instance.setObsPollMax(40);
+      = instance.setObsPollMax(maxPoll);
     assertEquals(instance, instanceResult);
-    assertEquals(40, instanceResult.getObsPollMax());
+    assertEquals(maxPoll, instanceResult.getObsPollMax());
     instance.buildCouchbaseConnection(uris, "default", "");
   }
 }
