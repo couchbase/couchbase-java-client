@@ -23,7 +23,6 @@
 package com.couchbase.client.protocol.views;
 
 import com.couchbase.client.CouchbaseClient;
-import com.couchbase.client.internal.HttpFuture;
 
 import java.util.Iterator;
 
@@ -33,7 +32,7 @@ import net.spy.memcached.compat.SpyObject;
  * A Paginator.
  */
 public class Paginator extends SpyObject
-  implements Iterator<ViewRow> {
+  implements Iterator<ViewResponse> {
 
   private static final int MIN_RESULTS = 15;
 
@@ -41,11 +40,16 @@ public class Paginator extends SpyObject
   private final Query query;
   private final View view;
   private final int docsPerPage;
+  private int docsOnPage;
+  private int totalLimit = 0;
+  private int totalDocs = 0;
 
   private ViewResponse page;
   private Iterator<ViewRow> pageItr;
   private ViewRow lastRow;
-  private int rowsIterated;
+  private ViewResponse finalRow;
+  private boolean first = true;
+  private boolean done = false;
 
   public Paginator(CouchbaseClient client, View view, Query query,
       int numDocs) {
@@ -53,30 +57,33 @@ public class Paginator extends SpyObject
     this.view = view;
     this.query = query.copy();
     this.docsPerPage = (MIN_RESULTS > numDocs) ? MIN_RESULTS : numDocs;
-    getNextPage(this.query.setLimit(docsPerPage + 1));
+    this.docsOnPage = 0;
+    this.totalLimit = query.getLimit();
+    getNextPage(this.query);
   }
 
   @Override
   public boolean hasNext() {
-    if (!pageItr.hasNext() && page.size() < docsPerPage) {
-      return false;
-    } else if (!(rowsIterated < docsPerPage)) {
-      lastRow = pageItr.next();
-      query.setStartkeyDocID(lastRow.getId());
-      query.setRangeStart(lastRow.getKey());
-      getNextPage(query);
+    if (first) {
+      return true;
     }
-    return true;
+    return !done;
   }
 
   @Override
-  public ViewRow next() {
-    if (rowsIterated <= docsPerPage) {
-      rowsIterated++;
-      lastRow = pageItr.next();
-      return lastRow;
+  public ViewResponse next() {
+    if (first) {
+      first = false;
+      return page;
     }
-    return null;
+    if (!done) {
+      query.setSkip(0);
+      query.setStartkeyDocID(finalRow.iterator().next().getId());
+      query.setRangeStart(finalRow.iterator().next().getKey());
+      return getNextPage(query);
+    } else {
+      return null;
+    }
   }
 
   @Override
@@ -84,14 +91,24 @@ public class Paginator extends SpyObject
     throw new UnsupportedOperationException("Remove is unsupported");
   }
 
-  private HttpFuture<ViewResponse> getNextPage(Query q) {
+  private ViewResponse getNextPage(Query q) {
     if (query.willReduce()) {
       throw new RuntimeException("Pagination is not supported for reduced"
           + " views");
     }
+    int remaining = totalLimit > 0 ? totalLimit - totalDocs : docsPerPage;
+    q.setLimit(remaining);
     page = client.query(view, q);
     pageItr = page.iterator();
-    rowsIterated = 0;
-    return null;
+    docsOnPage = page.size();
+    totalDocs += docsOnPage;
+    if (docsOnPage >= docsPerPage) {
+      q.setSkip(docsOnPage);
+      q.setLimit(1);
+      finalRow = client.query(view, q);
+    } else {
+      done = true;
+    }
+    return page;
   }
 }
