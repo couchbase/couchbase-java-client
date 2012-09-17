@@ -182,12 +182,9 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assert replaceOp.get()
             : "Key replace was not persisted to master : "
             + replaceOp.getStatus().getMessage();
-    OperationFuture<Boolean> deleteOp =
-            (((CouchbaseClient)client).delete("observetest",
-                PersistTo.MASTER));
-    assert deleteOp.get()
-            : "Key was not deleted on master : "
-            + deleteOp.getStatus().getMessage();
+    
+    assert client.delete("observetest").get()
+            : "Key was not deleted on master";
     OperationFuture<Boolean> addOp =
             (((CouchbaseClient)client).add("observetest", 0, "value",
                 PersistTo.MASTER, ReplicateTo.ZERO));
