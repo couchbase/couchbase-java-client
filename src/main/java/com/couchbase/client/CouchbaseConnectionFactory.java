@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,7 +101,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private volatile boolean needsReconnect;
   private AtomicBoolean doingResubscribe = new AtomicBoolean(false);
   private volatile long thresholdLastCheck = System.nanoTime();
-  private volatile int configThresholdCount = 0;
+  private AtomicInteger configThresholdCount = new AtomicInteger(0);
   private final int maxConfigCheck = 10; //maximum allowed checks before we
                                          // reconnect in a 10 sec interval
   private volatile long configProviderLastUpdateTimestamp;
@@ -278,13 +279,13 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private boolean pastReconnThreshold() {
     long currentTime = System.nanoTime();
     if (currentTime - thresholdLastCheck > 100000000) { //if longer than 10 sec
-      configThresholdCount = 0; // it's been more than 10 sec since last
+      configThresholdCount.set(0); // it's been more than 10 sec since last
                                 // tried, so don't try again just yet.
     }
-    configThresholdCount++;
+    configThresholdCount.incrementAndGet();
     thresholdLastCheck = currentTime;
 
-    if (configThresholdCount >= maxConfigCheck) {
+    if (configThresholdCount.get() >= maxConfigCheck) {
       return true;
     }
     return false;
