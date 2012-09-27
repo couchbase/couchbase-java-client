@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 import net.spy.memcached.TestConfig;
 
 /**
- * A VBucketMemcachedClientTest.
+ * A VBucketCouchbaseClientTest.
  */
 public class VBucketCouchbaseClientTest extends TestCase {
   public void testOps() throws Exception {
@@ -44,11 +44,11 @@ public class VBucketCouchbaseClientTest extends TestCase {
       URI base = new URI("http://" + TestConfig.IPV4_ADDR + ":8091/pools");
       mc = new CouchbaseClient(Arrays.asList(base), "default", "");
     } catch (IOException ex) {
-      System.err.println(ex.getMessage());
+      fail(ex.getMessage());
     } catch (ConfigurationException ex) {
-      System.err.println(ex.getMessage());
+      fail(ex.getMessage());
     } catch (URISyntaxException ex) {
-      System.err.println(ex.getMessage());
+      fail(ex.getMessage());
     }
 
     Integer i;
