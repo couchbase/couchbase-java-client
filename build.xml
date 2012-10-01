@@ -32,7 +32,7 @@
   </taskdef>
 
   <property name="name" value="couchbase-client"/>
-  <property name="copyright" value="2006-2011 Dustin Sallings, Matt Ingenthron" />
+  <property name="copyright" value="2006-2012 Dustin Sallings, Matt Ingenthron" />
   <property name="group" value="couchbase" />
 
   <property name="base.src.dir" value="${basedir}/src" />
@@ -55,7 +55,7 @@
   <!-- ivy properties used -->
   <property name="ivy.settings.dir" value="${basedir}/ivy" />
   <property name="ivy.pom.url"
-      value="http://www.couchbase.org/code/couchbase/java" />
+      value="http://www.couchbase.com/develop/java/current" />
   <property name="ivy.pom.groupId" value="couchbase" />
   <property name="ivy.pom.description"
    value = "A client library for Couchbase Server" />
