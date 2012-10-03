@@ -43,6 +43,7 @@ import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -66,6 +67,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -79,13 +81,16 @@ public class ViewTest {
   private static final String SERVER_URI = "http://" + TestConfig.IPV4_ADDR
       + ":8091/pools";
   private static final Map<String, Object> ITEMS;
+
   public static final String DESIGN_DOC_W_REDUCE = "doc_with_view";
   public static final String DESIGN_DOC_WO_REDUCE = "doc_without_view";
   public static final String DESIGN_DOC_OBSERVE = "doc_observe";
+  public static final String DESIGN_DOC_BINARY = "doc_binary";
   public static final String VIEW_NAME_W_REDUCE = "view_with_reduce";
   public static final String VIEW_NAME_WO_REDUCE = "view_without_reduce";
   public static final String VIEW_NAME_FOR_DATED = "view_emitting_dated";
   public static final String VIEW_NAME_OBSERVE = "view_staletest";
+  public static final String VIEW_NAME_BINARY = "view_binary";
 
   static {
     ITEMS = new HashMap<String, Object>();
@@ -147,14 +152,21 @@ public class ViewTest {
         + "} }\"}}}";
     client.asyncHttpPut(docUri, view);
 
+    // Creating the Design/View for the binary docs
+    docUri = "/default/_design/" + TestingClient.MODE_PREFIX
+        + DESIGN_DOC_BINARY;
+    view = "{\"language\":\"javascript\",\"views\":{\""
+        + VIEW_NAME_BINARY + "\":{\"map\":\"function (doc, meta) "
+        +"{ if(meta.id.match(/nonjson/)) { emit(meta.id, null); }}\"}}}";
+    client.asyncHttpPut(docUri, view);
+
     docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_WO_REDUCE;
     String view2 = "{\"language\":\"javascript\",\"views\":{\""
         + VIEW_NAME_FOR_DATED + "\":{\"map\":\"function (doc) {  "
         + "emit(doc.type, 1)}\"}}}";
     for (Entry<String, Object> item : ITEMS.entrySet()) {
-      assert client.set(item.getKey(), 0,
-          (String) item.getValue()).get().booleanValue();
+      assert client.set(item.getKey(), 0, item.getValue()).get().booleanValue();
     }
     HttpFuture<String> asyncHttpPut = client.asyncHttpPut(docUri, view2);
 
@@ -200,6 +212,9 @@ public class ViewTest {
 
     c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_OBSERVE).get();
+
+    c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
+        + DESIGN_DOC_BINARY).get();
   }
 
   private static String generateDoc(String type, String small, String large) {
@@ -757,6 +772,41 @@ public class ViewTest {
     }
 
     assertEquals(docAmount, returnedRows.size());
+  }
+
+  /**
+   * This test case adds two non-JSON documents and utilizes
+   * a special view that returns them.
+   *
+   * This makes sure that the view handlers don't break when
+   * non-JSON data is read from the view.
+   */
+  @Test
+  public void testViewWithBinaryDocs() {
+    // Create non-JSON documents
+    Date now = new Date();
+    client.set("nonjson1", 0, now);
+    client.set("nonjson2", 0, 42);
+
+    View view = client.getView(DESIGN_DOC_BINARY, VIEW_NAME_BINARY);
+    Query query = new Query();
+    query.setIncludeDocs(true);
+    query.setReduce(false);
+    query.setStale(Stale.FALSE);
+
+    assert view != null : "Could not retrieve view";
+    ViewResponse response = client.query(view, query);
+
+    Iterator<ViewRow> itr = response.iterator();
+    while (itr.hasNext()) {
+      ViewRow row = itr.next();
+      if(row.getKey().equals("nonjson1")) {
+        assertEquals(now.toString(), row.getDocument().toString());
+      }
+      if(row.getKey().equals("nonjson2")) {
+        assertEquals(42, row.getDocument());
+      }
+    }
   }
 
 }
