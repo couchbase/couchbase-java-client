@@ -33,6 +33,8 @@ import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.spy.memcached.compat.SpyObject;
 
@@ -50,7 +52,7 @@ import org.apache.http.nio.util.HeapByteBufferAllocator;
 import org.apache.http.protocol.HttpContext;
 
 /**
- * Establishes a connection to a single Couchbase node.
+ * Establishes a HTTP connection to a single Couchbase node.
  *
  * Based upon http://hc.apache.org/httpcomponents-core-ga/httpcore-nio/
  * examples/org/apache/http/examples/nio/NHttpClientConnManagement.java
@@ -67,6 +69,8 @@ public class ViewNode extends SpyObject {
   private final String user;
   private final String pass;
 
+  private Thread ioThread;
+
   public ViewNode(InetSocketAddress a, AsyncConnectionManager mgr,
       long queueLen, long maxBlockTime, long operationTimeout, String usr,
       String pwd) {
@@ -81,7 +85,7 @@ public class ViewNode extends SpyObject {
 
   public void init() throws IOReactorException {
     // Start the I/O reactor in a separate thread
-    Thread t = new Thread(new Runnable() {
+    ioThread = new Thread(new Runnable() {
       public void run() {
         try {
           connMgr.execute();
@@ -90,10 +94,10 @@ public class ViewNode extends SpyObject {
         } catch (IOException e) {
           getLogger().error("I/O error: " + e.getMessage(), e);
         }
-        getLogger().info("Couchbase I/O reactor terminated");
+        getLogger().info("I/O reactor terminated for " + addr.getHostName());
       }
     }, "Couchbase View Thread for node " + addr);
-    t.start();
+    ioThread.start();
   }
 
   public void writeOp(HttpOperation op) {
@@ -146,11 +150,20 @@ public class ViewNode extends SpyObject {
     shutdown(0, TimeUnit.MILLISECONDS);
   }
 
-  public void shutdown(long time, TimeUnit unit) throws IOException {
+  public void shutdown(long time, TimeUnit unit) throws
+    IOException {
+
+    long waittime = time;
     if (unit != TimeUnit.MILLISECONDS) {
-      connMgr.shutdown(TimeUnit.MILLISECONDS.convert(time, unit));
-    } else {
-      connMgr.shutdown(time);
+      waittime = TimeUnit.MILLISECONDS.convert(time, unit);
+    }
+
+    connMgr.shutdown(waittime);
+    try {
+      ioThread.join(waittime);
+    } catch (InterruptedException ex) {
+      getLogger().error("Interrupt " + ex + " received while waiting for node "
+        + addr.getHostName() + " to shut down.");
     }
   }
 

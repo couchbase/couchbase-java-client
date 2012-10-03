@@ -36,6 +36,7 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -65,10 +66,10 @@ import org.apache.http.protocol.RequestUserAgent;
 
 
 /**
- * Couchbase implementation of ViewConnection.
- *
+ * The ViewConnection class creates and manages the various connections
+ * to the ViewNodes.
  */
-public class ViewConnection extends SpyObject  implements
+public class ViewConnection extends SpyObject implements
   Reconfigurable {
   private static final int NUM_CONNS = 1;
 
@@ -86,6 +87,14 @@ public class ViewConnection extends SpyObject  implements
   private List<ViewNode> couchNodes;
   private int nextNode;
 
+  /**
+   * Kickstarts the initialization and delegates the connection creation.
+   *
+   * @param cf the factory which contains neeeded information.
+   * @param addrs the list of addresses to connect to.
+   * @param obs the connection observers.
+   * @throws IOException
+   */
   public ViewConnection(CouchbaseConnectionFactory cf,
       List<InetSocketAddress> addrs, Collection<ConnectionObserver> obs)
     throws IOException {
@@ -95,6 +104,16 @@ public class ViewConnection extends SpyObject  implements
     nextNode = 0;
   }
 
+  /**
+   * Create ViewNode connections and queue them up for connect.
+   *
+   * This method also defines the connection params for each connection,
+   * including the default settings like timeouts and the user agent string.
+   *
+   * @param addrs addresses of all the nodes it should connect to.
+   * @return Returns a list of the ViewNodes.
+   * @throws IOException
+   */
   private List<ViewNode> createConnections(List<InetSocketAddress> addrs)
     throws IOException {
 
@@ -128,7 +147,7 @@ public class ViewConnection extends SpyObject  implements
           new AsyncConnectionManager(
               new HttpHost(a.getHostName(), a.getPort()), NUM_CONNS,
               protocolHandler, params, new RequeueOpCallback(this));
-      getLogger().info("Added %s to connect queue", a);
+      getLogger().info("Added %s to connect queue", a.getHostName());
 
       ViewNode node = connFactory.createViewNode(a, connMgr);
       node.init();
@@ -138,6 +157,16 @@ public class ViewConnection extends SpyObject  implements
     return nodeList;
   }
 
+  /**
+   * Write an operation to the next ViewNode.
+   *
+   * To make sure that the operations are distributed throughout the cluster,
+   * the ViewNode is changed every time a new operation is added. Since the
+   * getNextNode() method increments the ViewNode IDs and calculates the
+   * modulo, the nodes are selected in a round-robin fashion.
+   *
+   * @param op the operation to run.
+   */
   public void addOp(final HttpOperation op) {
     rlock.lock();
     try {
@@ -153,36 +182,86 @@ public class ViewConnection extends SpyObject  implements
     }
   }
 
+  /**
+   * Calculates the next node to run the operation on.
+   *
+   * @return id of the next node.
+   */
   private int getNextNode() {
     return nextNode = (++nextNode % couchNodes.size());
   }
 
+  /**
+   * Returns the currently connected ViewNodes.
+   *
+   * @return
+   */
+  public List<ViewNode> getConnectedNodes() {
+    return couchNodes;
+  }
+
+  /**
+   * Checks the state of the ViewConnection.
+   *
+   * If shutdown is currently in progress, an Exception is thrown.
+   */
   protected void checkState() {
     if (shutDown) {
       throw new IllegalStateException("Shutting down");
     }
   }
 
+  /**
+   * Initiates the shutdown of all connected ViewNodes.
+   *
+   * @return false if a connection is already in progress, true otherwise.
+   * @throws IOException
+   */
   public boolean shutdown() throws IOException {
     if (shutDown) {
       getLogger().info("Suppressing duplicate attempt to shut down");
       return false;
     }
+
     shutDown = true;
     running = false;
-    for (ViewNode n : couchNodes) {
-      if (n != null) {
-        n.shutdown();
-        if (n.hasWriteOps()) {
-          getLogger().warn("Shutting down with ops waiting to be written");
+
+    List<ViewNode> nodesToRemove = new ArrayList<ViewNode>();
+    for(ViewNode node : couchNodes) {
+      if (node != null) {
+        String hostname = node.getSocketAddress().getHostName();
+        if (node.hasWriteOps()) {
+          getLogger().warn("Shutting down " + hostname +
+            " with ops waiting to be written");
+        } else {
+          getLogger().info("Node " + hostname +
+            " has no ops in the queue");
         }
+        node.shutdown();
+        nodesToRemove.add(node);
       }
     }
+
+    for(ViewNode node : nodesToRemove) {
+      couchNodes.remove(node);
+    }
+
     return true;
   }
 
+  /**
+   * Reconfigures the connected ViewNodes.
+   *
+   * When a reconfiguration event happens, new ViewNodes may need to be added
+   * or old ones need to be removed from the current configuration. This method
+   * takes care that those operations are performed in the correct order and
+   * are executed in a thread-safe manner.
+   *
+   * @param bucket the bucket which has been rebalanced.
+   */
   public void reconfigure(Bucket bucket) {
     reconfiguring = true;
+
     try {
       // get a new collection of addresses from the received config
       HashSet<SocketAddress> newServerAddresses = new HashSet<SocketAddress>();
