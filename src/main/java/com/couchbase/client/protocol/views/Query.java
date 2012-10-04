@@ -339,4 +339,13 @@ public class Query {
       return key + "=\"" + value + "\"";
     }
   }
+
+  /**
+   * Returns all current args for proper inspection.
+   *
+   * @return returns the currently stored arguments
+   */
+  public Map<String, Object> getArgs() {
+    return args;
+  }
 }
