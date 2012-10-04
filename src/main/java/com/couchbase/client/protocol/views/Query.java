@@ -46,7 +46,6 @@ public class Query {
   private static final String STALE = "stale";
   private static final String STARTKEY = "startkey";
   private static final String STARTKEYDOCID = "startkey_docid";
-  private static final String UPDATESEQ = "update_seq";
   private static final String ONERROR = "on_error";
   private boolean includedocs = false;
 
@@ -243,11 +242,6 @@ public class Query {
     return this;
   }
 
-  public Query setUpdateSeq(boolean updateseq) {
-    args.put(UPDATESEQ, Boolean.toString(updateseq));
-    return this;
-  }
-
   public Query setOnError(OnError opt) {
     args.put(ONERROR, opt);
     return this;
@@ -297,9 +291,6 @@ public class Query {
     }
     if (args.containsKey(STARTKEYDOCID)) {
       query.setStartkeyDocID(((String)args.get(STARTKEYDOCID)));
-    }
-    if (args.containsKey(UPDATESEQ)) {
-      query.setUpdateSeq(((Boolean)args.get(UPDATESEQ)).booleanValue());
     }
     if (args.containsKey(ONERROR)) {
       query.setOnError(((OnError)args.get(ONERROR)));
