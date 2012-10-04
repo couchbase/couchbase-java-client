@@ -127,11 +127,13 @@ public final class ComplexKey {
    */
   public String toJson() {
     if(components.size() == 1) {
-      if(components.get(0) == EMPTY_OBJECT) {
+      Object component = components.get(0);
+      if(component == EMPTY_OBJECT) {
         return new JSONObject().toString();
-      } else {
-        return components.get(0).toString();
+      } else if(component instanceof String) {
+        return "\"" + component + "\"";
       }
+      return component.toString();
     }
 
     JSONArray key = new JSONArray();

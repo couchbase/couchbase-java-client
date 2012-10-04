@@ -273,4 +273,36 @@ public class QueryTest {
     assertEquals("?keys=[\"users:10\",\"users:11\"]", query.toString());
   }
 
+  /**
+   * This test verifies how numeric strings passed in are casted to
+   * integer values and how the ComplexKey class can be used to pass
+   * in numeric strings accordingly.
+   */
+  @Test
+  public void testNumericStrings() {
+    Query query = new Query();
+    query.setKey("300");
+    assertEquals("?key=300", query.toString());
+
+    query.setKey("\"300\"");
+    assertEquals("?key=\"300\"", query.toString());
+
+    query.setKey("[300,400,\"500\"]");
+    assertEquals("?key=[300,400,\"500\"]", query.toString());
+
+    query.setKey(ComplexKey.of("300"));
+    assertEquals("?key=\"300\"", query.toString());
+
+    query.setKey(ComplexKey.of(300));
+    assertEquals("?key=300", query.toString());
+
+    query.setKey(ComplexKey.of(300, 400, "500"));
+    assertEquals("?key=[300,400,\"500\"]", query.toString());
+
+    query = new Query();
+    query.setRangeStart(ComplexKey.of("0000"));
+    query.setRangeEnd(ComplexKey.of("Level+2"));
+    assertEquals("?startkey=\"0000\"&endkey=\"Level+2\"", query.toString());
+  }
+
 }

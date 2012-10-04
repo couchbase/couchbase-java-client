@@ -495,8 +495,10 @@ public class Query {
       return key + "=" + value;
     } else if (StringUtils.isJsonObject(value.toString())) {
       return key + "=" + value.toString();
+    } else if(value.toString().startsWith("\"")) {
+        return key + "=" + value.toString();
     } else {
-      return key + "=\"" + value + "\"";
+      return key + "=\"" + value.toString() + "\"";
     }
   }
 
