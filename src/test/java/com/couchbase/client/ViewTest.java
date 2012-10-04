@@ -27,6 +27,7 @@ import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.protocol.views.ComplexKey;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
+import com.couchbase.client.protocol.views.InvalidViewException;
 import com.couchbase.client.protocol.views.NoDocsOperationImpl;
 import com.couchbase.client.protocol.views.OnError;
 import com.couchbase.client.protocol.views.Paginator;
@@ -38,7 +39,6 @@ import com.couchbase.client.protocol.views.View;
 import com.couchbase.client.protocol.views.ViewOperation.ViewCallback;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
-
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,13 +46,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.ops.OperationStatus;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.entity.StringEntity;
@@ -61,8 +59,10 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-
+import org.junit.rules.ExpectedException;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -79,6 +79,9 @@ public class ViewTest {
   public static final String VIEW_NAME_W_REDUCE = "view_with_reduce";
   public static final String VIEW_NAME_WO_REDUCE = "view_without_reduce";
   public static final String VIEW_NAME_FOR_DATED = "view_emitting_dated";
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   static {
     ITEMS = new HashMap<String, Object>();
@@ -150,10 +153,13 @@ public class ViewTest {
     initClient();
   }
 
+  /**
+   * Shuts the client down and nulls the reference.
+   *
+   * @throws Exception
+   */
   @After
   public void afterTest() throws Exception {
-    // Shut down, start up, flush, and shut down again. Error tests have
-    // unpredictable timing issues.
     client.shutdown();
     client = null;
   }
@@ -293,7 +299,7 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
-  @Test(expected = ExecutionException.class)
+  @Test(expected = InvalidViewException.class)
   public void testQuerySetGroupNoReduce() throws Exception {
     Query query = new Query();
     query.setGroup(true);
@@ -449,10 +455,10 @@ public class ViewTest {
   public void testReduceWhenNoneExists() throws Exception {
     Query query = new Query();
     query.setReduce(true);
-    View view = client.getView(DESIGN_DOC_WO_REDUCE, VIEW_NAME_WO_REDUCE);
     try {
+      View view = client.getView(DESIGN_DOC_WO_REDUCE, VIEW_NAME_WO_REDUCE);
       client.asyncQuery(view, query);
-    } catch (RuntimeException e) {
+    } catch (InvalidViewException e) {
       return; // Pass, no reduce exists.
     }
     assert false : ("No view exists and this query still happened");
@@ -680,4 +686,28 @@ public class ViewTest {
         generateDoc("a", "b", "c")).get().booleanValue()
         : "Adding key key112 failed";
   }
+
+  @Test
+  public void testInvalidViewHandling() {
+    String designDoc = "invalid_design";
+    String viewName = "invalid_view";
+
+    exception.expect(InvalidViewException.class);
+    exception.expectMessage("Could not load view \""
+                + viewName + "\" for design doc \"" + designDoc + "\"");
+    View view = client.getView(designDoc, viewName);
+    assertNull(view);
+  }
+
+  @Test
+  public void testInvalidDesignDocHandling() {
+    String designDoc = "invalid_design";
+
+    exception.expect(InvalidViewException.class);
+    exception.expectMessage("Could not load views for design doc \""
+            + designDoc + "\"");
+    List<View> views = client.getViews(designDoc);
+    assertNull(views);
+  }
+
 }

@@ -26,6 +26,7 @@ import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.internal.ViewFuture;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
+import com.couchbase.client.protocol.views.InvalidViewException;
 import com.couchbase.client.protocol.views.NoDocsOperationImpl;
 import com.couchbase.client.protocol.views.Paginator;
 import com.couchbase.client.protocol.views.Query;
@@ -296,6 +297,11 @@ public class CouchbaseClient extends MemcachedClient
    * information in your database from the raw data objects that have
    * been stored.
    *
+   * Note that since an HttpFuture is returned, the caller must also check to
+   * see if the View is null. The HttpFuture does provide a getStatus() method
+   * which can be used to check whether or not the view request has been
+   * successful.
+   *
    * @param designDocumentName the name of the design document.
    * @param viewName the name of the view to get.
    * @return a View object from the cluster.
@@ -352,6 +358,11 @@ public class CouchbaseClient extends MemcachedClient
    * information in your database from the raw data objects that have
    * been stored.
    *
+   * Note that since an HttpFuture is returned, the caller must also check to
+   * see if the View is null. The HttpFuture does provide a getStatus() method
+   * which can be used to check whether or not the view request has been
+   * successful.
+   *
    * @param designDocumentName the name of the design document.
    * @return a future containing a List of View objects from the cluster.
    */
@@ -404,10 +415,16 @@ public class CouchbaseClient extends MemcachedClient
    * @param designDocumentName the name of the design document.
    * @param viewName the name of the view to get.
    * @return a View object from the cluster.
+   * @throws InvalidViewException if no design document or view was found.
    */
   public View getView(final String designDocumentName, final String viewName) {
     try {
-      return asyncGetView(designDocumentName, viewName).get();
+      View view = asyncGetView(designDocumentName, viewName).get();
+      if(view == null) {
+        throw new InvalidViewException("Could not load view \"" +
+          viewName + "\" for design doc \"" + designDocumentName + "\"");
+      }
+      return view;
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted getting views", e);
     } catch (ExecutionException e) {
@@ -420,10 +437,16 @@ public class CouchbaseClient extends MemcachedClient
    *
    * @param designDocumentName the name of the design document.
    * @return a list of View objects from the cluster.
+   * @throws InvalidViewException if no design document or view was found.
    */
   public List<View> getViews(final String designDocumentName) {
     try {
-      return asyncGetViews(designDocumentName).get();
+      List<View> views = asyncGetViews(designDocumentName).get();
+      if(views == null) {
+        throw new InvalidViewException("Could not load views for design doc \""
+          + designDocumentName + "\"");
+      }
+      return views;
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted getting views", e);
     } catch (ExecutionException e) {
