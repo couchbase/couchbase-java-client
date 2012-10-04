@@ -25,13 +25,14 @@ package com.couchbase.client.protocol.views;
 /**
  * Possible on_error arguments to view queries.
  *
- * See http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-views-writing-querying-errorcontrol.html
+ * See http://www.couchbase.com/docs/couchbase-manual-2.0/
+ * couchbase-views-writing-querying-errorcontrol.html
  *
  */
 public enum OnError {
   /**
-   * Stop the processing of the view query when an error occurs and populate the
-   * errors response with details.
+   * Stop the processing of the view query when an error occurs and populate
+   * the errors response with details.
    *
    */
   STOP {
