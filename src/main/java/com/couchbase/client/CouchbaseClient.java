@@ -28,6 +28,11 @@ import com.couchbase.client.protocol.views.AbstractView;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.protocol.views.InvalidViewException;
+import com.couchbase.client.protocol.views.DesignDocOperationImpl;
+import com.couchbase.client.protocol.views.DesignDocument;
+import com.couchbase.client.protocol.views.DocsOperationImpl;
+import com.couchbase.client.protocol.views.HttpOperation;
+import com.couchbase.client.protocol.views.HttpOperationImpl;
 import com.couchbase.client.protocol.views.NoDocsOperationImpl;
 import com.couchbase.client.protocol.views.Paginator;
 import com.couchbase.client.protocol.views.Query;
@@ -52,6 +57,7 @@ import com.couchbase.client.vbucket.config.ConfigType;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
@@ -94,6 +100,9 @@ import net.spy.memcached.transcoders.Transcoder;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpVersion;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
 
 /**
@@ -555,6 +564,129 @@ public class CouchbaseClient extends MemcachedClient
     } catch (ExecutionException e) {
       throw new RuntimeException("Failed getting views", e);
     }
+  }
+
+  /**
+   * Store a design document in the cluster.
+   *
+   * @param doc the design document to store.
+   * @return the result of the creation operation.
+   */
+  public Boolean createDesignDoc(final DesignDocument doc) {
+     try {
+      return asyncCreateDesignDoc(doc).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted creating design document", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Failed creating design document", e);
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("Failed creating design document", e);
+    }
+  }
+
+   /**
+   * Store a design document in the cluster.
+   *
+   * @param name the name of the design document.
+   * @param value the full design document definition as a string.
+   * @return a future containing the result of the creation operation.
+   */
+  public HttpFuture<Boolean> asyncCreateDesignDoc(String name, String value)
+    throws UnsupportedEncodingException {
+    getLogger().info("Creating Design Document:" + name);
+    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+    final String uri = "/" + bucket + "/_design/" + MODE_PREFIX + name;
+
+    final CountDownLatch couchLatch = new CountDownLatch(1);
+    final HttpFuture<Boolean> crv = new HttpFuture<Boolean>(couchLatch, 60000);
+    HttpRequest request = new BasicHttpEntityEnclosingRequest("PUT", uri,
+            HttpVersion.HTTP_1_1);
+    request.setHeader(new BasicHeader("Content-Type", "application/json"));
+    StringEntity entity = new StringEntity(value);
+    ((BasicHttpEntityEnclosingRequest) request).setEntity(entity);
+
+    HttpOperationImpl op = new DesignDocOperationImpl(request,
+      new OperationCallback() {
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          crv.set(status.getMessage().equals("Error Code: 201"), status);
+        }
+
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
+    });
+
+    crv.setOperation(op);
+    addOp(op);
+    return crv;
+  }
+
+  /**
+   * Store a design document in the cluster.
+   *
+   * @param doc the design document to store.
+   * @return a future containing the result of the creation operation.
+   */
+  public HttpFuture<Boolean> asyncCreateDesignDoc(final DesignDocument doc)
+    throws UnsupportedEncodingException {
+    return asyncCreateDesignDoc(doc.getName(), doc.toJson());
+  }
+
+  /**
+   * Delete a design document in the cluster.
+   *
+   * @param doc the design document to delete.
+   * @return the result of the deletion operation.
+   */
+  public Boolean deleteDesignDoc(final String name) {
+     try {
+      return asyncDeleteDesignDoc(name).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted deleting design document", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Failed deleting design document", e);
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("Failed deleting design document", e);
+    }
+  }
+
+   /**
+   * Delete a design document in the cluster.
+   *
+   * @param doc the design document to delete.
+   * @return a future containing the result of the deletion operation.
+   */
+  public HttpFuture<Boolean> asyncDeleteDesignDoc(final String name)
+    throws UnsupportedEncodingException {
+    getLogger().info("Deleting Design Document:" + name);
+    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+
+    final String uri = "/" + bucket + "/_design/" + MODE_PREFIX + name;
+
+    final CountDownLatch couchLatch = new CountDownLatch(1);
+    final HttpFuture<Boolean> crv = new HttpFuture<Boolean>(couchLatch, 60000);
+    HttpRequest request = new BasicHttpEntityEnclosingRequest("DELETE", uri,
+            HttpVersion.HTTP_1_1);
+    request.setHeader(new BasicHeader("Content-Type", "application/json"));
+
+    HttpOperationImpl op = new DesignDocOperationImpl(request,
+      new OperationCallback() {
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          crv.set(status.getMessage().equals("Error Code: 200"), status);
+        }
+
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
+    });
+
+    crv.setOperation(op);
+    addOp(op);
+    return crv;
   }
 
   public HttpFuture<ViewResponse> asyncQuery(AbstractView view, Query query) {
