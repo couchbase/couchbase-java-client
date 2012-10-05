@@ -90,7 +90,7 @@ public class AsyncConnectionManager extends SpyObject {
   }
 
   public boolean hasPendingRequests() {
-    return pendingRequests.isEmpty();
+    return !pendingRequests.isEmpty();
   }
 
   public void shutdown(long waitMs) throws IOException {
