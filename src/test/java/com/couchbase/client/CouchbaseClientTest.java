@@ -191,6 +191,13 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assert addOp.get()
             : "Key add was not persisted to master : "
             + addOp.getStatus().getMessage();
+
+    OperationFuture<Boolean> noPersistOp =
+            (((CouchbaseClient)client).add("nopersisttest", 0, "value",
+              ReplicateTo.ONE));
+    assert noPersistOp.get()
+            : "Key add was not correctly replicated: "
+            + addOp.getStatus().getMessage();
   }
 
   public void testStatsKey() throws Exception {

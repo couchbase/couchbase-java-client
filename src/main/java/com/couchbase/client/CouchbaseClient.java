@@ -162,7 +162,7 @@ public class CouchbaseClient extends MemcachedClient
   /**
    * Get a CouchbaseClient based on the initial server list provided.
    *
-   * This constructor should be used if the bucket name is the same as the 
+   * This constructor should be used if the bucket name is the same as the
    * username (which is normally the case). If your bucket does not have
    * a password (likely the "default" bucket), use an empty string instead.
    *
@@ -224,9 +224,9 @@ public class CouchbaseClient extends MemcachedClient
    *
    * Note that when specifying a ConnectionFactory you must specify a
    * BinaryConnectionFactory (which is the case if you use the
-   * CouchbaseConnectionFactory). Also the ConnectionFactory's protocol and 
-   * locator values are always overwritten. The protocol will always be binary 
-   * and the locator will be chosen based on the bucket type you are connecting 
+   * CouchbaseConnectionFactory). Also the ConnectionFactory's protocol and
+   * locator values are always overwritten. The protocol will always be binary
+   * and the locator will be chosen based on the bucket type you are connecting
    * to.
    *
    * The subscribe variable determines whether or not we will subscribe to
@@ -864,7 +864,8 @@ public class CouchbaseClient extends MemcachedClient
     }
     return setOp;
   }
-/**
+
+  /**
    * Set a value with Observe.
    *
    * @param key the key to set
@@ -878,6 +879,22 @@ public class CouchbaseClient extends MemcachedClient
           String value, PersistTo req) {
     return set(key, exp, value, req, ReplicateTo.ZERO);
   }
+
+  /**
+   * Set a value with Observe.
+   *
+   * @param key the key to set
+   * @param exp the Expiry value
+   * @param value the Key value
+   * @param rep the Persistence to Replicas
+   * @return whether or not the operation was performed
+   *
+   */
+  public OperationFuture<Boolean> set(String key, int exp,
+          String value, ReplicateTo rep) {
+    return set(key, exp, value, PersistTo.ZERO, rep);
+  }
+
   /**
    * Add a value and Observe.
    *
@@ -933,6 +950,22 @@ public class CouchbaseClient extends MemcachedClient
   public OperationFuture<Boolean> add(String key, int exp,
           String value, PersistTo req) {
     return add(key, exp, value, req, ReplicateTo.ZERO);
+  }
+
+
+/**
+   * Add a value with Observe.
+   *
+   * @param key the key to set
+   * @param exp the Expiry value
+   * @param value the Key value
+   * @param rep the Persistence to Replicas
+   * @return whether or not the operation was performed
+   *
+   */
+  public OperationFuture<Boolean> add(String key, int exp,
+          String value, ReplicateTo rep) {
+    return add(key, exp, value, PersistTo.ZERO, rep);
   }
 
   /**
@@ -992,6 +1025,21 @@ public class CouchbaseClient extends MemcachedClient
     return replace(key, exp, value, req, ReplicateTo.ZERO);
   }
 
+/**
+   * Replace a value with Observe.
+   *
+   * @param key the key to set
+   * @param exp the Expiry value
+   * @param value the Key value
+   * @param rep the Persistence to Replicas
+   * @return whether or not the operation was performed
+   *
+   */
+  public OperationFuture<Boolean> replace(String key, int exp,
+          String value, ReplicateTo rep) {
+    return replace(key, exp, value, PersistTo.ZERO, rep);
+  }
+
   /**
    * Set a value with a CAS and Observe.
    *
@@ -1029,7 +1077,8 @@ public class CouchbaseClient extends MemcachedClient
     }
     return casr;
   }
-/**
+
+  /**
    * Set a value with a CAS and Observe.
    *
    * @param key the key to set
@@ -1042,6 +1091,21 @@ public class CouchbaseClient extends MemcachedClient
   public CASResponse cas(String key, long casv,
           String value, PersistTo req) {
     return cas(key, casv, value, req, ReplicateTo.ZERO);
+  }
+
+   /**
+   * Set a value with a CAS and Observe.
+   *
+   * @param key the key to set
+   * @param casv the CAS value
+   * @param value the Key value
+   * @param rep the Persistence to Replicas
+   * @return whether or not the operation was performed
+   *
+   */
+  public CASResponse cas(String key, long casv,
+          String value, ReplicateTo rep) {
+    return cas(key, casv, value, PersistTo.ZERO, rep);
   }
 
   /**
