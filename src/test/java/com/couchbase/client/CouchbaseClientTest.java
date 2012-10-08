@@ -40,6 +40,8 @@ import net.spy.memcached.TestConfig;
 import net.spy.memcached.internal.OperationFuture;
 import org.junit.Ignore;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * A CouchbaseClientTest.
  */
@@ -217,6 +219,30 @@ public class CouchbaseClientTest extends BinaryClientTest {
 
     future = ((CouchbaseClient)client).getKeyStats("key1");
     assertFalse(future.getStatus().isSuccess());
+  }
+
+  /**
+   * Tests if passing NULL for ReplicateTo and/or
+   * PersistTo correctly works and does not throw
+   * an exception.
+   */
+  public void testNullObserve() throws Exception {
+    boolean success;
+    try {
+      success = true;
+      OperationFuture<Boolean> nullcheckOp =
+        (((CouchbaseClient)client).add("nullcheck", 0, "value", null, null));
+      nullcheckOp.get();
+      nullcheckOp =
+        (((CouchbaseClient)client).set("nullcheck", 0, "value1", null, null));
+      nullcheckOp.get();
+      nullcheckOp =
+        (((CouchbaseClient)client).replace("nullcheck", 0, "value1", null, null));
+      nullcheckOp.get();
+    } catch(NullPointerException ex) {
+      success = false;
+    }
+    assertTrue(success);
   }
 
   public void testGetStatsSlabs() throws Exception {

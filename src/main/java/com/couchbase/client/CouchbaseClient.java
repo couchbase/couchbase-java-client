@@ -1370,6 +1370,10 @@ public class CouchbaseClient extends MemcachedClient
    * normally utilized through higher-level methods but can also be used
    * directly.
    *
+   * If persist is null, it will default to PersistTo.ZERO and if replicate is
+   * null, it will default to ReplicateTo.ZERO. This is the default behavior
+   * and is the same as not observing at all.
+   *
    * @param key the key to observe.
    * @param cas the CAS value for the key.
    * @param persist the persistence settings.
@@ -1379,6 +1383,12 @@ public class CouchbaseClient extends MemcachedClient
   public void observePoll(String key, long cas, PersistTo persist,
       ReplicateTo replicate, boolean isDelete) {
     boolean persistMaster = false;
+    if(persist == null) {
+      persist = PersistTo.ZERO;
+    }
+    if(replicate == null) {
+      replicate = ReplicateTo.ZERO;
+    }
     int persistReplica = persist.getValue();
     int replicateTo = replicate.getValue();
     int obsPolls = 0;
