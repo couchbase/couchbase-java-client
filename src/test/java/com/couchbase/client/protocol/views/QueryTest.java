@@ -22,6 +22,8 @@
 
 package com.couchbase.client.protocol.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -131,24 +133,26 @@ public class QueryTest {
    * Tests the "key" argument.
    */
   @Test
-  public void testKey() {
+  public void testKey() throws UnsupportedEncodingException {
     Query query = new Query();
     query.setKey("foobar");
 
     assertEquals(1, query.getArgs().size());
-    assertEquals("?key=\"foobar\"", query.toString());
+    String result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"foobar\"", result);
   }
 
   /**
    * Tests the "keys" argument.
    */
   @Test
-  public void testKeys() {
+  public void testKeys() throws UnsupportedEncodingException {
     Query query = new Query();
     query.setKeys("[2, 3, 4]");
 
     assertEquals(1, query.getArgs().size());
-    assertEquals("?keys=[2, 3, 4]", query.toString());
+    String result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?keys=[2, 3, 4]", result);
   }
 
   /**
@@ -180,17 +184,19 @@ public class QueryTest {
    * Tests the "range" argument.
    */
   @Test
-  public void testRange() {
+  public void testRange() throws UnsupportedEncodingException {
     Query query = new Query();
     query.setRangeStart("startkey");
     query.setRangeEnd("endkey");
     assertEquals(2, query.getArgs().size());
-    assertEquals("?startkey=\"startkey\"&endkey=\"endkey\"", query.toString());
+    String result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?startkey=\"startkey\"&endkey=\"endkey\"", result);
 
     query = new Query();
     query.setRange("foo", "bar");
     assertEquals(2, query.getArgs().size());
-    assertEquals("?startkey=\"foo\"&endkey=\"bar\"", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?startkey=\"foo\"&endkey=\"bar\"", result);
   }
 
   /**
@@ -245,7 +251,7 @@ public class QueryTest {
    * Tests the usage of complex keys for supported methods.
    */
   @Test
-  public void testComplexKeys() {
+  public void testComplexKeys() throws UnsupportedEncodingException {
     ComplexKey start = ComplexKey.of(2012, 05, 05);
     ComplexKey end = ComplexKey.of(2012, 05, 12);
     ComplexKey key = ComplexKey.of("mykey");
@@ -255,22 +261,26 @@ public class QueryTest {
     query.setRangeStart(start);
     query.setRangeEnd(end);
     assertEquals(2, query.getArgs().size());
-    assertEquals("?startkey=[2012,5,5]&endkey=[2012,5,12]", query.toString());
+    String result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?startkey=[2012,5,5]&endkey=[2012,5,12]", result);
 
     query = new Query();
     query.setRange(start, end);
     assertEquals(2, query.getArgs().size());
-    assertEquals("?startkey=[2012,5,5]&endkey=[2012,5,12]", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?startkey=[2012,5,5]&endkey=[2012,5,12]", result);
 
     query = new Query();
     query.setKey(key);
     assertEquals(1, query.getArgs().size());
-    assertEquals("?key=\"mykey\"", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"mykey\"", result);
 
     query = new Query();
     query.setKeys(keys);
     assertEquals(1, query.getArgs().size());
-    assertEquals("?keys=[\"users:10\",\"users:11\"]", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?keys=[\"users:10\",\"users:11\"]", result);
   }
 
   /**
@@ -279,30 +289,37 @@ public class QueryTest {
    * in numeric strings accordingly.
    */
   @Test
-  public void testNumericStrings() {
+  public void testNumericStrings() throws UnsupportedEncodingException {
     Query query = new Query();
     query.setKey("300");
-    assertEquals("?key=300", query.toString());
+    String result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=300", result);
 
     query.setKey("\"300\"");
-    assertEquals("?key=\"300\"", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"300\"", result);
 
     query.setKey("[300,400,\"500\"]");
-    assertEquals("?key=[300,400,\"500\"]", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=[300,400,\"500\"]", result);
 
     query.setKey(ComplexKey.of("300"));
-    assertEquals("?key=\"300\"", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"300\"", result);
 
     query.setKey(ComplexKey.of(300));
-    assertEquals("?key=300", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=300", result);
 
     query.setKey(ComplexKey.of(300, 400, "500"));
-    assertEquals("?key=[300,400,\"500\"]", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=[300,400,\"500\"]", result);
 
     query = new Query();
     query.setRangeStart(ComplexKey.of("0000"));
     query.setRangeEnd(ComplexKey.of("Level+2"));
-    assertEquals("?startkey=\"0000\"&endkey=\"Level+2\"", query.toString());
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?startkey=\"0000\"&endkey=\"Level+2\"", result);
   }
 
 }

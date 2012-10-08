@@ -22,9 +22,13 @@
 
 package com.couchbase.client.protocol.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.spy.memcached.util.StringUtils;
 
 /**
@@ -467,39 +471,51 @@ public class Query {
       } else {
         result.append("&");
       }
-      result.append(getArg(arg.getKey(), arg.getValue()));
+      String argument;
+      try {
+        argument = arg.getKey() + "=" + prepareValue(
+          arg.getKey(), arg.getValue()
+        );
+      } catch (Exception ex) {
+        throw new RuntimeException("Could not prepare view argument: " + ex);
+      }
+      result.append(argument);
     }
     return result.toString();
   }
 
   /**
-   * Takes a given key/value pair, inspects their type and returns
-   * their string representation.
+   * Takes a given object, inspects its type and returns
+   * its string representation.
    *
    * This helper method aids the toString() method so that it does
    * not need to transform map entries to their string representations
    * for itself. It also checks for various special cases and makes
    * sure the correct string representation is returned.
    *
-   * @param key The key of the map
-   * @param value The value of the map
-   * @return The key/value combination as a string
+   * @param key The key for the corresponding value.
+   * @param value The value to prepared.
+   * @return The correctly formatted and encoded value.
    */
-  private String getArg(String key, Object value) {
-    // Special case
+  private String prepareValue(String key, Object value)
+    throws UnsupportedEncodingException {
+    String encoded;
+
     if (key.equals(STARTKEYDOCID)) {
-      return key + "=" + value;
+      encoded = (String) value;
     } else if (value instanceof Stale) {
-      return key + "=" + ((Stale) value).toString();
+      encoded = ((Stale) value).toString();
     } else if (value instanceof OnError) {
-      return key + "=" + value;
+      encoded = ((OnError) value).toString();
     } else if (StringUtils.isJsonObject(value.toString())) {
-      return key + "=" + value.toString();
+      encoded = value.toString();
     } else if(value.toString().startsWith("\"")) {
-        return key + "=" + value.toString();
+      encoded = value.toString();
     } else {
-      return key + "=\"" + value.toString() + "\"";
+      encoded = "\"" + value + "\"";
     }
+
+    return URLEncoder.encode(encoded, "UTF-8");
   }
 
   /**
