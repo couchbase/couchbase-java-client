@@ -111,7 +111,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private int obsPollMax = 400;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
-      final String bucketName, final String password)
+      final String bucketName, String password)
     throws IOException {
     storedBaseList = new ArrayList<URI>();
     for (URI bu : baseList) {
@@ -121,6 +121,9 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       storedBaseList.add(bu);
     }
     bucket = bucketName;
+    if(password == null) {
+      password = "";
+    }
     pass = password;
     configurationProvider =
         new ConfigurationProviderHTTP(baseList, bucketName, password);
