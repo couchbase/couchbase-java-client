@@ -40,6 +40,7 @@ import com.couchbase.client.protocol.views.ViewOperation.ViewCallback;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -49,6 +50,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.spy.memcached.PersistTo;
+import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.ops.OperationStatus;
 import org.apache.http.HttpResponse;
@@ -64,6 +67,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * A CouchbaseClientTest.
@@ -76,9 +80,11 @@ public class ViewTest {
   private static final Map<String, Object> ITEMS;
   public static final String DESIGN_DOC_W_REDUCE = "doc_with_view";
   public static final String DESIGN_DOC_WO_REDUCE = "doc_without_view";
+  public static final String DESIGN_DOC_OBSERVE = "doc_observe";
   public static final String VIEW_NAME_W_REDUCE = "view_with_reduce";
   public static final String VIEW_NAME_WO_REDUCE = "view_without_reduce";
   public static final String VIEW_NAME_FOR_DATED = "view_emitting_dated";
+  public static final String VIEW_NAME_OBSERVE = "view_staletest";
 
   static {
     ITEMS = new HashMap<String, Object>();
@@ -121,6 +127,14 @@ public class ViewTest {
         + VIEW_NAME_W_REDUCE + "\":{\"map\":\"function (doc) { "
         + "if(doc.type != \\\"dated\\\") {emit(doc.type, 1)}}\","
         + "\"reduce\":\"_sum\" }}}";
+    c.asyncHttpPut(docUri, view);
+
+    // Create the view for oberserve integration test.
+    docUri = "/default/_design/" + TestingClient.MODE_PREFIX
+        + DESIGN_DOC_OBSERVE;
+    view = "{\"language\":\"javascript\",\"views\":{\""
+        + VIEW_NAME_OBSERVE + "\":{\"map\":\"function (doc, meta) {"
+        + " if(doc.type == \\\"observetest\\\") { emit(meta.id, null); } }\"}}}";
     c.asyncHttpPut(docUri, view);
 
     docUri = "/default/_design/" + TestingClient.MODE_PREFIX
@@ -173,6 +187,9 @@ public class ViewTest {
 
     c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_WO_REDUCE).get();
+
+    c.asyncHttpDelete("/default/_design/" + TestingClient.MODE_PREFIX
+        + DESIGN_DOC_OBSERVE).get();
   }
 
   private static String generateDoc(String type, String small, String large) {
@@ -698,6 +715,38 @@ public class ViewTest {
     String designDoc = "invalid_design";
     List<View> views = client.getViews(designDoc);
     assertNull(views);
+  }
+
+  /**
+   * This test case acts as an integration test to verify that adding
+   * data with the given integrity constraints in combination with the
+   * stale=false query return the correct dataset.
+   */
+  @Test
+  public void testObserveWithStaleFalse()
+    throws InterruptedException, ExecutionException {
+    int docAmount = 500;
+    for (int i = 1; i <= docAmount; i++) {
+      String value = "{\"type\":\"observetest\",\"value\":"+i+"}";
+      client.set("observetest"+i, 0, value, PersistTo.MASTER, ReplicateTo.ONE);
+    }
+
+    Query query = new Query().setStale(Stale.FALSE);
+    View view = client.getView(DESIGN_DOC_OBSERVE, VIEW_NAME_OBSERVE);
+
+    HttpFuture<ViewResponse> future = client.asyncQuery(view, query);
+
+    ViewResponse response = future.get();
+    assert response != null : future.getStatus();
+
+    Iterator<ViewRow> iterator = response.iterator();
+    List<ViewRow> returnedRows = new ArrayList<ViewRow>();
+    while (iterator.hasNext()) {
+      ViewRow row = iterator.next();
+      returnedRows.add(row);
+    }
+
+    assertEquals(docAmount, returnedRows.size());
   }
 
 }
