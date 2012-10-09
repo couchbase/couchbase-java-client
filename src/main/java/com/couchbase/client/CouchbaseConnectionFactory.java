@@ -92,10 +92,10 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    */
   public static final long DEFAULT_MIN_RECONNECT_INTERVAL = 1100;
 
-  private volatile ConfigurationProvider configurationProvider;
-  private final String bucket;
-  private final String pass;
-  private final List<URI> storedBaseList;
+  protected volatile ConfigurationProvider configurationProvider;
+  private String bucket;
+  private String pass;
+  private List<URI> storedBaseList;
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactory.class.getName());
   private volatile boolean needsReconnect;

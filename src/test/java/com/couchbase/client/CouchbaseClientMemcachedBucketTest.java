@@ -1,0 +1,68 @@
+/**
+ * Copyright (C) 2009-2012 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
+
+package com.couchbase.client;
+
+import com.couchbase.client.vbucket.ConfigurationProvider;
+import com.couchbase.client.vbucket.ConfigurationProviderMemcacheMock;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Test;
+import net.spy.memcached.TestConfig;
+
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Tests the correct initialization and reconfiguration of a memcache-bucket.
+ */
+public class CouchbaseClientMemcachedBucketTest {
+
+  @Test
+  public void testMemcacheBucketInitialization() throws IOException {
+    boolean success = true;
+
+    try {
+      List<URI> baseList = new ArrayList<URI>();
+      baseList.add(URI.create("http://"+TestConfig.IPV4_ADDR+":8091/pools"));
+      ConfigurationProvider provider = new ConfigurationProviderMemcacheMock();
+
+      CouchbaseConnectionFactoryMock factory;
+      factory = new CouchbaseConnectionFactoryMock(
+        baseList,
+        "memcached-default",
+        "",
+        provider
+      );
+
+      CouchbaseClient client = new CouchbaseClient(factory);
+      client.reconfigure(factory.getBucket("memcached-default"));
+      client.shutdown();
+    } catch(Exception e) {
+      success = false;
+    }
+
+    assertTrue("Could not verify the init of a memcache bucket", success);
+  }
+
+}

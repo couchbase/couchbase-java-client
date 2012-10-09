@@ -43,6 +43,7 @@ import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
+import com.couchbase.client.vbucket.config.ConfigType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -110,7 +111,7 @@ public class CouchbaseClient extends MemcachedClient
   public static final String MODE_PREFIX;
   private static final String MODE_ERROR;
 
-  private ViewConnection vconn;
+  private ViewConnection vconn = null;
   protected volatile boolean reconfiguring = false;
   private final CouchbaseConnectionFactory cbConnFactory;
 
@@ -244,11 +245,14 @@ public class CouchbaseClient extends MemcachedClient
     throws IOException {
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
     cbConnFactory = cf;
-    List<InetSocketAddress> addrs =
-      AddrUtil.getAddressesFromURL(cf.getVBucketConfig().getCouchServers());
+
+    if(cf.getVBucketConfig().getConfigType() == ConfigType.COUCHBASE) {
+      List<InetSocketAddress> addrs =
+        AddrUtil.getAddressesFromURL(cf.getVBucketConfig().getCouchServers());
+      vconn = cf.createViewConnection(addrs);
+    }
 
     getLogger().info(MODE_ERROR);
-    vconn = cf.createViewConnection(addrs);
     cf.getConfigurationProvider().subscribe(cf.getBucketName(), this);
   }
 
@@ -266,7 +270,9 @@ public class CouchbaseClient extends MemcachedClient
       cbcf.requestConfigReconnect(cbcf.getBucketName(), this);
     }
     try {
-      vconn.reconfigure(bucket);
+      if(vconn != null) {
+        vconn.reconfigure(bucket);
+      }
       if (mconn instanceof CouchbaseConnection) {
         CouchbaseConnection cbConn = (CouchbaseConnection) mconn;
         cbConn.reconfigure(bucket);
@@ -650,8 +656,10 @@ public class CouchbaseClient extends MemcachedClient
    * function is for internal use only.
    */
   public void addOp(final HttpOperation op) {
-    vconn.checkState();
-    vconn.addOp(op);
+    if(vconn != null) {
+      vconn.checkState();
+      vconn.addOp(op);
+    }
   }
 
 
@@ -1375,7 +1383,9 @@ public class CouchbaseClient extends MemcachedClient
       shutdownResult = super.shutdown(timeout, unit);
       CouchbaseConnectionFactory cf = (CouchbaseConnectionFactory) connFactory;
       cf.getConfigurationProvider().shutdown();
-      vconn.shutdown();
+      if(vconn != null) {
+        vconn.shutdown();
+      }
     } catch (IOException ex) {
       Logger.getLogger(
          CouchbaseClient.class.getName()).log(Level.SEVERE,
