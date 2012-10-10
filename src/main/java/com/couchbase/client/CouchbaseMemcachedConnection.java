@@ -53,8 +53,8 @@ import net.spy.memcached.OperationFactory;
  * This class provides that functionality by extending the MemcachedConnection
  * and adding a method to handle reconfiguration of a bucket.
  */
-public class CouchbaseMemcachedConnection extends MemcachedConnection  implements
-  Reconfigurable {
+public class CouchbaseMemcachedConnection extends MemcachedConnection
+  implements Reconfigurable {
 
   protected volatile boolean reconfiguring = false;
   private final CouchbaseConnectionFactory cf;

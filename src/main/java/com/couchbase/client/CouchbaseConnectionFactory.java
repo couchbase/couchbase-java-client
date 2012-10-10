@@ -308,7 +308,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       if (!doingResubscribe.compareAndSet(true, false)) {
         assert false : "Could not reset from doing a resubscribe.";
       }
-        Thread.currentThread().setName(threadNameBase + "complete");
+      Thread.currentThread().setName(threadNameBase + "complete");
     }
   }
 

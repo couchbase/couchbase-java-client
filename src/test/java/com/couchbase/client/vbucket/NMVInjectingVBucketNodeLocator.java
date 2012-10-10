@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 Couchbase, Inc.
+ * Copyright (C) 2011-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,8 @@ import net.spy.memcached.MemcachedNode;
  */
 public class NMVInjectingVBucketNodeLocator extends VBucketNodeLocator {
 
-  ArrayList<String> bogused; // chosen for size over speed, only 20 ops needed
+  // chosen for size over speed, only 20 ops needed
+  private ArrayList<String> bogused;
 
   public NMVInjectingVBucketNodeLocator(List<MemcachedNode> nodes,
     Config jsonConfig) {
@@ -59,7 +60,7 @@ public class NMVInjectingVBucketNodeLocator extends VBucketNodeLocator {
 
     if (key.startsWith("bogus")) {
       vBucketIndex = 1025; // make the vbucket index bogus first time through
-      System.err.println("BOGUS!!!!! " + key );
+      System.err.println("BOGUS!!!!! " + key);
       bogused.add(key);
     }
 

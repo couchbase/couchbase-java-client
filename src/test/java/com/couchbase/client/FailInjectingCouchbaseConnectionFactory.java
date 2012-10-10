@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 Couchbase, Inc.
+ * Copyright (C) 2011-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ public class FailInjectingCouchbaseConnectionFactory extends
 
   public FailInjectingCouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, final String password)
-      throws IOException {
+    throws IOException {
         super(baseList, bucketName, password);
   }
 
