@@ -121,8 +121,8 @@ public class ViewTest {
     String docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_W_REDUCE;
     String view = "{\"language\":\"javascript\",\"views\":{\""
-        + VIEW_NAME_W_REDUCE + "\":{\"map\":\"function (doc) {  "
-        + "emit(doc.type, 1)}\",\"reduce\":\"_sum\" }}}";
+        + VIEW_NAME_W_REDUCE + "\":{\"map\":\"function (doc) { "
+        + "if(doc.type != \\\"dated\\\") {emit(doc.type, 1)}}\",\"reduce\":\"_sum\" }}}";
     c.asyncHttpPut(docUri, view);
 
     docUri = "/default/_design/" + TestingClient.MODE_PREFIX
