@@ -198,7 +198,7 @@ public class AsyncConnectionManager extends SpyObject {
           new InetSocketAddress(this.target.getHostName(),
           this.target.getPort());
       ConnRequestCallback callback = new ConnRequestCallback(request);
-      getLogger().info("Opening new CouchDB connection");
+      getLogger().info("Opening new Couchbase HTTP connection");
       this.ioreactor.connect(address, null, request, callback);
     }
   }
