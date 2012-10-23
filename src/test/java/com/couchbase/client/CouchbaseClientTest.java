@@ -126,6 +126,20 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertTrue("NumVBuckets has to be a power of two", (num & -num)== num);
   }
 
+  public void testGetVersions() {
+    Map<SocketAddress, String> vs = ((CouchbaseClient)client).getVersions();
+    System.out.println(vs);
+    assertEquals(client.getAvailableServers().size(), vs.size());
+  }
+
+  public void testGetStats() throws Exception {
+    Map<SocketAddress, Map<String, String>> stats = ((CouchbaseClient)client).getStats();
+    assertEquals(client.getAvailableServers().size(), stats.size());
+    Map<String, String> oneStat = stats.values().iterator().next();
+    assertTrue(oneStat.containsKey("curr_items"));
+  }
+
+
   public void testGATTimeout() throws Exception {
     assertNull(client.get("gatkey"));
     assert client.set("gatkey", 1, "gatvalue").get().booleanValue();
