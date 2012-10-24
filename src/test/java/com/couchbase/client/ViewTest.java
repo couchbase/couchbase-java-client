@@ -291,7 +291,7 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
-  @Test(expected = InvalidViewException.class)
+  @Test(expected = ExecutionException.class)
   public void testQuerySetGroupNoReduce() throws Exception {
     Query query = new Query();
     query.setGroup(true);
@@ -427,7 +427,7 @@ public class ViewTest {
     try {
       View view = client.getView(DESIGN_DOC_WO_REDUCE, VIEW_NAME_WO_REDUCE);
       client.asyncQuery(view, query);
-    } catch (InvalidViewException e) {
+    } catch (RuntimeException e) {
       return; // Pass, no reduce exists.
     }
     assert false : ("No view exists and this query still happened");
