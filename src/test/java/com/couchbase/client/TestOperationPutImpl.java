@@ -56,7 +56,6 @@ public class TestOperationPutImpl extends HttpOperationImpl implements
     try {
       bi = response.getEntity().getContent();
       byte[] buffer = new byte[bi.available() ];
-      int bytesRead = bi.read(buffer);
       responseContent.append(new String(buffer));
     } catch (IOException ex) {
       Logger.getLogger(TestOperationImpl.class.getName()).log(

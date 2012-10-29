@@ -45,8 +45,6 @@ public class Paginator extends SpyObject
   private int totalDocs = 0;
 
   private ViewResponse page;
-  private Iterator<ViewRow> pageItr;
-  private ViewRow lastRow;
   private ViewResponse finalRow;
   private boolean first = true;
   private boolean done = false;
@@ -99,7 +97,6 @@ public class Paginator extends SpyObject
     int remaining = totalLimit > 0 ? totalLimit - totalDocs : docsPerPage;
     q.setLimit(remaining);
     page = client.query(view, q);
-    pageItr = page.iterator();
     docsOnPage = page.size();
     totalDocs += docsOnPage;
     if (docsOnPage >= docsPerPage) {

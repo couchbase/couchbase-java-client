@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Test;
 import net.spy.memcached.TestConfig;
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 

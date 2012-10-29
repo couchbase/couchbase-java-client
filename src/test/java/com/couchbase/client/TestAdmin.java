@@ -121,7 +121,6 @@ public final class TestAdmin {
                 "Basic " + encodedCredential);
       }
       connection.connect();
-      long time = System.currentTimeMillis();
       connection.connect();
 
       InputStream responseBodyStream = connection.getInputStream();
