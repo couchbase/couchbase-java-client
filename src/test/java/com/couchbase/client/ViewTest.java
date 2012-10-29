@@ -23,6 +23,8 @@
 package com.couchbase.client;
 
 
+import com.couchbase.client.BucketTool.FunctionCallback;
+import com.couchbase.client.clustermanager.BucketType;
 import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.protocol.views.ComplexKey;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
@@ -54,6 +56,7 @@ import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.ops.OperationStatus;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.entity.StringEntity;
@@ -62,9 +65,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -74,7 +75,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ViewTest {
 
-  protected TestingClient client = null;
+  protected static TestingClient client = null;
   private static final String SERVER_URI = "http://" + TestConfig.IPV4_ADDR
       + ":8091/pools";
   private static final Map<String, Object> ITEMS;
@@ -102,7 +103,7 @@ public class ViewTest {
     }
   }
 
-  protected void initClient() throws Exception {
+  protected static void initClient() throws Exception {
     List<URI> uris = new LinkedList<URI>();
     uris.add(URI.create(SERVER_URI));
     client = new TestingClient(uris, "default", "");
@@ -110,32 +111,41 @@ public class ViewTest {
 
   @BeforeClass
   public static void before() throws Exception {
-    TestAdmin testAdmin = new TestAdmin(TestConfig.IPV4_ADDR,
-            CbTestConfig.CLUSTER_ADMINNAME,
-            CbTestConfig.CLUSTER_PASS,
-            "default",
-            "");
-    TestAdmin.reCreateDefaultBucket();
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.deleteAllBuckets();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0);
+
+    BucketTool.FunctionCallback callback = new FunctionCallback() {
+      @Override
+      public void callback() throws Exception {
+        initClient();
+      }
+
+      @Override
+      public String success(long elapsedTime) {
+        return "Client Initialization took " + elapsedTime + "ms";
+      }
+    };
+    bucketTool.poll(callback);
+    bucketTool.waitForWarmup(client);
 
     // Create some design documents
-    List<URI> uris = new LinkedList<URI>();
-    uris.add(URI.create(SERVER_URI));
-    TestingClient c = new TestingClient(uris, "default", "");
     String docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_W_REDUCE;
     String view = "{\"language\":\"javascript\",\"views\":{\""
         + VIEW_NAME_W_REDUCE + "\":{\"map\":\"function (doc) { "
         + "if(doc.type != \\\"dated\\\") {emit(doc.type, 1)}}\","
         + "\"reduce\":\"_sum\" }}}";
-    c.asyncHttpPut(docUri, view);
+    client.asyncHttpPut(docUri, view);
 
     // Create the view for oberserve integration test.
     docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_OBSERVE;
     view = "{\"language\":\"javascript\",\"views\":{\""
         + VIEW_NAME_OBSERVE + "\":{\"map\":\"function (doc, meta) {"
-        + " if(doc.type == \\\"observetest\\\") { emit(meta.id, null); } }\"}}}";
-    c.asyncHttpPut(docUri, view);
+        + " if(doc.type == \\\"observetest\\\") { emit(meta.id, null); "
+        + "} }\"}}}";
+    client.asyncHttpPut(docUri, view);
 
     docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC_WO_REDUCE;
@@ -143,10 +153,10 @@ public class ViewTest {
         + VIEW_NAME_FOR_DATED + "\":{\"map\":\"function (doc) {  "
         + "emit(doc.type, 1)}\"}}}";
     for (Entry<String, Object> item : ITEMS.entrySet()) {
-      assert c.set(item.getKey(), 0,
+      assert client.set(item.getKey(), 0,
           (String) item.getValue()).get().booleanValue();
     }
-    HttpFuture<String> asyncHttpPut = c.asyncHttpPut(docUri, view2);
+    HttpFuture<String> asyncHttpPut = client.asyncHttpPut(docUri, view2);
 
     String response = asyncHttpPut.get();
     OperationStatus status = asyncHttpPut.getStatus();
@@ -154,7 +164,7 @@ public class ViewTest {
       assert false : "Could not load views: " + status.getMessage()
               + " with response " + response;
     }
-    c.shutdown();
+    client.shutdown();
     System.out.println("Setup of design docs complete, "
             + "sleeping until they propogate.");
     Thread.sleep(5000);

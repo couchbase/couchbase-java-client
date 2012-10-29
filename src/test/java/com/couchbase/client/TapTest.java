@@ -22,6 +22,9 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.BucketTool.FunctionCallback;
+import com.couchbase.client.clustermanager.BucketType;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.tapmessage.ResponseMessage;
 
@@ -44,19 +48,27 @@ public class TapTest extends CouchbaseClientBaseCase {
 
   @Override
   protected void initClient() throws Exception {
+    final List<URI> uris = Arrays.asList(URI.create("http://"
+        + TestConfig.IPV4_ADDR + ":8091/pools"));
 
-    TestAdmin testAdmin = new TestAdmin(TestConfig.IPV4_ADDR,
-            CbTestConfig.CLUSTER_ADMINNAME,
-            CbTestConfig.CLUSTER_PASS,
-            "default",
-            "");
-    TestAdmin.reCreateDefaultBucket();
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.deleteAllBuckets();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0);
 
-    List<URI> uris = new LinkedList<URI>();
-    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
-    client = new CouchbaseClient(uris, "default", "");
+    BucketTool.FunctionCallback callback = new FunctionCallback() {
+      @Override
+      public void callback() throws Exception {
+        initClient(new CouchbaseConnectionFactory(uris, "default", ""));
+      }
+
+      @Override
+      public String success(long elapsedTime) {
+        return "Client Initialization took " + elapsedTime + "ms";
+      }
+    };
+    bucketTool.poll(callback);
+    bucketTool.waitForWarmup(client);
   }
-
 
   public void testBackfill() throws Exception {
     List<URI> uris = new LinkedList<URI>();

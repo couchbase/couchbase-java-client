@@ -23,12 +23,15 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.BucketTool.FunctionCallback;
+import com.couchbase.client.clustermanager.BucketType;
+
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.spy.memcached.BinaryClientTest;
@@ -38,6 +41,7 @@ import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.internal.OperationFuture;
+
 import org.junit.Ignore;
 
 /**
@@ -47,16 +51,26 @@ public class CouchbaseClientTest extends BinaryClientTest {
 
   @Override
   protected void initClient() throws Exception {
-    TestAdmin testAdmin = new TestAdmin(TestConfig.IPV4_ADDR,
-              CbTestConfig.CLUSTER_ADMINNAME,
-              CbTestConfig.CLUSTER_PASS,
-              "default",
-              "");
-    TestAdmin.reCreateDefaultBucket();
+    final List<URI> uris = Arrays.asList(URI.create("http://"
+        + TestConfig.IPV4_ADDR + ":8091/pools"));
 
-    initClient(new CouchbaseConnectionFactory(
-            Arrays.asList(URI.create("http://"
-          + TestConfig.IPV4_ADDR + ":8091/pools")), "default", ""));
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.deleteAllBuckets();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0);
+
+    BucketTool.FunctionCallback callback = new FunctionCallback() {
+      @Override
+      public void callback() throws Exception {
+        initClient(new CouchbaseConnectionFactory(uris, "default", ""));
+      }
+
+      @Override
+      public String success(long elapsedTime) {
+        return "Client Initialization took " + elapsedTime + "ms";
+      }
+    };
+    bucketTool.poll(callback);
+    bucketTool.waitForWarmup(client);
   }
 
   @Override
@@ -216,9 +230,13 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   public void testStatsKey() throws Exception {
-    client.set("key", 0, "value");
+    OperationFuture<Boolean> f = client.set("key", 0, "value");
+    System.err.println(f.getStatus().getMessage());
+
     OperationFuture<Map<String, String>> future =
         ((CouchbaseClient)client).getKeyStats("key");
+    System.err.println(future);
+    System.err.println(future.getStatus());
     assertTrue(future.getStatus().isSuccess());
     Map<String, String> stats = future.get();
     assertTrue(stats.size() == 7);
