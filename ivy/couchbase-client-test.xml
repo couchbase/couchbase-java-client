@@ -44,7 +44,6 @@
     <artifact conf="master"/>
   </publications>
   <dependencies>
-    <dependency org="jmock" name="jmock" rev="${jmock.version}" conf="default" />
     <dependency org="junit" name="junit" rev="${junit.version" conf="default" />
     <dependency org="io.netty" name="netty" rev="${netty.version}" conf="default" />
     <dependency org="org.codehaus.jettison" name="jettison" rev="${jettison.version}" conf="default" />
