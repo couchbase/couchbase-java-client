@@ -58,6 +58,8 @@ SOFTWARE.
         conf="common->master" />
     <dependency org="org.easymock" name="easymockclassextension"
         rev="${easymock-extension.version}" conf="common->master" />
+    <dependency org="org.mockito" name="mockito-all" rev="${mockito.version}"
+        conf="common->master" />
     <dependency org="cglib" name="cglib" rev="${cglib.version}"
         conf="common->master" />
     <dependency org="asm" name="asm" rev="${asm.version}"
