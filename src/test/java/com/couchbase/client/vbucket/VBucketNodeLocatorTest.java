@@ -30,7 +30,7 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-
+import org.junit.Test;
 import net.spy.memcached.MemcachedNode;
 
 import static org.easymock.EasyMock.createMock;
@@ -60,6 +60,24 @@ public class VBucketNodeLocatorTest extends TestCase {
       + "127.0.0.1:11212\"],\n"
       + "  \"vBucketMap\":\n" + "    [\n" + "      [0, 1, 2],\n"
       + "      [1, 2, 0],\n" + "      [2, 1, -1],\n" + "      [1, 2, 0]\n"
+      + "    ]\n" + "}" + "}";
+
+  private static final String NO_REPLICA_CONFIG_IN_ENVELOPE =
+      "{ \"otherKeyThatIsIgnored\": 12345,\n"
+      + "\"nodes\": [\n"
+      + "{\n"
+      + "\"clusterCompatibility\": 1,\n"
+      + "\"clusterMembership\": \"active\"\n,"
+      + "\"couchApiBase\": \"http://10.2.1.67:5984/\"\n"
+      + "}\n"
+      + "],\n"
+      + "\"vBucketServerMap\": \n"
+      + "{\n"
+      + "  \"hashAlgorithm\": \"CRC\",\n"
+      + "  \"numReplicas\": 0,\n"
+      + "  \"serverList\": [\"127.0.0.1:11211\", \"127.0.0.1:11210\"],\n"
+      + "  \"vBucketMap\":\n" + "    [\n" + "      [-1],\n"
+      + "      [-1],\n" + "      [0],\n" + "      [0]\n"
       + "    ]\n" + "}" + "}";
 
   public void testGetPrimary() {
@@ -103,5 +121,28 @@ public class VBucketNodeLocatorTest extends TestCase {
     MemcachedNode alternative =
         locator.getAlternative("k1", Arrays.asList(primary));
     alternative.getSocketAddress();
+  }
+
+  @Test
+  public void testNoMasterServerForVbucket() {
+    MemcachedNodeMockImpl node1 = new MemcachedNodeMockImpl();
+    MemcachedNodeMockImpl node2 = new MemcachedNodeMockImpl();
+    node1.setSocketAddress(new InetSocketAddress("127.0.0.1", 11211));
+    node2.setSocketAddress(new InetSocketAddress("127.0.0.1", 11210));
+
+    ConfigFactory configFactory = new DefaultConfigFactory();
+    Config config = configFactory.create(NO_REPLICA_CONFIG_IN_ENVELOPE);
+
+    VBucketNodeLocator locator = new VBucketNodeLocator(
+      Arrays.asList((MemcachedNode) node1, node2),
+      config);
+
+    boolean success = false;
+    try {
+      MemcachedNode primary = locator.getPrimary("key1");
+    } catch(RuntimeException e) {
+      success = true;
+    }
+    assertTrue("No RuntimeException thrown when vbucket master is -1", success);
   }
 }
