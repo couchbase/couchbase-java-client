@@ -23,14 +23,12 @@
 package com.couchbase.client.internal;
 
 import com.couchbase.client.protocol.views.HttpOperation;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-
 import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.ops.Operation;
@@ -72,6 +70,12 @@ public class HttpFuture<T> extends SpyObject implements Future<T> {
   @Override
   public T get(long duration, TimeUnit units) throws InterruptedException,
       ExecutionException, TimeoutException {
+    waitForAndCheckOperation(duration, units);
+    return objRef.get();
+  }
+
+  protected void waitForAndCheckOperation(long duration, TimeUnit units)
+    throws InterruptedException, TimeoutException, ExecutionException {
     if (!latch.await(duration, units)) {
       if (op != null) {
         op.timeOut();
@@ -95,8 +99,6 @@ public class HttpFuture<T> extends SpyObject implements Future<T> {
       throw new ExecutionException(new CheckedOperationTimeoutException(
           "Operation timed out.", (Operation)op));
     }
-
-    return objRef.get();
   }
 
   public OperationStatus getStatus() {

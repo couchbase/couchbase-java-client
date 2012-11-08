@@ -26,7 +26,6 @@ import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewResponseWithDocs;
 import com.couchbase.client.protocol.views.ViewRow;
 import com.couchbase.client.protocol.views.ViewRowWithDocs;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,10 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-
 import net.spy.memcached.internal.BulkFuture;
-import net.spy.memcached.internal.CheckedOperationTimeoutException;
-import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 
 /**
@@ -57,31 +53,7 @@ public class ViewFuture extends HttpFuture<ViewResponse> {
   @Override
   public ViewResponse get(long duration, TimeUnit units)
     throws InterruptedException, ExecutionException, TimeoutException {
-
-    if (!latch.await(duration, units)) {
-      if (op != null) {
-        op.timeOut();
-      }
-      status = new OperationStatus(false, "Timed out");
-      throw new TimeoutException("Timed out waiting for operation");
-    }
-
-    if (op != null && op.hasErrored()) {
-      status = new OperationStatus(false, op.getException().getMessage());
-      throw new ExecutionException(op.getException());
-    }
-
-
-    if (op != null && op.isCancelled()) {
-      status = new OperationStatus(false, "Operation Cancelled");
-      throw new ExecutionException(new RuntimeException("Cancelled"));
-    }
-
-    if (op != null && op.isTimedOut()) {
-      status = new OperationStatus(false, "Timed out");
-      throw new ExecutionException(new CheckedOperationTimeoutException(
-          "Operation timed out.", (Operation)op));
-    }
+    waitForAndCheckOperation(duration, units);
 
     if (multigetRef.get() == null) {
       return null;
