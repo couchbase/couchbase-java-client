@@ -67,32 +67,32 @@ public class ClusterManagerTest extends TestCase {
   }
 
   public void testCreateDefaultBucket() throws Exception {
-    manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0);
+    manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0, true);
     Thread.sleep(1000);
     manager.deleteBucket("default");
-    manager.createDefaultBucket(BucketType.MEMCACHED, 100, 0);
+    manager.createDefaultBucket(BucketType.MEMCACHED, 100, 0, true);
     Thread.sleep(1000);
     manager.deleteBucket("default");
   }
 
   public void testCreateSaslBucket() throws Exception {
     manager.createSaslBucket(BucketType.COUCHBASE, "saslbucket", 100, 0,
-        "password");
+        "password", true);
     Thread.sleep(1000);
     manager.deleteBucket("saslbucket");
     manager.createSaslBucket(BucketType.MEMCACHED, "saslbucket", 100, 0,
-        "password");
+        "password", false);
     Thread.sleep(1000);
     manager.deleteBucket("saslbucket");
   }
 
   public void testCreatePortBucket() throws Exception {
     manager.createPortBucket(BucketType.COUCHBASE, "portbucket", 100, 0,
-        11212);
+        11212, true);
     Thread.sleep(1000);
     manager.deleteBucket("portbucket");
     manager.createPortBucket(BucketType.MEMCACHED, "portbucket", 100, 0,
-        11212);
+        11212, true);
     Thread.sleep(1000);
     manager.deleteBucket("portbucket");
   }
@@ -100,11 +100,11 @@ public class ClusterManagerTest extends TestCase {
   public void testGetBuckets() throws Exception {
     assertEquals(manager.listBuckets().size(), 0);
     manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, 0,
-        "password");
+        "password", false);
     manager.createSaslBucket(BucketType.COUCHBASE, "bucket2", 100, 0,
-        "password");
+        "password", false);
     manager.createSaslBucket(BucketType.COUCHBASE, "bucket3", 100, 0,
-        "password");
+        "password", false);
     List<String> buckets = manager.listBuckets();
     assertTrue(buckets.contains("bucket1"));
     assertTrue(buckets.contains("bucket2"));
@@ -115,7 +115,7 @@ public class ClusterManagerTest extends TestCase {
   public void testCreateBucketQuotaTooSmall() {
     try {
       manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 25, 0,
-          "password");
+          "password", false);
       fail("Bucket quota too small, but bucket was still created");
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Http Error: 400 Reason: Bad Request "
@@ -127,7 +127,7 @@ public class ClusterManagerTest extends TestCase {
   public void testCreateBucketQuotaTooBig() {
     try {
       manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100000, 0,
-          "password");
+          "password", false);
       fail("Bucket quota too large, but bucket was still created");
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Http Error: 400 Reason: Bad Request "
@@ -139,7 +139,7 @@ public class ClusterManagerTest extends TestCase {
   public void testCreateBucketTooManyReplicas() {
     try {
       manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, 4,
-          "password");
+          "password", false);
       fail("Replica number too large, but bucket was still created");
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Http Error: 400 Reason: Bad Request "
@@ -151,7 +151,7 @@ public class ClusterManagerTest extends TestCase {
   public void testCreateBucketTooFewReplicas() {
     try {
       manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, -1,
-          "password");
+          "password", false);
       fail("Replica number too small, but bucket was still created");
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Http Error: 400 Reason: Bad Request "
@@ -163,7 +163,7 @@ public class ClusterManagerTest extends TestCase {
   public void testCreateBucketBadName() {
     try {
       manager.createSaslBucket(BucketType.COUCHBASE, "$$$", 100, 0,
-          "password");
+          "password", false);
       fail("Invalid bucket name, but bucket was still created");
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Http Error: 400 Reason: Bad Request "
@@ -181,7 +181,7 @@ public class ClusterManagerTest extends TestCase {
     manager = new ClusterManager(uris, "Administrator", "password");
 
     try {
-      manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0);
+      manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0, true);
     } catch (RuntimeException e) {
       assertEquals(e.getMessage(), "Unable to connect to cluster");
     }
@@ -196,7 +196,7 @@ public class ClusterManagerTest extends TestCase {
 
     manager.shutdown();
     manager = new ClusterManager(uris, "Administrator", "password");
-    manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0);
+    manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0, true);
     Thread.sleep(1000);
     manager.deleteBucket("default");
   }

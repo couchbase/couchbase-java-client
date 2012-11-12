@@ -113,6 +113,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private long obsPollInterval = 100;
   private int obsPollMax = 400;
   private int viewTimeout = 75000;
+  private ClusterManager clusterManager;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, String password)
@@ -206,6 +207,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   public int getViewTimeout() {
     return this.viewTimeout;
   }
+
 
   public Config getVBucketConfig() {
     try {
@@ -353,6 +355,17 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       }
       Thread.currentThread().setName(threadNameBase + "complete");
     }
+  }
+
+  /**
+   * Returns a ClusterManager and initializes one if it does not exist.
+   * @return Returns an instance of a ClusterManager.
+   */
+  public ClusterManager getClusterManager() {
+    if(clusterManager == null) {
+      clusterManager = new ClusterManager(storedBaseList, bucket, pass);
+    }
+    return clusterManager;
   }
 
 }

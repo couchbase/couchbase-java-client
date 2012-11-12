@@ -24,6 +24,7 @@ package com.couchbase.client;
 
 import com.couchbase.client.clustermanager.AuthType;
 import com.couchbase.client.clustermanager.BucketType;
+import com.couchbase.client.clustermanager.FlushResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
@@ -124,11 +125,12 @@ public class ClusterManager extends SpyObject {
    * @param type The bucket type to create.
    * @param memorySizeMB The amount of memory to allocate to this bucket.
    * @param replicas The number of replicas for this bucket.
+   * @param flushEnabled If flush should be enabled on this bucket.
    */
   public void createDefaultBucket(BucketType type, int memorySizeMB,
-      int replicas) {
+      int replicas, boolean flushEnabled) {
     createBucket(type, "default", memorySizeMB, AuthType.NONE, replicas,
-        11212, "");
+        11212, "", flushEnabled);
   }
 
   /**
@@ -139,11 +141,12 @@ public class ClusterManager extends SpyObject {
    * @param memorySizeMB The amount of memory to allocate to this bucket.
    * @param replicas The number of replicas for this bucket.
    * @param authPassword The password for this bucket.
+   * @param flushEnabled If flush should be enabled on this bucket.
    */
   public void createSaslBucket(BucketType type, String name,
-      int memorySizeMB, int replicas, String authPassword) {
+      int memorySizeMB, int replicas, String authPassword, boolean flushEnabled) {
     createBucket(type, name, memorySizeMB, AuthType.SASL, replicas,
-        11212, authPassword);
+        11212, authPassword, flushEnabled);
   }
 
   /**
@@ -156,9 +159,9 @@ public class ClusterManager extends SpyObject {
    * @param port The port for this bucket to listen on.
    */
   public void createPortBucket(BucketType type, String name,
-      int memorySizeMB, int replicas, int port) {
+      int memorySizeMB, int replicas, int port, boolean flush) {
     createBucket(type, name, memorySizeMB, AuthType.NONE, replicas,
-        port, "");
+        port, "", flush);
   }
 
   /**
@@ -209,17 +212,27 @@ public class ClusterManager extends SpyObject {
    *
    * @param name The bucket to flush.
    */
-  public void flushBucket(String name) {
+  public FlushResponse flushBucket(String name) {
     String url = "/pools/default/buckets/" + name + "/controller/doFlush";
     BasicHttpEntityEnclosingRequest request =
         new BasicHttpEntityEnclosingRequest("POST", url);
 
-    checkError(200, sendRequest(request));
+    HttpResult result = sendRequest(request);
+    if(result.getErrorCode() == 200) {
+      return FlushResponse.OK;
+    } else if(result.getErrorCode() == 400) {
+      return FlushResponse.NOT_ENABLED;
+    } else {
+      throw new RuntimeException("Http Error: " + result.getErrorCode()
+          + " Reason: " + result.getErrorPhrase() + " Details: "
+          + result.getReason());
+    }
+
   }
 
   private  void createBucket(BucketType type, String name,
       int memorySizeMB, AuthType authType, int replicas, int port,
-      String authpassword) {
+      String authpassword, boolean flushEnabled) {
     BasicHttpEntityEnclosingRequest request =
         new BasicHttpEntityEnclosingRequest("POST", "/pools/default/buckets");
 
@@ -232,6 +245,9 @@ public class ClusterManager extends SpyObject {
     sb.append("&proxyPort=").append(port);
     if (authType == AuthType.SASL) {
       sb.append("&saslPassword=").append(authpassword);
+    }
+    if(flushEnabled) {
+      sb.append("&flushEnabled=1");
     }
 
     try {

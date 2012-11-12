@@ -56,7 +56,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
 
     BucketTool bucketTool = new BucketTool();
     bucketTool.deleteAllBuckets();
-    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 1);
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 1, true);
 
     BucketTool.FunctionCallback callback = new FunctionCallback() {
       @Override

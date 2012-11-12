@@ -22,11 +22,13 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.clustermanager.FlushResponse;
 import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.internal.ViewFuture;
 import com.couchbase.client.protocol.views.AbstractView;
 import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
 import com.couchbase.client.protocol.views.DesignDocFetcherOperationImpl;
+import com.couchbase.client.protocol.views.InvalidViewException;
 import com.couchbase.client.protocol.views.DesignDocOperationImpl;
 import com.couchbase.client.protocol.views.DesignDocument;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
@@ -1817,4 +1819,135 @@ public class CouchbaseClient extends MemcachedClient
     mconn.enqueueOperation(key, op);
     return rv;
   }
+
+  /**
+   * Flush all data from the bucket immediately.
+   *
+   * Note that if the bucket is of type memcached the flush will be nearly
+   * instantaneous.  Running a flush() on a Couchbase bucket can take quite
+   * a while, depending on the amount of data and the load on the system.
+   *
+   * @return
+   */
+  @Override
+  public OperationFuture<Boolean> flush() {
+    return flush(-1);
+  }
+
+    /**
+   * Flush all caches from all servers with a delay of application.
+   *
+   * @param delay the period of time to delay, in seconds
+   * @return whether or not the operation was accepted
+   */
+  @Override
+  public OperationFuture<Boolean> flush(final int delay) {
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    final FlushRunner flushRunner = new FlushRunner(latch);
+
+    final OperationFuture<Boolean> rv =
+            new OperationFuture<Boolean>("", latch, operationTimeout) {
+
+              CouchbaseConnectionFactory factory =
+                (CouchbaseConnectionFactory) connFactory;
+
+              @Override
+              public boolean cancel() {
+                throw new UnsupportedOperationException("Flush cannot be"
+                  + " canceled");
+              }
+
+              @Override
+              public boolean isDone() {
+                return flushRunner.status();
+              }
+
+              @Override
+              public Boolean get(long duration, TimeUnit units) throws
+                InterruptedException, TimeoutException,
+                ExecutionException {
+                if (!latch.await(duration, units)) {
+                  throw new TimeoutException("Flush not completed within"
+                    + " timeout.");
+                }
+
+                return flushRunner.status();
+              }
+
+              @Override
+              public Boolean get() throws InterruptedException,
+                ExecutionException {
+                try {
+                  return get(factory.getViewTimeout(), TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                  throw new RuntimeException("Timed out waiting for operation",
+                    e);
+                }
+              }
+
+              @Override
+              public Long getCas() {
+                throw new UnsupportedOperationException("Flush has no CAS"
+                  + " value.");
+              }
+
+              @Override
+              public String getKey() {
+                throw new UnsupportedOperationException("Flush has no"
+                  + " associated key.");
+              }
+
+              @Override
+              public OperationStatus getStatus() {
+                throw new UnsupportedOperationException("Flush has no"
+                  + " OperationStatus.");
+              }
+
+              @Override
+              public boolean isCancelled() {
+                throw new UnsupportedOperationException("Flush cannot be"
+                  + " canceled.");
+              }
+
+
+        };
+
+    Thread flusher = new Thread(flushRunner, "Temporary Flusher");
+    flusher.setDaemon(true);
+    flusher.start();
+
+    return rv;
+  }
+
+  /**
+   * Flush the current bucket.
+   */
+  private boolean flushBucket() {
+    FlushResponse res = cbConnFactory.getClusterManager().flushBucket(
+      cbConnFactory.getBucketName());
+    return res.equals(FlushResponse.OK);
+  }
+
+  // This is a bit of a hack since we don't have async http on this
+  // particular interface, but it conforms to the specification
+  private class FlushRunner implements Runnable {
+
+    final CountDownLatch flatch;
+    Boolean flushStatus = false;
+
+    public FlushRunner(CountDownLatch latch) {
+      flatch = latch;
+    }
+
+    public void run() {
+      flushStatus = flushBucket();
+      flatch.countDown();
+    }
+
+    private boolean status() {
+      return flushStatus.booleanValue();
+    }
+  }
+
 }

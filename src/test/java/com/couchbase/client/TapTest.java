@@ -65,7 +65,7 @@ public class TapTest {
 
     BucketTool bucketTool = new BucketTool();
     bucketTool.deleteAllBuckets();
-    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0);
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0, true);
 
     BucketTool.FunctionCallback callback = new FunctionCallback() {
       @Override
