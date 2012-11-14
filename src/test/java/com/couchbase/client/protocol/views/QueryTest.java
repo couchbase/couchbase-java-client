@@ -233,6 +233,7 @@ public class QueryTest {
     assertEquals(false, query.willIncludeDocs());
     query.setIncludeDocs(true);
     assertEquals(true, query.willIncludeDocs());
+    assertTrue(query.toString().isEmpty());
   }
 
   /**
