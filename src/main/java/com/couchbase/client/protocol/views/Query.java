@@ -65,6 +65,7 @@ public class Query {
   private static final String STARTKEY = "startkey";
   private static final String STARTKEYDOCID = "startkey_docid";
   private static final String ONERROR = "on_error";
+  private static final String BBOX = "bbox";
   private boolean includedocs = false;
 
   private Map<String, Object> args;
@@ -395,6 +396,23 @@ public class Query {
   }
 
   /**
+   * Sets the params for a spatial bounding box view query.
+   *
+   * @param lowerLeftLong The longitude of the lower left corner.
+   * @param lowerLeftLat The latitude of the lower left corner.
+   * @param upperRightLong The longitude of the upper right corner.
+   * @param upperRightLat The latitude of the upper right corner.
+   * @return The Query instance.
+   */
+  public Query setBbox(double lowerLeftLong, double lowerLeftLat,
+    double upperRightLong, double upperRightLat) {
+    String combined = lowerLeftLong + "," + lowerLeftLat + ","
+      + upperRightLong + "," + upperRightLat;
+    args.put(BBOX, combined);
+    return this;
+  }
+
+  /**
    * Creates a new query instance and returns it with the properties
    * bound to the current object.
    *
@@ -448,6 +466,11 @@ public class Query {
     if (args.containsKey(ONERROR)) {
       query.setOnError(((OnError)args.get(ONERROR)));
     }
+    if (args.containsKey(BBOX)) {
+      String[] bbox = ((String)args.get(BBOX)).split(",");
+      query.setBbox(Double.parseDouble(bbox[0]), Double.parseDouble(bbox[1]),
+        Double.parseDouble(bbox[2]), Double.parseDouble(bbox[3]));
+    }
     query.setIncludeDocs(willIncludeDocs());
 
     return query;
@@ -499,7 +522,7 @@ public class Query {
     throws UnsupportedEncodingException {
     String encoded;
 
-    if (key.equals(STARTKEYDOCID)) {
+    if (key.equals(STARTKEYDOCID) || key.equals(BBOX)) {
       encoded = (String) value;
     } else if (value instanceof Stale) {
       encoded = ((Stale) value).toString();

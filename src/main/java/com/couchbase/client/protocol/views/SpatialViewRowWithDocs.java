@@ -23,18 +23,21 @@
 package com.couchbase.client.protocol.views;
 
 /**
- * Holds a row in a view result that contains the fields
- * id, key, value, and doc.
+ * Holds a row in a spatial view result that contains the fields
+ * id, bbox, geometry, and doc.
  */
-public class ViewRowWithDocs implements ViewRow {
+public class SpatialViewRowWithDocs implements ViewRow {
   private final String id;
-  private final String key;
+  private final String bbox;
+  private final String geometry;
   private final String value;
   private final Object doc;
 
-  public ViewRowWithDocs(String id, String key, String value, Object doc) {
+  public SpatialViewRowWithDocs(String id, String bbox, String geometry,
+    String value, Object doc) {
     this.id = parseField(id);
-    this.key = parseField(key);
+    this.bbox = parseField(bbox);
+    this.geometry = parseField(geometry);
     this.value = parseField(value);
     this.doc = doc;
   }
@@ -53,8 +56,18 @@ public class ViewRowWithDocs implements ViewRow {
   }
 
   @Override
-  public String getKey() {
-    return key;
+  public String getBbox() {
+    return bbox;
+  }
+
+  @Override
+  public String getGeometry() {
+    return geometry;
+  }
+
+  @Override
+  public Object getDocument() {
+    return doc;
   }
 
   @Override
@@ -63,20 +76,9 @@ public class ViewRowWithDocs implements ViewRow {
   }
 
   @Override
-  public Object getDocument() {
-    return doc;
+  public String getKey() {
+     throw new UnsupportedOperationException("Spatial views don't contain "
+       + "a key");
   }
 
-
-  @Override
-  public String getBbox() {
-     throw new UnsupportedOperationException("Map/Reduce views don't contain "
-       + "Bounding Box information");
-  }
-
-  @Override
-  public String getGeometry() {
-      throw new UnsupportedOperationException("Map/Reduce views don't contain "
-       + "Geometry information");
-  }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,16 +36,16 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
- * A ViewOperationImpl.
+ * A SpatialViewOperationImpl.
  */
-public class ViewFetcherOperationImpl extends HttpOperationImpl implements
-    ViewFetcherOperation {
+public class SpatialViewFetcherOperationImpl extends HttpOperationImpl
+  implements SpatialViewFetcherOperation {
 
   private final String bucketName;
   private final String designDocName;
   private final String viewName;
 
-  public ViewFetcherOperationImpl(HttpRequest r, String bucketName,
+  public SpatialViewFetcherOperationImpl(HttpRequest r, String bucketName,
     String designDocName, String viewName, ViewFetcherCallback viewCallback) {
     super(r, viewCallback);
     this.bucketName = bucketName;
@@ -57,11 +57,11 @@ public class ViewFetcherOperationImpl extends HttpOperationImpl implements
   public void handleResponse(HttpResponse response) {
     String json = getEntityString(response);
     try {
-      View view = parseDesignDocumentForView(bucketName, designDocName,
+      SpatialView view = parseDesignDocumentForView(bucketName, designDocName,
           viewName, json);
       int errorcode = response.getStatusLine().getStatusCode();
       if (errorcode == HttpURLConnection.HTTP_OK) {
-        ((ViewFetcherCallback) callback).gotData(view);
+        ((SpatialViewFetcherOperation.ViewFetcherCallback) callback).gotData(view);
         callback.receivedStatus(new OperationStatus(true, "OK"));
       } else {
         callback.receivedStatus(new OperationStatus(false,
@@ -74,24 +74,22 @@ public class ViewFetcherOperationImpl extends HttpOperationImpl implements
     callback.complete();
   }
 
-  private View parseDesignDocumentForView(String dn, String ddn,
+  private SpatialView parseDesignDocumentForView(String dn, String ddn,
       String viewname, String json) throws ParseException {
-    View view = null;
+    SpatialView view = null;
     if (json != null) {
       try {
         JSONObject base = new JSONObject(json);
         if (base.has("error")) {
           return null;
         }
-        if (base.has("views")) {
-          JSONObject views = base.getJSONObject("views");
+        if (base.has("spatial")) {
+          JSONObject views = base.getJSONObject("spatial");
           Iterator<?> itr = views.keys();
           while (itr.hasNext()) {
             String curView = (String) itr.next();
             if (curView.equals(viewname)) {
-              boolean map = views.getJSONObject(curView).has("map");
-              boolean reduce = views.getJSONObject(curView).has("reduce");
-              view = new View(dn, ddn, viewname, map, reduce);
+              view = new SpatialView(dn, ddn, viewname);
               break;
             }
           }

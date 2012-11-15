@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,43 +26,30 @@ package com.couchbase.client.protocol.views;
  * Holds information about a view that can be queried in
  * Couchbase Server.
  */
-public class View {
-  private final String viewName;
-  private final String designDocumentName;
-  private final String databaseName;
+public class View extends AbstractView {
+
   private final boolean map;
   private final boolean reduce;
 
-  protected View(String dn, String ddn, String vn, boolean m, boolean r) {
-    databaseName = dn;
-    designDocumentName = ddn;
-    viewName = vn;
+  public View(String dn, String ddn, String vn, boolean m, boolean r) {
+    super(dn, ddn, vn);
     map = m;
     reduce = r;
   }
 
-  public String getDatabaseName() {
-    return databaseName;
-  }
-
-  public String getDesignDocumentName() {
-    return designDocumentName;
-  }
-
-  public String getViewName() {
-    return viewName;
-  }
-
+  @Override
   public boolean hasMap() {
     return map;
   }
 
+  @Override
   public boolean hasReduce() {
     return reduce;
   }
 
+  @Override
   public String getURI() {
-    return "/" + databaseName + "/_design/" + designDocumentName + "/_view/"
-        + viewName;
+    return "/" + getDatabaseName() + "/_design/" + getDesignDocumentName()
+      + "/_view/" + getViewName();
   }
 }

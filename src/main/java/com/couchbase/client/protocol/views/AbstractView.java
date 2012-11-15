@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,18 +23,34 @@
 package com.couchbase.client.protocol.views;
 
 /**
- * A ViewRow.
+ * A base class for views and spatial views.
  */
-public interface ViewRow {
-  String getId();
+public abstract class AbstractView {
+  private final String viewName;
+  private final String designDocumentName;
+  private final String databaseName;
 
-  String getKey();
+  public AbstractView(String dn, String ddn, String vn) {
+    databaseName = dn;
+    designDocumentName = ddn;
+    viewName = vn;
+  }
 
-  String getValue();
+  public String getDatabaseName() {
+    return databaseName;
+  }
 
-  String getBbox();
+  public String getDesignDocumentName() {
+    return designDocumentName;
+  }
 
-  String getGeometry();
+  public String getViewName() {
+    return viewName;
+  }
 
-  Object getDocument();
+  public abstract boolean hasMap();
+
+  public abstract boolean hasReduce();
+
+  public abstract String getURI();
 }

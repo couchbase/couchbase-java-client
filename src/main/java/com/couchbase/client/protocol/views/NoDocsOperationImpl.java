@@ -35,10 +35,11 @@ import org.codehaus.jettison.json.JSONObject;
  * Implementation of a view that calls the map
  * function and excludes the documents in the result.
  */
-public class NoDocsOperationImpl extends ViewOperationImpl{
+public class NoDocsOperationImpl extends ViewOperationImpl {
 
-  public NoDocsOperationImpl(HttpRequest r, ViewCallback cb) {
-    super(r, cb);
+  public NoDocsOperationImpl(HttpRequest r, AbstractView view,
+    ViewCallback cb) {
+    super(r, view, cb);
   }
 
   protected ViewResponseNoDocs parseResult(String json)
@@ -53,9 +54,15 @@ public class NoDocsOperationImpl extends ViewOperationImpl{
           for (int i = 0; i < ids.length(); i++) {
             JSONObject elem = ids.getJSONObject(i);
             String id = elem.getString("id");
-            String key = elem.getString("key");
             String value = elem.getString("value");
-            rows.add(new ViewRowNoDocs(id, key, value));
+            if(elem.has("bbox")) {
+              String bbox = elem.getString("bbox");
+              String geometry = elem.getString("geometry");
+              rows.add(new SpatialViewRowNoDocs(id, bbox, geometry, value));
+            } else {
+              String key = elem.getString("key");
+              rows.add(new ViewRowNoDocs(id, key, value));
+            }
           }
         }
         if (base.has("errors")) {

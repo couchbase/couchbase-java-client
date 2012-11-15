@@ -22,6 +22,9 @@
 
 package com.couchbase.client.internal;
 
+import com.couchbase.client.protocol.views.AbstractView;
+import com.couchbase.client.protocol.views.SpatialView;
+import com.couchbase.client.protocol.views.SpatialViewRowWithDocs;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewResponseWithDocs;
 import com.couchbase.client.protocol.views.ViewRow;
@@ -44,10 +47,13 @@ import net.spy.memcached.ops.OperationStatus;
 public class ViewFuture extends HttpFuture<ViewResponse> {
   private final AtomicReference<BulkFuture<Map<String, Object>>> multigetRef;
 
-  public ViewFuture(CountDownLatch latch, long timeout) {
+  private AbstractView view;
+
+  public ViewFuture(CountDownLatch latch, long timeout, AbstractView view) {
     super(latch, timeout);
     this.multigetRef =
         new AtomicReference<BulkFuture<Map<String, Object>>>(null);
+    this.view = view;
   }
 
   @Override
@@ -60,16 +66,21 @@ public class ViewFuture extends HttpFuture<ViewResponse> {
     }
 
     Map<String, Object> docMap = multigetRef.get().get();
-    final ViewResponseWithDocs view = (ViewResponseWithDocs) objRef.get();
+    final ViewResponseWithDocs viewResp = (ViewResponseWithDocs) objRef.get();
     Collection<ViewRow> rows = new LinkedList<ViewRow>();
-    Iterator<ViewRow> itr = view.iterator();
+    Iterator<ViewRow> itr = viewResp.iterator();
 
     while (itr.hasNext()) {
       ViewRow r = itr.next();
-      rows.add(new ViewRowWithDocs(r.getId(), r.getKey(), r.getValue(),
+      if(view instanceof SpatialView) {
+        rows.add(new SpatialViewRowWithDocs(r.getId(), r.getBbox(),
+          r.getGeometry(), r.getValue(), docMap.get(r.getId())));
+      } else {
+        rows.add(new ViewRowWithDocs(r.getId(), r.getKey(), r.getValue(),
           docMap.get(r.getId())));
+      }
     }
-    return new ViewResponseWithDocs(rows, view.getErrors());
+    return new ViewResponseWithDocs(rows, viewResp.getErrors());
   }
 
   public void set(ViewResponse viewResponse,

@@ -39,8 +39,15 @@ import org.apache.http.HttpResponse;
 public abstract class ViewOperationImpl extends HttpOperationImpl
   implements ViewOperation {
 
-  public ViewOperationImpl(HttpRequest r, OperationCallback cb) {
+  private AbstractView view;
+
+  public ViewOperationImpl(HttpRequest r, AbstractView view,
+    OperationCallback cb) {
     super(r, cb);
+  }
+
+  public AbstractView getView() {
+    return view;
   }
 
   @Override

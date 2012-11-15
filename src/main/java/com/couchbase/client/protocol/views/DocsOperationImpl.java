@@ -37,8 +37,8 @@ import org.codehaus.jettison.json.JSONObject;
  */
 public class DocsOperationImpl extends ViewOperationImpl {
 
-  public DocsOperationImpl(HttpRequest r, ViewCallback cb) {
-    super(r, cb);
+  public DocsOperationImpl(HttpRequest r, AbstractView view, ViewCallback cb) {
+    super(r, view, cb);
   }
 
   protected ViewResponseWithDocs parseResult(String json)
@@ -53,9 +53,15 @@ public class DocsOperationImpl extends ViewOperationImpl {
           for (int i = 0; i < ids.length(); i++) {
             JSONObject elem = ids.getJSONObject(i);
             String id = elem.getString("id");
-            String key = elem.getString("key");
             String value = elem.getString("value");
-            rows.add(new ViewRowWithDocs(id, key, value, null));
+            if(elem.has("bbox")) {
+              String bbox = elem.getString("bbox");
+              String geometry = elem.getString("geometry");
+              rows.add(new SpatialViewRowNoDocs(id, bbox, geometry, value));
+            } else {
+              String key = elem.getString("key");
+              rows.add(new ViewRowNoDocs(id, key, value));
+            }
           }
         }
         if (base.has("errors")) {

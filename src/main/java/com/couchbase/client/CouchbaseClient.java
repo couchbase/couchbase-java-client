@@ -24,6 +24,7 @@ package com.couchbase.client;
 
 import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.internal.ViewFuture;
+import com.couchbase.client.protocol.views.AbstractView;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.protocol.views.InvalidViewException;
@@ -31,6 +32,9 @@ import com.couchbase.client.protocol.views.NoDocsOperationImpl;
 import com.couchbase.client.protocol.views.Paginator;
 import com.couchbase.client.protocol.views.Query;
 import com.couchbase.client.protocol.views.ReducedOperationImpl;
+import com.couchbase.client.protocol.views.SpatialView;
+import com.couchbase.client.protocol.views.SpatialViewFetcherOperation;
+import com.couchbase.client.protocol.views.SpatialViewFetcherOperationImpl;
 import com.couchbase.client.protocol.views.View;
 import com.couchbase.client.protocol.views.ViewFetcherOperation;
 import com.couchbase.client.protocol.views.ViewFetcherOperationImpl;
@@ -352,6 +356,60 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
+   * Gets access to a spatial view contained in a design document from the
+   * cluster.
+   *
+   *
+   * Note that since an HttpFuture is returned, the caller must also check to
+   * see if the View is null. The HttpFuture does provide a getStatus() method
+   * which can be used to check whether or not the view request has been
+   * successful.
+   *
+   * @param designDocumentName the name of the design document.
+   * @param viewName the name of the spatial view to get.
+   * @return a HttpFuture<SpatialView> object from the cluster.
+   * @throws InterruptedException if the operation is interrupted while in
+   *           flight
+   * @throws ExecutionException if an error occurs during execution
+   */
+  public HttpFuture<SpatialView> asyncGetSpatialView(String designDocumentName,
+      final String viewName) {
+    designDocumentName = MODE_PREFIX + designDocumentName;
+    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+    String uri = "/" + bucket + "/_design/" + designDocumentName;
+    final CountDownLatch couchLatch = new CountDownLatch(1);
+    final HttpFuture<SpatialView> crv = new HttpFuture<SpatialView>(
+      couchLatch, 60000);
+
+    final HttpRequest request =
+        new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
+    final HttpOperation op =
+        new SpatialViewFetcherOperationImpl(request, bucket, designDocumentName,
+            viewName, new SpatialViewFetcherOperation.ViewFetcherCallback() {
+              private SpatialView view = null;
+
+              @Override
+              public void receivedStatus(OperationStatus status) {
+                crv.set(view, status);
+              }
+
+              @Override
+              public void complete() {
+                couchLatch.countDown();
+              }
+
+              @Override
+              public void gotData(SpatialView v) {
+                view = v;
+              }
+            });
+    crv.setOperation(op);
+    addOp(op);
+    assert crv != null : "Problem retrieving spatial view";
+    return crv;
+  }
+
+  /**
    * Gets a future with a list of views for a given design document from the
    * cluster.
    *
@@ -439,6 +497,37 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
+   * Gets access to a spatial view contained in a design document from the
+   * cluster.
+   *
+   * Spatial views enable you to return recorded geometry data in the bucket
+   * and perform queries which return information based on whether the recorded
+   * geometries existing within a given two-dimensional range such as a
+   * bounding box.
+   *
+   * @param designDocumentName the name of the design document.
+   * @param viewName the name of the view to get.
+   * @return a SpatialView object from the cluster.
+   * @throws InvalidViewException if no design document or view was found.
+   */
+  public SpatialView getSpatialView(final String designDocumentName,
+    final String viewName) {
+    try {
+      SpatialView view = asyncGetSpatialView(designDocumentName, viewName)
+        .get();
+      if(view == null) {
+        throw new InvalidViewException("Could not load spatial view \""
+          + viewName + "\" for design doc \"" + designDocumentName + "\"");
+      }
+      return view;
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted getting spatial view", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Failed getting view", e);
+    }
+  }
+
+  /**
    * Gets a list of views for a given design document from the cluster.
    *
    * @param designDocumentName the name of the design document.
@@ -460,7 +549,7 @@ public class CouchbaseClient extends MemcachedClient
     }
   }
 
-  public HttpFuture<ViewResponse> asyncQuery(View view, Query query) {
+  public HttpFuture<ViewResponse> asyncQuery(AbstractView view, Query query) {
     if (query.willReduce()) {
       return asyncQueryAndReduce(view, query);
     } else if (query.willIncludeDocs()) {
@@ -480,7 +569,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param query the type of query to run against the view.
    * @return a Future containing the results of the query.
    */
-  private HttpFuture<ViewResponse> asyncQueryAndIncludeDocs(View view,
+  private HttpFuture<ViewResponse> asyncQueryAndIncludeDocs(AbstractView view,
       Query query) {
     assert view != null : "Who passed me a null view";
     assert query != null : "who passed me a null query";
@@ -491,11 +580,12 @@ public class CouchbaseClient extends MemcachedClient
     String uri = viewUri + queryToRun;
     getLogger().info("lookin for:" + uri);
     final CountDownLatch couchLatch = new CountDownLatch(1);
-    final ViewFuture crv = new ViewFuture(couchLatch, 60000);
+    final ViewFuture crv = new ViewFuture(couchLatch, 60000, view);
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
-    final HttpOperation op = new DocsOperationImpl(request, new ViewCallback() {
+    final HttpOperation op = new DocsOperationImpl(request, view,
+      new ViewCallback() {
       private ViewResponse vr = null;
 
       @Override
@@ -537,7 +627,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param query the type of query to run against the view.
    * @return a Future containing the results of the query.
    */
-  private HttpFuture<ViewResponse> asyncQueryAndExcludeDocs(View view,
+  private HttpFuture<ViewResponse> asyncQueryAndExcludeDocs(AbstractView view,
       Query query) {
     String uri = view.getURI() + query.toString();
     final CountDownLatch couchLatch = new CountDownLatch(1);
@@ -547,7 +637,7 @@ public class CouchbaseClient extends MemcachedClient
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
     final HttpOperation op =
-        new NoDocsOperationImpl(request, new ViewCallback() {
+        new NoDocsOperationImpl(request, view, new ViewCallback() {
           private ViewResponse vr = null;
 
           @Override
@@ -578,7 +668,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param query the type of query to run against the view.
    * @return a Future containing the results of the query.
    */
-  private HttpFuture<ViewResponse> asyncQueryAndReduce(final View view,
+  private HttpFuture<ViewResponse> asyncQueryAndReduce(final AbstractView view,
       final Query query) {
     if (!view.hasReduce()) {
       throw new RuntimeException("This view doesn't contain a reduce function");
@@ -591,7 +681,7 @@ public class CouchbaseClient extends MemcachedClient
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
     final HttpOperation op =
-        new ReducedOperationImpl(request, new ViewCallback() {
+        new ReducedOperationImpl(request, view, new ViewCallback() {
           private ViewResponse vr = null;
 
           @Override
@@ -625,7 +715,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param query the type of query to run against the view.
    * @return a ViewResponseWithDocs containing the results of the query.
    */
-  public ViewResponse query(View view, Query query) {
+  public ViewResponse query(AbstractView view, Query query) {
     try {
       return asyncQuery(view, query).get();
     } catch (InterruptedException e) {

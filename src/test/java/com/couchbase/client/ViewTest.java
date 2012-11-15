@@ -519,7 +519,8 @@ public class ViewTest {
 
   @Test
   public void testViewDocsWithErrors() throws Exception {
-    HttpOperation op = new DocsOperationImpl(null, new ViewCallback() {
+    View view = new View("a", "b", "c", true, true);
+    HttpOperation op = new DocsOperationImpl(null, view, new ViewCallback() {
       @Override
       public void receivedStatus(OperationStatus status) {
         assert status.isSuccess();
@@ -552,7 +553,8 @@ public class ViewTest {
 
   @Test
   public void testViewNoDocsWithErrors() throws Exception {
-    HttpOperation op = new NoDocsOperationImpl(null, new ViewCallback() {
+    View view = new View("a", "b", "c", true, true);
+    HttpOperation op = new NoDocsOperationImpl(null, view, new ViewCallback() {
       @Override
       public void receivedStatus(OperationStatus status) {
         assert status.isSuccess();
@@ -585,7 +587,8 @@ public class ViewTest {
 
   @Test
   public void testViewReducedWithErrors() throws Exception {
-    HttpOperation op = new ReducedOperationImpl(null, new ViewCallback() {
+    View view = new View("a", "b", "c", true, true);
+    HttpOperation op = new ReducedOperationImpl(null, view, new ViewCallback() {
       @Override
       public void receivedStatus(OperationStatus status) {
         assert status.isSuccess();

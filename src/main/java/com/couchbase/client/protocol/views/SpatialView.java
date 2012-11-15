@@ -23,60 +23,28 @@
 package com.couchbase.client.protocol.views;
 
 /**
- * Holds a row in a view result that contains the fields
- * id, key, value, and doc.
+ * Holds information about a spatial view that can be queried in
+ * Couchbase Server.
  */
-public class ViewRowWithDocs implements ViewRow {
-  private final String id;
-  private final String key;
-  private final String value;
-  private final Object doc;
+public class SpatialView extends AbstractView {
 
-  public ViewRowWithDocs(String id, String key, String value, Object doc) {
-    this.id = parseField(id);
-    this.key = parseField(key);
-    this.value = parseField(value);
-    this.doc = doc;
-  }
-
-  private String parseField(String field) {
-    if (field != null && field.equals("null")) {
-      return null;
-    } else {
-      return field;
-    }
+  public SpatialView(String dn, String ddn, String vn) {
+    super(dn, ddn, vn);
   }
 
   @Override
-  public String getId() {
-    return id;
+  public boolean hasMap() {
+    return true;
   }
 
   @Override
-  public String getKey() {
-    return key;
+  public boolean hasReduce() {
+    return false;
   }
 
   @Override
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public Object getDocument() {
-    return doc;
-  }
-
-
-  @Override
-  public String getBbox() {
-     throw new UnsupportedOperationException("Map/Reduce views don't contain "
-       + "Bounding Box information");
-  }
-
-  @Override
-  public String getGeometry() {
-      throw new UnsupportedOperationException("Map/Reduce views don't contain "
-       + "Geometry information");
+  public String getURI() {
+    return "/" + getDatabaseName() + "/_design/" + getDesignDocumentName()
+      + "/_spatial/" + getViewName();
   }
 }
