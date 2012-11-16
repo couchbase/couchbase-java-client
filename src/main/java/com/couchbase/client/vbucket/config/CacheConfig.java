@@ -25,15 +25,12 @@ package com.couchbase.client.vbucket.config;
 import java.net.URL;
 import java.util.List;
 
-import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.HashAlgorithm;
 
 /**
  * A CacheConfig.
  */
 public class CacheConfig implements Config {
-
-  private final HashAlgorithm hashAlgorithm = DefaultHashAlgorithm.NATIVE_HASH;
 
   private int vbucketsCount;
 
@@ -140,7 +137,7 @@ public class CacheConfig implements Config {
   }
 
   public HashAlgorithm getHashAlgorithm() {
-    return hashAlgorithm;
+    throw new UnsupportedOperationException("HashAlgorithm not supported for cache buckets");
   }
 
   public ConfigType getConfigType() {
