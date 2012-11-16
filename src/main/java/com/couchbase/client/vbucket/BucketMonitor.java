@@ -32,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Observable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -41,6 +42,7 @@ import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
@@ -59,7 +61,7 @@ public class BucketMonitor extends Observable {
   private final String httpUser;
   private final String httpPass;
   private final ChannelFactory factory;
-  private Channel channel;
+  private volatile Channel channel;
   private final String host;
   private final int port;
   private ConfigurationParser configParser;
@@ -67,6 +69,8 @@ public class BucketMonitor extends Observable {
   private final HttpMessageHeaders headers;
   private static final Logger LOGGER =
       Logger.getLogger(BucketMonitor.class.getName());
+  private ClientBootstrap bootstrap;
+
   /**
    * The specification version which this client meets. This will be included in
    * requests to the server.
@@ -175,7 +179,31 @@ public class BucketMonitor extends Observable {
           "Bucket monitor is already started.");
       return;
     }
-    createChannel();
+
+    ChannelFuture channelFuture = createChannel();
+
+    final CountDownLatch channelLatch = new CountDownLatch(1);
+    channelFuture.addListener(new ChannelFutureListener() {
+      @Override
+      public void operationComplete(ChannelFuture cf) throws Exception {
+        if(cf.isSuccess()) {
+          channel = cf.getChannel();
+          channelLatch.countDown();
+        } else {
+          bootstrap.releaseExternalResources();
+          throw new ConnectionException("Could not connect to any cluster pool "
+            + "member.");
+        }
+      }
+    });
+
+    try {
+      channelLatch.await();
+    } catch(InterruptedException ex) {
+      throw new ConnectionException("Interrupted while waiting for streaming "
+        + "connection to arrive.");
+    }
+
     this.handler = channel.getPipeline().get(BucketUpdateResponseHandler.class);
     handler.setBucketMonitor(this);
     HttpRequest request = prepareRequest(cometStreamURI, host);
@@ -196,24 +224,15 @@ public class BucketMonitor extends Observable {
     }
   }
 
-  protected void createChannel() {
+  protected ChannelFuture createChannel() {
     // Configure the client.
-    ClientBootstrap bootstrap = new ClientBootstrap(factory);
+    bootstrap = new ClientBootstrap(factory);
 
     // Set up the event pipeline factory.
     bootstrap.setPipelineFactory(new BucketMonitorPipelineFactory());
 
     // Start the connection attempt.
-    ChannelFuture future = bootstrap.connect(new InetSocketAddress(host, port));
-
-    // Wait until the connection attempt succeeds or fails.
-    channel = future.awaitUninterruptibly().getChannel();
-    if (!future.isSuccess()) {
-      bootstrap.releaseExternalResources();
-      throw new ConnectionException("Could not connect to any cluster pool "
-        + "member.");
-    }
-    assert (channel != null);
+    return bootstrap.connect(new InetSocketAddress(host, port));
   }
 
   protected HttpRequest prepareRequest(URI uri, String h) {
