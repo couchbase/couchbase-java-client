@@ -1505,18 +1505,18 @@ public class CouchbaseClient extends MemcachedClient
    */
   public void observePoll(String key, long cas, PersistTo persist,
       ReplicateTo replicate, boolean isDelete) {
-    boolean persistMaster = false;
     if(persist == null) {
       persist = PersistTo.ZERO;
     }
     if(replicate == null) {
       replicate = ReplicateTo.ZERO;
     }
-    int persistReplica = persist.getValue();
+    int persistReplica = persist.getValue() > 0 ? persist.getValue() - 1 : 0;
     int replicateTo = replicate.getValue();
     int obsPolls = 0;
     int obsPollMax = cbConnFactory.getObsPollMax();
     long obsPollInterval = cbConnFactory.getObsPollInterval();
+    boolean persistMaster = persist.getValue() > 0;
 
     Config cfg = ((CouchbaseConnectionFactory) connFactory).getVBucketConfig();
     VBucketNodeLocator locator = ((VBucketNodeLocator)
@@ -1559,14 +1559,14 @@ public class CouchbaseClient extends MemcachedClient
           throw new ObservedModifiedException("Key was modified");
         }
         if (!isDelete) {
-          if (r.getValue() == ObserveResponse.FOUND_NOT_PERSISTED) {
+          if (!isMaster && r.getValue() == ObserveResponse.FOUND_NOT_PERSISTED) {
             replicatedTo++;
           }
           if (r.getValue() == ObserveResponse.FOUND_PERSISTED) {
-            replicatedTo++;
             if (isMaster) {
               persistedMaster = true;
             } else {
+              replicatedTo++;
               replicaPersistedTo++;
             }
           }
