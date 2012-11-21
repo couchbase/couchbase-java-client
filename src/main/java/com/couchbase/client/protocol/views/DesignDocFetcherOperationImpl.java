@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2009-2011 Couchbase, Inc.
+  /**
+ * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,19 +38,17 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
- * A ViewsOperationImpl.
+ * Implements the design doc fetching HTTP operation.
  */
-public class ViewsFetcherOperationImpl extends HttpOperationImpl
-    implements ViewsFetcherOperation {
+public class DesignDocFetcherOperationImpl extends HttpOperationImpl
+    implements DesignDocFetcherOperation {
 
-  private final String bucketName;
   private final String designDocName;
 
 
-  public ViewsFetcherOperationImpl(HttpRequest r, String bucketName,
-      String designDocName, ViewsFetcherCallback viewsCallback) {
-    super(r, viewsCallback);
-    this.bucketName = bucketName;
+  public DesignDocFetcherOperationImpl(HttpRequest r, String designDocName,
+    DesignDocFetcherCallback designCallback) {
+    super(r, designCallback);
     this.designDocName = designDocName;
   }
 
@@ -60,9 +58,8 @@ public class ViewsFetcherOperationImpl extends HttpOperationImpl
     try {
       int errorcode = response.getStatusLine().getStatusCode();
       if (errorcode == HttpURLConnection.HTTP_OK) {
-        List<View> views = parseDesignDocumentForViews(bucketName,
-          designDocName, json);
-        ((ViewsFetcherCallback) callback).gotData(views);
+        DesignDocument design = parseDesignDocument(designDocName, json);
+        ((DesignDocFetcherCallback) callback).gotData(design);
         callback.receivedStatus(new OperationStatus(true, "OK"));
       } else {
         callback.receivedStatus(new OperationStatus(false,
@@ -75,27 +72,43 @@ public class ViewsFetcherOperationImpl extends HttpOperationImpl
     callback.complete();
   }
 
-  private List<View> parseDesignDocumentForViews(String dn, String ddn,
-      String json) throws ParseException {
-    List<View> viewList = new LinkedList<View>();
+  private DesignDocument parseDesignDocument(String ddn, String json)
+    throws ParseException {
+    DesignDocument design = new DesignDocument(ddn);
     try {
       JSONObject base = new JSONObject(json);
       if (base.has("error")) {
         return null;
       }
-      if (base.has("views")) {
+      if(base.has("views")) {
         JSONObject views = base.getJSONObject("views");
-        Iterator<?> itr = views.keys();
-        while (itr.hasNext()) {
-          String viewname = (String) itr.next();
-          boolean map = views.getJSONObject(viewname).has("map");
-          boolean reduce = views.getJSONObject(viewname).has("reduce");
-          viewList.add(new View(dn, ddn, viewname, map, reduce));
+        Iterator iterator = views.keys();
+        while (iterator.hasNext()) {
+          ViewDesign view;
+          String name = (String) iterator.next();
+          String map = (String) views.getJSONObject(name).get("map");
+          if(views.getJSONObject(name).has("reduce")) {
+            String reduce = (String) views.getJSONObject(name).get("reduce");
+            view = new ViewDesign(name, map, reduce);
+          } else {
+            view = new ViewDesign(name, map);
+          }
+          design.setView(view);
+        }
+      }
+      if(base.has("spatial")) {
+        JSONObject views = base.getJSONObject("spatial");
+        Iterator iterator = views.keys();
+        while (iterator.hasNext()) {
+          String name = (String) iterator.next();
+          String map = (String) views.get(name);
+          SpatialViewDesign view = new SpatialViewDesign(name, map);
+          design.setSpatialView(view);
         }
       }
     } catch (JSONException e) {
       throw new ParseException("Cannot read json: " + json, 0);
     }
-    return viewList;
+    return design;
   }
 }

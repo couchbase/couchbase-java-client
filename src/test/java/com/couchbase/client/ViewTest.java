@@ -748,8 +748,8 @@ public class ViewTest {
 
     Thread.sleep(2000);
 
-    List<View> storedViews = client.getViews("mydesign");
-    assertEquals(2, storedViews.size());
+    DesignDocument design = client.getDesignDocument("mydesign");
+    assertEquals(2, design.getViews().size());
   }
 
   @Test
@@ -775,8 +775,8 @@ public class ViewTest {
 
     Thread.sleep(2000);
 
-    List<View> storedViews = client.getViews("rawdesign");
-    assertEquals(1, storedViews.size());
+    DesignDocument design = client.getDesignDocument("rawdesign");
+    assertEquals(1, design.getViews().size());
   }
 
   @Test
@@ -788,7 +788,7 @@ public class ViewTest {
 
     boolean success = false;
     try {
-      client.getViews("invalid_design");
+      client.getDesignDocument("invalid_design");
     } catch(InvalidViewException ex) {
       success = true;
     }
@@ -797,8 +797,8 @@ public class ViewTest {
 
   @Test
   public void testDesignDocumentDeletion() throws InterruptedException {
-    List<View> storedViews = client.getViews("mydesign");
-    assertEquals(2, storedViews.size());
+    DesignDocument design = client.getDesignDocument("mydesign");
+    assertEquals(2, design.getViews().size());
 
     boolean success = true;
 
@@ -814,13 +814,13 @@ public class ViewTest {
 
     success = false;
     try {
-      storedViews = client.getViews("mydesign");
+      design = client.getDesignDocument("mydesign");
     } catch(InvalidViewException e) {
       success = true;
     }
     assertTrue(success);
   }
-  
+
   public void testInvalidViewHandling() {
     String designDoc = "invalid_design";
     String viewName = "invalid_view";
@@ -837,10 +837,9 @@ public class ViewTest {
     String designDoc = "invalid_design";
 
     exception.expect(InvalidViewException.class);
-    exception.expectMessage("Could not load views for design doc \""
+    exception.expectMessage("Could not load design document \""
             + designDoc + "\"");
-    List<View> views = client.getViews(designDoc);
-    assertNull(views);
+    client.getDesignDocument(designDoc);
   }
 
 }

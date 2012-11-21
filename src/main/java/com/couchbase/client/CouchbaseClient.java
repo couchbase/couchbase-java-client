@@ -46,8 +46,8 @@ import com.couchbase.client.protocol.views.ViewFetcherOperationImpl;
 import com.couchbase.client.protocol.views.ViewOperation.ViewCallback;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
-import com.couchbase.client.protocol.views.ViewsFetcherOperation;
-import com.couchbase.client.protocol.views.ViewsFetcherOperationImpl;
+import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
+import com.couchbase.client.protocol.views.DesignDocFetcherOperationImpl;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
@@ -425,45 +425,34 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
-   * Gets a future with a list of views for a given design document from the
-   * cluster.
+   * Gets a future with a design document from the cluster.
    *
-   * The purpose of a view is take the structured data stored within the
-   * Couchbase Server database as JSON documents, extract the fields and
-   * information, and to produce an index of the selected information.
-   *
-   * The result is a view on the stored data. The view that is created
-   * during this process allows you to iterate, select and query the
-   * information in your database from the raw data objects that have
-   * been stored.
-   *
-   * Note that since an HttpFuture is returned, the caller must also check to
-   * see if the View is null. The HttpFuture does provide a getStatus() method
-   * which can be used to check whether or not the view request has been
-   * successful.
+   * If no design document was found, the enclosed DesignDocument inside
+   * the future will be null.
    *
    * @param designDocumentName the name of the design document.
-   * @return a future containing a List of View objects from the cluster.
+   * @return a future containing a DesignDocument from the cluster.
    */
-  public HttpFuture<List<View>> asyncGetViews(String designDocumentName) {
-    CouchbaseConnectionFactory factory =
-      (CouchbaseConnectionFactory) connFactory;
+  public HttpFuture<DesignDocument> asyncGetDesignDocument(
+    String designDocumentName) {
     designDocumentName = MODE_PREFIX + designDocumentName;
-    String bucket = factory.getBucketName();
+    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
     String uri = "/" + bucket + "/_design/" + designDocumentName;
     final CountDownLatch couchLatch = new CountDownLatch(1);
-    final HttpFuture<List<View>> crv =
-        new HttpFuture<List<View>>(couchLatch, factory.getViewTimeout());
+    final HttpFuture<DesignDocument> crv =
+        new HttpFuture<DesignDocument>(couchLatch, 60000);
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
-    final HttpOperation op = new ViewsFetcherOperationImpl(request, bucket,
-        designDocumentName, new ViewsFetcherOperation.ViewsFetcherCallback() {
-          private List<View> views = null;
+    final HttpOperation op = new DesignDocFetcherOperationImpl(
+      request,
+      designDocumentName,
+      new DesignDocFetcherOperation.DesignDocFetcherCallback() {
+          private DesignDocument design = null;
 
           @Override
           public void receivedStatus(OperationStatus status) {
-            crv.set(views, status);
+            crv.set(design, status);
           }
 
           @Override
@@ -472,8 +461,8 @@ public class CouchbaseClient extends MemcachedClient
           }
 
           @Override
-          public void gotData(List<View> v) {
-            views = v;
+          public void gotData(DesignDocument d) {
+            design = d;
           }
         });
     crv.setOperation(op);
@@ -545,24 +534,24 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   /**
-   * Gets a list of views for a given design document from the cluster.
+   * Returns a representation of a design document stored in the cluster.
    *
    * @param designDocumentName the name of the design document.
-   * @return a list of View objects from the cluster.
+   * @return a DesignDocument object from the cluster.
    * @throws InvalidViewException if no design document or view was found.
    */
-  public List<View> getViews(final String designDocumentName) {
+  public DesignDocument getDesignDocument(final String designDocumentName) {
     try {
-      List<View> views = asyncGetViews(designDocumentName).get();
-      if(views == null) {
-        throw new InvalidViewException("Could not load views for design doc \""
+      DesignDocument design = asyncGetDesignDocument(designDocumentName).get();
+      if(design == null) {
+        throw new InvalidViewException("Could not load design document \""
           + designDocumentName + "\"");
       }
-      return views;
+      return design;
     } catch (InterruptedException e) {
-      throw new RuntimeException("Interrupted getting views", e);
+      throw new RuntimeException("Interrupted getting design document", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed getting views", e);
+      throw new RuntimeException("Failed getting design document", e);
     }
   }
 

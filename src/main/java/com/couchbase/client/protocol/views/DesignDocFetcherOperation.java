@@ -29,12 +29,12 @@ import net.spy.memcached.ops.OperationCallback;
 /**
  * A ViewsOperation.
  */
-public interface ViewsFetcherOperation {
+public interface DesignDocFetcherOperation {
 
   /**
    * A ViewsCallback.
    */
-  interface ViewsFetcherCallback extends OperationCallback {
-    void gotData(List<View> views);
+  interface DesignDocFetcherCallback extends OperationCallback {
+    void gotData(DesignDocument d);
   }
 }
