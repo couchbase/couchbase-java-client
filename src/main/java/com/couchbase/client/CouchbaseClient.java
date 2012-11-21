@@ -558,6 +558,10 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   public HttpFuture<ViewResponse> asyncQuery(AbstractView view, Query query) {
+    if(view.hasReduce() && !query.getArgs().containsKey("reduce")) {
+      query.setReduce(true);
+    }
+
     if (query.willReduce()) {
       return asyncQueryAndReduce(view, query);
     } else if (query.willIncludeDocs()) {

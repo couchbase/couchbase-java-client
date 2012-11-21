@@ -297,9 +297,25 @@ public class ViewTest {
     Iterator<ViewRow> itr = reduce.iterator();
     while (itr.hasNext()) {
       ViewRow row = itr.next();
-      assert row.getKey() == null;
-      assert Integer.valueOf(row.getValue()) == ITEMS.size()
-          : future.getStatus();
+      assertNull(row.getKey());
+      assertEquals(ITEMS.size(), Integer.parseInt(row.getValue()));
+    }
+  }
+
+  /**
+   * When a view with reduce is selected, make sure that implicitly
+   * reduce is used to align with the UI behavior.
+   */
+  @Test
+  public void testImplicitReduce() {
+    Query query = new Query();
+    View view = client.getView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
+    ViewResponse reduce = client.query(view, query);
+    Iterator<ViewRow> iterator = reduce.iterator();
+    while(iterator.hasNext()) {
+      ViewRow row = iterator.next();
+      assertNull(row.getKey());
+      assertEquals(ITEMS.size(), Integer.parseInt(row.getValue()));
     }
   }
 
