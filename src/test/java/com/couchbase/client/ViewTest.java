@@ -756,7 +756,7 @@ public class ViewTest {
     int docAmount = 500;
     for (int i = 1; i <= docAmount; i++) {
       String value = "{\"type\":\"observetest\",\"value\":"+i+"}";
-      client.set("observetest"+i, 0, value, PersistTo.MASTER, ReplicateTo.ONE);
+      assertTrue(client.set("observetest"+i, 0, value, PersistTo.MASTER).get());
     }
 
     Query query = new Query().setStale(Stale.FALSE);
