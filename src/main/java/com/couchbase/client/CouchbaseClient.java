@@ -321,11 +321,15 @@ public class CouchbaseClient extends MemcachedClient
    */
   public HttpFuture<View> asyncGetView(String designDocumentName,
       final String viewName) {
+    CouchbaseConnectionFactory factory =
+      (CouchbaseConnectionFactory) connFactory;
+
     designDocumentName = MODE_PREFIX + designDocumentName;
-    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+    String bucket = factory.getBucketName();
     String uri = "/" + bucket + "/_design/" + designDocumentName;
     final CountDownLatch couchLatch = new CountDownLatch(1);
-    final HttpFuture<View> crv = new HttpFuture<View>(couchLatch, 60000);
+    final HttpFuture<View> crv = new HttpFuture<View>(couchLatch,
+      factory.getViewTimeout());
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
@@ -374,12 +378,14 @@ public class CouchbaseClient extends MemcachedClient
    */
   public HttpFuture<SpatialView> asyncGetSpatialView(String designDocumentName,
       final String viewName) {
+    CouchbaseConnectionFactory factory =
+      (CouchbaseConnectionFactory) connFactory;
     designDocumentName = MODE_PREFIX + designDocumentName;
-    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+    String bucket = factory.getBucketName();
     String uri = "/" + bucket + "/_design/" + designDocumentName;
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<SpatialView> crv = new HttpFuture<SpatialView>(
-      couchLatch, 60000);
+      couchLatch, factory.getViewTimeout());
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
@@ -431,12 +437,14 @@ public class CouchbaseClient extends MemcachedClient
    * @return a future containing a List of View objects from the cluster.
    */
   public HttpFuture<List<View>> asyncGetViews(String designDocumentName) {
+    CouchbaseConnectionFactory factory =
+      (CouchbaseConnectionFactory) connFactory;
     designDocumentName = MODE_PREFIX + designDocumentName;
-    String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
+    String bucket = factory.getBucketName();
     String uri = "/" + bucket + "/_design/" + designDocumentName;
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<List<View>> crv =
-        new HttpFuture<List<View>>(couchLatch, 60000);
+        new HttpFuture<List<View>>(couchLatch, factory.getViewTimeout());
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
@@ -580,7 +588,8 @@ public class CouchbaseClient extends MemcachedClient
     String uri = viewUri + queryToRun;
     getLogger().info("lookin for:" + uri);
     final CountDownLatch couchLatch = new CountDownLatch(1);
-    final ViewFuture crv = new ViewFuture(couchLatch, 60000, view);
+    int timeout = ((CouchbaseConnectionFactory) connFactory).getViewTimeout();
+    final ViewFuture crv = new ViewFuture(couchLatch, timeout, view);
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
@@ -631,8 +640,9 @@ public class CouchbaseClient extends MemcachedClient
       Query query) {
     String uri = view.getURI() + query.toString();
     final CountDownLatch couchLatch = new CountDownLatch(1);
+    int timeout = ((CouchbaseConnectionFactory) connFactory).getViewTimeout();
     final HttpFuture<ViewResponse> crv =
-        new HttpFuture<ViewResponse>(couchLatch, 60000);
+        new HttpFuture<ViewResponse>(couchLatch, timeout);
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
@@ -675,8 +685,9 @@ public class CouchbaseClient extends MemcachedClient
     }
     String uri = view.getURI() + query.toString();
     final CountDownLatch couchLatch = new CountDownLatch(1);
+    int timeout = ((CouchbaseConnectionFactory) connFactory).getViewTimeout();
     final HttpFuture<ViewResponse> crv =
-        new HttpFuture<ViewResponse>(couchLatch, 60000);
+        new HttpFuture<ViewResponse>(couchLatch, timeout);
 
     final HttpRequest request =
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);

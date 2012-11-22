@@ -83,7 +83,6 @@ public class CouchbaseConnectionFactoryBuilderTest {
    */
   @Test
   public void testSetObsPollMax() throws IOException {
-    System.out.println("setObsPollMax");
     int maxPoll = 40;
     CouchbaseConnectionFactoryBuilder instance =
       new CouchbaseConnectionFactoryBuilder();
@@ -91,6 +90,28 @@ public class CouchbaseConnectionFactoryBuilderTest {
       = instance.setObsPollMax(maxPoll);
     assertEquals(instance, instanceResult);
     assertEquals(maxPoll, instanceResult.getObsPollMax());
+    instance.buildCouchbaseConnection(uris, "default", "");
+  }
+
+  /**
+   * Test of setViewTimeout method, of class CouchbaseConnectionFactoryBuilder.
+   */
+  @Test
+  public void testSetViewTimeout() throws IOException {
+    int viewTimeout = 30000;
+    int lowTimeout = 200;
+    int lowerTimeoutLimit = 500;
+
+    CouchbaseConnectionFactoryBuilder instance =
+      new CouchbaseConnectionFactoryBuilder();
+     CouchbaseConnectionFactoryBuilder instanceResult
+      = instance.setViewTimeout(viewTimeout);
+    assertEquals(instance, instanceResult);
+    assertEquals(viewTimeout, instanceResult.getViewTimeout());
+
+    instanceResult = instance.setViewTimeout(lowTimeout);
+    assertEquals(lowerTimeoutLimit, instanceResult.getViewTimeout());
+
     instance.buildCouchbaseConnection(uris, "default", "");
   }
 }

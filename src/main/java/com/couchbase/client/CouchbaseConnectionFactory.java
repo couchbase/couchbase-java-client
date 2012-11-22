@@ -109,6 +109,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private ExecutorService resubExec = Executors.newSingleThreadExecutor();
   private long obsPollInterval = 100;
   private int obsPollMax = 400;
+  private int viewTimeout = 75000;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
       final String bucketName, String password)
@@ -197,6 +198,10 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
 
   public String getBucketName() {
     return bucket;
+  }
+
+  public int getViewTimeout() {
+    return this.viewTimeout;
   }
 
   public Config getVBucketConfig() {

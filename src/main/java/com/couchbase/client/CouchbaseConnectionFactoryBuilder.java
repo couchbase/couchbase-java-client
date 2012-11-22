@@ -30,6 +30,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.ConnectionObserver;
@@ -51,6 +53,9 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
     CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL;
   private long obsPollInterval;
   private int obsPollMax;
+  private int viewTimeout;
+  private static final Logger LOGGER =
+    Logger.getLogger(CouchbaseConnectionFactoryBuilder.class.getName());
 
   public Config getVBucketConfig() {
     return vBucketConfig;
@@ -73,6 +78,20 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
     obsPollMax = maxPoll;
     return this;
   }
+
+  public CouchbaseConnectionFactoryBuilder setViewTimeout(int timeout) {
+    if(timeout < 500) {
+      timeout = 500;
+      LOGGER.log(Level.WARNING, "ViewTimeout is too short. Overriding "
+        + "viewTimeout with threshold of 500ms.");
+    } else if(timeout < 2500) {
+      LOGGER.log(Level.WARNING, "ViewTimeout is very short, should be "
+        + "more than 2500ms.");
+    }
+    viewTimeout = timeout;
+    return this;
+  }
+
   /**
    * Get the CouchbaseConnectionFactory set up with the provided parameters.
    * Note that a CouchbaseConnectionFactory requires the failure mode is set
@@ -211,6 +230,11 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
         return obsPollMax;
       }
 
+      @Override
+      public int getViewTimeout() {
+        return viewTimeout;
+      }
+
     };
   }
 
@@ -226,5 +250,12 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
    */
   public int getObsPollMax() {
     return obsPollMax;
+  }
+
+  /**
+   * @return the viewTimeout
+   */
+  public int getViewTimeout() {
+    return viewTimeout;
   }
 }
