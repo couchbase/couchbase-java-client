@@ -236,6 +236,7 @@
     <echo>IPV4 address ${server.address_v4}</echo>
     <echo>IPV6 address ${server.address_v6}</echo>
     <echo>Test Type (unit|ci) ${test.type}</echo>
+    <echo>Testing against ${java.version}</echo>
     <delete dir="${junit.dir}"/>
     <mkdir  dir="${junit.dir}/data"/>
     <junit fork="yes" timeout="5400000" failureproperty="junit.failure" showoutput="true">
@@ -280,7 +281,8 @@
         srcdir="${test.dir}"
         includes="**/*.java"
         destdir="${build.test.classes}"
-        debug="${javac.debug}">
+        debug="${javac.debug}"
+        includeantruntime="false">
       <classpath>
         <path refid="test.classpath"/>
       </classpath>
@@ -357,6 +359,7 @@
 
   <target name="compile" depends="ivy-init, gen-version, ivy-retrieve"
       description="Compile and run the project">
+    <echo>Compiling against ${java.version}</echo>
     <mkdir dir="${build.classes}" />
     <javac
         encoding="${build.encoding}"
@@ -364,18 +367,9 @@
         includes="**/*.java"
         destdir="${build.classes}"
         debug="${javac.debug}"
-        deprecation="${javac.deprecation}">
+        deprecation="${javac.deprecation}"
+        includeantruntime="false">
       <classpath refid="${name}.common.classpath" />
-    </javac>
-
-    <javac
-        encoding="${build.encoding}"
-        srcdir="${build.src.dir}"
-        includes="**/*.java"
-        destdir="${build.classes}"
-        debug="${javac.debug}"
-        deprecation="${javac.deprecation}">
-      <classpath refid="${name}.common.classpath"/>
     </javac>
     <move file="${build.src.dir}/com/couchbase/client/changelog.txt"
         tofile="${build.classes}/com/couchbase/client/changelog.txt" />
