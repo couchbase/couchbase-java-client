@@ -123,11 +123,21 @@ public class DefaultConfig implements Config {
     return vbuckets;
   }
 
+  /**
+   * Compares the given configuration with the current configuration
+   * and calculates the differences.
+   *
+   * Note that if a MEMCACHE type config is used, only the servers are compared
+   * because MEMCACHE buckets do not contain vBuckets. If COUCHBASE configs
+   * are compared, also the vBucket changes are taken into account.
+   *
+   * @param config the new config to compare against.
+   * @return the differences between the configurations.
+   */
   @Override
   public ConfigDifference compareTo(Config config) {
     ConfigDifference difference = new ConfigDifference();
 
-    // Verify the servers are equal in their positions
     if (this.serversCount == config.getServersCount()) {
       difference.setSequenceChanged(false);
       for (int i = 0; i < this.serversCount; i++) {
@@ -137,12 +147,11 @@ public class DefaultConfig implements Config {
         }
       }
     } else {
-      // Just say yes
       difference.setSequenceChanged(true);
     }
 
-    // Count the number of vbucket differences
-    if (this.vbucketsCount == config.getVbucketsCount()) {
+    if (config.getConfigType().equals(ConfigType.COUCHBASE) &&
+      this.vbucketsCount == config.getVbucketsCount()) {
       int vbucketsChanges = 0;
       for (int i = 0; i < this.vbucketsCount; i++) {
         vbucketsChanges += (this.getMaster(i) == config.getMaster(i)) ? 0 : 1;
