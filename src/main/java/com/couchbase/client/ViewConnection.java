@@ -194,7 +194,7 @@ public class ViewConnection extends SpyObject implements
   /**
    * Returns the currently connected ViewNodes.
    *
-   * @return
+   * @return a list of currently connected ViewNodes.
    */
   public List<ViewNode> getConnectedNodes() {
     return couchNodes;

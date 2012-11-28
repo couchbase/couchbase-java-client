@@ -122,7 +122,7 @@ public class ClusterManager extends SpyObject {
    * Creates the default bucket.
    *
    * @param type The bucket type to create.
-   * @param memorySize The amount of memory to allocate to this bucket.
+   * @param memorySizeMB The amount of memory to allocate to this bucket.
    * @param replicas The number of replicas for this bucket.
    */
   public void createDefaultBucket(BucketType type, int memorySizeMB,
@@ -136,9 +136,9 @@ public class ClusterManager extends SpyObject {
    *
    * @param type The bucket type to create.
    * @param name The name of the bucket.
-   * @param memorySize The amount of memory to allocate to this bucket.
+   * @param memorySizeMB The amount of memory to allocate to this bucket.
    * @param replicas The number of replicas for this bucket.
-   * @param password The password for this bucket.
+   * @param authPassword The password for this bucket.
    */
   public void createSaslBucket(BucketType type, String name,
       int memorySizeMB, int replicas, String authPassword) {
@@ -151,7 +151,7 @@ public class ClusterManager extends SpyObject {
    *
    * @param type The bucket type to create.
    * @param name The name of the bucket.
-   * @param memorySize The amount of memory to allocate to this bucket.
+   * @param memorySizeMB The amount of memory to allocate to this bucket.
    * @param replicas The number of replicas for this bucket.
    * @param port The port for this bucket to listen on.
    */
