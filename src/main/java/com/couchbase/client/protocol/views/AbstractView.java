@@ -23,34 +23,77 @@
 package com.couchbase.client.protocol.views;
 
 /**
- * A base class for views and spatial views.
+ * The base class for Views and Spatial Views.
+ *
+ * This class acts as a base class for both map/reduce views and spatial
+ * views. Do not use this class directly, but instead create instances from
+ * either the View or the SpatialView classes.
  */
 public abstract class AbstractView {
   private final String viewName;
   private final String designDocumentName;
   private final String databaseName;
 
-  public AbstractView(String dn, String ddn, String vn) {
-    databaseName = dn;
-    designDocumentName = ddn;
-    viewName = vn;
+  /**
+   * Instantiate a AbstractView object.
+   *
+   * This should only be used by subclasses like View or SpatialView.
+   *
+   * @param database the name of the database.
+   * @param designDoc the name of the corresponding design document.
+   * @param view the name of the view itself.
+   */
+  public AbstractView(String database, String designDoc, String view) {
+    databaseName = database;
+    designDocumentName = designDoc;
+    viewName = view;
   }
 
+  /**
+   * Returns the database (bucket) name.
+   *
+   * @return the database (bucket) name.
+   */
   public String getDatabaseName() {
     return databaseName;
   }
 
+  /**
+   * Returns the design document name.
+   *
+   * @return the name of the design document.
+   */
   public String getDesignDocumentName() {
     return designDocumentName;
   }
 
+  /**
+   * Returns the view name.
+   *
+   * @return the name of the view.
+   */
   public String getViewName() {
     return viewName;
   }
 
+  /**
+   * Checks if the view has a "map" method defined.
+   *
+   * @return true if it has a "map" method defined, false otherwise.
+   */
   public abstract boolean hasMap();
 
+  /**
+   * Checks if the view has a "reduce" method defined.
+   *
+   * @return true if it has a "reduce" method defined, false otherwise.
+   */
   public abstract boolean hasReduce();
 
+  /**
+   * Returns the URI/String representation of the View.
+   *
+   * @return the URI path of the View to query against the cluster.
+   */
   public abstract String getURI();
 }

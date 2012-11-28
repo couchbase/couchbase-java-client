@@ -28,20 +28,44 @@ package com.couchbase.client.protocol.views;
  */
 public class SpatialView extends AbstractView {
 
-  public SpatialView(String dn, String ddn, String vn) {
-    super(dn, ddn, vn);
+  /**
+   * Create a new Spatial View object.
+   *
+   * @param database the name of the database.
+   * @param designDoc the name of the corresponding design document.
+   * @param viewName the name of the view itself.
+   */
+  public SpatialView(String database, String designDoc, String viewName) {
+    super(database, designDoc, viewName);
   }
 
+  /**
+   * Will always return true, because Spatial Views need to have a map
+   * function.
+   *
+   * @return true.
+   */
   @Override
   public boolean hasMap() {
     return true;
   }
 
+  /**
+   * Will always return false, because Spatial Views can't have reduce
+   * functions.
+   *
+   * @return false.
+   */
   @Override
   public boolean hasReduce() {
     return false;
   }
 
+  /**
+   * Returns the URI/String representation of the Spatial View.
+   *
+   * @return the URI path of the Spatial View to query against the cluster.
+   */
   @Override
   public String getURI() {
     return "/" + getDatabaseName() + "/_design/" + getDesignDocumentName()
