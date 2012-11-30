@@ -22,7 +22,9 @@
 
 package com.couchbase.client.protocol.views;
 
+import com.couchbase.client.vbucket.config.Bucket;
 import java.text.ParseException;
+import java.util.logging.Logger;
 
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationErrorType;
@@ -41,9 +43,13 @@ public abstract class ViewOperationImpl extends HttpOperationImpl
 
   private AbstractView view;
 
+  protected static final Logger LOGGER = Logger.getLogger(
+    ViewOperationImpl.class.getName());
+
   public ViewOperationImpl(HttpRequest r, AbstractView view,
     OperationCallback cb) {
     super(r, cb);
+    this.view = view;
   }
 
   public AbstractView getView() {

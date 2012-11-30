@@ -66,6 +66,7 @@ public class Query {
   private static final String STARTKEYDOCID = "startkey_docid";
   private static final String ONERROR = "on_error";
   private static final String BBOX = "bbox";
+  private static final String DEBUG = "debug";
   private boolean includedocs = false;
 
   private Map<String, Object> args;
@@ -413,6 +414,17 @@ public class Query {
   }
 
   /**
+   * Enabled debugging on view queries.
+   *
+   * @param debug True when debugging should be enabled.
+   * @return The Query instance.
+   */
+  public Query setDebug(boolean debug) {
+    args.put(DEBUG, Boolean.valueOf(debug));
+    return this;
+  }
+
+  /**
    * Creates a new query instance and returns it with the properties
    * bound to the current object.
    *
@@ -470,6 +482,9 @@ public class Query {
       String[] bbox = ((String)args.get(BBOX)).split(",");
       query.setBbox(Double.parseDouble(bbox[0]), Double.parseDouble(bbox[1]),
         Double.parseDouble(bbox[2]), Double.parseDouble(bbox[3]));
+    }
+    if (args.containsKey(DEBUG)) {
+      query.setDebug(((Boolean)args.get(DEBUG)).booleanValue());
     }
     query.setIncludeDocs(willIncludeDocs());
 

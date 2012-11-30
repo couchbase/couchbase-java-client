@@ -25,6 +25,7 @@ package com.couchbase.client.protocol.views;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.apache.http.HttpRequest;
 import org.codehaus.jettison.json.JSONArray;
@@ -64,6 +65,10 @@ public class NoDocsOperationImpl extends ViewOperationImpl {
               rows.add(new ViewRowNoDocs(id, key, value));
             }
           }
+        }
+        if (base.has("debug_info")) {
+          LOGGER.log(Level.INFO, "Debugging View {0}: {1}",
+            new Object[]{getView().getURI(), json});
         }
         if (base.has("errors")) {
           JSONArray ids = base.getJSONArray("errors");
