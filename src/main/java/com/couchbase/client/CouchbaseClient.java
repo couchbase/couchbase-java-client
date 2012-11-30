@@ -1658,6 +1658,9 @@ public class CouchbaseClient extends MemcachedClient
     if(replicate == null) {
       replicate = ReplicateTo.ZERO;
     }
+    ((CouchbaseConnectionFactory)connFactory).
+      checkConfigAgainstPersistence(persist, replicate);
+
     int persistReplica = persist.getValue() > 0 ? persist.getValue() - 1 : 0;
     int replicateTo = replicate.getValue();
     int obsPolls = 0;
