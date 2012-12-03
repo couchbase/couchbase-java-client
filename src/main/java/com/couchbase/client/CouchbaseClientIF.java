@@ -80,6 +80,10 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
           String value, PersistTo req, ReplicateTo rep);
   CASResponse cas(String key, long cas,
           String value, PersistTo req);
+  OperationFuture<Boolean> delete(String key, PersistTo persist);
+  OperationFuture<Boolean> delete(String key, PersistTo persist,
+          ReplicateTo replicate);
+  OperationFuture<Boolean> delete(String key, ReplicateTo replicate);
 
   int getNumVBuckets();
 }
