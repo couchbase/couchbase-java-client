@@ -25,16 +25,12 @@ package com.couchbase.client;
 import com.couchbase.client.clustermanager.BucketType;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import net.spy.memcached.TestConfig;
-import net.spy.memcached.internal.OperationFuture;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -83,6 +79,11 @@ public class FlushTest {
 
   /**
    * Test the flush command against a bucket when enabled and check success.
+   *
+   * @pre Use the server configuration for connection. Set sample documents
+   * to the database in a loop. Flush the data and check its return value.
+   * @post Shutdown the client.
+   * @throws Exception
    */
   @Ignore("Disabled for JCBC-173/MB-7381.") @Test
   public void testFlushWhenEnabled() throws Exception {
@@ -110,6 +111,11 @@ public class FlushTest {
 
   /**
    * Test the flush command against a bucket when disabled and check errors.
+   *
+   * @pre Use the server configuration for connection. Set sample documents
+   * to the database in a loop. Flush the data and check its return value.
+   * @post Shutdown the client.
+   * @throws Exception
    */
   @Ignore("Disabled for JCBC-173/MB-7381.") @Test
   public void testFlushWhenDisabled() throws Exception {
@@ -119,7 +125,7 @@ public class FlushTest {
       uris, NOFLUSH_BUCKET, NOFLUSH_BUCKET);
 
     for(int i = 0; i <= 10; i++) {
-     client.set("doc:"+ i, 0, "sampledocument").get();
+      client.set("doc:"+ i, 0, "sampledocument").get();
     }
 
     for(int i = 0; i <= 10; i++) {

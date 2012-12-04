@@ -34,10 +34,23 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the correct initialization and reconfiguration of a memcache-bucket.
+ * Tests the correct initialization and reconfiguration of a memcached-bucket.
  */
 public class CouchbaseClientMemcachedBucketTest {
 
+  /**
+   * Check the memcached bucket initialization.
+   *
+   * @pre Retrieve the server configuration stored in TestConfig.
+   * Create a couchbase connection factory instance using the retrieved
+   * configuration, memcached-bucket and the configuration provider instance.
+   * Create a client with the connection factory, reconfigure the client
+   * and shut it down.
+   * @post Test succeeds and an assert is returned with the message
+   * that the initialization was successful.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void testMemcacheBucketInitialization() throws IOException {
     boolean success = true;

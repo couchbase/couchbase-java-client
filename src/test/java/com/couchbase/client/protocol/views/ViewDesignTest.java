@@ -53,6 +53,15 @@ public class ViewDesignTest {
   public void tearDown() {
   }
 
+  /**
+   * Tests the ViewDesign instance created
+   * from a view name and a map.
+   *
+   * @pre Prepare ViewDesign using view
+   * name and a map as the criteria.
+   * @post Asserts true.
+   * @throws UnsupportedEncodingException
+   */
   @Test
   public void testViewDesignWithoutReduce() {
     String name = "beers";
@@ -63,6 +72,15 @@ public class ViewDesignTest {
     assertEquals("", view.getReduce());
   }
 
+  /**
+   * Tests the ViewDesign instance created from
+   * a view name, map and reduce functions.
+   *
+   * @pre Prepare ViewDesign using view name,
+   * map and reduce functions as the criteria.
+   * @post Asserts true.
+   * @throws UnsupportedEncodingException
+   */
   @Test
   public void testViewDesignWithReduce() {
     String name = "beers";
@@ -73,6 +91,4 @@ public class ViewDesignTest {
     assertEquals(map, view.getMap());
     assertEquals(reduce, view.getReduce());
   }
-
-
 }

@@ -63,6 +63,15 @@ import static org.mockito.Mockito.mock;
  */
 public class ViewNodeTest {
 
+  /**
+   * This test tries to retrieve unresponsive node by establishing an HTTP
+   * connection to a single Couchbase node.
+   *
+   * @pre Build a connection manager and socket address using the server
+   * configurations. Pass these to ViewNode to retrieve its new instance.
+   * Call writeOp to request for connection.
+   * @post Asserts false if its not able to get connection.
+   */
   @Test
   public void testUnresponsiveViewNode() throws IOReactorException {
     AsyncConnectionManager mgr = createConMgr(TestConfig.IPV4_ADDR, 8091);

@@ -43,7 +43,7 @@ import net.spy.memcached.ops.StoreType;
  * A test for optimized sets.
  *
  * This should generate an optimized set of sets, with one set destined for the
- * wrong vbucket in the middle of the group.  This wrong
+ * wrong vbucket in the middle of the group.
  */
 public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
   private TestingCouchbaseClient tclient;
@@ -60,6 +60,16 @@ public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
     client = tclient;
   }
 
+  /**
+   * Failed to test optimised store.
+   *
+   * @pre  Use the new instance of OptimizedSetImpl to add Set operations
+   * with different keys to be queued. Initialise this to check if the
+   * set operations are properly queued to the server.
+   * @post  Assert if its not properly queued. Also queue the operation
+   * by calling enqueueTestOperation using the client instance.
+   *
+   */
   public void failedtotestOptimizedStore() {
     OptimizedSetImpl toTry = new OptimizedSetImpl(new StoreOperationImpl(
       StoreType.set, "key", 0, 10,
@@ -76,6 +86,18 @@ public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
     tclient.enqueueTestOperation("key", toTry);
   }
 
+  /**
+   * Test optimised store.
+   *
+   * @pre  Use the new instance of OperationFuture to perform set
+   * operations with different keys. Keep adding all the set results
+   * in an array list object.
+   * @post  Verify if they're all successful. Assert if key is found
+   * in server.
+   *
+   * @throws InterruptedException the interrupted exception
+   * @throws ExecutionException the execution exception
+   */
   public void testOptimizedStore() throws InterruptedException,
     ExecutionException {
 
@@ -83,8 +105,6 @@ public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
 
     ArrayList<OperationFuture<Boolean>> completed =
       new ArrayList<OperationFuture<Boolean>>();
-
-    OperationFuture<Boolean> lastBogus, lastReal;
 
     System.err.println("Setting regular and bogus keys.  Bogus should retry.");
     for (int i=1; i<19; i++) {
@@ -130,9 +150,6 @@ public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
 
       Object result = client.get(doneOpf.getKey());
       assertNotNull("Key was not set " + doneOpf.getKey(), result);
-
     }
-
   }
-
 }

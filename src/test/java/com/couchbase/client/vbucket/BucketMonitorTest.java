@@ -42,6 +42,15 @@ public class BucketMonitorTest extends TestCase {
   private static final ConfigurationParserMock CONFIG_PARSER =
       new ConfigurationParserMock();
 
+  /**
+   * Tests instantiation of the BucketMonitor.
+   *
+   * @pre Prepare a new instance of BucketMonitor with
+   * configured URI, bucket name, user, password and parser.
+   * @post Asserts true if the bucket monitor's user and
+   * password match with those configured.
+   * @throws Exception
+   */
   public void testInstantiate() throws Exception {
 
     BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
@@ -50,13 +59,23 @@ public class BucketMonitorTest extends TestCase {
     assertEquals(PASSWORD, bucketMonitor.getHttpPass());
   }
 
+  /**
+   * Tests observer on BucketMonitor.
+   *
+   * @pre Prepare a new instance of BucketMonitor with
+   * configured URI, bucket name, user, password and parser.
+   * Add observer to it and start the monitor. Asserts
+   * true as the update for observer was not called.
+   * @post Asserts true if the bucket monitor's user
+   * and password match with those configured.
+   * Shutdown the bucket monitor.
+   * @throws Exception
+   */
   public void testObservable() throws Exception {
     BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
         BUCKET_NAME, USERNAME, PASSWORD, CONFIG_PARSER);
 
     BucketObserverMock observer = new BucketObserverMock();
-    bucketMonitor.addObserver(observer);
-
     bucketMonitor.addObserver(observer);
 
     bucketMonitor.startMonitor();

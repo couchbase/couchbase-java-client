@@ -73,9 +73,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/**
- * A CouchbaseClientTest.
- */
 public class ViewTest {
 
   protected static TestingClient client = null;
@@ -242,6 +239,13 @@ public class ViewTest {
     assertTrue("Assertions are not enabled!", caught);
   }
 
+  /**
+   * Tests the view query with docs i.e. includeDocs and no reduce.
+   *
+   * @pre Retrieve a view including docs from the client.
+   *    Perform an async query on the view.
+   * @post Assert row id and document id if successful.
+   */
   @Test
   public void testQueryWithDocs() {
     Query query = new Query();
@@ -271,6 +275,14 @@ public class ViewTest {
     assert ITEMS.size() == response.size() : future.getStatus().getMessage();
   }
 
+  /**
+   * Tests the view query without includeDocs and reduce.
+   *
+   * @pre Retrieve a view from the client.
+   *   Perform an async query on the view.
+   * @post Assert status and the response size.
+   * @throws Exception
+   */
   @Test
   public void testViewNoDocs() throws Exception {
     Query query = new Query();
@@ -291,6 +303,15 @@ public class ViewTest {
     assert response.size() == ITEMS.size() : future.getStatus();
   }
 
+  /**
+   * Tests the view query with reduce functionality.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Iterate over the reduced result set and
+   *   assert the key value and size of the returned results.
+   * @throws Exception
+   */
   @Test
   public void testReduce() throws Exception {
     Query query = new Query();
@@ -310,8 +331,14 @@ public class ViewTest {
   }
 
   /**
-   * When a view with reduce is selected, make sure that implicitly
-   * reduce is used to align with the UI behavior.
+   * Tests the view query with implicit reduce.
+   *
+   * @pre Retrieve a view from the client. Perform an async
+   *    query on the view. When a view with reduce is selected,
+   *    make sure that implicitly reduce is used to align with
+   *    the UI behaviour.
+   * @post  Iterate over the reduced result set and assert
+   *    the key value and size of the returned results.
    */
   @Test
   public void testImplicitReduce() {
@@ -326,6 +353,14 @@ public class ViewTest {
     }
   }
 
+  /**
+   * Tests the view query with query set descending.
+   *
+   * @pre Retrieve a view from the client.
+   *   Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetDescending() throws Exception {
     Query query = new Query();
@@ -337,6 +372,14 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with last document id.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetEndKeyDocID() throws Exception {
     Query query = new Query();
@@ -348,6 +391,14 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with grouping true.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetGroup() throws Exception {
     Query query = new Query();
@@ -359,6 +410,14 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with grouping true and without reduce.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  InvalidViewException will be returned.
+   * @throws Exception
+   */
   @Test(expected = InvalidViewException.class)
   public void testQuerySetGroupNoReduce() throws Exception {
     Query query = new Query();
@@ -367,6 +426,14 @@ public class ViewTest {
     client.asyncQuery(view, query).get();
   }
 
+  /**
+   * Tests the view query with group level as 1.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetGroupWithLevel() throws Exception {
     Query query = new Query();
@@ -378,6 +445,14 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with last result set included.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetInclusiveEnd() throws Exception {
     Query query = new Query();
@@ -389,6 +464,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with a key id set. It will return
+   *    only documents that match the specified key.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetKey() throws Exception {
     Query query = new Query();
@@ -400,6 +484,16 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with limit as 10,
+   *    to return only 10 documents.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   * @TODO Inspect the correctness of the limit.
+   */
   @Test
   public void testQuerySetLimit() throws Exception {
     Query query = new Query();
@@ -411,6 +505,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with start and end key values.
+   *    Returns records in the given key range.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetRange() throws Exception {
     Query query = new Query();
@@ -422,6 +525,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with start key. Return records
+   *    with a value equal to or greater than the specified key.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetRangeStart() throws Exception {
     Query query = new Query();
@@ -433,7 +545,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
-
+  /**
+   * Tests the view query with complex key as the starting key.
+   *
+   * @pre  Prepare a complex query with date as the criteria.
+   *       Retrieve a view from the client.
+   *       Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetRangeStartComplexKey() throws Exception {
 
@@ -456,6 +576,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with last key. Stops returning
+   *    records when the specified key is reached.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetRangeEnd() throws Exception {
     Query query = new Query();
@@ -467,6 +596,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query with a skip number so as to skip
+   *    that many records before starting to return the results.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetSkip() throws Exception {
     Query query = new Query();
@@ -478,6 +616,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query which allows the
+   *    results from a stale view to be used.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetStale() throws Exception {
     Query query = new Query();
@@ -489,6 +636,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the view query by setting the start
+   *    key doc id to return records starting with it.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetStartkeyDocID() throws Exception {
     Query query = new Query();
@@ -500,6 +656,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the query with OnError parameter set.
+   *    Sets the response in the event of an error.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testQuerySetOnError() throws Exception {
     Query query = new Query();
@@ -511,6 +676,15 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Tests the query with reduce as true but not set.
+   *
+   * @pre Retrieve a view from the client.
+   *    Perform an async query on the view.
+   * @post  InvalidViewException is caught and
+   *    the query happens without reduce.
+   * @throws Exception
+   */
   @Test
   public void testReduceWhenNoneExists() throws Exception {
     Query query = new Query();
@@ -524,6 +698,13 @@ public class ViewTest {
     assert false : ("No view exists and this query still happened");
   }
 
+  /**
+   * Tests the query with complex key of range end.
+   *
+   * @pre Retrieve a view from the client. Perform an async query on the view.
+   * @post Assert the response status is not null.
+   * @throws Exception
+   */
   @Test
   public void testComplexKeyQuery() throws Exception {
     Query query = new Query();
@@ -537,6 +718,18 @@ public class ViewTest {
     assert response != null : future.getStatus();
   }
 
+  /**
+   * Test view with docs with errors. It tries to
+   * ensure that the client does not crash when receiving a
+   * bad HTTP response.
+   *
+   * @pre Prepare a new view and instantiate a new Http
+   * NoDocs operation on the same.Verify the Http Response
+   * having the rows array as empty.
+   * @post Validates the Http Operation as successful if
+   * the view has got data and request reaches the server.
+   * @throws Exception
+   */
   @Test
   public void testViewDocsWithErrors() throws Exception {
     View view = new View("a", "b", "c", true, true);
@@ -571,6 +764,18 @@ public class ViewTest {
     op.handleResponse(response);
   }
 
+  /**
+   * Test view no docs with errors. It tries to
+   * ensure that the client does not crash when receiving a
+   * bad HTTP response.
+   *
+   * @pre Prepare a new view and instantiate a new Http
+   * NoDocs operation on the same. Verify the Http Response
+   * having the rows array as empty.
+   * @post Validates the Http Operation as successful if
+   * the view has got data and request reaches the server.
+   * @throws Exception
+   */
   @Test
   public void testViewNoDocsWithErrors() throws Exception {
     View view = new View("a", "b", "c", true, true);
@@ -605,6 +810,17 @@ public class ViewTest {
     op.handleResponse(response);
   }
 
+  /**
+   * Test view reduced with errors.
+   *
+   * @pre Prepare a new view and instantiate
+   * a new Http Reduce operation on the same.
+   * Verify the Http Response for the same.
+   * @post Validates the Http Operation as
+   * successful if the view has got data
+   * and request reaches the server.
+   * @throws Exception
+   */
   @Test
   public void testViewReducedWithErrors() throws Exception {
     View view = new View("a", "b", "c", true, true);
@@ -640,9 +856,16 @@ public class ViewTest {
   }
 
   /**
-   * This test case acts as an integration test to verify that adding
-   * data with the given integrity constraints in combination with the
-   * stale=false query return the correct dataset.
+   * Verifies the addition of data to the master with
+   * the given integrity constraints in combination with
+   * the stale=false query.
+   *
+   * @pre Set data to the client with observe in a loop. Prepare
+   * an async view query with docs and iterate over the response.
+   * @post Return the correct dataset as all got persisted.
+   *
+   * @throws InterruptedException the interrupted exception
+   * @throws ExecutionException the execution exception
    */
   @Test
   public void testObserveWithStaleFalse()
@@ -672,10 +895,13 @@ public class ViewTest {
   }
 
   /**
-   * This test case adds two non-JSON documents and utilizes
-   * a special view that returns them.
+   * This test case adds two non-JSON documents and
+   * utilises a special view that returns them.
    *
-   * This makes sure that the view handlers don't break when
+   * @pre Create non-JSON documents and set them to the db.
+   * Prepare a view query with docs and iterate over the response.
+   * Find the non json documents in the result set and assert them.
+   * @post This makes sure that the view handlers don't break when
    * non-JSON data is read from the view.
    */
   @Test
@@ -706,6 +932,17 @@ public class ViewTest {
     }
   }
 
+  /**
+   * This tests the design document creation using
+   * views and spatial views.
+   *
+   * @pre Create two array lists with views and spatial views.
+   * Using these, prepare a design document object. Pass this
+   * instance to call the method asyncCreateDesignDoc on the
+   * client. Put the current thread to sleep for 2000ms and then
+   * again query the client for the just created design document.
+   * @post Asserts true if the size of views in the design document is 2.
+   */
   @Test
   public void testDesignDocumentCreation() throws InterruptedException {
     List<ViewDesign> views = new ArrayList<ViewDesign>();
@@ -747,6 +984,16 @@ public class ViewTest {
     assertEquals(2, design.getViews().size());
   }
 
+  /**
+   * This tests the design document creation using views.
+   *
+   * @pre Create an array list with views. Using this, prepare a
+   * design document object. Pass this instance to call the method
+   * asyncCreateDesignDoc on the client. Put the current thread to
+   * sleep for 2000ms and then again query the client for the just
+   * created design document.
+   * @post Asserts true if the size of views in the design document is 1.
+   */
   @Test
   public void testRawDesignDocumentCreation() throws InterruptedException {
     List<ViewDesign> views = new ArrayList<ViewDesign>();
@@ -774,6 +1021,12 @@ public class ViewTest {
     assertEquals(1, design.getViews().size());
   }
 
+  /**
+   * Test invalid design doc handling.
+   *
+   * @pre pass any string to retrieve the views from it.
+   * @post Return the InvalidViewException.
+   */
   @Test
   public void testInvalidDesignDocumentCreation() throws Exception {
     String content = "{certainly_not_a_view: true}";
@@ -790,6 +1043,19 @@ public class ViewTest {
     assertTrue(success);
   }
 
+  /**
+   * This tests the design document deletion.
+   *
+   * @pre Create a design document object with the name
+   * of the design document previously created. Asserts true
+   * if the size of views in the design document is 2. Call the
+   * method asyncDeleteDesignDoc on the client to delete this
+   * existing design document. Put the current thread to sleep
+   * for 2000ms and then again query the client for the just
+   * deleted design document.
+   * @post Asserts true for demonstrating the success
+   * of the deletion operation.
+   */
   @Test
   public void testDesignDocumentDeletion() throws InterruptedException {
     DesignDocument design = client.getDesignDocument("mydesign");
@@ -816,6 +1082,13 @@ public class ViewTest {
     assertTrue(success);
   }
 
+  /**
+   * Test invalid view handling.
+   *
+   * @pre pass any string in the view name and the design
+   * doc name to retrieve the database view from it.
+   * @post Return the InvalidViewException.
+   */
   public void testInvalidViewHandling() {
     String designDoc = "invalid_design";
     String viewName = "invalid_view";
@@ -827,6 +1100,15 @@ public class ViewTest {
     assertNull(view);
   }
 
+  /**
+   * This test tries to retrieve the design document
+   * with an invalid name.
+   *
+   * @pre Use an invalid name for search a design document
+   * in the server. Call getDesignDocument method.
+   * @post The design document is not loaded and the test
+   * passes if InvalidViewException is returned as expected.
+   */
   @Test
   public void testInvalidDesignDocHandling() {
     String designDoc = "invalid_design";

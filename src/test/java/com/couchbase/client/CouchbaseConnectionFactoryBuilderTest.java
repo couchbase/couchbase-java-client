@@ -42,6 +42,9 @@ public class CouchbaseConnectionFactoryBuilderTest {
   private List<URI> uris = Arrays.asList(
       URI.create("http://localhost:8091/pools"));
 
+  /**
+   * Instantiates a new couchbase connection factory builder test.
+   */
   public CouchbaseConnectionFactoryBuilderTest() {
   }
 
@@ -62,8 +65,15 @@ public class CouchbaseConnectionFactoryBuilderTest {
   }
 
   /**
-   * Test of setObsPollInterval method, of class
-   * CouchbaseConnectionFactoryBuilder.
+   * Test setting the observer poll interval as 600.
+   *
+   * @pre Instantiate the connection factory builder and
+   * set the observer poll interval as 600 and assert it.
+   * @post Assert that the observer poll interval was not set.
+   * And build the connection.
+   *
+   * @throws IOException
+   * Signals that an I/O exception has occurred.
    */
   @Test
   public void testSetObsPollInterval() throws IOException {
@@ -79,7 +89,15 @@ public class CouchbaseConnectionFactoryBuilderTest {
   }
 
   /**
-   * Test of setObsPollMax method, of class CouchbaseConnectionFactoryBuilder.
+   * Test setting the max observer poll interval as 40.
+   *
+   * @pre Instantiate the connection factory builder and
+   * set the observer poll interval as 40 and assert it.
+   * @post Asserts no error if correctly set
+   * and then build connection.
+   *
+   * @throws IOException
+   * Signals that an I/O exception has occurred.
    */
   @Test
   public void testSetObsPollMax() throws IOException {
@@ -94,7 +112,17 @@ public class CouchbaseConnectionFactoryBuilderTest {
   }
 
   /**
-   * Test of setViewTimeout method, of class CouchbaseConnectionFactoryBuilder.
+   * Test setting the time out limits.
+   *
+   * @pre  Instantiate the connection factory builder
+   * and set the view timeout as 30000 and assert it.
+   * Also try to set 200 and as its not equal to 500
+   * then an assert with error message will appear.
+   * @post  Asserts no error if correctly set and
+   * then build connection.
+   *
+   * @throws IOException
+   * Signals that an I/O exception has occurred.
    */
   @Test
   public void testSetViewTimeout() throws IOException {
@@ -104,7 +132,7 @@ public class CouchbaseConnectionFactoryBuilderTest {
 
     CouchbaseConnectionFactoryBuilder instance =
       new CouchbaseConnectionFactoryBuilder();
-     CouchbaseConnectionFactoryBuilder instanceResult
+    CouchbaseConnectionFactoryBuilder instanceResult
       = instance.setViewTimeout(viewTimeout);
     assertEquals(instance, instanceResult);
     assertEquals(viewTimeout, instanceResult.getViewTimeout());

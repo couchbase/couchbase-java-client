@@ -55,6 +55,14 @@ public class ConfigurationProviderHTTPDownNodeTest extends TestCase {
     assertNotNull(configProvider);
   }
 
+  /**
+   * Tests to get bucket configuration.
+   *
+   * @pre  Using config provider instance,
+   * get the bucket configuration.
+   * @post  Asserts that an bucket isn't null.
+   * @throws Exception the exception
+   */
   public void testGetBucketConfiguration() throws Exception {
     Bucket bucket = configProvider.getBucketConfiguration(DEFAULT_BUCKET_NAME);
     assertNotNull(bucket);

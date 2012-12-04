@@ -38,6 +38,20 @@ import net.spy.memcached.TestConfig;
  * A VBucketCouchbaseClientTest.
  */
 public class VBucketCouchbaseClientTest extends TestCase {
+
+  /**
+   * Creates a vbucket aware couchbase client and test the basic
+   * set get operations on the same.
+   *
+   * @pre Set up a couchbase client using the configured server
+   * details.Watch out for exceptions in the process. If connection
+   * is successful, perform set operation in a loop. Then also try
+   * to get all the values set previously.
+   * @post Asserts the results retrieved.
+   * Shutdown the client at the end.
+   *
+   * @throws Exception
+   */
   public void testOps() throws Exception {
     CouchbaseClient mc = null;
     try {

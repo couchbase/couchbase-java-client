@@ -49,6 +49,10 @@ import org.junit.Ignore;
  */
 public class CouchbaseClientTest extends BinaryClientTest {
 
+  /**
+   * Initialises the client, deletes all the buckets
+   * and creates a new default bucket.
+   */
   @Override
   protected void initClient() throws Exception {
     final List<URI> uris = Arrays.asList(URI.create("http://"
@@ -73,6 +77,9 @@ public class CouchbaseClientTest extends BinaryClientTest {
     bucketTool.waitForWarmup(client);
   }
 
+  /**
+   * Gets the server IP address to connect to.
+   */
   @Override
   protected String getExpectedVersionSource() {
     if (TestConfig.IPV4_ADDR.equals("127.0.0.1")) {
@@ -81,11 +88,25 @@ public class CouchbaseClientTest extends BinaryClientTest {
     return TestConfig.IPV4_ADDR + ":11210";
   }
 
+  /**
+   * Creating a new instance of the couchbase client object.
+   */
   @Override
   protected void initClient(ConnectionFactory cf) throws Exception {
     client = new CouchbaseClient((CouchbaseConnectionFactory) cf);
   }
 
+  /**
+   * Check the available servers, a client is able to connect to.
+   *
+   * @pre First let the client warm up and sleeps for 10ms and then
+   * deletes this bucket. Another default bucket is then created,
+   * this time of the type - Memcached. This bucket is also deleted,
+   * after a delay of 1000ms of its creation.
+   * @post Creation and deletion of the default buckets succeeds
+   * without exception.
+   * @throws Exception
+   */
   @Override
   public void testAvailableServers() {
     // CouchbaseClient tracks hostname and ip address of servers need to
@@ -105,10 +126,21 @@ public class CouchbaseClientTest extends BinaryClientTest {
     }
 
     assert (client.getAvailableServers().size() % 2) ==  0 : "Num servers "
-      + client.getAvailableServers().size() + ".  They are: "
+      + client.getAvailableServers().size() + ". They are: "
       + availableServers;
   }
 
+  /**
+   * Check the graceful shutdown of the client.
+   *
+   * @pre Once the client shuts down, wait for 5 seconds
+   * and then initialise it again without recreating the bucket.
+   * Add keys to the default bucket and then try to retrieve the
+   * keys in bulk from the server.
+   * @post Test succeeds to prove that the server had shut
+   * down properly without tampering its state and the buckets.
+   * @throws Exception
+   */
   @Override
   public void testGracefulShutdown() throws Exception {
     for (int i = 0; i < 1000; i++) {
@@ -132,18 +164,43 @@ public class CouchbaseClientTest extends BinaryClientTest {
     }
   }
 
+  /**
+   * Check the number of vbuckets using the couchbase client.
+   *
+   * @pre Using the client instance, get the number of vbuckets.
+   * @post Test verifies and asserts that the number of vbuckets are
+   * in a power of two.
+   * @throws Exception
+   */
   public void testNumVBuckets() throws Exception {
     // Check for power of two values
     int num = ((CouchbaseClient)client).getNumVBuckets();
     assertTrue("NumVBuckets has to be a power of two", (num & -num)== num);
   }
 
+  /**
+   * Check the versions of the client using the couchbase client instance.
+   *
+   * @pre Using the client instance, get the versions of the client.
+   * @post Test asserts the size of available servers and
+   * the size of versions inside the server.
+   */
+  @Override
   public void testGetVersions() {
     Map<SocketAddress, String> vs = ((CouchbaseClient)client).getVersions();
     System.out.println(vs);
     assertEquals(client.getAvailableServers().size(), vs.size());
   }
 
+  /**
+   * Check the server statistics.
+   *
+   * @pre Using the client instance, get the stats of the client.
+   * @post Test asserts the size of available servers and
+   * the size of stats inside the server and asserts
+   * true if the curr_items exits in the server statistics.
+   */
+  @Override
   public void testGetStats() throws Exception {
     Map<SocketAddress, Map<String, String>> stats =
         ((CouchbaseClient)client).getStats();
@@ -152,7 +209,18 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertTrue(oneStat.containsKey("curr_items"));
   }
 
-
+  /**
+   * Get a value and update the expiration time for a given key.
+   *
+   * @pre Call the simple get and touch operation for the same key
+   * and update the expiry time. Wait for 1.3 seconds and
+   * then try to get the value of that key. Wait for another
+   * 2 seconds and then call get and touch operation on the same key.
+   * @post Test succeeds to call the get and touch operation for the first
+   * time but by the second time key has expired.
+   *
+   * @throws Exception
+   */
   public void testGATTimeout() throws Exception {
     assertNull(client.get("gatkey"));
     assert client.set("gatkey", 1, "gatvalue").get().booleanValue();
@@ -163,6 +231,19 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertNull(client.getAndTouch("gatkey", 3));
   }
 
+  /**
+   * Update the expire time of an item in different time intervals.
+   *
+   * @pre Call the simple set and touch operations for a key
+   * and update the expiry time. Wait for 1.3 seconds and
+   * then try to get the value of that key. Wait for another
+   * 2 seconds and then call touch operation on the same key.
+   * @post Test succeeds to call the touch operation for the first
+   * time but the second time a boolean false is returned
+   * as the key has expired by then.
+   *
+   * @throws Exception
+   */
   public void testTouchTimeout() throws Exception {
     assertNull(client.get("touchkey"));
     assert client.set("touchkey", 1, "touchvalue").get().booleanValue();
@@ -173,6 +254,16 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertFalse(client.touch("touchkey", 3).get().booleanValue());
   }
 
+  /**
+   * Get the value for a key, lock the key from changes.
+   *
+   * @pre Call the simple set operation for a key value pair
+   * and then call the getAndLock operation to prevent any changes.
+   * Wait for 2 seconds and then try to set a new value of that key.
+   * Wait for another 2 seconds and then again call the set operation.
+   * @post Test succeeds to return an assert that the key has been locked.
+   * @throws Exception
+   */
   public void testSimpleGetl() throws Exception {
     assertNull(client.get("getltest"));
     client.set("getltest", 0, "value");
@@ -185,6 +276,15 @@ public class CouchbaseClientTest extends BinaryClientTest {
       : "Key was locked for too long";
   }
 
+  /**
+   * Get the value for a key, lock the key from changes and then unlock.
+   *
+   * @pre Call the simple set operation for a key value pair
+   * and then call the getAndLock operation to prevent any changes.
+   * Unlock the key and then again try to set the value.
+   * @post Test succeeds to return an assert that the key has been unlocked.
+   * @throws Exception
+   */
   public void testSimpleUnlock() throws Exception {
     assertNull(client.get("getunltest"));
     client.set("getunltest", 0, "value");
@@ -197,6 +297,18 @@ public class CouchbaseClientTest extends BinaryClientTest {
       : "Key was locked for too long";
   }
 
+  /**
+   * Test observe functionality.
+   *
+   * @pre The replication and persisting of key value pair for the
+   * set, replace, delete add(both non persistent and the persistent)
+   * operations.
+   * @post Test succeeds to return an assert that the key was persisted
+   * to master or not. In case of the add operation it also returns
+   * whether the key has been replicated to other nodes.
+   *
+   * @throws Exception
+   */
   public void testObserve() throws Exception {
     assertNull(client.get("observetest"));
     OperationFuture<Boolean> setOp =
@@ -232,6 +344,17 @@ public class CouchbaseClientTest extends BinaryClientTest {
             + noPersistOp.getStatus().getMessage();
   }
 
+  /**
+   * Get the key status from the client in the operation future object.
+   *
+   * @pre set a key value pair to db using the client. On the client object
+   * call getKeyStats. This will return a future object which has a status
+   * associated with it.
+   * @post Test asserts true if the status is success. Also it asserts
+   * true if all the parameters related to the key are available.
+   *
+   * @throws Exception
+   */
   public void testStatsKey() throws Exception {
     OperationFuture<Boolean> f = client.set("key", 0, "value");
     System.err.println(f.getStatus().getMessage());
@@ -256,9 +379,13 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   /**
-   * Tests if passing NULL for ReplicateTo and/or
-   * PersistTo correctly works and does not throw
-   * an exception.
+   * Tests if passing NULL for ReplicateTo and/or PersistTo
+   * correctly works and does not throw an exception.
+   *
+   * @pre Call add, set and replace operations on the client.
+   * @post Test succeeds and success = true is returned
+   *
+   * @throws Exception
    */
   public void testNullObserve() throws Exception {
     boolean success;
@@ -279,6 +406,14 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertTrue(success);
   }
 
+  /**
+   * Tests observe and persist with less than minimum nodes.
+   * @pre Call set operations on the client object
+   * with persist nodes as 4.
+   * @post Asserts true.
+   *
+   * @throws Exception
+   */
   public void testObservePersistWithTooFewNodes() throws Exception {
     CouchbaseClient cb = (CouchbaseClient) client;
     OperationFuture<Boolean> invalid = cb.set("something", 0,
@@ -289,6 +424,15 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertEquals(expected, invalid.getStatus().getMessage());
   }
 
+  /**
+   * Tests observe and replicate with less than minimum nodes.
+   *
+   * @pre Call set operations on the client object
+   * with replicate nodes as 3.
+   * @post Asserts true.
+   *
+   * @throws Exception
+   */
   public void testObserveReplicateWithTooFewNodes() throws Exception {
     CouchbaseClient cb = (CouchbaseClient) client;
     OperationFuture<Boolean> invalid = cb.set("something", 0,
@@ -299,10 +443,12 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertEquals(expected, invalid.getStatus().getMessage());
   }
 
+  @Override
   public void testGetStatsSlabs() throws Exception {
     // Empty
   }
 
+  @Override
   public void testGetStatsSizes() throws Exception {
     // Empty
   }
@@ -311,10 +457,12 @@ public class CouchbaseClientTest extends BinaryClientTest {
     // Empty
   }
 
+  @Override
   public void testStupidlyLargeSetAndSizeOverride() throws Exception {
     // Empty
   }
 
+  @Override
   protected void syncGetTimeoutsInitClient() throws Exception {
     initClient(new CouchbaseConnectionFactory(Arrays.asList(URI
         .create("http://" + TestConfig.IPV4_ADDR + ":8091/pools")),
@@ -343,6 +491,9 @@ public class CouchbaseClientTest extends BinaryClientTest {
     // TODO: re-add after RESTful flush added: Couchbase MB-5170
   }
 
+  /**
+   * Shutdown the client and return the client object to the garbage collector.
+   */
   @Override
   protected void tearDown() throws Exception {
     // Can't use our CouchbaseClientBaseCase easily owing to inheritance.

@@ -60,7 +60,7 @@ public class TapTest {
 
   @BeforeClass
   public static void before() throws Exception {
-    final List<URI> uris = Arrays.asList(URI.create("http://"
+    Arrays.asList(URI.create("http://"
         + TestConfig.IPV4_ADDR + ":8091/pools"));
 
     BucketTool bucketTool = new BucketTool();
@@ -82,6 +82,18 @@ public class TapTest {
     bucketTool.waitForWarmup(client);
   }
 
+  /**
+   * Creates a cluster aware tap client and specifies back
+   * fill for capturing changes.
+   *
+   * @pre  Set up a tap client using the configured server details.
+   * Call back fill and loop over the tapClient to check for
+   * messages if any existing. If not, it keeps adding messages
+   * from the items.
+   * @post  Asserts a failure if the tap dump takes too long or
+   * has no message stored. Check the tapped item count and
+   * shutdown the client at the end.
+   */
   @Test
   public void testBackfill() throws Exception {
     List<URI> uris = new LinkedList<URI>();
@@ -110,6 +122,17 @@ public class TapTest {
     tc.shutdown();
   }
 
+  /**
+   * Creates a cluster aware tap client for Couchbase Server.
+   * To this client, specify a tap stream.
+   *
+   * @pre Set up a tap client using the configured server details.
+   * Loop over the tapClient to check for messages if any existing.
+   * If not, it keeps adding messages from the items.
+   * @post Asserts a failure if the tap dump takes too long or has
+   * no message stored. Check the tapped item count and shutdown
+   * the client at the end.
+   */
   @Test
   public void testTapDump() throws Exception {
     HashMap<String, Boolean> items = new HashMap<String, Boolean>();
@@ -142,6 +165,16 @@ public class TapTest {
     tapClient.shutdown();
   }
 
+  /**
+   * Creates a cluster aware tap client for Couchbase Server.
+   * This will react to changes happening in the node.
+   *
+   * @pre  Set up a tap client using the configured server details.
+   * Tap a stream of key-value mutations by using tabBackFill
+   * method of the client.
+   * @post  Asserts a failure if the server is not configured
+   * correctly. Shutdown the client at the end.
+   */
   @Test
   public void testTapBucketDoesNotExist() throws Exception {
     TapClient tapClient = null;
@@ -160,6 +193,11 @@ public class TapTest {
     }
   }
 
+  /**
+   * Check tap keys.
+   *
+   * @param items the items
+   */
   private void checkTapKeys(HashMap<String, Boolean> items) {
     for (Entry<String, Boolean> kv : items.entrySet()) {
       if (!kv.getValue().booleanValue()) {

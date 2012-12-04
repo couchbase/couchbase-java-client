@@ -36,6 +36,9 @@ import static org.junit.Assert.*;
  */
 public class QueryTest {
 
+  /**
+   * Instantiates a new query test.
+   */
   public QueryTest() {
   }
 
@@ -57,6 +60,9 @@ public class QueryTest {
 
   /**
    * Tests the default settings of the Query object.
+   *
+   * @pre Prepare a new Query Object.
+   * @post Assert all the default parameters of this object.
    */
   @Test
   public void testInit() {
@@ -70,6 +76,10 @@ public class QueryTest {
 
   /**
    * Tests the "descending" argument.
+   *
+   * @pre Prepare a new Query Object with descending true.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testDescending() {
@@ -82,6 +92,10 @@ public class QueryTest {
 
   /**
    * Tests the "startkey_docid" argument.
+   *
+   * @pre Prepare a new Query Object with start key doc Id.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testStartkey() {
@@ -94,6 +108,10 @@ public class QueryTest {
 
   /**
    * Tests the "endkey_docid" argument.
+   *
+   * @pre Prepare a new Query Object with end key doc Id.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testEndkey() {
@@ -106,6 +124,11 @@ public class QueryTest {
 
   /**
    * Tests both the "group" and the "group_level" arguments.
+   *
+   * @pre Prepare a new Query Object with group = true
+   * and the group level = 2.
+   * @post Asserts true as the query arguments =2
+   * and the query string equals the given expression.
    */
   @Test
   public void testGroup() {
@@ -119,6 +142,10 @@ public class QueryTest {
 
   /**
    * Tests the "inclusive_end" argument.
+   *
+   * @pre Prepare a new Query Object with end included.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testInclusiveEnd() {
@@ -131,6 +158,12 @@ public class QueryTest {
 
   /**
    * Tests the "key" argument.
+   *
+   * @pre Prepare a new Query Object with a key set to
+   * match in the result set.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testKey() throws UnsupportedEncodingException {
@@ -144,6 +177,12 @@ public class QueryTest {
 
   /**
    * Tests the "keys" argument.
+   *
+   * @pre Prepare a new Query Object with multiple keys
+   * set to match in the result set.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testKeys() throws UnsupportedEncodingException {
@@ -157,6 +196,11 @@ public class QueryTest {
 
   /**
    * Tests the "limit" argument.
+   *
+   * @pre Prepare a new Query Object with a limit set
+   * to match in the result set.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testLimit() {
@@ -170,6 +214,10 @@ public class QueryTest {
 
   /**
    * Tests the "reduce" argument.
+   *
+   * @pre Prepare a new Query Object with a reduce true.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testReduce() {
@@ -182,6 +230,11 @@ public class QueryTest {
 
   /**
    * Tests the "range" argument.
+   *
+   * @pre Prepare a new Query Object with start and end keys.
+   * @post Asserts true as the query arguments =2 and
+   * the query string equals the given expression.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testRange() throws UnsupportedEncodingException {
@@ -201,6 +254,12 @@ public class QueryTest {
 
   /**
    * Test docs to skip.
+   *
+   * @pre Prepare a new Query Object with skip set to
+   * skip this number of records before starting to
+   * return the results.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testSkip() {
@@ -213,6 +272,11 @@ public class QueryTest {
 
   /**
    * Tests the "stale" argument.
+   *
+   * @pre Prepare a new Query Object with stale
+   * state as update after.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testStale() {
@@ -225,6 +289,9 @@ public class QueryTest {
 
   /**
    * Test the "include_docs" argument.
+   *
+   * @pre Prepare a new Query Object and set include docs as true.
+   * @post Asserts true as the query result includes docs.
    */
   @Test
   public void testIncludeDocs() {
@@ -238,6 +305,11 @@ public class QueryTest {
 
   /**
    * Tests the "on_error" argument.
+   *
+   * @pre Prepare a new Query Object with on error
+   * parameter as Continue.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
    */
   @Test
   public void testOnError() {
@@ -250,6 +322,11 @@ public class QueryTest {
 
   /**
    * Tests the "bbox" argument.
+   *
+   * @pre Prepare a new Query Object with Bbox boundaries.
+   * @post Asserts true as the query arguments =1 and
+   * the query string equals the given expression.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testBbox() throws UnsupportedEncodingException {
@@ -262,7 +339,11 @@ public class QueryTest {
   }
 
   /**
-   * Tests the "debug" argument.
+   * Tests the debug argument of a query.
+   *
+   * @pre Prepare new query and set debug true.
+   * @post Asserts true as the query arguments size is 1
+   * and the query string equals the given expressions.
    */
   @Test
   public void testDebug() {
@@ -275,6 +356,12 @@ public class QueryTest {
 
   /**
    * Tests the usage of complex keys for supported methods.
+   *
+   * @pre Prepare new Complex Key expressions and query
+   * using these as the criteria.
+   * @post Asserts true as the query arguments =2 and
+   * the query string equals the given expressions.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testComplexKeys() throws UnsupportedEncodingException {
@@ -313,6 +400,12 @@ public class QueryTest {
    * This test verifies how numeric strings passed in are casted to
    * integer values and how the ComplexKey class can be used to pass
    * in numeric strings accordingly.
+   *
+   * @pre Prepare new Complex Key expressions and
+   * query using these as the criteria.
+   * @post Asserts true as the query string
+   * equals the given expressions.
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testNumericStrings() throws UnsupportedEncodingException {
@@ -337,7 +430,7 @@ public class QueryTest {
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=300", result);
 
-    query.setKey(ComplexKey.of(99999999999l));
+    query.setKey(ComplexKey.of(99999999999L));
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=99999999999", result);
 

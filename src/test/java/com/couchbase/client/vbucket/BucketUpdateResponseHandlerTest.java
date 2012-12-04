@@ -52,11 +52,16 @@ public class BucketUpdateResponseHandlerTest {
 
   }
 
-  @Test
   /**
-   * Test checks if setReceivedFuture() method properly sets a field
-   * receivedFuture.
+   * Test checks if setReceivedFuture() method properly
+   * sets a field receivedFuture.
+   *
+   * @pre Using the handler invoke setRecievedFuture object
+   * and set Channel future instance to it.
+   * @post Asserts true. Verify ChannelFuture instance at the end.
+   * @throws Throwable
    */
+  @Test
   public void testSetGetRecievedFuture() throws Throwable {
     ChannelFuture futureMock = createMock(ChannelFuture.class);
     replay(futureMock);
@@ -71,6 +76,19 @@ public class BucketUpdateResponseHandlerTest {
     verify(futureMock);
   }
 
+  /**
+   * Test to receive messages in chunks.
+   *
+   * @pre Prepare the message event object for reading
+   * and writing to the Channel buffer. Using the HTTP
+   * protocol ship this message.
+   * @post If current chunk is the last chunk - set
+   * readingChunks to false. If current chunk contains
+   * "\n\n\n\n"-reset partialResponse and update lastResponse.
+   * If current chunk is not last and it is not "\n\n\n\n"-store
+   * its value in partialResponse and invoke channelFuture.setSuccess
+   * @throws NoSuchFieldException the no such field exception
+   */
   @Test
   public void testMessageReceived() throws NoSuchFieldException {
     MessageEvent eventMock = createMock(MessageEvent.class);
@@ -137,6 +155,9 @@ public class BucketUpdateResponseHandlerTest {
     verify(eventMock, futureMock, chunkMock, bufferMock);
   }
 
+  /**
+   * Test log response.
+   */
   public void testLogResponse() {
 
   }

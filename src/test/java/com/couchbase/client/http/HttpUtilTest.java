@@ -35,6 +35,9 @@ import static org.junit.Assert.*;
  */
 public class HttpUtilTest {
 
+  /**
+   * Instantiates a new http util test.
+   */
   public HttpUtilTest() {
   }
 
@@ -55,7 +58,12 @@ public class HttpUtilTest {
   }
 
   /**
-   * Test of buildAuthHeader method, of class HttpUtil.
+   * Test the generation of authorisation header given
+   * a username and password from HttpUtil class.
+   *
+   * @pre Provide any user and password for authorisation.
+   *
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testBuildAuthHeader() throws UnsupportedEncodingException {
@@ -63,7 +71,13 @@ public class HttpUtilTest {
   }
 
   /**
-   * Test of buildAuthHeader method, of class HttpUtil.
+   * Test the generation of authorisation header given a
+   * username and password from HttpUtil class.
+   *
+   * @pre Provide any user and password for authorisation.
+   * @post Asserts if the result matches the given string.
+   *
+   * @throws UnsupportedEncodingException
    */
   @Test
   public void testBuildAuthHeaderUTF8() throws UnsupportedEncodingException {

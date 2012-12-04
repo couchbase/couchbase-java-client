@@ -30,8 +30,8 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import org.junit.Test;
 import net.spy.memcached.MemcachedNode;
+import org.junit.Test;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
@@ -80,6 +80,15 @@ public class VBucketNodeLocatorTest extends TestCase {
       + "      [-1],\n" + "      [0],\n" + "      [0]\n"
       + "    ]\n" + "}" + "}";
 
+  /**
+   * Get primary memcached node for a given key.
+   *
+   * @pre Create three nodes and set their corresponding socket
+   * addresses. Using the default config and the VBucketNodeLocator
+   * instance, get primary node.
+   * @post Asserts true if node1 is the primary node.
+   * Verify the three nodes.
+   */
   public void testGetPrimary() {
     MemcachedNode node1 = createMock(MemcachedNode.class);
     MemcachedNode node2 = createMock(MemcachedNode.class);
@@ -105,6 +114,13 @@ public class VBucketNodeLocatorTest extends TestCase {
     verify(node1, node2, node3);
   }
 
+  /**
+   * Get alternative memcached node for a given key.
+   *
+   * @pre Create three nodes and set their corresponding socket
+   * addresses. Using the default config and the VBucketNodeLocator
+   * instance, get primary and alternative nodes.
+   */
   public void testGetAlternative() {
     MemcachedNodeMockImpl node1 = new MemcachedNodeMockImpl();
     MemcachedNodeMockImpl node2 = new MemcachedNodeMockImpl();
@@ -123,6 +139,15 @@ public class VBucketNodeLocatorTest extends TestCase {
     alternative.getSocketAddress();
   }
 
+  /**
+   * Tests that there is no master server for the vbuckets.
+   *
+   * @pre Create two nodes and set their corresponding socket addresses.
+   * Using the no replica config and the VBucketNodeLocator instance,
+   * get primary node.
+   * @post Succeeds to return that there is no primary
+   * node as there are no replicas.
+   */
   @Test
   public void testNoMasterServerForVbucket() {
     MemcachedNodeMockImpl node1 = new MemcachedNodeMockImpl();
@@ -139,7 +164,7 @@ public class VBucketNodeLocatorTest extends TestCase {
 
     boolean success = false;
     try {
-      MemcachedNode primary = locator.getPrimary("key1");
+      locator.getPrimary("key1");
     } catch(RuntimeException e) {
       success = true;
     }

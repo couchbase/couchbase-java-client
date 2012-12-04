@@ -53,6 +53,14 @@ public class SpatialViewDesignTest {
   public void tearDown() {
   }
 
+  /**
+   * Tests the SpatialViewDesign instance created
+   * from a view name and a map.
+   *
+   * @pre Prepare SpatialViewDesign using view name
+   * and a map as the criteria.
+   * @post Asserts true.
+   */
   @Test
   public void testSpatialViewDesign() {
     String name = "points";
@@ -61,6 +69,4 @@ public class SpatialViewDesignTest {
     assertEquals(name, view.getName());
     assertEquals(map, view.getMap());
   }
-
-
 }

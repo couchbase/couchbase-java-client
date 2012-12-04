@@ -42,6 +42,17 @@ public class BucketMonitorPipelineFactoryTest {
 
   }
 
+  /**
+   * Tests the get pipeline from the ChannelPipeline and
+   * get the HTTP decoder, encoder, handler.
+   *
+   * @pre Prepare a new instances of BucketMonitorPipelineFactory
+   * and using this instance get the pipeline.
+   * @post Asserts true for the decoder, encoder, handler
+   * instances to be correct and asserts if the handler is the
+   * last in pipeline and the decoder is the first.
+   * @throws Exception
+   */
   @Test
   public void testGetPipeline() throws Exception {
     BucketMonitorPipelineFactory factory = new BucketMonitorPipelineFactory();

@@ -78,14 +78,32 @@ public class PaginatorTest {
     private String name;
     private String country;
     private String continent;
+
+    /**
+     * Instantiates a new city
+     * @param n the name
+     * @param c the country
+     * @param co the continent
+     */
     public City(String n, String c, String co) {
       name = n;
       country = c;
       continent = co;
     }
+
+    /**
+     * Gets the key.
+     * @return the key
+     */
     public String getKey() {
       return "city:" + name;
     }
+
+    /**
+     * Converts json object to string.
+     * @return the string
+     * @throws JSONException the jSON exception
+     */
     public String toJson() throws JSONException {
       JSONObject obj = new JSONObject();
       obj.put("type", type);
@@ -151,7 +169,9 @@ public class PaginatorTest {
   }
 
   /**
-   * Initialize the client new before every test to provide a clean state.
+   * Initialize the client new before every
+   * test to provide a clean state.
+   *
    * @throws Exception
    */
   @Before
@@ -159,6 +179,17 @@ public class PaginatorTest {
     initClient();
   }
 
+  /**
+   * Test map reduce view functionality.
+   *
+   * @pre  Query the view to fetch all the records.
+   * No filter is added on the view and a paginated
+   * query is prepared with only 3 documents per page.
+   * Iteration is performed on the result set.
+   * @post  Assert if the view rows are empty or if
+   * the expected row count doesn't match 1, or if the
+   * number of pages don't match the calculated count.
+   */
   @Test
   public void testMapReduceWithExactPage() {
     View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
@@ -184,6 +215,17 @@ public class PaginatorTest {
     assertEquals(CITY_DOCS.size(), totalCount);
   }
 
+  /**
+   * Test map reduce view functionality.
+   *
+   * @pre Query the view to fetch all the records.
+   * No filter is added on the view and a paginated
+   * query is prepared with only 3 documents per page.
+   * Iteration is performed on the result set.
+   * @post  Assert if the view rows are empty or if
+   * the expected row count doesn't match 1, or if the
+   * number of pages don't match the calculated count.
+   */
   @Test
   public void testMapReduceWithOffsetPage() {
     View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
@@ -209,15 +251,36 @@ public class PaginatorTest {
     assertEquals(CITY_DOCS.size(), totalCount);
   }
 
+  /**
+   * Test invalid documents per page.
+   *
+   * @pre Query the view to fetch all the records.
+   * No filter is added on the view and a paginated
+   * query is prepared with 0 documents per page.
+   * @post Test passes illegal argument exception
+   * is returned.
+   */
   @Test(expected = IllegalArgumentException.class)
   public void testInvalidDocsPerPage() {
     View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
     Query query = new Query();
     query.setReduce(false).setStale(Stale.FALSE);
     int docsPerPage = 0;
-    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+    client.paginatedQuery(view, query, docsPerPage);
   }
 
+  /**
+   * Test views using the map reduce functionality
+   * by setting the limit.
+   *
+   * @pre Query the view to fetch all the records.
+   * Limit of 5 is added on the view and a paginated
+   * query is prepared with 4 documents per page.
+   * Iterate over the result set.
+   * @post Assert if the view rows are empty or if
+   * the expected row count doesn't match 1,or if the
+   * number of pages don't match the calculated count.
+   */
   @Test
   public void testMapReduceWithLimit() {
     View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
@@ -243,5 +306,4 @@ public class PaginatorTest {
     assertEquals(expected, pageCount);
     assertEquals(limit, totalCount);
   }
-
 }

@@ -35,6 +35,13 @@ public class ConfigurationParserJSONTest extends TestCase {
   private ConfigurationParser configParser = new ConfigurationParserJSON();
   private static final String DEFAULT_POOL_NAME = "default";
 
+  /**
+   * Test to check if the base string used
+   * can be parsed or not.
+   *
+   * @pre Parse base string
+   * @throws Exception the exception
+   */
   public void testParseBase() throws Exception {
     Map<String, Pool> base = configParser.parseBase(BASE_STRING);
     assertNotNull(base);
@@ -45,6 +52,14 @@ public class ConfigurationParserJSONTest extends TestCase {
     assertNotNull(pool.getUri());
   }
 
+  /**
+   * Test to check if the buckets string used
+   * can be parsed or not.
+   *
+   * @pre Parse bucket cluster strings
+   * @post check bucket
+   * @throws Exception the exception
+   */
   public void testParseBuckets() throws Exception {
     Map<String, Bucket> buckets = configParser.parseBuckets(BUCKETS_STRING);
     for (Bucket bucket : buckets.values()) {
@@ -52,6 +67,14 @@ public class ConfigurationParserJSONTest extends TestCase {
     }
   }
 
+  /**
+   * Test to check if the buckets cluster string used
+   * can be parsed or not.
+   *
+   * @pre Parse bucket cluster strings
+   * @post check bucket
+   * @throws Exception the exception
+   */
   public void testParseBucketsClustered() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append(BUCKETS_CLUSTER_STRING);
@@ -62,17 +85,42 @@ public class ConfigurationParserJSONTest extends TestCase {
     }
   }
 
+  /**
+   * Test to check if the JSON bucket string used in this
+   * test can be parsed into a server bucket with all the
+   * configuration like URI, name etc.
+   *
+   * @pre Parse bucket
+   * @post check bucket
+   * @throws Exception the exception
+   */
   public void testParseBucket() throws Exception {
     Bucket bucket = configParser.parseBucket(BUCKET_STRING);
     checkBucket(bucket);
   }
 
+  /**
+   * Test to load the JSON pool string after parsing it using the
+   * configuration parser and retrieving the bucket information
+   * from the created pool.
+   *
+   * @pre Load the pool of strings
+   * @post Asserts that the bucket URI is not null
+   *
+   * @throws Exception the exception
+   */
   public void testLoadPool() throws Exception {
     Pool pool = new Pool(null, null, null);
     configParser.loadPool(pool, POOL_STRING);
     assertNotNull(pool.getBucketsUri());
   }
 
+  /**
+   * Check bucket.
+   *
+   * @param bucket the bucket
+   * @throws Exception the exception
+   */
   private void checkBucket(Bucket bucket) throws Exception {
     assertNotNull("Bucket is null", bucket);
     assertNotNull(bucket.getName());
