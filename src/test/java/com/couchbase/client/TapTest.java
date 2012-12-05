@@ -24,7 +24,6 @@ package com.couchbase.client;
 
 import com.couchbase.client.BucketTool.FunctionCallback;
 import com.couchbase.client.clustermanager.BucketType;
-
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,9 +31,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.tapmessage.ResponseMessage;
+import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 // TBD - Uncomment this line when the TAP tests are complete
 // import net.spy.memcached.tapmessage.ResponseMessage;
@@ -42,12 +43,23 @@ import net.spy.memcached.tapmessage.ResponseMessage;
 /**
  * A TapTest.
  */
-public class TapTest extends CouchbaseClientBaseCase {
+public class TapTest {
 
   private static final long TAP_DUMP_TIMEOUT = 2000;
 
-  @Override
-  protected void initClient() throws Exception {
+  private static final String SERVER_URI = "http://" + TestConfig.IPV4_ADDR
+      + ":8091/pools";
+
+  protected static TestingClient client = null;
+
+  protected static void initClient() throws Exception {
+    List<URI> uris = new LinkedList<URI>();
+    uris.add(URI.create(SERVER_URI));
+    client = new TestingClient(uris, "default", "");
+  }
+
+  @BeforeClass
+  public static void before() throws Exception {
     final List<URI> uris = Arrays.asList(URI.create("http://"
         + TestConfig.IPV4_ADDR + ":8091/pools"));
 
@@ -58,7 +70,7 @@ public class TapTest extends CouchbaseClientBaseCase {
     BucketTool.FunctionCallback callback = new FunctionCallback() {
       @Override
       public void callback() throws Exception {
-        initClient(new CouchbaseConnectionFactory(uris, "default", ""));
+        initClient();
       }
 
       @Override
@@ -70,6 +82,7 @@ public class TapTest extends CouchbaseClientBaseCase {
     bucketTool.waitForWarmup(client);
   }
 
+  @Test
   public void testBackfill() throws Exception {
     List<URI> uris = new LinkedList<URI>();
     uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
@@ -88,7 +101,7 @@ public class TapTest extends CouchbaseClientBaseCase {
         if (items.containsKey(key)) {
           items.put(key, new Boolean(true));
         } else {
-          fail();
+          assertTrue(false);
         }
       }
     }
@@ -97,6 +110,7 @@ public class TapTest extends CouchbaseClientBaseCase {
     tc.shutdown();
   }
 
+  @Test
   public void testTapDump() throws Exception {
     HashMap<String, Boolean> items = new HashMap<String, Boolean>();
     for (int i = 0; i < 25; i++) {
@@ -111,7 +125,7 @@ public class TapTest extends CouchbaseClientBaseCase {
     long st = System.currentTimeMillis();
     while (tapClient.hasMoreMessages()) {
       if ((System.currentTimeMillis() - st) > TAP_DUMP_TIMEOUT) {
-        fail("Tap dump took too long");
+        assertTrue("Tap dump took too long", false);
       }
       ResponseMessage m;
       if ((m = tapClient.getNextMessage()) != null) {
@@ -119,7 +133,7 @@ public class TapTest extends CouchbaseClientBaseCase {
         if (items.containsKey(key)) {
           items.put(key, new Boolean(true));
         } else {
-          fail();
+          assertTrue("Received key not found in the items", false);
         }
       }
     }
@@ -128,13 +142,14 @@ public class TapTest extends CouchbaseClientBaseCase {
     tapClient.shutdown();
   }
 
+  @Test
   public void testTapBucketDoesNotExist() throws Exception {
     TapClient tapClient = null;
     tapClient = new TapClient(Arrays.asList(new URI("http://"
       + TestConfig.IPV4_ADDR + ":8091/pools")), "abucket", "apassword");
     try {
       tapClient.tapBackfill(null, 5, TimeUnit.SECONDS);
-      fail("TAP started with a misconfiguration on " + tapClient);
+      assertTrue("TAP started with a misconfiguration on " + tapClient, false);
     } catch (RuntimeException e) {
       // expected
       System.err.println("Expected tap of non existent bucket "
@@ -148,8 +163,9 @@ public class TapTest extends CouchbaseClientBaseCase {
   private void checkTapKeys(HashMap<String, Boolean> items) {
     for (Entry<String, Boolean> kv : items.entrySet()) {
       if (!kv.getValue().booleanValue()) {
-        fail("Failed to receive one of the previously set items: \""
-          + kv.getKey() + "\". Number of items received: " + items.size());
+        assertTrue("Failed to receive one of the previously set items: \""
+          + kv.getKey() + "\". Number of items received: " + items.size(),
+          false);
       }
     }
     System.err.println("Received " + items.size() + " items over TAP.");
