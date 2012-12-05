@@ -621,7 +621,7 @@ public class CouchbaseClient extends MemcachedClient
   /**
    * Delete a design document in the cluster.
    *
-   * @param doc the design document to delete.
+   * @param name the design document to delete.
    * @return the result of the deletion operation.
    */
   public Boolean deleteDesignDoc(final String name) {
@@ -639,7 +639,7 @@ public class CouchbaseClient extends MemcachedClient
    /**
    * Delete a design document in the cluster.
    *
-   * @param doc the design document to delete.
+   * @param name the design document to delete.
    * @return a future containing the result of the deletion operation.
    */
   public HttpFuture<Boolean> asyncDeleteDesignDoc(final String name)

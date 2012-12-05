@@ -106,7 +106,8 @@ public class DesignDocument<T> {
 
   /**
    * Get the name of the design document.
-   * @return
+   *
+   * @return the name of the design document.
    */
   public String getName() {
     return name;
@@ -166,7 +167,7 @@ public class DesignDocument<T> {
   /**
    * Add a single spatial view to the list of stored DpatialViewDesign objects.
    *
-   * @param view a single spatial view to be added.
+   * @param spatialView a single spatial view to be added.
    * @return the current object instance.
    */
   public DesignDocument setSpatialView(SpatialViewDesign spatialView) {
