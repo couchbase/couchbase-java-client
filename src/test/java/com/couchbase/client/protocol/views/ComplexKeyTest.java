@@ -24,10 +24,10 @@ package com.couchbase.client.protocol.views;
 import java.util.Date;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Test the creation of complex keys for views.
@@ -126,6 +126,15 @@ public class ComplexKeyTest {
     String expResult = "[\""+start.toString()+"\",\""+end.toString()+"\"]";
     ComplexKey result = ComplexKey.of(start, end);
     assertEquals(expResult, result.toJson());
+  }
+
+  @Test
+  public void testForceArray() {
+    ComplexKey simple = ComplexKey.of("40");
+    assertEquals("\"40\"", simple.toJson());
+
+    simple.forceArray(true);
+    assertEquals("[\"40\"]", simple.toJson());
   }
 
 }
