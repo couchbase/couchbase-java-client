@@ -61,7 +61,8 @@ public class SpatialViewFetcherOperationImpl extends HttpOperationImpl
           viewName, json);
       int errorcode = response.getStatusLine().getStatusCode();
       if (errorcode == HttpURLConnection.HTTP_OK) {
-        ((SpatialViewFetcherOperation.ViewFetcherCallback) callback).gotData(view);
+        ((SpatialViewFetcherOperation.ViewFetcherCallback) callback)
+          .gotData(view);
         callback.receivedStatus(new OperationStatus(true, "OK"));
       } else {
         callback.receivedStatus(new OperationStatus(false,

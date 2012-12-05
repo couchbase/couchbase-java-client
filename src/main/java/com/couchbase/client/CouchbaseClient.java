@@ -25,14 +25,14 @@ package com.couchbase.client;
 import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.internal.ViewFuture;
 import com.couchbase.client.protocol.views.AbstractView;
-import com.couchbase.client.protocol.views.DocsOperationImpl;
-import com.couchbase.client.protocol.views.HttpOperation;
-import com.couchbase.client.protocol.views.InvalidViewException;
+import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
+import com.couchbase.client.protocol.views.DesignDocFetcherOperationImpl;
 import com.couchbase.client.protocol.views.DesignDocOperationImpl;
 import com.couchbase.client.protocol.views.DesignDocument;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.protocol.views.HttpOperationImpl;
+import com.couchbase.client.protocol.views.InvalidViewException;
 import com.couchbase.client.protocol.views.NoDocsOperationImpl;
 import com.couchbase.client.protocol.views.Paginator;
 import com.couchbase.client.protocol.views.Query;
@@ -46,14 +46,11 @@ import com.couchbase.client.protocol.views.ViewFetcherOperationImpl;
 import com.couchbase.client.protocol.views.ViewOperation.ViewCallback;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
-import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
-import com.couchbase.client.protocol.views.DesignDocFetcherOperationImpl;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigType;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -76,7 +73,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.BroadcastOpFactory;
 import net.spy.memcached.CASResponse;
@@ -97,7 +93,6 @@ import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatsOperation;
 import net.spy.memcached.transcoders.Transcoder;
-
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpVersion;
 import org.apache.http.entity.StringEntity;
@@ -562,7 +557,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the result of the creation operation.
    */
   public Boolean createDesignDoc(final DesignDocument doc) {
-     try {
+    try {
       return asyncCreateDesignDoc(doc).get();
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted creating design document", e);
@@ -596,15 +591,15 @@ public class CouchbaseClient extends MemcachedClient
 
     HttpOperationImpl op = new DesignDocOperationImpl(request,
       new OperationCallback() {
-        @Override
-        public void receivedStatus(OperationStatus status) {
-          crv.set(status.getMessage().equals("Error Code: 201"), status);
-        }
+      @Override
+      public void receivedStatus(OperationStatus status) {
+        crv.set(status.getMessage().equals("Error Code: 201"), status);
+      }
 
-        @Override
-        public void complete() {
-          couchLatch.countDown();
-        }
+      @Override
+      public void complete() {
+        couchLatch.countDown();
+      }
     });
 
     crv.setOperation(op);
@@ -630,7 +625,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the result of the deletion operation.
    */
   public Boolean deleteDesignDoc(final String name) {
-     try {
+    try {
       return asyncDeleteDesignDoc(name).get();
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted deleting design document", e);
@@ -662,15 +657,15 @@ public class CouchbaseClient extends MemcachedClient
 
     HttpOperationImpl op = new DesignDocOperationImpl(request,
       new OperationCallback() {
-        @Override
-        public void receivedStatus(OperationStatus status) {
-          crv.set(status.getMessage().equals("Error Code: 200"), status);
-        }
+      @Override
+      public void receivedStatus(OperationStatus status) {
+        crv.set(status.getMessage().equals("Error Code: 200"), status);
+      }
 
-        @Override
-        public void complete() {
-          couchLatch.countDown();
-        }
+      @Override
+      public void complete() {
+        couchLatch.countDown();
+      }
     });
 
     crv.setOperation(op);
@@ -1764,7 +1759,8 @@ public class CouchbaseClient extends MemcachedClient
           throw new ObservedModifiedException("Key was modified");
         }
         if (!isDelete) {
-          if (!isMaster && r.getValue() == ObserveResponse.FOUND_NOT_PERSISTED) {
+          if (!isMaster && r.getValue()
+            == ObserveResponse.FOUND_NOT_PERSISTED) {
             replicatedTo++;
           }
           if (r.getValue() == ObserveResponse.FOUND_PERSISTED) {

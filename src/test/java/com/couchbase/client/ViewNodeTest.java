@@ -81,7 +81,8 @@ public class ViewNodeTest {
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<ViewResponse> crv =
         new HttpFuture<ViewResponse>(couchLatch, 60000);
-    final HttpRequest request = new BasicHttpRequest("GET", "/pools", HttpVersion.HTTP_1_1);
+    final HttpRequest request = new BasicHttpRequest("GET", "/pools",
+      HttpVersion.HTTP_1_1);
     return new NoDocsOperationImpl(
       request,
       view,
@@ -107,7 +108,8 @@ public class ViewNodeTest {
   }
 
 
-  private AsyncConnectionManager createConMgr(String host, int port) throws IOReactorException {
+  private AsyncConnectionManager createConMgr(String host, int port)
+    throws IOReactorException {
     HttpHost target = new HttpHost(host, port);
     int maxConnections = 1;
 
@@ -115,9 +117,11 @@ public class ViewNodeTest {
     params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 5000)
           .setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
           .setIntParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, 8 * 1024)
-          .setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false)
+          .setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK,
+            false)
           .setBooleanParameter(CoreConnectionPNames.TCP_NODELAY, true)
-          .setParameter(CoreProtocolPNames.USER_AGENT, "Couchbase Java Client 1.1");
+          .setParameter(CoreProtocolPNames.USER_AGENT,
+            "Couchbase Java Client 1.1");
 
     HttpProcessor httpproc = new ImmutableHttpProcessor(
       new HttpRequestInterceptor[] {

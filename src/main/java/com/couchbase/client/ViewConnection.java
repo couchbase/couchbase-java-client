@@ -29,24 +29,20 @@ import com.couchbase.client.http.RequeueOpCallback;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.compat.SpyObject;
-
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -231,11 +227,11 @@ public class ViewConnection extends SpyObject implements
       if (node != null) {
         String hostname = node.getSocketAddress().getHostName();
         if (node.hasWriteOps()) {
-          getLogger().warn("Shutting down " + hostname +
-            " with ops waiting to be written");
+          getLogger().warn("Shutting down " + hostname
+            + " with ops waiting to be written");
         } else {
-          getLogger().info("Node " + hostname +
-            " has no ops in the queue");
+          getLogger().info("Node " + hostname
+            + " has no ops in the queue");
         }
         node.shutdown();
         nodesToRemove.add(node);

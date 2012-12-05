@@ -31,17 +31,17 @@ public class ViewDesign {
   /**
    * The name of the view.
    */
-  String name = null;
+  private String name = null;
 
   /**
    * The map function of the view.
    */
-  String map = null;
+  private String map = null;
 
   /**
    * The optional reduce function of the view.
    */
-  String reduce = null;
+  private String reduce = null;
 
   /**
    * Create a ViewDesign with a name and a map function.

@@ -25,13 +25,9 @@ package com.couchbase.client.protocol.views;
 import java.net.HttpURLConnection;
 import java.text.ParseException;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
-
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.codehaus.jettison.json.JSONException;

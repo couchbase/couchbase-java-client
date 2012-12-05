@@ -1,4 +1,4 @@
-  /**
+/**
  * Copyright (C) 2009-2012 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,24 +23,21 @@
 package com.couchbase.client.protocol.views;
 
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.LinkedList;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 
 /**
  * Implements design document storing and deleting.
  */
-public class DesignDocOperationImpl extends HttpOperationImpl implements DesignDocOperation {
+public class DesignDocOperationImpl extends HttpOperationImpl
+  implements DesignDocOperation {
 
-  public DesignDocOperationImpl(HttpRequest request, OperationCallback operationCallback) {
+  public DesignDocOperationImpl(HttpRequest request,
+    OperationCallback operationCallback) {
     super(request, operationCallback);
   }
 

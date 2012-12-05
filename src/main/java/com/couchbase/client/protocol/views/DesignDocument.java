@@ -51,7 +51,7 @@ public class DesignDocument<T> {
   private List<ViewDesign> views;
 
   /**
-   * Associated spatial views to the design document;
+   * Associated spatial views to the design document.
    */
   private List<SpatialViewDesign> spatialViews;
 

@@ -22,7 +22,6 @@
 
 package com.couchbase.client;
 
-
 import com.couchbase.client.BucketTool.FunctionCallback;
 import com.couchbase.client.clustermanager.BucketType;
 import com.couchbase.client.internal.HttpFuture;
@@ -46,9 +45,6 @@ import com.couchbase.client.protocol.views.ViewRow;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -59,7 +55,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.spy.memcached.PersistTo;
-import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.ops.OperationStatus;
 import org.apache.http.HttpResponse;
@@ -69,9 +64,9 @@ import org.apache.http.message.BasicHttpResponse;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;

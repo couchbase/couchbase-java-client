@@ -31,12 +31,12 @@ public class SpatialViewDesign {
   /**
    * The name of the spatial view.
    */
-  String name = null;
+  private String name = null;
 
   /**
    * The map function of the spatial view.
    */
-  String map = null;
+  private String map = null;
 
   /**
    * Create a SpatialViewDesign with a name and a map function.
