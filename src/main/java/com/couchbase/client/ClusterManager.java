@@ -134,7 +134,7 @@ public class ClusterManager extends SpyObject {
   }
 
   /**
-   * Creates the a sasl bucket.
+   * Creates a named bucket with a given password for SASL authentication.
    *
    * @param type The bucket type to create.
    * @param name The name of the bucket.
@@ -143,7 +143,7 @@ public class ClusterManager extends SpyObject {
    * @param authPassword The password for this bucket.
    * @param flushEnabled If flush should be enabled on this bucket.
    */
-  public void createSaslBucket(BucketType type, String name,
+  public void createNamedBucket(BucketType type, String name,
       int memorySizeMB, int replicas, String authPassword, boolean flushEnabled) {
     createBucket(type, name, memorySizeMB, AuthType.SASL, replicas,
         11212, authPassword, flushEnabled);

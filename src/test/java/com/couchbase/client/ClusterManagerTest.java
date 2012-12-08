@@ -76,11 +76,11 @@ public class ClusterManagerTest extends TestCase {
   }
 
   public void testCreateSaslBucket() throws Exception {
-    manager.createSaslBucket(BucketType.COUCHBASE, "saslbucket", 100, 0,
+    manager.createNamedBucket(BucketType.COUCHBASE, "saslbucket", 100, 0,
         "password", true);
     Thread.sleep(1000);
     manager.deleteBucket("saslbucket");
-    manager.createSaslBucket(BucketType.MEMCACHED, "saslbucket", 100, 0,
+    manager.createNamedBucket(BucketType.MEMCACHED, "saslbucket", 100, 0,
         "password", false);
     Thread.sleep(1000);
     manager.deleteBucket("saslbucket");
@@ -99,11 +99,11 @@ public class ClusterManagerTest extends TestCase {
 
   public void testGetBuckets() throws Exception {
     assertEquals(manager.listBuckets().size(), 0);
-    manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, 0,
+    manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, 0,
         "password", false);
-    manager.createSaslBucket(BucketType.COUCHBASE, "bucket2", 100, 0,
+    manager.createNamedBucket(BucketType.COUCHBASE, "bucket2", 100, 0,
         "password", false);
-    manager.createSaslBucket(BucketType.COUCHBASE, "bucket3", 100, 0,
+    manager.createNamedBucket(BucketType.COUCHBASE, "bucket3", 100, 0,
         "password", false);
     List<String> buckets = manager.listBuckets();
     assertTrue(buckets.contains("bucket1"));
@@ -114,7 +114,7 @@ public class ClusterManagerTest extends TestCase {
 
   public void testCreateBucketQuotaTooSmall() {
     try {
-      manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 25, 0,
+      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 25, 0,
           "password", false);
       fail("Bucket quota too small, but bucket was still created");
     } catch (RuntimeException e) {
@@ -126,7 +126,7 @@ public class ClusterManagerTest extends TestCase {
 
   public void testCreateBucketQuotaTooBig() {
     try {
-      manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100000, 0,
+      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100000, 0,
           "password", false);
       fail("Bucket quota too large, but bucket was still created");
     } catch (RuntimeException e) {
@@ -138,7 +138,7 @@ public class ClusterManagerTest extends TestCase {
 
   public void testCreateBucketTooManyReplicas() {
     try {
-      manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, 4,
+      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, 4,
           "password", false);
       fail("Replica number too large, but bucket was still created");
     } catch (RuntimeException e) {
@@ -150,7 +150,7 @@ public class ClusterManagerTest extends TestCase {
 
   public void testCreateBucketTooFewReplicas() {
     try {
-      manager.createSaslBucket(BucketType.COUCHBASE, "bucket1", 100, -1,
+      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, -1,
           "password", false);
       fail("Replica number too small, but bucket was still created");
     } catch (RuntimeException e) {
@@ -162,7 +162,7 @@ public class ClusterManagerTest extends TestCase {
 
   public void testCreateBucketBadName() {
     try {
-      manager.createSaslBucket(BucketType.COUCHBASE, "$$$", 100, 0,
+      manager.createNamedBucket(BucketType.COUCHBASE, "$$$", 100, 0,
           "password", false);
       fail("Invalid bucket name, but bucket was still created");
     } catch (RuntimeException e) {

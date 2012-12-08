@@ -105,7 +105,7 @@ public class BucketTool extends SpyObject {
     FunctionCallback callback = new FunctionCallback() {
       @Override
       public void callback() throws Exception {
-        manager.createSaslBucket(type, name, quota, replicas, name, flush);
+        manager.createNamedBucket(type, name, quota, replicas, name, flush);
       }
 
       @Override
