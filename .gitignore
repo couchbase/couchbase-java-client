@@ -1,6 +1,26 @@
+# General Ignores
 *~
 .classpath
 .DS_Store
 .project
 build/
 lib/ivy-2.2.0.jar
+bin/
+target/
+log/
+
+# IDE Support
+# IntelliJ specific files/directories
+.idea/
+*.ipr
+*.iws
+*.iml
+atlassian-ide-plugin.xml
+
+# Eclipse
+.factorypath
+.settings/
+.externalToolBuilders
+
+# NetBeans
+.nbattrs
