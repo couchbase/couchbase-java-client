@@ -529,6 +529,10 @@ public class Query {
    * for itself. It also checks for various special cases and makes
    * sure the correct string representation is returned.
    *
+   * When no previous match was found, the final try is to cast it to a
+   * long value and treat it as a numeric value. If this doesn't succeed
+   * either, then it is treated as a string.
+   *
    * @param key The key for the corresponding value.
    * @param value The value to prepared.
    * @return The correctly formatted and encoded value.
@@ -548,7 +552,12 @@ public class Query {
     } else if(value.toString().startsWith("\"")) {
       encoded = value.toString();
     } else {
-      encoded = "\"" + value + "\"";
+      try {
+        Long.parseLong(value.toString());
+        encoded = value.toString();
+      } catch(NumberFormatException ex) {
+        encoded = "\"" + value.toString() + "\"";
+      }
     }
 
     return URLEncoder.encode(encoded, "UTF-8");

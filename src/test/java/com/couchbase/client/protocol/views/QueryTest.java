@@ -337,6 +337,10 @@ public class QueryTest {
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=300", result);
 
+    query.setKey(ComplexKey.of(99999999999l));
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=99999999999", result);
+
     query.setKey(ComplexKey.of(300, 400, "500"));
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=[300,400,\"500\"]", result);
@@ -346,6 +350,15 @@ public class QueryTest {
     query.setRangeEnd(ComplexKey.of("Level+2"));
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?startkey=\"0000\"&endkey=\"Level+2\"", result);
+  }
+
+  @Test
+  public void testBooleans() {
+    Query query = new Query();
+    query.setKey(ComplexKey.of(true));
+    query.setKeys(ComplexKey.of(false));
+
+    assertEquals("?keys=false&key=true", query.toString());
   }
 
 }
