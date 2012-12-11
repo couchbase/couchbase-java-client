@@ -51,9 +51,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
   private Config vBucketConfig;
   private long reconnThresholdTimeMsecs =
     CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL;
-  private long obsPollInterval;
-  private int obsPollMax;
-  private int viewTimeout;
+  private long obsPollInterval =
+    CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL;
+  private int obsPollMax = CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX;
+  private int viewTimeout = CouchbaseConnectionFactory.DEFAULT_VIEW_TIMEOUT;
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactoryBuilder.class.getName());
 

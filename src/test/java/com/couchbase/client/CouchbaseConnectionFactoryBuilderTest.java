@@ -114,4 +114,33 @@ public class CouchbaseConnectionFactoryBuilderTest {
 
     instance.buildCouchbaseConnection(uris, "default", "");
   }
+
+  /**
+   * Test to be sure that the default values are the expected values.
+   *
+   * This especially verifies the view timeout, which has been reported in
+   * JCBC-168.
+   *
+   * @throws IOException
+   */
+  @Test
+  public void testDefaultValues() throws IOException {
+
+    CouchbaseConnectionFactoryBuilder instance =
+      new CouchbaseConnectionFactoryBuilder();
+
+    CouchbaseConnectionFactory connFact =
+      instance.buildCouchbaseConnection(uris, "default", "");
+
+
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_VIEW_TIMEOUT,
+      connFact.getViewTimeout());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL,
+      connFact.getObsPollInterval());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX,
+      connFact.getObsPollMax());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL,
+      connFact.getMinReconnectInterval());
+  }
+
 }

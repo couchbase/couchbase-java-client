@@ -89,11 +89,27 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   public static final int DEFAULT_OP_QUEUE_LEN = 16384;
   /**
    * Specify a default minimum reconnect interval of 1.1s.
+   *
    * This means that if a reconnect is needed, it won't try to reconnect
    * more frequently than 1.1s between tries.  The initial HTTP connections
    * under us take up to 500ms per request.
    */
   public static final long DEFAULT_MIN_RECONNECT_INTERVAL = 1100;
+
+  /**
+   * Default View request timeout in ms.
+   */
+  public static final int DEFAULT_VIEW_TIMEOUT = 75000;
+
+  /**
+   * Default Observe poll interval in ms.
+   */
+  public static final long DEFAULT_OBS_POLL_INTERVAL = 100;
+
+  /**
+   * Default maximum amount of poll cycles before failure.
+   */
+  public static final int DEFAULT_OBS_POLL_MAX = 400;
 
   protected volatile ConfigurationProvider configurationProvider;
   private String bucket;
@@ -110,9 +126,9 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private volatile long configProviderLastUpdateTimestamp;
   private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
   private ExecutorService resubExec = Executors.newSingleThreadExecutor();
-  private long obsPollInterval = 100;
-  private int obsPollMax = 400;
-  private int viewTimeout = 75000;
+  private long obsPollInterval = DEFAULT_OBS_POLL_INTERVAL;
+  private int obsPollMax = DEFAULT_OBS_POLL_MAX;
+  private int viewTimeout = DEFAULT_VIEW_TIMEOUT;
   private ClusterManager clusterManager;
 
   public CouchbaseConnectionFactory(final List<URI> baseList,
