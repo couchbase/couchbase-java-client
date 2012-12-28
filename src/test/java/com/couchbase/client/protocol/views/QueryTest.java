@@ -341,6 +341,14 @@ public class QueryTest {
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=99999999999", result);
 
+    query.setKey(ComplexKey.of(3.141159f));
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=3.141159", result);
+
+    query.setKey(ComplexKey.of(3.141159));
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=3.141159", result);
+
     query.setKey(ComplexKey.of(300, 400, "500"));
     result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=[300,400,\"500\"]", result);

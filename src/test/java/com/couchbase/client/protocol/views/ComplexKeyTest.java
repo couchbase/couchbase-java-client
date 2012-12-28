@@ -145,6 +145,12 @@ public class ComplexKeyTest {
 
     ComplexKey singleLong = ComplexKey.of(99999999999L);
     assertEquals("99999999999", singleLong.toJson());
+
+    ComplexKey singleFloat = ComplexKey.of(3.141159f);
+    assertEquals("3.141159", singleFloat.toJson());
+
+    ComplexKey singleDouble = ComplexKey.of(3.141159);
+    assertEquals("3.141159", singleDouble.toJson());
   }
 
   // TODO: eventually support this

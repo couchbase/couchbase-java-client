@@ -24,6 +24,8 @@ package com.couchbase.client.protocol.views;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -553,9 +555,8 @@ public class Query {
       encoded = value.toString();
     } else {
       try {
-        Long.parseLong(value.toString());
-        encoded = value.toString();
-      } catch(NumberFormatException ex) {
+        encoded = NumberFormat.getInstance().parse(value.toString()).toString();
+      } catch(ParseException ex) {
         encoded = "\"" + value.toString() + "\"";
       }
     }
