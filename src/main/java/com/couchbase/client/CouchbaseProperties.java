@@ -45,7 +45,7 @@ import net.spy.memcached.compat.CloseUtil;
  * also allows you to pass a boolean param to control this behavior (ignore
  * the namespace at all).
  */
-final class CouchbaseProperties {
+public final class CouchbaseProperties {
 
   private static Properties fileProperties = new Properties();
 

@@ -132,6 +132,8 @@ public class CouchbaseClient extends MemcachedClient
    * 3. Property defined in cbclient.properties.
    */
   static {
+    CouchbaseProperties.setPropertyFile("cbclient.properties");
+
     Properties properties = new Properties(System.getProperties());
     String viewmode = properties.getProperty("viewmode", null);
 
