@@ -23,9 +23,11 @@
 package com.couchbase.client.vbucket.config;
 
 
+import com.couchbase.client.vbucket.ConnectionException;
+import java.text.ParseException;
 import java.util.Map;
-
 import junit.framework.TestCase;
+import net.spy.memcached.TestConfig;
 
 /**
  * A ConfigParserJSONTest.
@@ -116,6 +118,23 @@ public class ConfigurationParserJSONTest extends TestCase {
   }
 
   /**
+   * Tests the behaviour of the client when a wrong URI is provided
+   * for connection.
+   *
+   * @pre Wrong connection URI is passed.
+   * @post Asserts equals if due to this the test runs
+   * into ConnectionException.
+   */
+  public void testInvalidURI() throws ParseException{
+    try {
+      configParser.parseBase(INVALID_BASE_STRING);
+    } catch (ConnectionException e) {
+      assertEquals(e.getMessage(), "Connection URI is either incorrect " +
+        "or invalid as it cannot be parsed.");
+    }
+  }
+
+  /**
    * Check bucket.
    *
    * @param bucket the bucket
@@ -135,6 +154,9 @@ public class ConfigurationParserJSONTest extends TestCase {
           + "2.2.4\",\"mnesia\":\"4.4.12\",\"kernel\":\"2.13.4\",\"sasl\""
           + ":\"2.1.8\",\"ns_server\":\"1.6.0beta3\",\"menelaus\":\"1.6.0"
           + "beta3\",\"stdlib\":\"1.16.4\"}}";
+
+  private static final String INVALID_BASE_STRING =
+      "http://" + TestConfig.IPV4_ADDR + ":8091/index.html";
 
   private static final String BUCKETS_STRING = "[\n"
       + "    {\n"

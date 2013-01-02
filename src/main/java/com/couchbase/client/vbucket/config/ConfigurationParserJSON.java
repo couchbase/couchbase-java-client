@@ -23,6 +23,7 @@
 package com.couchbase.client.vbucket.config;
 
 
+import com.couchbase.client.vbucket.ConnectionException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -53,7 +54,10 @@ public class ConfigurationParserJSON extends SpyObject implements
       JSONObject baseJO = new JSONObject(base);
       poolsJA = baseJO.getJSONArray("pools");
     } catch (JSONException e) {
-      throw new ParseException("Can not read base " + base, 0);
+      getLogger().debug("Received the folloing unparsable response: "
+        + e.getMessage());
+      throw new ConnectionException("Connection URI is either incorrect " +
+        "or invalid as it cannot be parsed.");
     }
     for (int i = 0; i < poolsJA.length(); ++i) {
       try {
