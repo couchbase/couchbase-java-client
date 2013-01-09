@@ -26,6 +26,8 @@ import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigDifference;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -145,11 +147,12 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
 
   public void updateLocator(final Collection<MemcachedNode> nodes,
       final Config newconf) {
-    // we'll get a new config for various reasons we don't care about, so check
-    // if we do care
     Config current = fullConfig.get().getConfig();
+
     ConfigDifference compareTo = current.compareTo(newconf);
-    if (compareTo.isSequenceChanged() || compareTo.getVbucketsChanges() > 0) {
+
+    if (compareTo.isSequenceChanged() || compareTo.getVbucketsChanges() > 0
+      || current.getCouchServers().size() != newconf.getCouchServers().size()) {
       getLogger().debug("Updating configuration, received updated configuration"
         + " with significant changes.");
       fullConfig.set(new TotalConfig(newconf,

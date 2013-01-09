@@ -111,6 +111,23 @@ public class ConfigurationProviderHTTP extends SpyObject implements
   }
 
   /**
+   * Returns the current Reconfigurable object.
+   */
+  @Override
+  public Reconfigurable getReconfigurable() {
+    return reSubRec;
+  }
+
+  /**
+   * Returns the current bucket name.
+   */
+  @Override
+  public String getBucket() {
+    return reSubBucket;
+  }
+
+
+  /**
    * Connects to the REST service and retrieves the bucket configuration from
    * the first pool available.
    *
@@ -229,16 +246,11 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * @param rec reconfigurable that will receive updates
    */
   public void subscribe(String bucketName, Reconfigurable rec) {
-    // this seems odd, and it is, but this code was taken from outside the
-    // client where it supported multiple buckets and was now shoved down in.
-    // recent changes don't support multiple, so we validate
-    /* @TODO: refactor all of this bucket and subscription behind the
-     *        node locator
-     */
     if (null == bucketName || (null != reSubBucket
       && !bucketName.equals(reSubBucket))) {
       throw new IllegalArgumentException("Bucket name cannot be null and must"
-        + " never be re-set to a new object.");
+        + " never be re-set to a new object. Bucket: "
+        + bucketName + ", reSubBucket: " + reSubBucket);
     }
     if (null == rec || (null != reSubRec && rec != reSubRec)) {
       throw new IllegalArgumentException("Reconfigurable cannot be null and"

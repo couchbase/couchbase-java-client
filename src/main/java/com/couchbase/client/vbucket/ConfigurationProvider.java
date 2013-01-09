@@ -71,4 +71,15 @@ public interface ConfigurationProvider {
   String getAnonymousAuthBucket();
 
   void finishResubscribe();
+
+  /**
+   * Returns the current Reconfigurable object.
+   */
+  public Reconfigurable getReconfigurable();
+
+  /**
+   * Returns the current bucket name.
+   */
+  public String getBucket();
+
 }

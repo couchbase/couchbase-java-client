@@ -29,6 +29,7 @@ import com.couchbase.client.vbucket.ConfigurationProvider;
 import com.couchbase.client.vbucket.ConfigurationProviderHTTP;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
+import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigType;
 
@@ -273,11 +274,21 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     }
   }
 
+  /**
+   * Check if a configuration update is needed.
+   *
+   * There are two main reasons that can trigger a configuration update. Either
+   * there is a configuration update happening in the cluster, or operations
+   * added to the queue can not find their corresponding node. For the latter,
+   * see the {@link #pastReconnThreshold()} method for further details.
+   *
+   * If a configuration update is needed, a resubscription for configuration
+   * updates is triggered. Note that since reconnection takes some time,
+   * the method will also wait a time period given by
+   * {@link #getMinReconnectInterval()} before the resubscription is triggered.
+   */
   void checkConfigUpdate() {
     if (needsReconnect || pastReconnThreshold()) {
-
-      // past the threshold, but now we need to give the reconnect attempt
-      // a bit of time to complete setting itself up
       long now = System.currentTimeMillis();
       long intervalWaited = now - this.configProviderLastUpdateTimestamp;
       if (intervalWaited < this.getMinReconnectInterval()) {
@@ -286,13 +297,13 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
                 new Object[]{intervalWaited, this.getMinReconnectInterval()});
         return;
       }
+
       if (doingResubscribe.compareAndSet(false, true)) {
         resubConfigUpdate();
       } else {
         LOGGER.log(Level.CONFIG, "Duplicate resubscribe for config updates"
           + " suppressed.");
       }
-
     } else {
       LOGGER.log(Level.FINE, "No reconnect required, though check requested."
               + " Current config check is {0} out of a threshold of {1}.",
@@ -300,34 +311,39 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     }
   }
 
+  /**
+   * Resubscribe for configuration updates.
+   */
   private synchronized void resubConfigUpdate() {
-    // synchronized shouldn't be needed here, just being defensive
     LOGGER.log(Level.INFO, "Attempting to resubscribe for cluster config"
       + " updates.");
     resubExec.execute(new Resubscriber());
-
-
   }
 
   /**
-   * Checks if the last reconnection was more than or equal 10 seconds
-   * ago.
+   * Checks if there have been more requests than allowed through
+   * maxConfigCheck in a 10 second period.
    *
-   * @return true if it's been more than 10 seconds since we last tried
-   *         to connect
+   * If this is the case, then true is returned. If the timeframe between
+   * two distinct requests is more than 10 seconds, a fresh timeframe starts.
+   * This means that 10 calls every second would trigger an update while
+   * 1 operation, then a 11 second sleep and one more operation would not.
+   *
+   * @return true if there were more config check requests than maxConfigCheck
+   *              in the 10 second period.
    */
-  private boolean pastReconnThreshold() {
+  protected boolean pastReconnThreshold() {
     long currentTime = System.nanoTime();
-    if (currentTime - thresholdLastCheck >= TimeUnit.SECONDS.toMillis(10)) {
-      configThresholdCount.set(0); // it's been more than 10 sec since last
-                                // tried, so don't try again just yet.
-    }
-    configThresholdCount.incrementAndGet();
-    thresholdLastCheck = currentTime;
 
-    if (configThresholdCount.get() >= maxConfigCheck) {
+    if (currentTime - thresholdLastCheck >= TimeUnit.SECONDS.toNanos(10)) {
+      configThresholdCount.set(0);
+    }
+
+    thresholdLastCheck = currentTime;
+    if (configThresholdCount.incrementAndGet() >= maxConfigCheck) {
       return true;
     }
+
     return false;
   }
 
@@ -336,7 +352,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
    *
    * @return the minReconnectInterval
    */
-  public long getMinReconnectInterval() {
+  long getMinReconnectInterval() {
     return minReconnectInterval;
   }
 
@@ -346,6 +362,16 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
 
   int getObsPollMax() {
     return obsPollMax;
+  }
+
+  /**
+   * Returns the amount of how many config checks in a given time period
+   * (currently 10 seconds) are allowed before a reconfiguration is triggered.
+   *
+   * @return the number of config checks allowed.
+   */
+  int getMaxConfigCheck() {
+    return maxConfigCheck;
   }
 
   private class Resubscriber implements Runnable {
@@ -360,15 +386,22 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       ConfigurationProvider oldConfigProvider = configurationProvider;
       setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
         bucket, pass));
-      configurationProvider.finishResubscribe();
-    // cleanup the old config provider
+
       if (null != oldConfigProvider) {
         oldConfigProvider.shutdown();
       }
 
+      configurationProvider.markForResubscribe(
+        oldConfigProvider.getBucket(), oldConfigProvider.getReconfigurable());
+      configurationProvider.finishResubscribe();
+      Bucket bucket = configurationProvider.getBucketConfiguration(
+                                     configurationProvider.getBucket());
+      configurationProvider.getReconfigurable().reconfigure(bucket);
+
       if (!doingResubscribe.compareAndSet(true, false)) {
-        assert false : "Could not reset from doing a resubscribe.";
+        LOGGER.log(Level.WARNING, "Could not reset from doing a resubscribe.");
       }
+
       Thread.currentThread().setName(threadNameBase + "complete");
     }
   }

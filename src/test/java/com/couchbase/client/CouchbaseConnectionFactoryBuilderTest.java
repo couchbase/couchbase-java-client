@@ -26,12 +26,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import net.spy.memcached.TestConfig;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Test for basic things in the CouchbaseConnectionFactoryBuilder.
@@ -39,30 +36,8 @@ import static org.junit.Assert.*;
  */
 public class CouchbaseConnectionFactoryBuilderTest {
 
-  private List<URI> uris = Arrays.asList(
-      URI.create("http://localhost:8091/pools"));
-
-  /**
-   * Instantiates a new couchbase connection factory builder test.
-   */
-  public CouchbaseConnectionFactoryBuilderTest() {
-  }
-
-  @BeforeClass
-  public static void setUpClass() {
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-  }
-
-  @Before
-  public void setUp() {
-  }
-
-  @After
-  public void tearDown() {
-  }
+  private List<URI> uris = Arrays.asList(URI.create(
+    "http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
 
   /**
    * Test setting the observer poll interval as 600.
@@ -159,7 +134,6 @@ public class CouchbaseConnectionFactoryBuilderTest {
 
     CouchbaseConnectionFactory connFact =
       instance.buildCouchbaseConnection(uris, "default", "");
-
 
     assertEquals(CouchbaseConnectionFactory.DEFAULT_VIEW_TIMEOUT,
       connFact.getViewTimeout());
