@@ -563,7 +563,8 @@
         <exclude name="config.properties" />
         <exclude name="ivy.xml" />
         <exclude name="LICENSE.txt" />
-        <exclude name="README.markdown" />
+        <exclude name="TESTING.md" />
+        <exclude name="README.md" />
       </fileset>
     </delete>
   </target>
