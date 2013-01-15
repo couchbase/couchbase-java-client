@@ -42,6 +42,7 @@
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="src.dir" value="${base.src.dir}/main/java" />
   <property name="test.dir" value="${base.src.dir}/test/java" />
+  <property name="test.resources.dir" value="${base.src.dir}/test/resources" />
   <property name="script.src.dir" value="${base.src.dir}/scripts" />
   <property name="build.javadoc" location="${build.dir}/docs/" />
   <property name="junit.dir" location="${build.dir}/junit" />
@@ -59,12 +60,6 @@
   <property name="ivy.pom.groupId" value="couchbase" />
   <property name="ivy.pom.description"
    value = "A client library for Couchbase Server" />
-  <path id="test.classpath">
-    <pathelement location="${build.classes}" />
-    <fileset dir="${lib.dir}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </path>
 
   <!-- tests -->
   <property name="build.test" location="${build.dir}/test"/>
@@ -149,8 +144,10 @@
     <!-- Classpath for unit tests (superset of compile.classpath) -->
     <path id="test.classpath">
       <pathelement location="${build.test.classes}" />
+      <pathelement location="${test.resources.dir}" />
       <path refid="compile.classpath" />
     </path>
+
   </target>
 
   <target name="ivy-probe-antlib" >
