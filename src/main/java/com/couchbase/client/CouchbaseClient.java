@@ -28,7 +28,6 @@ import com.couchbase.client.internal.ViewFuture;
 import com.couchbase.client.protocol.views.AbstractView;
 import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
 import com.couchbase.client.protocol.views.DesignDocFetcherOperationImpl;
-import com.couchbase.client.protocol.views.InvalidViewException;
 import com.couchbase.client.protocol.views.DesignDocOperationImpl;
 import com.couchbase.client.protocol.views.DesignDocument;
 import com.couchbase.client.protocol.views.DocsOperationImpl;
@@ -593,16 +592,16 @@ public class CouchbaseClient extends MemcachedClient
 
     HttpOperationImpl op = new DesignDocOperationImpl(request,
       new OperationCallback() {
-      @Override
-      public void receivedStatus(OperationStatus status) {
-        crv.set(status.getMessage().equals("Error Code: 201"), status);
-      }
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          crv.set(status.getMessage().equals("Error Code: 201"), status);
+        }
 
-      @Override
-      public void complete() {
-        couchLatch.countDown();
-      }
-    });
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
+      });
 
     crv.setOperation(op);
     addOp(op);
@@ -659,16 +658,16 @@ public class CouchbaseClient extends MemcachedClient
 
     HttpOperationImpl op = new DesignDocOperationImpl(request,
       new OperationCallback() {
-      @Override
-      public void receivedStatus(OperationStatus status) {
-        crv.set(status.getMessage().equals("Error Code: 200"), status);
-      }
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          crv.set(status.getMessage().equals("Error Code: 200"), status);
+        }
 
-      @Override
-      public void complete() {
-        couchLatch.countDown();
-      }
-    });
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
+      });
 
     crv.setOperation(op);
     addOp(op);
@@ -717,32 +716,32 @@ public class CouchbaseClient extends MemcachedClient
         new BasicHttpRequest("GET", uri, HttpVersion.HTTP_1_1);
     final HttpOperation op = new DocsOperationImpl(request, view,
       new ViewCallback() {
-      private ViewResponse vr = null;
+        private ViewResponse vr = null;
 
-      @Override
-      public void receivedStatus(OperationStatus status) {
-        if (vr != null) {
-          Collection<String> ids = new LinkedList<String>();
-          Iterator<ViewRow> itr = vr.iterator();
-          while (itr.hasNext()) {
-            ids.add(itr.next().getId());
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          if (vr != null) {
+            Collection<String> ids = new LinkedList<String>();
+            Iterator<ViewRow> itr = vr.iterator();
+            while (itr.hasNext()) {
+              ids.add(itr.next().getId());
+            }
+            crv.set(vr, asyncGetBulk(ids), status);
+          } else {
+            crv.set(null, null, status);
           }
-          crv.set(vr, asyncGetBulk(ids), status);
-        } else {
-          crv.set(null, null, status);
         }
-      }
 
-      @Override
-      public void complete() {
-        couchLatch.countDown();
-      }
+        @Override
+        public void complete() {
+          couchLatch.countDown();
+        }
 
-      @Override
-      public void gotData(ViewResponse response) {
-        vr = response;
-      }
-    });
+        @Override
+        public void gotData(ViewResponse response) {
+          vr = response;
+        }
+      });
     crv.setOperation(op);
     addOp(op);
     return crv;
@@ -1847,71 +1846,68 @@ public class CouchbaseClient extends MemcachedClient
     final FlushRunner flushRunner = new FlushRunner(latch);
 
     final OperationFuture<Boolean> rv =
-            new OperationFuture<Boolean>("", latch, operationTimeout) {
+      new OperationFuture<Boolean>("", latch, operationTimeout) {
+        private CouchbaseConnectionFactory factory =
+          (CouchbaseConnectionFactory) connFactory;
 
-              CouchbaseConnectionFactory factory =
-                (CouchbaseConnectionFactory) connFactory;
+        @Override
+        public boolean cancel() {
+          throw new UnsupportedOperationException("Flush cannot be"
+            + " canceled");
+        }
 
-              @Override
-              public boolean cancel() {
-                throw new UnsupportedOperationException("Flush cannot be"
-                  + " canceled");
-              }
+        @Override
+        public boolean isDone() {
+          return flushRunner.status();
+        }
 
-              @Override
-              public boolean isDone() {
-                return flushRunner.status();
-              }
+        @Override
+        public Boolean get(long duration, TimeUnit units) throws
+          InterruptedException, TimeoutException,
+          ExecutionException {
+          if (!latch.await(duration, units)) {
+            throw new TimeoutException("Flush not completed within"
+              + " timeout.");
+          }
 
-              @Override
-              public Boolean get(long duration, TimeUnit units) throws
-                InterruptedException, TimeoutException,
-                ExecutionException {
-                if (!latch.await(duration, units)) {
-                  throw new TimeoutException("Flush not completed within"
-                    + " timeout.");
-                }
+          return flushRunner.status();
+        }
 
-                return flushRunner.status();
-              }
+        @Override
+        public Boolean get() throws InterruptedException,
+          ExecutionException {
+          try {
+            return get(factory.getViewTimeout(), TimeUnit.MILLISECONDS);
+          } catch (TimeoutException e) {
+            throw new RuntimeException("Timed out waiting for operation",
+              e);
+          }
+        }
 
-              @Override
-              public Boolean get() throws InterruptedException,
-                ExecutionException {
-                try {
-                  return get(factory.getViewTimeout(), TimeUnit.MILLISECONDS);
-                } catch (TimeoutException e) {
-                  throw new RuntimeException("Timed out waiting for operation",
-                    e);
-                }
-              }
+        @Override
+        public Long getCas() {
+          throw new UnsupportedOperationException("Flush has no CAS"
+            + " value.");
+        }
 
-              @Override
-              public Long getCas() {
-                throw new UnsupportedOperationException("Flush has no CAS"
-                  + " value.");
-              }
+        @Override
+        public String getKey() {
+          throw new UnsupportedOperationException("Flush has no"
+            + " associated key.");
+        }
 
-              @Override
-              public String getKey() {
-                throw new UnsupportedOperationException("Flush has no"
-                  + " associated key.");
-              }
+        @Override
+        public OperationStatus getStatus() {
+          throw new UnsupportedOperationException("Flush has no"
+            + " OperationStatus.");
+        }
 
-              @Override
-              public OperationStatus getStatus() {
-                throw new UnsupportedOperationException("Flush has no"
-                  + " OperationStatus.");
-              }
-
-              @Override
-              public boolean isCancelled() {
-                throw new UnsupportedOperationException("Flush cannot be"
-                  + " canceled.");
-              }
-
-
-        };
+        @Override
+        public boolean isCancelled() {
+          throw new UnsupportedOperationException("Flush cannot be"
+            + " canceled.");
+        }
+      };
 
     Thread flusher = new Thread(flushRunner, "Temporary Flusher");
     flusher.setDaemon(true);
@@ -1933,8 +1929,8 @@ public class CouchbaseClient extends MemcachedClient
   // particular interface, but it conforms to the specification
   private class FlushRunner implements Runnable {
 
-    final CountDownLatch flatch;
-    Boolean flushStatus = false;
+    private final CountDownLatch flatch;
+    private Boolean flushStatus = false;
 
     public FlushRunner(CountDownLatch latch) {
       flatch = latch;

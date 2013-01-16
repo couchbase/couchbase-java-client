@@ -137,7 +137,8 @@ public class CacheConfig implements Config {
   }
 
   public HashAlgorithm getHashAlgorithm() {
-    throw new UnsupportedOperationException("HashAlgorithm not supported for cache buckets");
+    throw new UnsupportedOperationException(
+      "HashAlgorithm not supported for cache buckets");
   }
 
   public ConfigType getConfigType() {

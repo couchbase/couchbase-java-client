@@ -22,7 +22,6 @@
 
 package com.couchbase.client.protocol.views;
 
-import com.couchbase.client.vbucket.config.Bucket;
 import java.text.ParseException;
 import java.util.logging.Logger;
 

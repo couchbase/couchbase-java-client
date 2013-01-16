@@ -45,7 +45,7 @@ public class View extends AbstractView {
    * @param reduce if the View contains a reduce function or not.
    */
   public View(String database, String designDoc, String viewName,
-		boolean map, boolean reduce) {
+    boolean map, boolean reduce) {
     super(database, designDoc, viewName);
     this.map = map;
     this.reduce = reduce;

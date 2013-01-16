@@ -73,6 +73,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/**
+ * Verifies the correct functionality of views.
+ */
 public class ViewTest {
 
   protected static TestingClient client = null;

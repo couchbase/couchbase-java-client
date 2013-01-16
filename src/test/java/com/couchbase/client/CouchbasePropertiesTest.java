@@ -62,7 +62,8 @@ public class CouchbasePropertiesTest {
 
     assertNull(CouchbaseProperties.getProperty("throttler"));
     CouchbaseProperties.setPropertyFile("cbclient-test.properties");
-    assertEquals("demo_throttler", CouchbaseProperties.getProperty("throttler"));
+    assertEquals("demo_throttler",
+      CouchbaseProperties.getProperty("throttler"));
     assertEquals("demo_throttler",
       CouchbaseProperties.getProperty("throttler", true));
 

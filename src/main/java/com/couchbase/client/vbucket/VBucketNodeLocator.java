@@ -26,8 +26,6 @@ import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigDifference;
 
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

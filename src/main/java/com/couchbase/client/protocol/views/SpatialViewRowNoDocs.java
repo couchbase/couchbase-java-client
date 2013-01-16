@@ -71,13 +71,13 @@ public class SpatialViewRowNoDocs implements ViewRow {
   @Override
   public Object getDocument() {
     throw new UnsupportedOperationException("This view result doesn't contain "
-        + "documents");
+      + "documents");
   }
 
   @Override
   public String getKey() {
-     throw new UnsupportedOperationException("Spatial views don't contain "
-       + "a key");
+    throw new UnsupportedOperationException("Spatial views don't contain "
+      + "a key");
   }
 
 }

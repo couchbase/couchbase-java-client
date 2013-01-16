@@ -144,7 +144,8 @@ public class ClusterManager extends SpyObject {
    * @param flushEnabled If flush should be enabled on this bucket.
    */
   public void createNamedBucket(BucketType type, String name,
-      int memorySizeMB, int replicas, String authPassword, boolean flushEnabled) {
+      int memorySizeMB, int replicas, String authPassword,
+      boolean flushEnabled) {
     createBucket(type, name, memorySizeMB, AuthType.SASL, replicas,
         11212, authPassword, flushEnabled);
   }

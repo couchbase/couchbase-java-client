@@ -394,9 +394,9 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       configurationProvider.markForResubscribe(
         oldConfigProvider.getBucket(), oldConfigProvider.getReconfigurable());
       configurationProvider.finishResubscribe();
-      Bucket bucket = configurationProvider.getBucketConfiguration(
+      Bucket oldBucket = configurationProvider.getBucketConfiguration(
                                      configurationProvider.getBucket());
-      configurationProvider.getReconfigurable().reconfigure(bucket);
+      configurationProvider.getReconfigurable().reconfigure(oldBucket);
 
       if (!doingResubscribe.compareAndSet(true, false)) {
         LOGGER.log(Level.WARNING, "Could not reset from doing a resubscribe.");

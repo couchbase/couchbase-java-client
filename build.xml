@@ -562,6 +562,7 @@
         <exclude name="LICENSE.txt" />
         <exclude name="TESTING.md" />
         <exclude name="README.md" />
+        <exclude name="cbclient.properties.dist" />
       </fileset>
     </delete>
   </target>

@@ -77,8 +77,8 @@ public class SpatialViewRowWithDocs implements ViewRow {
 
   @Override
   public String getKey() {
-     throw new UnsupportedOperationException("Spatial views don't contain "
-       + "a key");
+    throw new UnsupportedOperationException("Spatial views don't contain "
+      + "a key");
   }
 
 }

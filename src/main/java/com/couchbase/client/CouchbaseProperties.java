@@ -45,12 +45,14 @@ import net.spy.memcached.compat.CloseUtil;
  * also allows you to pass a boolean param to control this behavior (ignore
  * the namespace at all).
  */
-public class CouchbaseProperties {
+final class CouchbaseProperties {
 
   private static Properties fileProperties = new Properties();
 
   private static final Logger LOGGER = Logger.getLogger(
     CouchbaseProperties.class.getName());
+
+  private CouchbaseProperties() {}
 
   /**
    * The default namespace of the properties.
@@ -63,32 +65,32 @@ public class CouchbaseProperties {
    * @param filename the filename of the properties file.
    */
   public static void setPropertyFile(String filename) {
-      FileInputStream fs = null;
-      try {
-        if(filename == null) {
-          throw new IllegalArgumentException(
-            "Given property filename is null.");
-        }
-
-        URL url =  ClassLoader.getSystemResource(filename);
-        if (url != null) {
-          String clFilename = url.getFile();
-          File propFile = new File(clFilename);
-          fs = new FileInputStream(propFile);
-          fileProperties.load(fs);
-        } else {
-          throw new IOException("File not found with system classloader.");
-        }
-        LOGGER.log(Level.INFO, "Successfully loaded properties file \"{0}\".",
-          filename);
-      } catch (Exception e) {
-        LOGGER.log(Level.WARNING, "Could not load properties file \"{0}\" "
-          + "because: {1}", new Object[]{filename, e.getMessage()});
-      } finally {
-        if (fs != null) {
-          CloseUtil.close(fs);
-        }
+    FileInputStream fs = null;
+    try {
+      if(filename == null) {
+        throw new IllegalArgumentException(
+          "Given property filename is null.");
       }
+
+      URL url =  ClassLoader.getSystemResource(filename);
+      if (url != null) {
+        String clFilename = url.getFile();
+        File propFile = new File(clFilename);
+        fs = new FileInputStream(propFile);
+        fileProperties.load(fs);
+      } else {
+        throw new IOException("File not found with system classloader.");
+      }
+      LOGGER.log(Level.INFO, "Successfully loaded properties file \"{0}\".",
+        filename);
+    } catch (Exception e) {
+      LOGGER.log(Level.WARNING, "Could not load properties file \"{0}\" "
+        + "because: {1}", new Object[]{filename, e.getMessage()});
+    } finally {
+      if (fs != null) {
+        CloseUtil.close(fs);
+      }
+    }
   }
 
   /**
@@ -104,7 +106,7 @@ public class CouchbaseProperties {
    * @return returns the property or default if not set.
    */
   public static String getProperty(String name, String def, boolean ignore) {
-    if(ignore == false) {
+    if(!ignore) {
       name = namespace + "." + name;
     }
 

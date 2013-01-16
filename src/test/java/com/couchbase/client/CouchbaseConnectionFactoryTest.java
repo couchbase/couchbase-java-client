@@ -33,6 +33,9 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Makes sure the CouchbaseConnectionFactory works as expected.
+ */
 public class CouchbaseConnectionFactoryTest {
 
   private List<URI> uris;
@@ -59,7 +62,7 @@ public class CouchbaseConnectionFactoryTest {
   public void testPastReconnectThreshold() throws IOException {
     CouchbaseConnectionFactory connFact = buildFactory();
 
-    for(int i=1;i<connFact.getMaxConfigCheck();i++) {
+    for(int i=1; i<connFact.getMaxConfigCheck(); i++) {
       boolean pastReconnThreshold = connFact.pastReconnThreshold();
       assertFalse(pastReconnThreshold);
     }
@@ -78,14 +81,14 @@ public class CouchbaseConnectionFactoryTest {
   public void testPastReconnectThresholdWithSleep() throws Exception {
     CouchbaseConnectionFactory connFact = buildFactory();
 
-    for(int i=1;i<=connFact.getMaxConfigCheck()-1;i++) {
+    for(int i=1; i<=connFact.getMaxConfigCheck()-1; i++) {
       boolean pastReconnThreshold = connFact.pastReconnThreshold();
       assertFalse(pastReconnThreshold);
     }
 
     Thread.sleep(TimeUnit.SECONDS.toMillis(11));
 
-    for(int i=1;i<=connFact.getMaxConfigCheck()-1;i++) {
+    for(int i=1; i<=connFact.getMaxConfigCheck()-1; i++) {
       boolean pastReconnThreshold = connFact.pastReconnThreshold();
       assertFalse(pastReconnThreshold);
     }

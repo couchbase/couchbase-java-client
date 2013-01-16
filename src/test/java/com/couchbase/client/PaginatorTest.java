@@ -80,7 +80,8 @@ public class PaginatorTest {
     private String continent;
 
     /**
-     * Instantiates a new city
+     * Instantiates a new city.
+     *
      * @param n the name
      * @param c the country
      * @param co the continent

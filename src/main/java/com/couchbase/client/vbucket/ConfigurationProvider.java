@@ -75,11 +75,11 @@ public interface ConfigurationProvider {
   /**
    * Returns the current Reconfigurable object.
    */
-  public Reconfigurable getReconfigurable();
+  Reconfigurable getReconfigurable();
 
   /**
    * Returns the current bucket name.
    */
-  public String getBucket();
+  String getBucket();
 
 }
