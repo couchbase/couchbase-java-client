@@ -125,34 +125,18 @@ public class CouchbaseClient extends MemcachedClient
   private final CouchbaseConnectionFactory cbConnFactory;
 
   /**
-   * Properties priority from highest to lowest:
+   * Try to load the cbclient.properties file and check for the viewmode.
    *
-   * 1. Property defined in user code.
-   * 2. Property defined on command line.
-   * 3. Property defined in cbclient.properties.
+   * If no viewmode (either through "cbclient.viewmode" or "viewmode")
+   * property is set, the fallback is always "production". Possible options
+   * are either "development" or "production".
    */
   static {
     CouchbaseProperties.setPropertyFile("cbclient.properties");
 
-    Properties properties = new Properties(System.getProperties());
-    String viewmode = properties.getProperty("viewmode", null);
-
+    String viewmode = CouchbaseProperties.getProperty("viewmode");
     if (viewmode == null) {
-      FileInputStream fs = null;
-      try {
-        URL url =  ClassLoader.getSystemResource("cbclient.properties");
-        if (url != null) {
-          fs = new FileInputStream(new File(url.getFile()));
-          properties.load(fs);
-        }
-        viewmode = properties.getProperty("viewmode");
-      } catch (IOException e) {
-        // Properties file doesn't exist. Error logged later.
-      } finally {
-        if (fs != null) {
-          CloseUtil.close(fs);
-        }
-      }
+      viewmode = CouchbaseProperties.getProperty("viewmode", true);
     }
 
     if (viewmode == null) {
