@@ -353,6 +353,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       + connection.getURL());
     try {
       connection.setConnectTimeout(500);
+      connection.setReadTimeout(5000);
       InputStream inStream = connection.getInputStream();
       if (connection instanceof java.net.HttpURLConnection) {
         HttpURLConnection httpConnection = (HttpURLConnection) connection;
