@@ -28,7 +28,9 @@ import java.util.List;
 import net.spy.memcached.HashAlgorithm;
 
 /**
- * A CacheConfig.
+ * The CacheConfig class represents a configuration object for memcached-type
+ * buckets. Unlike couchbase-type buckets, they don't support vbuckets and
+ * replicas, so some of the interface methods are not supported.
  */
 public class CacheConfig implements Config {
 
@@ -45,11 +47,13 @@ public class CacheConfig implements Config {
   }
 
   public int getReplicasCount() {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No replica support for cache"
+      + "buckets");
   }
 
   public int getVbucketsCount() {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No vbucket support for cache"
+      + "buckets");
   }
 
   public int getServersCount() {
@@ -66,19 +70,23 @@ public class CacheConfig implements Config {
   }
 
   public int getVbucketByKey(String key) {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No vbucket support for cache"
+      + "buckets");
   }
 
   public int getMaster(int vbucketIndex) {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No master/replica support for"
+      + "cache buckets");
   }
 
   public int getReplica(int vbucketIndex, int replicaIndex) {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No replica support for cache"
+      + "buckets");
   }
 
   public int foundIncorrectMaster(int vbucket, int wrongServer) {
-    throw new IllegalArgumentException("TODO: refactor this");
+    throw new UnsupportedOperationException("No master check for "
+      + "cache buckets");
   }
 
   public void setServers(List<String> newServers) {
@@ -99,14 +107,6 @@ public class CacheConfig implements Config {
 
   public ConfigDifference compareTo(Config config) {
     ConfigDifference difference = new ConfigDifference();
-
-    // Compute the added and removed servers
-    // difference.setServersAdded(new
-    // ArrayList<String>(CollectionUtils.subtract(config.getServers(),
-    // this.getServers())));
-    // difference.setServersRemoved(new
-    // ArrayList<String>(CollectionUtils.subtract(this.getServers(),
-    // config.getServers())));
 
     // Verify the servers are equal in their positions
     if (this.serversCount == config.getServersCount()) {
