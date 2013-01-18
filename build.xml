@@ -368,6 +368,17 @@
         includeantruntime="false">
       <classpath refid="${name}.common.classpath" />
     </javac>
+
+    <javac
+        encoding="${build.encoding}"
+        srcdir="${build.src.dir}"
+        includes="**/*.java"
+        destdir="${build.classes}"
+        debug="${javac.debug}"
+        deprecation="${javac.deprecation}"
+        includeantruntime="false">
+      <classpath refid="${name}.common.classpath"/>
+    </javac>
     <move file="${build.src.dir}/com/couchbase/client/changelog.txt"
         tofile="${build.classes}/com/couchbase/client/changelog.txt" />
   </target>
