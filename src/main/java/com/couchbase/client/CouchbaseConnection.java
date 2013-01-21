@@ -129,7 +129,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
       mergedNodes.addAll(newNodes);
 
       for(MemcachedNode keepingNode : mergedNodes) {
-        getLogger().info("Node " + keepingNode.getSocketAddress()
+        getLogger().debug("Node " + keepingNode.getSocketAddress()
           + " will stay in cluster config after reconfiguration.");
       }
 
@@ -192,7 +192,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
       // and wait for it to come back online.
       if (placeIn == null) {
         placeIn = primary;
-        this.getLogger().warn(
+        getLogger().warn(
             "Node expected to receive data is inactive. This could be due to "
             + "a failure within the cluster. Will check for updated "
             + "configuration. Key without a configured node is: %s.", key);

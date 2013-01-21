@@ -68,7 +68,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * requests to the server.
    */
   public static final String CLIENT_SPEC_VER = "1.0";
-  private List<URI> baseList;
+  private volatile List<URI> baseList;
   private String restUsr;
   private String restPwd;
   private URI loadedBaseUri;
@@ -81,8 +81,8 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       new ConfigurationParserJSON();
   private Map<String, BucketMonitor> monitors =
       new HashMap<String, BucketMonitor>();
-  private String reSubBucket;
-  private Reconfigurable reSubRec;
+  private volatile String reSubBucket;
+  private volatile Reconfigurable reSubRec;
 
   /**
    * Constructs a configuration provider with disabled authentication for the
@@ -114,7 +114,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * Returns the current Reconfigurable object.
    */
   @Override
-  public Reconfigurable getReconfigurable() {
+  public synchronized Reconfigurable getReconfigurable() {
     return reSubRec;
   }
 
@@ -122,7 +122,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * Returns the current bucket name.
    */
   @Override
-  public String getBucket() {
+  public synchronized String getBucket() {
     return reSubBucket;
   }
 
@@ -227,12 +227,12 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     return AddrUtil.getAddresses(serversString.toString());
   }
 
-  public void finishResubscribe() {
+  public synchronized void finishResubscribe() {
     monitors.clear();
     subscribe(reSubBucket, reSubRec);
   }
 
-  public void markForResubscribe(String bucketName, Reconfigurable rec) {
+  public synchronized void markForResubscribe(String bucketName, Reconfigurable rec) {
     getLogger().debug("Marking bucket " + bucketName
       + " for resubscribe with reconfigurable " + rec);
     reSubBucket = bucketName; // can't subscribe here, must from user request
@@ -245,19 +245,21 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * @param bucketName bucket name to receive configuration for
    * @param rec reconfigurable that will receive updates
    */
-  public void subscribe(String bucketName, Reconfigurable rec) {
+  public synchronized void subscribe(String bucketName, Reconfigurable rec) {
     if (null == bucketName || (null != reSubBucket
       && !bucketName.equals(reSubBucket))) {
       throw new IllegalArgumentException("Bucket name cannot be null and must"
         + " never be re-set to a new object. Bucket: "
         + bucketName + ", reSubBucket: " + reSubBucket);
     }
+
     if (null == rec || (null != reSubRec && rec != reSubRec)) {
       throw new IllegalArgumentException("Reconfigurable cannot be null and"
         + " must never be re-set to a new object");
     }
     reSubBucket = bucketName;  // More than one subscriber, would be an error
     reSubRec = rec;
+
     getLogger().debug("Subscribing an object for reconfiguration updates "
       + rec.getClass().getName());
     Bucket bucket = getBucketConfiguration(bucketName);
@@ -386,4 +388,14 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       }
     }
   }
+
+  @Override
+  public synchronized String toString() {
+    String result = "";
+    result += "bucket: " + reSubBucket;
+    result += "reconf:" + reSubRec;
+    result += "baseList:" + baseList;
+    return result;
+  }
+
 }

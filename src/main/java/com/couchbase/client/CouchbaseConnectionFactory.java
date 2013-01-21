@@ -113,9 +113,9 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   public static final int DEFAULT_OBS_POLL_MAX = 400;
 
   protected volatile ConfigurationProvider configurationProvider;
-  private String bucket;
-  private String pass;
-  private List<URI> storedBaseList;
+  private volatile String bucket;
+  private volatile String pass;
+  private volatile List<URI> storedBaseList;
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactory.class.getName());
   private volatile boolean needsReconnect;
@@ -244,7 +244,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     }
   }
 
-  public ConfigurationProvider getConfigurationProvider() {
+  public synchronized ConfigurationProvider getConfigurationProvider() {
     return configurationProvider;
   }
 
@@ -253,7 +253,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     needsReconnect = true;
   }
 
-  void setConfigurationProvider(ConfigurationProvider configProvider) {
+  synchronized void setConfigurationProvider(ConfigurationProvider configProvider) {
     this.configProviderLastUpdateTimestamp = System.currentTimeMillis();
     this.configurationProvider = configProvider;
   }
@@ -379,28 +379,33 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     public void run() {
       String threadNameBase = "couchbase cluster resubscriber - ";
       Thread.currentThread().setName(threadNameBase + "running");
-      LOGGER.log(Level.CONFIG, "Starting resubscription for bucket {0}",
-        bucket);
       LOGGER.log(Level.CONFIG, "Resubscribing for {0} using base list {1}",
         new Object[]{bucket, storedBaseList});
-      ConfigurationProvider oldConfigProvider = configurationProvider;
-      setConfigurationProvider(new ConfigurationProviderHTTP(storedBaseList,
-        bucket, pass));
 
-      if (null != oldConfigProvider) {
-        oldConfigProvider.shutdown();
-      }
+      do {
+        try {
+          ConfigurationProvider oldConfigProvider = getConfigurationProvider();
 
-      configurationProvider.markForResubscribe(
-        oldConfigProvider.getBucket(), oldConfigProvider.getReconfigurable());
-      configurationProvider.finishResubscribe();
-      Bucket oldBucket = configurationProvider.getBucketConfiguration(
-                                     configurationProvider.getBucket());
-      configurationProvider.getReconfigurable().reconfigure(oldBucket);
+          if (null != oldConfigProvider) {
+            oldConfigProvider.shutdown();
+          }
 
-      if (!doingResubscribe.compareAndSet(true, false)) {
-        LOGGER.log(Level.WARNING, "Could not reset from doing a resubscribe.");
-      }
+          ConfigurationProvider newConfigProvider =
+            new ConfigurationProviderHTTP(storedBaseList, bucket, pass);
+          setConfigurationProvider(newConfigProvider);
+
+          newConfigProvider.subscribe(bucket,
+            oldConfigProvider.getReconfigurable());
+
+          if (!doingResubscribe.compareAndSet(true, false)) {
+            LOGGER.log(Level.WARNING,
+              "Could not reset from doing a resubscribe.");
+          }
+        } catch (Exception ex) {
+          LOGGER.log(Level.WARNING,
+            "Could not resubscribe because of: " + ex.getMessage(), ex);
+        }
+      } while(doingResubscribe.get());
 
       Thread.currentThread().setName(threadNameBase + "complete");
     }
