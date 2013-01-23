@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import net.spy.memcached.PersistTo;
 import net.spy.memcached.TestConfig;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -161,7 +162,7 @@ public class PaginatorTest {
     client.asyncHttpPut(docUri, view);
 
     for(City city : CITY_DOCS) {
-      client.set(city.getKey(), 0, city.toJson());
+      client.set(city.getKey(), 0, city.toJson(), PersistTo.MASTER);
     }
 
     System.out.println("Setup of design docs complete, "
