@@ -56,8 +56,8 @@ public class ConfigurationParserJSON extends SpyObject implements
     } catch (JSONException e) {
       getLogger().debug("Received the folloing unparsable response: "
         + e.getMessage());
-      throw new ConnectionException("Connection URI is either incorrect " +
-        "or invalid as it cannot be parsed.");
+      throw new ConnectionException("Connection URI is either incorrect "
+        + "or invalid as it cannot be parsed.");
     }
     for (int i = 0; i < poolsJA.length(); ++i) {
       try {

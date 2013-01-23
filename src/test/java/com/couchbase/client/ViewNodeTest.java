@@ -54,8 +54,8 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
-import static org.junit.Assert.assertFalse;
 import org.junit.Test;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 /**

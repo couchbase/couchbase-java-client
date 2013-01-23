@@ -27,13 +27,13 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import net.spy.memcached.TestConfig;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * Verifies the correct behavior of the Couchbase Server 2.0 HTTP-based
@@ -41,7 +41,7 @@ import org.junit.Test;
  */
 public class FlushTest {
 
-  private static String NOFLUSH_BUCKET = "noflush";
+  private static String noflushBucket = "noflush";
   private static CouchbaseClient defaultClient;
   private static CouchbaseClient saslClient;
 
@@ -54,7 +54,7 @@ public class FlushTest {
     BucketTool bucketTool = new BucketTool();
     bucketTool.deleteAllBuckets();
     bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0, true);
-    bucketTool.createSaslBucket(NOFLUSH_BUCKET, BucketType.COUCHBASE, 256, 0,
+    bucketTool.createSaslBucket(noflushBucket, BucketType.COUCHBASE, 256, 0,
       false);
 
     BucketTool.FunctionCallback callback = new BucketTool.FunctionCallback() {
@@ -64,7 +64,7 @@ public class FlushTest {
         uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
         defaultClient = new CouchbaseClient(uris, "default", "");
         saslClient = new CouchbaseClient(uris,
-          NOFLUSH_BUCKET, NOFLUSH_BUCKET);
+          noflushBucket, noflushBucket);
       }
 
       @Override
@@ -122,7 +122,7 @@ public class FlushTest {
     List<URI> uris = new ArrayList<URI>();
     uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
     CouchbaseClient client = new CouchbaseClient(
-      uris, NOFLUSH_BUCKET, NOFLUSH_BUCKET);
+      uris, noflushBucket, noflushBucket);
 
     for(int i = 0; i <= 10; i++) {
       client.set("doc:"+ i, 0, "sampledocument").get();

@@ -129,8 +129,8 @@ public class ConfigurationParserJSONTest extends TestCase {
     try {
       configParser.parseBase(INVALID_BASE_STRING);
     } catch (ConnectionException e) {
-      assertEquals(e.getMessage(), "Connection URI is either incorrect " +
-        "or invalid as it cannot be parsed.");
+      assertEquals(e.getMessage(), "Connection URI is either incorrect "
+        + "or invalid as it cannot be parsed.");
     }
   }
 

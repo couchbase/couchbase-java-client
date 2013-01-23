@@ -63,15 +63,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * Verifies the correct functionality of views.
@@ -92,9 +90,6 @@ public class ViewTest {
   public static final String VIEW_NAME_FOR_DATED = "view_emitting_dated";
   public static final String VIEW_NAME_OBSERVE = "view_staletest";
   public static final String VIEW_NAME_BINARY = "view_binary";
-
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
 
   static {
     ITEMS = new HashMap<String, Object>();
@@ -1092,13 +1087,10 @@ public class ViewTest {
    * doc name to retrieve the database view from it.
    * @post Return the InvalidViewException.
    */
+  @Test(expected=InvalidViewException.class)
   public void testInvalidViewHandling() {
     String designDoc = "invalid_design";
     String viewName = "invalid_view";
-
-    exception.expect(InvalidViewException.class);
-    exception.expectMessage("Could not load view \""
-                + viewName + "\" for design doc \"" + designDoc + "\"");
     View view = client.getView(designDoc, viewName);
     assertNull(view);
   }
@@ -1112,13 +1104,9 @@ public class ViewTest {
    * @post The design document is not loaded and the test
    * passes if InvalidViewException is returned as expected.
    */
-  @Test
+  @Test(expected=InvalidViewException.class)
   public void testInvalidDesignDocHandling() {
     String designDoc = "invalid_design";
-
-    exception.expect(InvalidViewException.class);
-    exception.expectMessage("Could not load design document \""
-            + designDoc + "\"");
     client.getDesignDocument(designDoc);
   }
 

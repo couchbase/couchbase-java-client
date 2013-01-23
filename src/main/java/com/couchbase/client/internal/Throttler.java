@@ -30,6 +30,6 @@ public interface Throttler {
   /**
    * Throttle the current message if needed.
    */
-  public void throttle();
+  void throttle();
 
 }

@@ -25,20 +25,17 @@ package com.couchbase.client.internal;
 import com.couchbase.client.CouchbaseConnection;
 import com.couchbase.client.CouchbaseProperties;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.spy.memcached.BroadcastOpFactory;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatsOperation;
 import net.spy.memcached.protocol.binary.BinaryOperationFactory;
-import net.spy.memcached.compat.SpyObject;
 
 /**
  * The AdaptiveThrottler allows dynamic backoff of memcached operations to make
@@ -50,37 +47,37 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    * Under normal conditions after how many operations the stats should be
    * re-checked.
    */
-  private final int normal_stats_interval;
+  private final int normalStatsInterval;
 
   /**
    * Under high watermark conditions (10% of the remaining high_wat) after
    * how many operations the stats should be re-checked.
    */
-  private final int high_stats_interval;
+  private final int highStatsInterval;
 
   /**
    * Under critical high watermark conditions (higher than 10% of the high_wat
    * level) after how many operations the stats should be re-checked.
    */
-  private final int critical_stats_interval;
+  private final int criticalStatsInterval;
 
   /**
    * The amount of time (in ms) to sleep when high watermark conditions are
    * reached.
    */
-  private final int high_sleep;
+  private final int highSleep;
 
   /**
    * The amount of time (in ms) to sleep when critical high watermark conditions
    * are reached.
    */
-  private final int critical_sleep;
+  private final int criticalSleep;
 
   /**
    * The current amount of operations on the counter (needed to check when
    * the stats need to be re-fetched).
    */
-  private int interval_counter = 0;
+  private int intervalCounter = 0;
 
   /**
    * Holds a reference to the CouchbaseConnection in order to schedule stats
@@ -107,9 +104,9 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    * Note that there is a second constructor available that lets you set all
    * properties by hand. These are the default settings:
    *
-   * - Normal Stats Interval Check: 10000 operations (normal_stats_interval)
-   * - High Stats Interval Check: 100 operations (high_stats_interval)
-   * - Critical Stats Interval Check: 10 operations (critical_stats_interval)
+   * - Normal Stats Interval Check: 10000 operations (normalStatsInterval)
+   * - High Stats Interval Check: 100 operations (highStatsInterval)
+   * - Critical Stats Interval Check: 10 operations (criticalStatsInterval)
    * - Time of throttle when High: 1ms (high_sleep_time)
    * - Time of throttle when critical: 3ms (critical_sleep_time)
    */
@@ -136,27 +133,27 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    * @param conn the CouchbaseConnection to work against.
    * @param opFact the BinaryOperationFactory to work against.
    * @param node the node for the throttler.
-   * @param normal_stats_interval After how many operations a check should be
+   * @param normalStatsInterval After how many operations a check should be
    *        initialized when memory is below high_wat.
-   * @param high_stats_interval After how many operations a check should be
+   * @param highStatsInterval After how many operations a check should be
    *        initialized when memory is higher than high_wat (< 10%)
-   * @param critical_stats_interval After how many operations a check should be
+   * @param criticalStatsInterval After how many operations a check should be
    *        initialized when memory is higher than high_wat (> 10%)
-   * @param high_sleep The time (in ms) to throttle when high is reached.
-   * @param critical_sleep The time (in ms) to throttle when critical is reached.
+   * @param highSleep The time (in ms) to throttle when high is reached.
+   * @param criticalSleep The time (in ms) to throttle when critical is reached.
    */
   public AdaptiveThrottler(CouchbaseConnection conn,
     BinaryOperationFactory opFact, InetSocketAddress node,
-    int normal_stats_interval, int high_stats_interval,
-    int critical_stats_interval, int high_sleep, int critical_sleep) {
+    int normalStatsInterval, int highStatsInterval,
+    int criticalStatsInterval, int highSleep, int criticalSleep) {
     this.conn = conn;
     this.opFact = opFact;
     this.node = node;
-    this.normal_stats_interval = normal_stats_interval;
-    this.high_stats_interval = high_stats_interval;
-    this.critical_stats_interval = critical_stats_interval;
-    this.high_sleep = high_sleep;
-    this.critical_sleep = critical_sleep;
+    this.normalStatsInterval = normalStatsInterval;
+    this.highStatsInterval = highStatsInterval;
+    this.criticalStatsInterval = criticalStatsInterval;
+    this.highSleep = highSleep;
+    this.criticalSleep = criticalSleep;
 
     logCreation();
   }
@@ -166,7 +163,7 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    */
   @Override
   public void throttle() {
-    ++interval_counter;
+    ++intervalCounter;
     if(statsNeedFetch()) {
       Map<String, String> stats = gatherStats();
       int throttleTime = throttleNeeded(stats);
@@ -179,7 +176,7 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
           return;
         }
       }
-      interval_counter = 0;
+      intervalCounter = 0;
     }
   }
 
@@ -191,23 +188,23 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    * @return the number of ms to sleep.
    */
   private int throttleNeeded(Map<String, String> stats) {
-    long high_water;
-    long mem_used;
+    long highWater;
+    long memUsed;
 
     try {
-      high_water = Long.parseLong(stats.get("ep_mem_high_wat"));
-      mem_used = Long.parseLong(stats.get("mem_used"));
+      highWater = Long.parseLong(stats.get("ep_mem_high_wat"));
+      memUsed = Long.parseLong(stats.get("mem_used"));
     } catch(NumberFormatException ex) {
       getLogger().warn("Received throttle stats invalid, skipping interval.");
       return 0;
     }
 
-    if(mem_used >= (high_water + high_water/10)) {
+    if(memUsed >= (highWater + highWater/10)) {
       currentState = ThrottlerState.CRITICAL;
-      return critical_sleep;
-    } else if(mem_used >= high_water) {
+      return criticalSleep;
+    } else if(memUsed >= highWater) {
       currentState = ThrottlerState.HIGH;
-      return high_sleep;
+      return highSleep;
     } else {
       currentState = ThrottlerState.NORMAL;
       return 0;
@@ -263,13 +260,13 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    */
   private boolean statsNeedFetch() {
     if(currentState == ThrottlerState.NORMAL
-      && interval_counter >= normal_stats_interval) {
+      && intervalCounter >= normalStatsInterval) {
       return true;
     } else if(currentState == ThrottlerState.HIGH
-      && interval_counter >= high_stats_interval) {
+      && intervalCounter >= highStatsInterval) {
       return true;
     } else if(currentState == ThrottlerState.CRITICAL
-      && interval_counter >= critical_stats_interval) {
+      && intervalCounter >= criticalStatsInterval) {
       return true;
     }
     return false;
@@ -277,11 +274,11 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
 
   private void logCreation() {
     getLogger().info("AdaptiveThrottler instantiated with options "
-      + "normal_stats_interval: " + this.normal_stats_interval
-      + " high_stats_interval: " + this.high_stats_interval
-      + " critical_stats_interval: " + this.critical_stats_interval
-      + " high_sleep: " + this.high_sleep
-      + " critical_sleep: " + this.critical_sleep
+      + "normal_stats_interval: " + this.normalStatsInterval
+      + " high_stats_interval: " + this.highStatsInterval
+      + " critical_stats_interval: " + this.criticalStatsInterval
+      + " high_sleep: " + this.highSleep
+      + " critical_sleep: " + this.criticalSleep
       + " - for node " + this.node);
   }
 

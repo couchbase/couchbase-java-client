@@ -27,8 +27,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import net.spy.memcached.TestConfig;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test for basic things in the CouchbaseConnectionFactoryBuilder.

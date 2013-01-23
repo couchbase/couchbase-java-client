@@ -33,12 +33,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.tapmessage.ResponseMessage;
-import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-// TBD - Uncomment this line when the TAP tests are complete
-// import net.spy.memcached.tapmessage.ResponseMessage;
+import static org.junit.Assert.assertTrue;
 
 /**
  * A TapTest.

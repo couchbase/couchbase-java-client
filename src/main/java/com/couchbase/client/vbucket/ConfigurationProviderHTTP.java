@@ -232,7 +232,8 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     subscribe(reSubBucket, reSubRec);
   }
 
-  public synchronized void markForResubscribe(String bucketName, Reconfigurable rec) {
+  public synchronized void markForResubscribe(String bucketName,
+    Reconfigurable rec) {
     getLogger().debug("Marking bucket " + bucketName
       + " for resubscribe with reconfigurable " + rec);
     reSubBucket = bucketName; // can't subscribe here, must from user request

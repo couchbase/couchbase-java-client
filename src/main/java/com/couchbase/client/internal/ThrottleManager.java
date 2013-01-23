@@ -67,8 +67,8 @@ public class ThrottleManager<T extends Throttler> {
         this.conn.getClass(), opFact.getClass(), node.getClass());
       throttles.put(node, constructor.newInstance(this.conn, opFact, node));
     } catch(Exception e) {
-      throw new RuntimeException("Could not add Throttler for " +
-        node.toString());
+      throw new RuntimeException("Could not add Throttler for "
+        + node.toString());
     }
     return this;
   }

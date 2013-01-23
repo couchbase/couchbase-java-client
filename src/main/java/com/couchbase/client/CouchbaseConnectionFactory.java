@@ -29,7 +29,6 @@ import com.couchbase.client.vbucket.ConfigurationProvider;
 import com.couchbase.client.vbucket.ConfigurationProviderHTTP;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
-import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigType;
 
@@ -253,7 +252,8 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     needsReconnect = true;
   }
 
-  synchronized void setConfigurationProvider(ConfigurationProvider configProvider) {
+  synchronized void setConfigurationProvider(
+    ConfigurationProvider configProvider) {
     this.configProviderLastUpdateTimestamp = System.currentTimeMillis();
     this.configurationProvider = configProvider;
   }

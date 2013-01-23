@@ -22,8 +22,6 @@
 
 package com.couchbase.client.protocol.views;
 
-import java.util.List;
-
 import net.spy.memcached.ops.OperationCallback;
 
 /**
