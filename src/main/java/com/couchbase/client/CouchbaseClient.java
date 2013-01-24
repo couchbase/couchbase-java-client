@@ -258,6 +258,7 @@ public class CouchbaseClient extends MemcachedClient
         + "configuration updates, attempting to reconnect.");
       CouchbaseConnectionFactory cbcf = (CouchbaseConnectionFactory)connFactory;
       cbcf.requestConfigReconnect(cbcf.getBucketName(), this);
+      cbcf.checkConfigUpdate();
     }
     try {
       if(vconn != null) {

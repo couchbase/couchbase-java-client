@@ -183,6 +183,11 @@ public class BucketUpdateResponseHandler extends SimpleChannelUpstreamHandler {
         LOGGER.log(Level.FINE, "Channel has been disconnected on us, "
           + "restarting the monitor.");
         monitor.notifyDisconnected(); // connection has been dropped
+      } else if(csEvent.getState() == ChannelState.OPEN
+        && Boolean.valueOf(csEvent.getValue().toString()) == false) {
+         LOGGER.log(Level.FINE, "Channel has been closed on us, "
+          + "restarting the monitor.");
+        monitor.notifyDisconnected(); // connection has been closed
       } else {
         LOGGER.log(Level.FINER, "Channel state change is not a disconnect. "
           + "Event value is {0} and Channel State is {1}.",

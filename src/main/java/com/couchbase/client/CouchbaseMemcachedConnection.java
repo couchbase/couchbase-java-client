@@ -114,6 +114,11 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       mergedNodes.addAll(stayNodes);
       mergedNodes.addAll(newNodes);
 
+      for(MemcachedNode keepingNode : mergedNodes) {
+        getLogger().debug("Node " + keepingNode.getSocketAddress()
+          + " will stay in cluster config after reconfiguration.");
+      }
+
       // call update locator with new nodes list and vbucket config
       if (locator instanceof VBucketNodeLocator) {
         ((VBucketNodeLocator)locator).updateLocator(mergedNodes,
@@ -130,6 +135,10 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       }
 
       // schedule shutdown for the oddNodes
+      for(MemcachedNode shutDownNode : oddNodes) {
+        getLogger().info("Scheduling Node "
+          + shutDownNode.getSocketAddress() + "for shutdown.");
+      }
       nodesToShutdown.addAll(oddNodes);
     } catch (IOException e) {
       getLogger().error("Connection reconfiguration failed", e);
