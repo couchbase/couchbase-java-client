@@ -1599,7 +1599,10 @@ public class CouchbaseClient extends MemcachedClient
 
     bcastNodes.add(locator.getServerByIndex(cfg.getMaster(vb)));
     for (int i = 1; i <= cfg.getReplicasCount(); i++) {
-      bcastNodes.add(locator.getServerByIndex(cfg.getReplica(vb, i-1)));
+      int replica = cfg.getReplica(vb, i-1);
+      if(replica > 0) {
+        bcastNodes.add(locator.getServerByIndex(replica));
+      }
     }
 
     final Map<MemcachedNode, ObserveResponse> response =
