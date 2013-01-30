@@ -300,8 +300,8 @@ public class ClusterManagerTest extends TestCase {
     uris.add(URI.create("http://badurl:8091/pools"));
     uris.add(URI.create("http://anotherbadurl:8091/pools"));
     manager.shutdown();
-    manager = new ClusterManager(uris, "Administrator", "password");
-
+    manager = new ClusterManager(uris, CbTestConfig.CLUSTER_ADMINNAME,
+      CbTestConfig.CLUSTER_PASS);
     try {
       manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0, true);
     } catch (RuntimeException e) {
@@ -327,7 +327,8 @@ public class ClusterManagerTest extends TestCase {
     uris.add(URI.create("http://anotherbadurl:8091/pools"));
 
     manager.shutdown();
-    manager = new ClusterManager(uris, "Administrator", "password");
+    manager = new ClusterManager(uris, CbTestConfig.CLUSTER_ADMINNAME,
+      CbTestConfig.CLUSTER_PASS);
     manager.createDefaultBucket(BucketType.COUCHBASE, 100, 0, true);
     Thread.sleep(1000);
     manager.deleteBucket("default");
