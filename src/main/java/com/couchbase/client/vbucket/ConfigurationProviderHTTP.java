@@ -149,11 +149,17 @@ public class ConfigurationProviderHTTP extends SpyObject implements
    * For a given bucket to be found, walk the URIs in the baselist until the
    * bucket needed is found.
    *
+   * The intent with this method is to encapsulate all of the walking of
+   * URIs and populating an internal object model of the configuration in
+   * one place.
+   *
+   * When the full baseList URIs are walked and still no connection is
+   * established, a backoff algorithm is in place to retry after a
+   * increasing timeframe.
+   *
    * @param bucketToFind
    */
   private void readPools(String bucketToFind) {
-    // the intent with this method is to encapsulate all of the walking of URIs
-    // and populating an internal object model of the configuration to one place
     for (URI baseUri : baseList) {
       try {
         // get and parse the response from the current base uri
@@ -174,7 +180,8 @@ public class ConfigurationProviderHTTP extends SpyObject implements
         }
         // load pools
         for (Pool pool : pools.values()) {
-          URLConnection poolConnection = urlConnBuilder(baseUri, pool.getUri());
+          URLConnection poolConnection = urlConnBuilder(baseUri,
+            pool.getUri());
           String poolString = readToString(poolConnection);
           configurationParser.loadPool(pool, poolString);
           URLConnection poolBucketsConnection = urlConnBuilder(baseUri,
@@ -264,6 +271,11 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     getLogger().debug("Subscribing an object for reconfiguration updates "
       + rec.getClass().getName());
     Bucket bucket = getBucketConfiguration(bucketName);
+
+    if(bucket == null) {
+      throw new ConfigurationException("Could not get bucket configuration "
+        + "for: " + bucketName);
+    }
 
     ReconfigurableObserver obs = new ReconfigurableObserver(rec);
     BucketMonitor monitor = this.monitors.get(bucketName);
