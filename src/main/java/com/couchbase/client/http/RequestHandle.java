@@ -61,6 +61,7 @@ public class RequestHandle {
       return;
     }
     this.completed = true;
+    this.connMgr.releaseConnection(this.conn);
     synchronized (this) {
       notifyAll();
     }
