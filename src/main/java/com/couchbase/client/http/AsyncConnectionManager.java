@@ -99,10 +99,15 @@ public class AsyncConnectionManager extends SpyObject {
         this.shutdown = true;
         while (!this.pendingRequests.isEmpty()) {
           AsyncConnectionRequest request = this.pendingRequests.remove();
-          HttpOperation op = (HttpOperation)request.getConnection()
-              .getContext().getAttribute("operation");
-          request.cancel();
-          requeueCallback.invoke(op);
+          if(request != null) {
+            NHttpClientConnection connection = request.getConnection();
+            if(connection != null) {
+              HttpOperation op = (HttpOperation)connection.getContext()
+                .getAttribute("operation");
+              requeueCallback.invoke(op);
+            }
+            request.cancel();
+          }
         }
         this.availableConns.clear();
         this.allConns.clear();

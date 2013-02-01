@@ -68,6 +68,7 @@ import org.apache.http.protocol.RequestUserAgent;
 public class ViewConnection extends SpyObject implements
   Reconfigurable {
   private static final int NUM_CONNS = 1;
+  private static final int MAX_ADDOP_RETRIES = 6;
 
   private volatile boolean shutDown = false;
   protected volatile boolean reconfiguring = false;
@@ -170,8 +171,29 @@ public class ViewConnection extends SpyObject implements
         getLogger().error("No server connections. Cancelling op.");
         op.cancel();
       } else {
-        ViewNode node = couchNodes.get(getNextNode());
-        node.writeOp(op);
+        boolean success = false;
+        int retries = 0;
+        do {
+          if(retries >= MAX_ADDOP_RETRIES) {
+            op.cancel();
+            break;
+          }
+          ViewNode node = couchNodes.get(getNextNode());
+          if(node.isShuttingDown()) {
+            continue;
+          }
+          if(retries > 0) {
+            getLogger().debug("Retrying view operation #" + op.hashCode()
+              + " on node: " + node.getSocketAddress());
+          }
+          success = node.writeOp(op);
+          if(retries > 0 && success) {
+            getLogger().debug("Successfully wrote #" + op.hashCode()
+              + " on node: " + node.getSocketAddress() + " after "
+              + retries + " retries.");
+          }
+          retries++;
+        } while(!success);
       }
     } finally {
       rlock.unlock();

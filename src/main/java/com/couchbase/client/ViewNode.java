@@ -63,6 +63,7 @@ public class ViewNode extends SpyObject {
   private final long defaultOpTimeout;
   private final String user;
   private final String pass;
+  private boolean shuttingDown = false;
 
   private Thread ioThread;
 
@@ -95,24 +96,22 @@ public class ViewNode extends SpyObject {
     ioThread.start();
   }
 
-  public void writeOp(HttpOperation op) {
+  public boolean writeOp(HttpOperation op) {
     AsyncConnectionRequest connRequest = connMgr.requestConnection();
     try {
       connRequest.waitFor();
     } catch (InterruptedException e) {
       getLogger().warn(
-          "Interrupted while trying to get a connection."
-              + " Cancelling op");
-      op.cancel();
+          "Interrupted while trying to get a connection.");
       connRequest.cancel();
-      return;
+      return false;
     }
 
     NHttpClientConnection conn = connRequest.getConnection();
     if (conn == null) {
-      getLogger().error("Failed to obtain connection. Cancelling op");
-      op.cancel();
+      getLogger().debug("Failed to obtain connection on node " + this.addr);
       connRequest.cancel();
+      return false;
     } else {
       if (!user.equals("default")) {
         try {
@@ -131,6 +130,8 @@ public class ViewNode extends SpyObject {
       context.setAttribute("operation", op);
       conn.requestOutput();
     }
+
+    return true;
   }
 
   public boolean hasWriteOps() {
@@ -147,7 +148,7 @@ public class ViewNode extends SpyObject {
 
   public void shutdown(long time, TimeUnit unit) throws
     IOException {
-
+    shuttingDown = true;
     long waittime = time;
     if (unit != TimeUnit.MILLISECONDS) {
       waittime = TimeUnit.MILLISECONDS.convert(time, unit);
@@ -160,6 +161,10 @@ public class ViewNode extends SpyObject {
       getLogger().error("Interrupt " + ex + " received while waiting for node "
         + addr.getHostName() + " to shut down.");
     }
+  }
+
+  public boolean isShuttingDown() {
+    return shuttingDown;
   }
 
   static class MyHttpRequestExecutionHandler implements

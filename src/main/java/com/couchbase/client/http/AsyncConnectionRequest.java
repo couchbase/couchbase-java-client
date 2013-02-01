@@ -71,7 +71,7 @@ public class AsyncConnectionRequest {
     }
     synchronized (this) {
       while (!this.completed) {
-        wait(30000);
+        wait(5000);
         this.completed = true;
       }
     }
