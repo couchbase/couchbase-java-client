@@ -64,6 +64,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -464,6 +465,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param viewName the name of the view to get.
    * @return a View object from the cluster.
    * @throws InvalidViewException if no design document or view was found.
+   * @throws CancellationException if operation was canceled.
    */
   public View getView(final String designDocumentName, final String viewName) {
     try {
@@ -476,7 +478,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted getting views", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed getting views", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed getting views", e);
+      }
     }
   }
 
@@ -493,6 +499,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param viewName the name of the view to get.
    * @return a SpatialView object from the cluster.
    * @throws InvalidViewException if no design document or view was found.
+   * @throws CancellationException if operation was canceled.
    */
   public SpatialView getSpatialView(final String designDocumentName,
     final String viewName) {
@@ -507,7 +514,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted getting spatial view", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed getting view", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed getting views", e);
+      }
     }
   }
 
@@ -517,6 +528,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param designDocumentName the name of the design document.
    * @return a DesignDocument object from the cluster.
    * @throws InvalidViewException if no design document or view was found.
+   * @throws CancellationException if operation was canceled.
    */
   public DesignDocument getDesignDocument(final String designDocumentName) {
     try {
@@ -529,7 +541,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted getting design document", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed getting design document", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed getting design document", e);
+      }
     }
   }
 
@@ -538,6 +554,7 @@ public class CouchbaseClient extends MemcachedClient
    *
    * @param doc the design document to store.
    * @return the result of the creation operation.
+   * @throws CancellationException if operation was canceled.
    */
   public Boolean createDesignDoc(final DesignDocument doc) {
     try {
@@ -545,7 +562,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted creating design document", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed creating design document", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed creating design document", e);
+      }
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Failed creating design document", e);
     }
@@ -606,6 +627,7 @@ public class CouchbaseClient extends MemcachedClient
    *
    * @param name the design document to delete.
    * @return the result of the deletion operation.
+   * @throws CancellationException if operation was canceled.
    */
   public Boolean deleteDesignDoc(final String name) {
     try {
@@ -613,7 +635,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted deleting design document", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed deleting design document", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed deleting design document", e);
+      }
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Failed deleting design document", e);
     }
@@ -828,6 +854,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param view the view to run the query against.
    * @param query the type of query to run against the view.
    * @return a ViewResponseWithDocs containing the results of the query.
+   * @throws CancellationException if operation was canceled.
    */
   public ViewResponse query(AbstractView view, Query query) {
     try {
@@ -835,7 +862,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted while accessing the view", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Failed to access the view", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Failed to access the view", e);
+      }
     }
   }
 
@@ -940,6 +971,7 @@ public class CouchbaseClient extends MemcachedClient
    *           exceeded
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
+   * @throws CancellationException if operation was canceled
    */
   public <T> CASValue<T> getAndLock(String key, int exp, Transcoder<T> tc) {
     try {
@@ -948,7 +980,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted waiting for value", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Exception waiting for value", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Exception waiting for value", e);
+      }
     } catch (TimeoutException e) {
       throw new OperationTimeoutException("Timeout waiting for value", e);
     }
@@ -1027,6 +1063,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return whether or not the operation was performed
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
+   * @throws CancellationException if operation was canceled
    */
   public <T> Boolean unlock(final String key,
           long casId, final Transcoder<T> tc) {
@@ -1036,7 +1073,11 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted waiting for value", e);
     } catch (ExecutionException e) {
-      throw new RuntimeException("Exception waiting for value", e);
+      if(e.getCause() instanceof CancellationException) {
+        throw (CancellationException) e.getCause();
+      } else {
+        throw new RuntimeException("Exception waiting for value", e);
+      }
     } catch (TimeoutException e) {
       throw new OperationTimeoutException("Timeout waiting for value", e);
     }
@@ -1068,7 +1109,6 @@ public class CouchbaseClient extends MemcachedClient
    * @param req the Persistence to Master value
    * @param rep the Persistence to Replicas
    * @return whether or not the operation was performed
-   *
    */
   public OperationFuture<Boolean> delete(String key,
           PersistTo req, ReplicateTo rep) {
@@ -1081,8 +1121,13 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       deleteOp.set(false, new OperationStatus(false, "Delete get timed out"));
     } catch (ExecutionException e) {
-      deleteOp.set(false, new OperationStatus(false, "Delete get "
-              + "execution exception "));
+      if(e.getCause() instanceof CancellationException) {
+        deleteOp.set(false, new OperationStatus(false, "Delete get "
+          + "cancellation exception "));
+      } else {
+        deleteOp.set(false, new OperationStatus(false, "Delete get "
+          + "execution exception "));
+      }
     }
     if (!deleteStatus) {
       return deleteOp;
@@ -1170,8 +1215,13 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       setOp.set(false, new OperationStatus(false, "Set get timed out"));
     } catch (ExecutionException e) {
-      setOp.set(false, new OperationStatus(false, "Set get "
-              + "execution exception "));
+      if(e.getCause() instanceof CancellationException) {
+        setOp.set(false, new OperationStatus(false, "Set get "
+          + "cancellation exception "));
+      } else {
+        setOp.set(false, new OperationStatus(false, "Set get "
+          + "execution exception "));
+      }
     }
     if (!setStatus) {
       return setOp;
@@ -1283,8 +1333,13 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       addOp.set(false, new OperationStatus(false, "Add get timed out"));
     } catch (ExecutionException e) {
-      addOp.set(false, new OperationStatus(false, "Add get "
-              + "execution exception "));
+      if(e.getCause() instanceof CancellationException) {
+        addOp.set(false, new OperationStatus(false, "Add get "
+          + "cancellation exception "));
+      } else {
+        addOp.set(false, new OperationStatus(false, "Add get "
+          + "execution exception "));
+      }
     }
     if (!addStatus) {
       return addOp;
@@ -1397,8 +1452,13 @@ public class CouchbaseClient extends MemcachedClient
     } catch (InterruptedException e) {
       replaceOp.set(false, new OperationStatus(false, "Replace get timed out"));
     } catch (ExecutionException e) {
-      replaceOp.set(false, new OperationStatus(false, "Replace get "
-              + "execution exception "));
+      if(e.getCause() instanceof CancellationException) {
+        replaceOp.set(false, new OperationStatus(false, "Replace get "
+          + "cancellation exception "));
+      } else {
+        replaceOp.set(false, new OperationStatus(false, "Replace get "
+          + "execution exception "));
+      }
     }
     if (!replaceStatus) {
       return replaceOp;

@@ -23,6 +23,7 @@
 package com.couchbase.client.internal;
 
 import com.couchbase.client.protocol.views.HttpOperation;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -91,7 +92,7 @@ public class HttpFuture<T> extends SpyObject implements Future<T> {
 
     if (op != null && op.isCancelled()) {
       status = new OperationStatus(false, "Operation Cancelled");
-      throw new ExecutionException(new RuntimeException("Cancelled"));
+      throw new ExecutionException(new CancellationException("Cancelled"));
     }
 
     if (op != null && op.isTimedOut()) {
