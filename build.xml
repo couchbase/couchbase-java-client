@@ -495,7 +495,7 @@
       <attach file="${build.dir}/sources/${name}-${version}.jar"
           classifier="sources" />
     <attach file="${build.dir}/javadocs/${name}-${version}.jar"
-          classifier="javadocs" />
+          classifier="javadoc" />
     </artifact:install>
     <artifact:pom id="couchbase-client-test" file="${couchbase-client-test.pom}" />
     <artifact:install file="${build.dir}/jars/${name}-test-${version}.jar">
