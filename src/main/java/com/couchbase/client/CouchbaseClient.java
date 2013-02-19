@@ -1207,7 +1207,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the set operation.
    */
   public OperationFuture<Boolean> set(String key, int exp,
-          String value, PersistTo req, ReplicateTo rep) {
+          Object value, PersistTo req, ReplicateTo rep) {
 
     OperationFuture<Boolean> setOp = set(key, exp, value);
 
@@ -1261,7 +1261,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the set operation.
    */
   public OperationFuture<Boolean> set(String key, int exp,
-          String value, PersistTo req) {
+          Object value, PersistTo req) {
     return set(key, exp, value, req, ReplicateTo.ZERO);
   }
 
@@ -1286,7 +1286,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the set operation.
    */
   public OperationFuture<Boolean> set(String key, int exp,
-          String value, ReplicateTo rep) {
+          Object value, ReplicateTo rep) {
     return set(key, exp, value, PersistTo.ZERO, rep);
   }
 
@@ -1325,7 +1325,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          String value, PersistTo req, ReplicateTo rep) {
+          Object value, PersistTo req, ReplicateTo rep) {
 
     OperationFuture<Boolean> addOp = add(key, exp, value);
 
@@ -1379,7 +1379,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          String value, PersistTo req) {
+          Object value, PersistTo req) {
     return add(key, exp, value, req, ReplicateTo.ZERO);
   }
 
@@ -1405,7 +1405,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          String value, ReplicateTo rep) {
+          Object value, ReplicateTo rep) {
     return add(key, exp, value, PersistTo.ZERO, rep);
   }
 
@@ -1444,7 +1444,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the replace operation.
    */
   public OperationFuture<Boolean> replace(String key, int exp,
-          String value, PersistTo req, ReplicateTo rep) {
+          Object value, PersistTo req, ReplicateTo rep) {
 
     OperationFuture<Boolean> replaceOp = replace(key, exp, value);
 
@@ -1499,7 +1499,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the replace operation.
    */
   public OperationFuture<Boolean> replace(String key, int exp,
-          String value, PersistTo req) {
+          Object value, PersistTo req) {
     return replace(key, exp, value, req, ReplicateTo.ZERO);
   }
 
@@ -1524,7 +1524,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the replace operation.
    */
   public OperationFuture<Boolean> replace(String key, int exp,
-          String value, ReplicateTo rep) {
+          Object value, ReplicateTo rep) {
     return replace(key, exp, value, PersistTo.ZERO, rep);
   }
 
@@ -1563,7 +1563,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the CAS operation.
    */
   public CASResponse cas(String key, long cas,
-          String value, PersistTo req, ReplicateTo rep) {
+          Object value, PersistTo req, ReplicateTo rep) {
 
     OperationFuture<CASResponse> casOp = asyncCAS(key, cas, value);
     CASResponse casr = null;
@@ -1608,7 +1608,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the CAS operation.
    */
   public CASResponse cas(String key, long cas,
-          String value, PersistTo req) {
+          Object value, PersistTo req) {
     return cas(key, cas, value, req, ReplicateTo.ZERO);
   }
 
@@ -1633,7 +1633,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the CAS operation.
    */
   public CASResponse cas(String key, long cas,
-          String value, ReplicateTo rep) {
+          Object value, ReplicateTo rep) {
     return cas(key, cas, value, PersistTo.ZERO, rep);
   }
 

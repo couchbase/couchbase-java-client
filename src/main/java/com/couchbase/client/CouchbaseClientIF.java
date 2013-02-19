@@ -65,21 +65,29 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
   Map<MemcachedNode, ObserveResponse> observe(final String key, long cas);
 
   OperationFuture<Boolean> set(String key, int exp,
-          String value, PersistTo persist);
+          Object value, PersistTo persist);
   OperationFuture<Boolean> set(String key, int exp,
-          String value, PersistTo persist, ReplicateTo replicate);
+          Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> set(String key, int exp,
+          Object value, PersistTo persist, ReplicateTo replicate);
   OperationFuture<Boolean> add(String key, int exp,
-          String value, PersistTo persist);
+          Object value, PersistTo persist);
   OperationFuture<Boolean> add(String key, int exp,
-          String value, PersistTo persist, ReplicateTo replicate);
+          Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> add(String key, int exp,
+          Object value, PersistTo persist, ReplicateTo replicate);
   OperationFuture<Boolean> replace(String key, int exp,
-          String value, PersistTo persist);
+          Object value, PersistTo persist);
   OperationFuture<Boolean> replace(String key, int exp,
-          String value, PersistTo persist, ReplicateTo replicate);
+          Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> replace(String key, int exp,
+          Object value, PersistTo persist, ReplicateTo replicate);
   CASResponse cas(String key, long cas,
-          String value, PersistTo req, ReplicateTo rep);
+          Object value, PersistTo req, ReplicateTo rep);
   CASResponse cas(String key, long cas,
-          String value, PersistTo req);
+          Object value, PersistTo req);
+  CASResponse cas(String key, long cas,
+          Object value, ReplicateTo rep);
   OperationFuture<Boolean> delete(String key, PersistTo persist);
   OperationFuture<Boolean> delete(String key, PersistTo persist,
           ReplicateTo replicate);
