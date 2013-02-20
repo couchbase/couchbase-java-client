@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import net.spy.memcached.BinaryClientTest;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
@@ -441,6 +442,139 @@ public class CouchbaseClientTest extends BinaryClientTest {
     String expected = "Currently, there are less nodes in the cluster than "
       + "required to satisfy the replication constraint.";
     assertEquals(expected, invalid.getStatus().getMessage());
+  }
+
+  /**
+   * Tests observe and persist with zero nodes.
+   * @pre Call set operations on the client object
+   * with persist nodes as 0.
+   * @post Asserts true.
+   *
+   * @throws Exception
+   */
+  public void testPersistZeroNodes() throws Exception {
+    CouchbaseClient cb = (CouchbaseClient) client;
+    OperationFuture<Boolean> success = cb.set("something", 0,
+      "to_store", PersistTo.ZERO);
+    assertTrue(success.get());
+    String expected = "OK";
+    assertEquals(expected, success.getStatus().getMessage());
+    assertNotNull(cb.get("something"));
+  }
+
+  /**
+   * Tests observe and replicate with zero nodes.
+   * @pre Call set operations on the client object
+   * with replicate nodes as 0.
+   * @post Asserts true.
+   *
+   * @throws Exception
+   */
+  public void testReplicateZeroNodes() throws Exception {
+    CouchbaseClient cb = (CouchbaseClient) client;
+    OperationFuture<Boolean> success = cb.set("something", 0,
+      "to_store", ReplicateTo.ZERO);
+    assertTrue(success.get());
+    String expected = "OK";
+    assertEquals(expected, success.getStatus().getMessage());
+    assertNotNull(cb.get("something"));
+  }
+
+  /**
+   * Tests observe and persist to more nodes than configured.
+   *
+   * @pre Call set operations on the client object
+   * with persist nodes more than the server size.
+   * @post Asserts false.
+   *
+   * @throws Exception
+   */
+  public void testPersistToMoreThanConf() throws Exception {
+    CouchbaseClient cb = (CouchbaseClient) client;
+    int size = client.getAvailableServers().size();
+    OperationFuture<Boolean> future = null;
+    switch(size){
+    case 0:
+      future = cb.set("something", 0,
+        "to_store", PersistTo.ONE);
+      assertFalse(future.get());
+      break;
+    case 1:
+      future = cb.set("something", 0,
+        "to_store", PersistTo.TWO);
+      assertFalse(future.get());
+      break;
+    case 2:
+      future = cb.set("something", 0,
+        "to_store", PersistTo.THREE);
+      assertFalse(future.get());
+      break;
+    case 3:
+      future = cb.set("something", 0,
+        "to_store", PersistTo.FOUR);
+      assertFalse(future.get());
+      break;
+    default:
+      break;
+    }
+    String expected = "Currently, there are less nodes in the cluster than "
+      + "required to satisfy the persistence constraint.";
+    assertEquals(expected, future.getStatus().getMessage());
+  }
+
+  /**
+   * Tests observe and replicate to more nodes than configured.
+   *
+   * @pre Call set operations on the client object
+   * with replicate nodes more than the server size.
+   * @post Asserts false.
+   *
+   * @throws Exception
+   */
+  public void testReplicateToMoreThanConf() throws Exception {
+    CouchbaseClient cb = (CouchbaseClient) client;
+    int size = client.getAvailableServers().size();
+    OperationFuture<Boolean> future = null;
+    switch(size){
+    case 0:
+      future = cb.set("something", 0,
+        "to_store", ReplicateTo.ONE);
+      assertFalse(future.get());
+      break;
+    case 1:
+      future = cb.set("something", 0,
+        "to_store", ReplicateTo.TWO);
+      assertFalse(future.get());
+      break;
+    case 2:
+      future = cb.set("something", 0,
+        "to_store", ReplicateTo.THREE);
+      assertFalse(future.get());
+      break;
+    default:
+      break;
+    }
+    String expected = "Currently, there are less nodes in the cluster than "
+      + "required to satisfy the replication constraint.";
+    assertEquals(expected, future.getStatus().getMessage());
+  }
+
+  /**
+   * Test observe in case of deletion where key exists.
+   *
+   * @pre Sets the key.
+   * @post Deletes the key and
+   * asserts the status of operation.
+   *
+   * @throws Exception
+   */
+  public void testObsDeleteKeyExists() throws Exception {
+    client.set("observetest", 0, "something");
+    OperationFuture<Boolean> delOp =
+            (((CouchbaseClient)client).delete("observetest",
+                PersistTo.MASTER));
+    assert delOp.get();
+    assertNotNull(delOp.getStatus().getMessage());
   }
 
   @Override
