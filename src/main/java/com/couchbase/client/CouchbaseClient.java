@@ -24,6 +24,7 @@ package com.couchbase.client;
 
 import com.couchbase.client.clustermanager.FlushResponse;
 import com.couchbase.client.internal.HttpFuture;
+import com.couchbase.client.internal.ReplicaGetFuture;
 import com.couchbase.client.internal.ViewFuture;
 import com.couchbase.client.protocol.views.AbstractView;
 import com.couchbase.client.protocol.views.DesignDocFetcherOperation;
@@ -67,6 +68,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -82,12 +84,15 @@ import net.spy.memcached.ObserveResponse;
 import net.spy.memcached.OperationTimeoutException;
 import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
+import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.GetOperation;
 import net.spy.memcached.ops.GetlOperation;
 import net.spy.memcached.ops.ObserveOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.ReplicaGetOperation;
 import net.spy.memcached.ops.StatsOperation;
 import net.spy.memcached.transcoders.Transcoder;
 import org.apache.http.HttpRequest;
@@ -960,6 +965,117 @@ public class CouchbaseClient extends MemcachedClient
   public OperationFuture<CASValue<Object>> asyncGetAndLock(final String key,
       int exp) {
     return asyncGetAndLock(key, exp, transcoder);
+  }
+
+  /**
+   * Get a document from a replica node.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead of the master node.
+   *
+   * This command only works on couchbase type buckets.
+   *
+   * @param key the key to fetch.
+   * @return the fetched document or null when no document available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  public Object getFromReplica(String key) {
+    return getFromReplica(key, transcoder);
+  }
+
+  /**
+   * Get a document from a replica node.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead from the master node.
+   *
+   * This command only works on couchbase type buckets.
+   *
+   * @param key the key to fetch.
+   * @param tc a custom document transcoder.
+   * @return the fetched document or null when no document available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  public <T> T getFromReplica(String key, Transcoder<T> tc) {
+    try {
+      return asyncGetFromReplica(key, tc).get(operationTimeout,
+        TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted waiting for value", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Exception waiting for value", e);
+    } catch (TimeoutException e) {
+      throw new OperationTimeoutException("Timeout waiting for value", e);
+    }
+  }
+
+  /**
+   * Get a document from a replica node asynchronously.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead from the master node. This command only works on couchbase
+   * type buckets.
+   *
+   * @param key the key to fetch.
+   * @return a future containing the fetched document or null when no document
+   *         available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  public ReplicaGetFuture<Object> asyncGetFromReplica(final String key) {
+    return asyncGetFromReplica(key, transcoder);
+  }
+
+  /**
+   * Get a document from a replica node asynchronously.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead from the master node. This command only works on couchbase
+   * type buckets.
+   *
+   * @param key the key to fetch.
+   * @param tc a custom document transcoder.
+   * @return a future containing the fetched document or null when no document
+   *         available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  public <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key, final Transcoder<T> tc) {
+    int replicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
+    if(replicaCount == 0) {
+      throw new RuntimeException("Currently, there is no replica available for"
+        + " the given key (\"" + key + "\").");
+    }
+
+    List<GetFuture<T>> futures = new ArrayList<GetFuture<T>>();
+    for(int index=0; index < replicaCount; index++) {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final GetFuture<T> rv = new GetFuture<T>(latch, operationTimeout, key);
+      Operation op = opFact.replicaGet(key, index, new ReplicaGetOperation.Callback() {
+        private Future<T> val = null;
+
+        public void receivedStatus(OperationStatus status) {
+          rv.set(val, status);
+        }
+
+        public void gotData(String k, int flags, byte[] data) {
+          assert key.equals(k) : "Wrong key returned";
+          val =
+              tcService.decode(tc, new CachedData(flags, data, tc.getMaxSize()));
+        }
+
+        public void complete() {
+          latch.countDown();
+        }
+      });
+      rv.setOperation(op);
+      mconn.enqueueOperation(key, op);
+      futures.add(rv);
+    }
+
+    return new ReplicaGetFuture<T>(operationTimeout, futures);
   }
 
   /**
