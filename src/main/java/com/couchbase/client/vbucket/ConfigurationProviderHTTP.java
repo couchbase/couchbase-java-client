@@ -72,11 +72,9 @@ public class ConfigurationProviderHTTP extends SpyObject implements
   private String restUsr;
   private String restPwd;
   private URI loadedBaseUri;
-  // map of <bucketname, bucket> currently loaded
-  private Map<String, Bucket> buckets = new ConcurrentHashMap<String, Bucket>();
 
-  // map of <poolname, pool> currently loaded
-  // private Map<String, Pool> pools = new ConcurrentHashMap<String, Pool>();
+  private final Map<String, Bucket> buckets = new ConcurrentHashMap<String, Bucket>();
+
   private ConfigurationParser configurationParser =
       new ConfigurationParserJSON();
   private Map<String, BucketMonitor> monitors =
@@ -143,6 +141,21 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       readPools(bucketname);
     }
     return this.buckets.get(bucketname);
+  }
+
+  /**
+   * Update the configuration provider with a new bucket.
+   *
+   * This method is usually called from the CouchbaseClient class during
+   * reconfiguration to make sure the configuration provider has the most
+   * recent bucket available (including the enclosed config).
+   *
+   * @param bucketname the name of the bucket.
+   * @param newBucket the new bucket to update.
+   */
+  @Override
+  public void updateBucket(String bucketname, Bucket newBucket) {
+    this.buckets.put(bucketname, newBucket);
   }
 
   /**

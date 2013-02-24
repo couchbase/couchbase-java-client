@@ -40,6 +40,14 @@ public interface ConfigurationProvider {
   Bucket getBucketConfiguration(String bucketname);
 
   /**
+   * Update the bucket including configuration.
+   *
+   * @param bucketname the name of the bucket
+   * @param newBucket the new bucket including config
+   */
+  void updateBucket(String bucketname, Bucket newBucket);
+
+  /**
    * Subscribes for configuration updates.
    *
    * @param bucketName bucket name to receive configuration for

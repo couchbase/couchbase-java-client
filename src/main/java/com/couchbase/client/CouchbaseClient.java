@@ -262,6 +262,9 @@ public class CouchbaseClient extends MemcachedClient
       cbcf.checkConfigUpdate();
     }
     try {
+      cbConnFactory.getConfigurationProvider().updateBucket(
+        cbConnFactory.getBucketName(), bucket);
+
       if(vconn != null) {
         vconn.reconfigure(bucket);
       }
@@ -1728,6 +1731,23 @@ public class CouchbaseClient extends MemcachedClient
     return shutdownResult;
   }
 
+  private void checkObserveReplica(int numPersist, int numReplica) {
+    Config cfg = ((CouchbaseConnectionFactory) connFactory).getVBucketConfig();
+    VBucketNodeLocator locator = ((VBucketNodeLocator)
+        ((CouchbaseConnection) mconn).getLocator());
+
+    int replicaCount = Math.min(locator.getAll().size() - 1,
+          cfg.getReplicasCount());
+
+    if (numReplica > replicaCount) {
+      throw new ObservedException("Requested replication to " + numReplica
+          + " node(s), but only " + replicaCount + " are avaliable");
+    } else if (numPersist > replicaCount + 1) {
+      throw new ObservedException("Requested persistence to " + numPersist
+          + " node(s), but only " + (replicaCount + 1) + " are available.");
+    }
+  }
+
   /**
    * Poll and observe a key with the given CAS and persist settings.
    *
@@ -1768,22 +1788,15 @@ public class CouchbaseClient extends MemcachedClient
     VBucketNodeLocator locator = ((VBucketNodeLocator)
         ((CouchbaseConnection) mconn).getLocator());
 
-    int replicaCount = Math.min(locator.getAll().size() - 1,
-          cfg.getReplicasCount());
-
-    if (replicateTo > replicaCount) {
-      throw new ObservedException("Requested replication to " + replicateTo
-          + " node(s), but only " + replicaCount + " are avaliable");
-    } else if (persistReplica > replicaCount + 1) {
-      throw new ObservedException("Requested persistence to " + persistReplica
-          + " node(s), but only " + (replicaCount + 1) + " are available.");
-    }
+    checkObserveReplica(persistReplica, replicateTo);
 
     int replicaPersistedTo = 0;
     int replicatedTo = 0;
     boolean persistedMaster = false;
     while(replicateTo > replicatedTo || persistReplica - 1 > replicaPersistedTo
         || (!persistedMaster && persistMaster)) {
+      checkObserveReplica(persistReplica, replicateTo);
+
       if (++obsPolls >= obsPollMax) {
         long timeTried = obsPollMax * obsPollInterval;
         TimeUnit tu = TimeUnit.MILLISECONDS;
@@ -1791,6 +1804,7 @@ public class CouchbaseClient extends MemcachedClient
             + " Unsuccessfully for at least " + tu.toSeconds(timeTried)
             + " seconds.");
       }
+
       Map<MemcachedNode, ObserveResponse> response = observe(key, cas);
 
       int vb = locator.getVBucketIndex(key);
