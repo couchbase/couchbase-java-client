@@ -1660,7 +1660,7 @@ public class CouchbaseClient extends MemcachedClient
     bcastNodes.add(locator.getServerByIndex(cfg.getMaster(vb)));
     for (int i = 1; i <= cfg.getReplicasCount(); i++) {
       int replica = cfg.getReplica(vb, i-1);
-      if(replica > 0) {
+      if(replica >= 0) {
         bcastNodes.add(locator.getServerByIndex(replica));
       }
     }
