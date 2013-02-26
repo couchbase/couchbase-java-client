@@ -1731,10 +1731,19 @@ public class CouchbaseClient extends MemcachedClient
     return shutdownResult;
   }
 
-  private void checkObserveReplica(int numPersist, int numReplica) {
+  private void checkObserveReplica(String key, int numPersist, int numReplica) {
     Config cfg = ((CouchbaseConnectionFactory) connFactory).getVBucketConfig();
     VBucketNodeLocator locator = ((VBucketNodeLocator)
         ((CouchbaseConnection) mconn).getLocator());
+
+    int vBucketIndex = locator.getVBucketIndex(key);
+    int currentReplicaNum = cfg.getReplica(vBucketIndex, numReplica-1);
+
+    if (currentReplicaNum < 0) {
+      throw new ObservedException("Currently, there is no replica available for"
+        + "the given replica index. This can be the case because of a failed "
+        + "over node which has not yet been rebalanced.");
+    }
 
     int replicaCount = Math.min(locator.getAll().size() - 1,
           cfg.getReplicasCount());
@@ -1788,14 +1797,14 @@ public class CouchbaseClient extends MemcachedClient
     VBucketNodeLocator locator = ((VBucketNodeLocator)
         ((CouchbaseConnection) mconn).getLocator());
 
-    checkObserveReplica(persistReplica, replicateTo);
+    checkObserveReplica(key, persistReplica, replicateTo);
 
     int replicaPersistedTo = 0;
     int replicatedTo = 0;
     boolean persistedMaster = false;
     while(replicateTo > replicatedTo || persistReplica - 1 > replicaPersistedTo
         || (!persistedMaster && persistMaster)) {
-      checkObserveReplica(persistReplica, replicateTo);
+      checkObserveReplica(key, persistReplica, replicateTo);
 
       if (++obsPolls >= obsPollMax) {
         long timeTried = obsPollMax * obsPollInterval;
