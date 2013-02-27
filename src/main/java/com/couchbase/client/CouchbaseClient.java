@@ -1681,10 +1681,15 @@ public class CouchbaseClient extends MemcachedClient
 
           public void gotData(String key, long retCas, MemcachedNode node,
               ObserveResponse or) {
-            if (cas != retCas) {
-              response.put(node, ObserveResponse.MODIFIED);
-            } else {
+            if (cas == retCas) {
               response.put(node, or);
+            } else /* cas doesn't match */ {
+              if (or == ObserveResponse.NOT_FOUND_PERSISTED) {
+                // CAS doesn't matter in this case.  tell the caller it's gone
+                response.put(node, or);
+              } else {
+                response.put(node, ObserveResponse.MODIFIED);
+              }
             }
           }
           public void complete() {
