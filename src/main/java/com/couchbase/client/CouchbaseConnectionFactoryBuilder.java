@@ -158,12 +158,12 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
 
       @Override
       public FailureMode getFailureMode() {
-        return failureMode;
+        return failureMode == null ? DEFAULT_FAILURE_MODE : failureMode;
       }
 
       @Override
       public HashAlgorithm getHashAlg() {
-        return hashAlg;
+        return hashAlg == null ? DEFAULT_HASH : hashAlg;
       }
 
       @Override

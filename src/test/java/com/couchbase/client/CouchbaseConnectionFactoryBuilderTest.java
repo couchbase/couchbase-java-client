@@ -22,13 +22,16 @@
  */
 package com.couchbase.client;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+
 import net.spy.memcached.TestConfig;
+
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test for basic things in the CouchbaseConnectionFactoryBuilder.
@@ -143,6 +146,10 @@ public class CouchbaseConnectionFactoryBuilderTest {
       connFact.getObsPollMax());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL,
       connFact.getMinReconnectInterval());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_FAILURE_MODE,
+      connFact.getFailureMode());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_HASH,
+      connFact.getHashAlg());
   }
 
 }
