@@ -32,8 +32,8 @@ import java.util.Map;
 public class ViewResponseNoDocs extends ViewResponse {
 
   public ViewResponseNoDocs(final Collection<ViewRow> rows,
-      final Collection<RowError> errors) {
-    super(rows, errors);
+      final Collection<RowError> errors, long totalViewRows) {
+    super(rows, errors, totalViewRows);
   }
 
   @Override

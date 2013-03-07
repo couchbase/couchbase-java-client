@@ -83,7 +83,8 @@ public class ViewFuture extends HttpFuture<ViewResponse> {
           docMap.get(r.getId())));
       }
     }
-    return new ViewResponseWithDocs(rows, viewResp.getErrors());
+    return new ViewResponseWithDocs(rows, viewResp.getErrors(),
+      viewResp.getTotalRows());
   }
 
   public void set(ViewResponse viewResponse,

@@ -47,9 +47,13 @@ public class NoDocsOperationImpl extends ViewOperationImpl {
     throws ParseException {
     final Collection<ViewRow> rows = new LinkedList<ViewRow>();
     final Collection<RowError> errors = new LinkedList<RowError>();
+    long totalViewRows = 0;
     if (json != null) {
       try {
         JSONObject base = new JSONObject(json);
+        if (base.has("total_rows")) {
+          totalViewRows = (long)base.getDouble("total_rows");
+        }
         if (base.has("rows")) {
           JSONArray ids = base.getJSONArray("rows");
           for (int i = 0; i < ids.length(); i++) {
@@ -83,7 +87,7 @@ public class NoDocsOperationImpl extends ViewOperationImpl {
         throw new ParseException("Cannot read json: " + json, 0);
       }
     }
-    return new ViewResponseNoDocs(rows, errors);
+    return new ViewResponseNoDocs(rows, errors, totalViewRows);
   }
 
   @Override

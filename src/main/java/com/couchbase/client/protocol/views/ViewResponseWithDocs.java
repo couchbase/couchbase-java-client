@@ -37,8 +37,8 @@ public class ViewResponseWithDocs extends ViewResponse {
   private Map<String, Object> map;
 
   public ViewResponseWithDocs(final Collection<ViewRow> rows,
-      final Collection<RowError> errors) {
-    super(rows, errors);
+      final Collection<RowError> errors, long totalViewRows) {
+    super(rows, errors, totalViewRows);
     map = null;
   }
 

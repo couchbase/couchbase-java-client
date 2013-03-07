@@ -33,7 +33,12 @@ public class ViewResponseReduced extends ViewResponse {
 
   public ViewResponseReduced(final Collection<ViewRow> rows,
       final Collection<RowError> errors) {
-    super(rows, errors);
+    super(rows, errors, -1);
+  }
+
+  public ViewResponseReduced(final Collection<ViewRow> rows,
+      final Collection<RowError> errors, long totalViewRows) {
+    super(rows, errors, totalViewRows);
   }
 
   @Override
@@ -53,4 +58,11 @@ public class ViewResponseReduced extends ViewResponse {
     }
     return s.toString();
   }
+
+  @Override
+  public long getTotalRows() {
+    throw new IllegalStateException("Total Number of Rows is not available on "
+      + "reduced views.");
+  }
+
 }
