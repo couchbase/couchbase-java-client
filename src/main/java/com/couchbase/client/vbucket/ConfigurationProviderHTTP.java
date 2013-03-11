@@ -25,6 +25,7 @@ package com.couchbase.client.vbucket;
 import com.couchbase.client.http.HttpUtil;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
+import com.couchbase.client.vbucket.config.ConfigType;
 import com.couchbase.client.vbucket.config.ConfigurationParser;
 import com.couchbase.client.vbucket.config.ConfigurationParserJSON;
 import com.couchbase.client.vbucket.config.Pool;
@@ -146,6 +147,10 @@ public class ConfigurationProviderHTTP extends SpyObject implements
       while(warmedUp == false) {
         readPools(bucketname);
         Config config = this.buckets.get(bucketname).getConfig();
+        if(config.getConfigType().equals(ConfigType.MEMCACHE)) {
+          warmedUp = true;
+          continue;
+        }
         if(config.getVbucketsCount() == 0) {
           if(retryCount > maxBackoffRetries) {
             throw new ConfigurationException("Cluster is not in a warmed up "
