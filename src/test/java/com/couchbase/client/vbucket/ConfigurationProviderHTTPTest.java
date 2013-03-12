@@ -46,8 +46,8 @@ public class ConfigurationProviderHTTPTest extends TestCase {
     super.setUp();
     List<URI> baseList = Arrays.asList(new URI("http://"
         + TestConfig.IPV4_ADDR + ":8091/pools"));
-    configProvider = new ConfigurationProviderHTTP(baseList, CbTestConfig.CLUSTER_ADMINNAME,
-        CbTestConfig.CLUSTER_PASS);
+    configProvider = new ConfigurationProviderHTTP(baseList,
+      CbTestConfig.CLUSTER_ADMINNAME, CbTestConfig.CLUSTER_PASS);
     assertNotNull(configProvider);
   }
 

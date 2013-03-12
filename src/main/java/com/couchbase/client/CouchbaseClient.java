@@ -1745,9 +1745,9 @@ public class CouchbaseClient extends MemcachedClient
       int vBucketIndex = locator.getVBucketIndex(key);
       int currentReplicaNum = cfg.getReplica(vBucketIndex, numReplica-1);
       if (currentReplicaNum < 0) {
-        throw new ObservedException("Currently, there is no replica available for"
-          + "the given replica index. This can be the case because of a failed "
-          + "over node which has not yet been rebalanced.");
+        throw new ObservedException("Currently, there is no replica available "
+          + "for the given replica index. This can be the case because of a "
+          + "failed over node which has not yet been rebalanced.");
       }
     }
 
@@ -1901,7 +1901,7 @@ public class CouchbaseClient extends MemcachedClient
    * instantaneous.  Running a flush() on a Couchbase bucket can take quite
    * a while, depending on the amount of data and the load on the system.
    *
-   * @return
+   * @return a OperationFuture indicating the result of the flush.
    */
   @Override
   public OperationFuture<Boolean> flush() {
