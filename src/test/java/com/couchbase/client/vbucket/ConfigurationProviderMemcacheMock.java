@@ -70,8 +70,6 @@ public class ConfigurationProviderMemcacheMock
   }
 
   @Override
-  public void updateBucket(String string, Bucket bucket) {
-    throw new UnsupportedOperationException("Not needed in the mock?");
-  }
+  public void updateBucket(String string, Bucket bucket) { }
 
 }
