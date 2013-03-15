@@ -127,11 +127,6 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
         // We update the locator with the merged nodes
         // before initiating a reconnect on the queue
         locator.updateLocator(mergedNodes);
-        for (MemcachedNode node : mergedNodes) {
-          if (!node.isActive()) {
-            queueReconnect(node);
-          }
-        }
       }
 
       // schedule shutdown for the oddNodes
