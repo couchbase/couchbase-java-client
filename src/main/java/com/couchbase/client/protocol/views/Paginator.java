@@ -23,130 +23,261 @@
 package com.couchbase.client.protocol.views;
 
 import com.couchbase.client.CouchbaseClient;
+
 import java.util.Iterator;
-import net.spy.memcached.compat.SpyObject;
 
 /**
- * The Paginator allows easy pagination over a ViewResult.
+ * The {@link Paginator} makes it possible to iterate over a
+ * {@link ViewResponse} in pages.
  *
- * It is recommended not to instantiate this object directly, but to obtain
- * a reference through the CouchbaseClient object like this:
+ * <p>It is possible to iterate over both reduced and non-reduced results, but
+ * iterating over non-reduced results is considerably faster, because a
+ * more efficient pagination approach can be used.</p>
  *
- *   View view = client.getView("design_doc", "viewname");
- *   Query query = new Query();
- *   int docsPerPage = 15;
- *   Paginator paginator = client.paginatedQuery(view, query, docsPerPage);
+ * <p>Usage:</p>
+ * <pre>{@code
  *
+ *View view = client.getView("design_doc", "view_name");
+ *Query query = new Query();
+ *int docsPerPage = 20;
+ *
+ *Paginator paginator = client.paginatedQuery(view, query, docsPerPage);
+ *while(paginator.hasNext()) {
+ *  ViewResponse response = paginator.next();
+ *  for(ViewRow row : response) {
+ *    System.out.println(row.getKey());
+ *  }
+ *}
+ * }</pre>
+ *
+ * <p>Note that if a custom limit is set on the {@link Query} object when it
+ * gets passed in into the {@link Paginator}, then it is considered as an
+ * absolute limit. The {@link Paginator} will stop iterating once this absolute
+ * limit is reached. If no limit is provided, the {@link Paginator} will move
+ * forward until no more documents are returned by the view.</p>
+ *
+ * <p>If you encounter an infinite loop when emitting stringified numbers from
+ * your View, see the {@link Paginator#forcedKeyType} method for instructions
+ * to remedy this situation.</p>
  */
-public class Paginator extends SpyObject
-  implements Iterator<ViewResponse> {
+public class Paginator implements Iterator<ViewResponse> {
 
   private final CouchbaseClient client;
-  private final Query query;
   private final View view;
-  private final int docsPerPage;
-  private int docsOnPage;
-  private int totalLimit = 0;
-  private int totalDocs = 0;
-
-  private ViewResponse page;
-  private ViewResponse finalRow;
-  private boolean first = true;
-  private boolean done = false;
+  private final Query query;
+  private final int limit;
 
   /**
-   * Create a new Paginator.
-   *
-   * @param client the CouchbaseClient object to run the queries on.
-   * @param view the instance of the View to run the Queries against.
-   * @param query the instance of the Query object for the params.
-   * @param numDocs the number of the documents to return per page (must be
-   *    greater than zero).
+   * Contains the current state of the Paginator.
    */
-  public Paginator(CouchbaseClient client, View view, Query query,
-      int numDocs) {
-    this.client = client;
-    this.view = view;
-    if (query.willReduce()) {
-      throw new RuntimeException("Pagination is not supported for reduced"
-          + " views");
-    }
-    this.query = query.copy();
-    if(numDocs > 0) {
-      this.docsPerPage = numDocs;
-    } else {
+  private volatile State currentState;
+
+  /**
+   * Holds the next response that will be returned on {@link #next()}.
+   */
+  private ViewResponse nextResponse = null;
+
+  /**
+   * A counter indicating the current page (used to for skipping).
+   */
+  private int currentPage;
+
+  /**
+   * The next ID to start when paging with non-reduced views.
+   */
+  private String nextStartKeyDocID = null;
+
+  /**
+   * The next key to start when paging with non-reduced views.
+   */
+  private String nextStartKey = null;
+
+  /**
+   * Helps to prevent errors when {@link #hasNext()} is called twice or more
+   * before actually calling {@link #next()}.
+   */
+  private boolean alreadyCalled;
+
+  /**
+   * Used to make sure a total limit on the view result can still be
+   * paginated correctly.
+   */
+  private int totalLimit;
+
+  /**
+   * Defines into which the key will be casted into.
+   */
+  private Class<?> forcedKeyType = null;
+
+  /**
+   * Create a new Paginator by passing in the needed params.
+   *
+   * @param client the client object to work against.
+   * @param view the corresponding view to query.
+   * @param query the query object to customize the pages.
+   * @param limit the amount of docs to return per page.
+   */
+  public Paginator(final CouchbaseClient client, final View view,
+    final Query query, final int limit) {
+    if (limit <= 0) {
       throw new IllegalArgumentException("Number of documents per page "
         + "must be greater than zero.");
     }
-    this.docsOnPage = 0;
-    this.totalLimit = query.getLimit();
-    getNextPage(this.query);
-  }
 
-  /**
-   * Check if there is still a ViewResult left to fetch.
-   *
-   * @return true or false whether there is a ViewResult set to return or not.
-   */
-  @Override
-  public boolean hasNext() {
-    if (first) {
-      return true;
-    }
-    return !done;
-  }
+    this.client = client;
+    this.view = view;
+    this.query = query.copy();
+    this.limit = limit;
 
-  /**
-   * Returns the next ViewResult object to iterate over.
-   *
-   * @return the next ViewResult page.
-   */
-  @Override
-  public ViewResponse next() {
-    if (first) {
-      first = false;
-      return page;
-    }
-    if (!done) {
-      query.setSkip(0);
-      query.setStartkeyDocID(finalRow.iterator().next().getId());
-      query.setRangeStart(finalRow.iterator().next().getKey());
-      return getNextPage(query);
+    if (this.query.getLimit() > 0) {
+      this.totalLimit = this.query.getLimit();
     } else {
+      this.totalLimit = -1;
+    }
+
+    this.query.setLimit(limit + 1);
+    this.currentState = State.INITIALIZED;
+    this.currentPage = 1;
+    this.alreadyCalled = false;
+  }
+
+  /**
+   * Check if another Page is available.
+   *
+   * @return true if a page is available, false otherwise.
+   */
+  public final boolean hasNext() {
+    if (currentState == State.FINISHED) {
+      return false;
+    }
+
+    if (alreadyCalled) {
+      return true;
+    } else {
+      alreadyCalled = true;
+    }
+
+    fetchNextPage();
+    if (currentState == State.INITIALIZED) {
+      currentState = State.PAGING;
+    }
+
+    return true;
+  }
+
+  /**
+   * Fetch the next page.
+   *
+   * Depending on if reduce is used or not, it uses a different approach on
+   * how to handle paging.
+   */
+  private void fetchNextPage() {
+    if (currentState == State.PAGING) {
+      if (query.willReduce()) {
+        query.setSkip(limit * (currentPage - 1));
+      } else {
+        query.setStartkeyDocID(nextStartKeyDocID);
+        query.setRangeStart(convertKey(nextStartKey));
+      }
+    }
+
+    if (totalLimit > 0 && (currentPage * limit) >= totalLimit) {
+      int reduceBy = (currentPage * limit) - totalLimit;
+      query.setLimit(limit - reduceBy);
+    }
+
+    nextResponse = client.query(view, query);
+
+    if (nextResponse.size() == limit + 1) {
+      ViewRow nextRow = nextResponse.removeLastElement();
+      if (!query.willReduce()) {
+        nextStartKeyDocID = nextRow.getId();
+        nextStartKey = nextRow.getKey();
+      }
+    } else {
+      currentState = State.FINISHED;
+    }
+
+    currentPage++;
+  }
+
+  /**
+   * Returns the next {@link ViewResponse}.
+   *
+   * @return returns a {@link ViewResponse} which represents the next page
+   *         or null if there is none (check with {@link #hasNext()} first.
+   */
+  public final ViewResponse next() {
+    alreadyCalled = false;
+
+    if (currentState == State.INITIALIZED) {
       return null;
     }
+
+    return nextResponse;
   }
 
   /**
-   * Remove is not supported while iterating over a ViewResult.
+   * Allows one to override the type of the row key.
+   *
+   * <p>This should only be used to enforce a different type if absolutely
+   * needed, especially if you emit a number as a string from the view. If
+   * nothing else is specified, the data will be passed in 1:1 which may lead
+   * to infinite loops on stringified numbers. To remedy this situation,
+   * forcing to stringify the number again like this helps:</p>
+   *
+   *<pre>{@code
+   *paginatedQuery.forceKeyType(String.class);
+   *}</pre>
+   *
+   * <p>Setting it to Integer.class will force a conversion to integer
+   * the other way round. Note that if the class type is not recognized,
+   * the original value will be passed straight through as a String towards
+   * the {@link ComplexKey} class.</p>
+   *
+   * <p>This is ignored on reduced and spatial views, because a different
+   * strategy (skip) is used there.</p>
+   *
+   * @param clazz the enforced key type.
    */
-  @Override
-  public void remove() {
+  public void forceKeyType(Class<?> clazz) {
+    this.forcedKeyType = clazz;
+  }
+
+  /**
+   * Converts the paginator key to the intended type.
+   *
+   * @param original original Key from the View as string
+   * @return the modified key.
+   */
+  private String convertKey(String original) {
+    if(forcedKeyType == null) {
+      return original;
+    }
+
+    if(forcedKeyType.getSimpleName().equals("Integer")) {
+      return ComplexKey.of(Integer.parseInt(original)).toJson();
+    }
+    return ComplexKey.of(original).toJson();
+  }
+
+  /**
+   * The {@link #remove()} method is not supported in this context.
+   */
+  public final void remove() {
     throw new UnsupportedOperationException("Remove is unsupported");
   }
 
   /**
-   * Reads the next page based on the given page params and the Query object.
-   *
-   * @param q the Query object to work against.
-   * @return the next ViewResponse page.
+   * Defines the States in which the Paginator is in at any given time.
    */
-  private ViewResponse getNextPage(Query q) {
-    int remaining = totalLimit > 0 ? totalLimit - totalDocs : docsPerPage;
-    q.setLimit(remaining);
-    page = client.query(view, q);
-    docsOnPage = page.size();
-    totalDocs += docsOnPage;
-    if (docsOnPage >= docsPerPage) {
-      q.setSkip(docsOnPage);
-      q.setLimit(1);
-      finalRow = client.query(view, q);
-      if(!finalRow.iterator().hasNext()) {
-        done = true;
-      }
-    } else {
-      done = true;
-    }
-    return page;
+  enum State {
+    /** No Page has yet been fetched, it has just been initialized. */
+    INITIALIZED,
+    /** Currently in the process of paging, more pages available. */
+    PAGING,
+    /** Last page reached and/or finished already. */
+    FINISHED
   }
+
 }

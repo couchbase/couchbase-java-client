@@ -43,6 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the correct functionality of the View Paginator.
@@ -56,19 +57,23 @@ public class PaginatorTest {
   public static final String DESIGN_DOC = "cities";
   public static final String VIEW_NAME_MAPRED = "all";
   public static final String VIEW_NAME_SPATIAL = "europe";
+  public static final String VIEW_NAME_POPULATION_STRING =
+    "by_population_string";
+  public static final String VIEW_NAME_POPULATION_INT =
+    "by_population_int";
 
   static {
     CITY_DOCS = new ArrayList<City>();
 
-    CITY_DOCS.add(new City("amsterdam", "netherlands", "europe"));
-    CITY_DOCS.add(new City("rome", "italy", "europe"));
-    CITY_DOCS.add(new City("paris", "france", "europe"));
-    CITY_DOCS.add(new City("vienna", "austria", "europe"));
-    CITY_DOCS.add(new City("new_york", "usa", "north_america"));
-    CITY_DOCS.add(new City("san_francisco", "usa", "north_america"));
-    CITY_DOCS.add(new City("shanghai", "china", "asia"));
-    CITY_DOCS.add(new City("tokyo", "japan", "asia"));
-    CITY_DOCS.add(new City("moscow", "russia", "asia"));
+    CITY_DOCS.add(new City("amsterdam", "netherlands", "europe", 820654));
+    CITY_DOCS.add(new City("rome", "italy", "europe", 2777979));
+    CITY_DOCS.add(new City("paris", "france", "europe", 2234105));
+    CITY_DOCS.add(new City("vienna", "austria", "europe", 1731236));
+    CITY_DOCS.add(new City("new_york", "usa", "north_america", 8244910));
+    CITY_DOCS.add(new City("san_francisco", "usa", "north_america", 812826));
+    CITY_DOCS.add(new City("shanghai", "china", "asia", 23019148));
+    CITY_DOCS.add(new City("tokyo", "japan", "asia", 13222760));
+    CITY_DOCS.add(new City("moscow", "russia", "asia", 11979529));
   }
 
   /**
@@ -79,6 +84,7 @@ public class PaginatorTest {
     private String name;
     private String country;
     private String continent;
+    private long population;
 
     /**
      * Instantiates a new city.
@@ -87,10 +93,11 @@ public class PaginatorTest {
      * @param c the country
      * @param co the continent
      */
-    public City(String n, String c, String co) {
+    public City(String n, String c, String co, long pop) {
       name = n;
       country = c;
       continent = co;
+      population = pop;
     }
 
     /**
@@ -112,6 +119,7 @@ public class PaginatorTest {
       obj.put("name", name);
       obj.put("country", country);
       obj.put("continent", continent);
+      obj.put("population", population);
       return obj.toString();
     }
   }
@@ -154,11 +162,18 @@ public class PaginatorTest {
 
     String docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC;
+
     String view = "{\"language\":\"javascript\",\"views\":{\""
-        + VIEW_NAME_MAPRED + "\":{\"map\":\"function (doc) { "
-        + "if(doc.type == \\\"city\\\") {emit([doc.continent, doc.country, "
-        + "doc.name], 1)}}\","
-        + "\"reduce\":\"_sum\" }}}";
+      + VIEW_NAME_MAPRED + "\":{\"map\":\""
+      + "function (doc) { if(doc.type == \\\"city\\\") {emit([doc.continent, "
+      + "doc.country, doc.name], 1)}}\",\"reduce\":\"_sum\"},"
+      + "\"" + VIEW_NAME_POPULATION_STRING + "\":{\"map\":\"function(doc, meta)"
+      + "{\\n  if(doc.type == \\\"city\\\" && doc.population) {\\n    "
+      + "emit(doc.population.toString(), null);\\n  }\\n}\"},"
+      + "\"" + VIEW_NAME_POPULATION_INT + "\":{\"map\":\"function(doc, meta)"
+      + "{\\n  if(doc.type == \\\"city\\\" && doc.population) "
+      + "{\\n    emit(doc.population, null);\\n  }\\n}\"}}}";
+
     client.asyncHttpPut(docUri, view);
 
     for(City city : CITY_DOCS) {
@@ -308,4 +323,126 @@ public class PaginatorTest {
     assertEquals(expected, pageCount);
     assertEquals(limit, totalCount);
   }
+
+  @Test
+  public void testWithExactReduce() {
+    View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
+    Query query = new Query();
+    query.setGroupLevel(1);
+    int docsPerPage = 1;
+
+    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+
+    int pageCount = 0;
+    int totalCount = 0;
+    while(paginatedQuery.hasNext()) {
+      pageCount++;
+      ViewResponse response = paginatedQuery.next();
+      for(ViewRow row : response) {
+        totalCount++;
+        assertTrue("Reduce value is 0 or less",
+          Integer.parseInt(row.getValue()) > 0);
+      }
+    }
+
+    assertEquals(3, pageCount);
+    assertEquals(3, totalCount);
+  }
+
+  @Test
+  public void testWithOffsetReduce() {
+    View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
+    Query query = new Query();
+    query.setGroupLevel(1);
+    int docsPerPage = 2;
+
+    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+
+    int pageCount = 0;
+    int totalCount = 0;
+    while(paginatedQuery.hasNext()) {
+      pageCount++;
+      ViewResponse response = paginatedQuery.next();
+      for(ViewRow row : response) {
+        totalCount++;
+        assertTrue("Reduce value is 0 or less",
+          Integer.parseInt(row.getValue()) > 0);
+      }
+    }
+
+    assertEquals(2, pageCount);
+    assertEquals(3, totalCount);
+  }
+
+  @Test
+  public void testWithReduceAndLimit() {
+    View view = client.getView(DESIGN_DOC, VIEW_NAME_MAPRED);
+    Query query = new Query();
+    query.setGroupLevel(1);
+    query.setLimit(2);
+    int docsPerPage = 1;
+
+    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+
+    int pageCount = 0;
+    int totalCount = 0;
+    while(paginatedQuery.hasNext()) {
+      pageCount++;
+      ViewResponse response = paginatedQuery.next();
+      for(ViewRow row : response) {
+        totalCount++;
+        assertTrue("Reduce value is 0 or less",
+          Integer.parseInt(row.getValue()) > 0);
+      }
+    }
+
+    assertEquals(2, pageCount);
+    assertEquals(2, totalCount);
+  }
+
+  @Test
+  public void testStringifiedNumber() {
+    View view = client.getView(DESIGN_DOC, VIEW_NAME_POPULATION_STRING);
+    Query query = new Query();
+    int docsPerPage = 2;
+
+    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+    paginatedQuery.forceKeyType(String.class);
+    int pageCount = 0;
+    int totalCount = 0;
+    while(paginatedQuery.hasNext()) {
+      pageCount++;
+      ViewResponse response = paginatedQuery.next();
+      for(ViewRow row : response) {
+        totalCount++;
+      }
+    }
+
+    int expected = (int)Math.ceil((double)CITY_DOCS.size() / docsPerPage);
+    assertEquals(expected, pageCount);
+    assertEquals(CITY_DOCS.size(), totalCount);
+  }
+
+  @Test
+  public void testNumber() {
+    View view = client.getView(DESIGN_DOC, VIEW_NAME_POPULATION_INT);
+    Query query = new Query();
+    int docsPerPage = 2;
+
+    Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);
+    int pageCount = 0;
+    int totalCount = 0;
+    while(paginatedQuery.hasNext()) {
+      pageCount++;
+      ViewResponse response = paginatedQuery.next();
+      for(ViewRow row : response) {
+        totalCount++;
+      }
+    }
+
+    int expected = (int)Math.ceil((double)CITY_DOCS.size() / docsPerPage);
+    assertEquals(expected, pageCount);
+    assertEquals(CITY_DOCS.size(), totalCount);
+  }
+
 }

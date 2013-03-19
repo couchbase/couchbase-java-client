@@ -24,6 +24,7 @@ package com.couchbase.client.protocol.views;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -53,4 +54,8 @@ public abstract class ViewResponse implements Iterable<ViewRow> {
   }
 
   public abstract Map<String, Object> getMap();
+
+  public ViewRow removeLastElement() {
+    return ((LinkedList<ViewRow>) rows).removeLast();
+  }
 }
