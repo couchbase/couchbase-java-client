@@ -718,7 +718,7 @@ public class CouchbaseClient extends MemcachedClient
     assert viewUri != null : "view URI seems to be null";
     assert queryToRun != null  : "query seems to be null";
     String uri = viewUri + queryToRun;
-    getLogger().info("lookin for:" + uri);
+
     final CountDownLatch couchLatch = new CountDownLatch(1);
     int timeout = ((CouchbaseConnectionFactory) connFactory).getViewTimeout();
     final ViewFuture crv = new ViewFuture(couchLatch, timeout, view);
