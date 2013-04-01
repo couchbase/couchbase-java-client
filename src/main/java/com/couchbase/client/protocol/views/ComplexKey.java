@@ -149,6 +149,8 @@ public final class ComplexKey {
         return new JSONObject().toString();
       } else if(component instanceof String) {
         return "\"" + component + "\"";
+      } else if(component == null){
+        return "null";
       }
       return component.toString();
     }
