@@ -76,13 +76,14 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   /**
    * Default failure mode.
    */
-  public static final FailureMode DEFAULT_FAILURE_MODE = FailureMode.Retry;
+  public static final FailureMode DEFAULT_FAILURE_MODE =
+    FailureMode.Redistribute;
 
   /**
    * Default hash algorithm.
    */
   public static final HashAlgorithm DEFAULT_HASH =
-    DefaultHashAlgorithm.KETAMA_HASH;
+    DefaultHashAlgorithm.NATIVE_HASH;
 
   /**
    * Maximum length of the operation queue returned by this connection factory.
