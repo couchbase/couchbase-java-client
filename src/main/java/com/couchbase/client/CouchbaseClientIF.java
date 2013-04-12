@@ -64,23 +64,47 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
 
   Map<MemcachedNode, ObserveResponse> observe(final String key, long cas);
 
+  OperationFuture<Boolean> set(String key,
+          Object value);
   OperationFuture<Boolean> set(String key, int exp,
           Object value, PersistTo persist);
+  OperationFuture<Boolean> set(String key,
+          Object value, PersistTo persist);
   OperationFuture<Boolean> set(String key, int exp,
+          Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> set(String key,
           Object value, ReplicateTo replicate);
   OperationFuture<Boolean> set(String key, int exp,
           Object value, PersistTo persist, ReplicateTo replicate);
+  OperationFuture<Boolean> set(String key,
+          Object value, PersistTo persist, ReplicateTo replicate);
+  OperationFuture<Boolean> add(String key,
+          Object value);
   OperationFuture<Boolean> add(String key, int exp,
           Object value, PersistTo persist);
+  OperationFuture<Boolean> add(String key,
+          Object value, PersistTo persist);
   OperationFuture<Boolean> add(String key, int exp,
+          Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> add(String key,
           Object value, ReplicateTo replicate);
   OperationFuture<Boolean> add(String key, int exp,
           Object value, PersistTo persist, ReplicateTo replicate);
+  OperationFuture<Boolean> add(String key,
+          Object value, PersistTo persist, ReplicateTo replicate);
+  OperationFuture<Boolean> replace(String key,
+           Object value);
   OperationFuture<Boolean> replace(String key, int exp,
+          Object value, PersistTo persist);
+  OperationFuture<Boolean> replace(String key,
           Object value, PersistTo persist);
   OperationFuture<Boolean> replace(String key, int exp,
           Object value, ReplicateTo replicate);
+  OperationFuture<Boolean> replace(String key,
+          Object value, ReplicateTo replicate);
   OperationFuture<Boolean> replace(String key, int exp,
+          Object value, PersistTo persist, ReplicateTo replicate);
+  OperationFuture<Boolean> replace(String key,
           Object value, PersistTo persist, ReplicateTo replicate);
   CASResponse cas(String key, long cas,
           Object value, PersistTo req, ReplicateTo rep);
