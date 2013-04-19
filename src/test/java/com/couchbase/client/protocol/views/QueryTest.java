@@ -173,6 +173,52 @@ public class QueryTest {
     assertEquals(1, query.getArgs().size());
     String result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?key=\"foobar\"", result);
+
+    //test numerical values
+    query.setKey("123");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=123", result);
+
+    // Test mix alpha and numerical values
+    query.setKey("123FOUR");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"123FOUR\"", result);
+
+    // Test integer
+    query.setKey("123");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=123", result);
+
+    // Test float
+    query.setKey("1234.9");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=1234.9", result);
+
+    // Test float with separator
+    query.setKey("1,234.9");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=1234.9", result);
+
+    // Test float with zero
+    query.setKey("0.123");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=0.123", result);
+
+    // Test float without zero
+    query.setKey(".123");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=0.123", result);
+
+    // Test Exponent
+    query.setKey("123E10");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=1230000000000", result);
+
+    // Test String
+    query.setKey("\"123E10\"");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?key=\"123E10\"", result);
+
   }
 
   /**
@@ -192,6 +238,16 @@ public class QueryTest {
     assertEquals(1, query.getArgs().size());
     String result = URLDecoder.decode(query.toString(), "UTF-8");
     assertEquals("?keys=[2, 3, 4]", result);
+
+    // Test mix alpha and numerical values
+    query.setKeys("[\"123FOUR\",\"ABC4\",\"123\"]");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?keys=[\"123FOUR\",\"ABC4\",\"123\"]", result);
+
+    // Test mix alpha and numerical values
+    query.setKeys("[\"123FOUR\", 123.4, 0.8]");
+    result = URLDecoder.decode(query.toString(), "UTF-8");
+    assertEquals("?keys=[\"123FOUR\", 123.4, 0.8]", result);
   }
 
   /**
