@@ -1117,6 +1117,11 @@ public class CouchbaseClient extends MemcachedClient
           PersistTo req, ReplicateTo rep) {
 
     OperationFuture<Boolean> deleteOp = delete(key);
+
+    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+      return deleteOp;
+    }
+
     boolean deleteStatus = false;
 
     try {
@@ -1244,6 +1249,10 @@ public class CouchbaseClient extends MemcachedClient
           Object value, PersistTo req, ReplicateTo rep) {
 
     OperationFuture<Boolean> setOp = set(key, exp, value);
+
+    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+      return setOp;
+    }
 
     boolean setStatus = false;
 
@@ -1463,6 +1472,10 @@ public class CouchbaseClient extends MemcachedClient
 
     OperationFuture<Boolean> addOp = add(key, exp, value);
 
+    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+      return addOp;
+    }
+
     boolean addStatus = false;
 
     try {
@@ -1681,6 +1694,10 @@ public class CouchbaseClient extends MemcachedClient
 
     OperationFuture<Boolean> replaceOp = replace(key, exp, value);
 
+    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+      return replaceOp;
+    }
+
     boolean replaceStatus = false;
 
     try {
@@ -1891,6 +1908,11 @@ public class CouchbaseClient extends MemcachedClient
     if (casr != CASResponse.OK) {
       return casr;
     }
+
+    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+      return casr;
+    }
+
     try {
       observePoll(key, casOp.getCas(), req, rep, false);
     } catch (ObservedException e) {
