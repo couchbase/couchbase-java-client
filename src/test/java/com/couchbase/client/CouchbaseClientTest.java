@@ -44,6 +44,7 @@ import net.spy.memcached.TestConfig;
 import net.spy.memcached.internal.OperationFuture;
 
 import org.junit.Ignore;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * A CouchbaseClientTest.
@@ -315,34 +316,38 @@ public class CouchbaseClientTest extends BinaryClientTest {
     OperationFuture<Boolean> setOp =
             (((CouchbaseClient)client).set("observetest", 0, "value",
                 PersistTo.MASTER));
-    assert setOp.get()
-            : "Key set was not persisted to master : "
-            + setOp.getStatus().getMessage();
+    assertTrue("Key set was not persisted to master: "
+      + setOp.getStatus().getMessage(), setOp.get());
+
     OperationFuture<Boolean> replaceOp =
             (((CouchbaseClient)client).replace("observetest", 0, "value",
                 PersistTo.MASTER));
-    assert replaceOp.get()
-            : "Key replace was not persisted to master : "
-            + replaceOp.getStatus().getMessage();
+    assertTrue("Key replace was not persisted to master: "
+      + replaceOp.getStatus().getMessage(), replaceOp.get());
+
     OperationFuture<Boolean> deleteOp =
             (((CouchbaseClient)client).delete("observetest",
                 PersistTo.MASTER));
-    assert deleteOp.get()
-            : "Key was not deleted on master : "
-            + deleteOp.getStatus().getMessage();
+    assertTrue("Key was not deleted on master: "
+      + deleteOp.getStatus().getMessage(), deleteOp.get());
+
     OperationFuture<Boolean> addOp =
             (((CouchbaseClient)client).add("observetest", 0, "value",
                 PersistTo.MASTER, ReplicateTo.ZERO));
-    assert addOp.get()
-            : "Key add was not persisted to master : "
-            + addOp.getStatus().getMessage();
+    assertTrue("Key add was not persisted to master : "
+      + addOp.getStatus().getMessage(), addOp.get());
+
+    // Don't run this test when only one server is in the cluster, as it will
+    // fail. Those tests can be found below.
+    if(client.getAvailableServers().size() < 2) {
+      return;
+    }
 
     OperationFuture<Boolean> noPersistOp =
             (((CouchbaseClient)client).add("nopersisttest", 0, "value",
               ReplicateTo.ONE));
-    assert noPersistOp.get()
-            : "Key add was not correctly replicated: "
-            + noPersistOp.getStatus().getMessage();
+    assertTrue("Key add was not correctly replicated: "
+      + noPersistOp.getStatus().getMessage(), noPersistOp.get());
   }
 
   /**
@@ -408,40 +413,43 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   /**
-   * Tests observe and persist with less than minimum nodes.
+   * Tests observe and persist to more nodes than configured.
+   *
    * @pre Call set operations on the client object
-   * with persist nodes as 4.
-   * @post Asserts true.
+   * with persist nodes more than the server size.
+   * @post Asserts false.
    *
    * @throws Exception
    */
-  public void testObservePersistWithTooFewNodes() throws Exception {
+  public void testPersistToMoreThanConf() throws Exception {
     CouchbaseClient cb = (CouchbaseClient) client;
+    assumeTrue(client.getAvailableServers().size() <= 3);
+
     OperationFuture<Boolean> invalid = cb.set("something", 0,
       "to_store", PersistTo.FOUR);
     assertFalse(invalid.get());
-    String expected = "Currently, there are less nodes in the cluster than "
-      + "required to satisfy the persistence constraint.";
-    assertEquals(expected, invalid.getStatus().getMessage());
+    assertTrue(invalid.getStatus().getMessage().matches(
+      "Requested persistence to 4 node\\(s\\), but only \\d are available\\."));
   }
 
   /**
-   * Tests observe and replicate with less than minimum nodes.
+   * Tests observe and replicate to more nodes than configured.
    *
    * @pre Call set operations on the client object
-   * with replicate nodes as 3.
-   * @post Asserts true.
+   * with replicate nodes more than the server size.
+   * @post Asserts false.
    *
    * @throws Exception
    */
-  public void testObserveReplicateWithTooFewNodes() throws Exception {
+  public void testReplicateToMoreThanConf() throws Exception {
     CouchbaseClient cb = (CouchbaseClient) client;
+    assumeTrue(client.getAvailableServers().size() <= 3);
+
     OperationFuture<Boolean> invalid = cb.set("something", 0,
       "to_store", ReplicateTo.THREE);
     assertFalse(invalid.get());
-    String expected = "Currently, there are less nodes in the cluster than "
-      + "required to satisfy the replication constraint.";
-    assertEquals(expected, invalid.getStatus().getMessage());
+    assertTrue(invalid.getStatus().getMessage().matches(
+      "Requested replication to 3 node\\(s\\), but only \\d are available\\."));
   }
 
   /**
@@ -478,85 +486,6 @@ public class CouchbaseClientTest extends BinaryClientTest {
     String expected = "OK";
     assertEquals(expected, success.getStatus().getMessage());
     assertNotNull(cb.get("something"));
-  }
-
-  /**
-   * Tests observe and persist to more nodes than configured.
-   *
-   * @pre Call set operations on the client object
-   * with persist nodes more than the server size.
-   * @post Asserts false.
-   *
-   * @throws Exception
-   */
-  public void testPersistToMoreThanConf() throws Exception {
-    CouchbaseClient cb = (CouchbaseClient) client;
-    int size = client.getAvailableServers().size();
-    OperationFuture<Boolean> future = null;
-    switch(size){
-    case 0:
-      future = cb.set("something", 0,
-        "to_store", PersistTo.ONE);
-      assertFalse(future.get());
-      break;
-    case 1:
-      future = cb.set("something", 0,
-        "to_store", PersistTo.TWO);
-      assertFalse(future.get());
-      break;
-    case 2:
-      future = cb.set("something", 0,
-        "to_store", PersistTo.THREE);
-      assertFalse(future.get());
-      break;
-    case 3:
-      future = cb.set("something", 0,
-        "to_store", PersistTo.FOUR);
-      assertFalse(future.get());
-      break;
-    default:
-      break;
-    }
-    String expected = "Currently, there are less nodes in the cluster than "
-      + "required to satisfy the persistence constraint.";
-    assertEquals(expected, future.getStatus().getMessage());
-  }
-
-  /**
-   * Tests observe and replicate to more nodes than configured.
-   *
-   * @pre Call set operations on the client object
-   * with replicate nodes more than the server size.
-   * @post Asserts false.
-   *
-   * @throws Exception
-   */
-  public void testReplicateToMoreThanConf() throws Exception {
-    CouchbaseClient cb = (CouchbaseClient) client;
-    int size = client.getAvailableServers().size();
-    OperationFuture<Boolean> future = null;
-    switch(size){
-    case 0:
-      future = cb.set("something", 0,
-        "to_store", ReplicateTo.ONE);
-      assertFalse(future.get());
-      break;
-    case 1:
-      future = cb.set("something", 0,
-        "to_store", ReplicateTo.TWO);
-      assertFalse(future.get());
-      break;
-    case 2:
-      future = cb.set("something", 0,
-        "to_store", ReplicateTo.THREE);
-      assertFalse(future.get());
-      break;
-    default:
-      break;
-    }
-    String expected = "Currently, there are less nodes in the cluster than "
-      + "required to satisfy the replication constraint.";
-    assertEquals(expected, future.getStatus().getMessage());
   }
 
   /**

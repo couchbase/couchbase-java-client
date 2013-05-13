@@ -2106,9 +2106,8 @@ public class CouchbaseClient extends MemcachedClient
       int vBucketIndex = locator.getVBucketIndex(key);
       int currentReplicaNum = cfg.getReplica(vBucketIndex, numReplica-1);
       if (currentReplicaNum < 0) {
-        throw new ObservedException("Currently, there is no replica available "
-          + "for the given replica index. This can be the case because of a "
-          + "failed over node which has not yet been rebalanced.");
+        throw new ObservedException("Currently, there is no replica node "
+          + "available for the given replication index (" + numReplica + ").");
       }
     }
 
@@ -2118,9 +2117,9 @@ public class CouchbaseClient extends MemcachedClient
 
     if (numReplica > replicaCount) {
       throw new ObservedException("Requested replication to " + numReplica
-          + " node(s), but only " + replicaCount + " are avaliable");
+          + " node(s), but only " + replicaCount + " are available.");
     } else if (numPersist > replicaCount + 1) {
-      throw new ObservedException("Requested persistence to " + numPersist
+      throw new ObservedException("Requested persistence to " + (numPersist + 1)
           + " node(s), but only " + (replicaCount + 1) + " are available.");
     }
   }
@@ -2151,8 +2150,6 @@ public class CouchbaseClient extends MemcachedClient
     if(replicate == null) {
       replicate = ReplicateTo.ZERO;
     }
-    ((CouchbaseConnectionFactory)connFactory).
-      checkConfigAgainstPersistence(persist, replicate);
 
     int persistReplica = persist.getValue() > 0 ? persist.getValue() - 1 : 0;
     int replicateTo = replicate.getValue();
