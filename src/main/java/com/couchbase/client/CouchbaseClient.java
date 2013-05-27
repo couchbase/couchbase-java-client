@@ -1116,6 +1116,11 @@ public class CouchbaseClient extends MemcachedClient
   public OperationFuture<Boolean> delete(String key,
           PersistTo req, ReplicateTo rep) {
 
+    if(mconn instanceof CouchbaseMemcachedConnection) {
+      throw new IllegalArgumentException("Durability options are not supported"
+        + " on memcached type buckets.");
+    }
+
     OperationFuture<Boolean> deleteOp = delete(key);
 
     if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
@@ -1247,6 +1252,11 @@ public class CouchbaseClient extends MemcachedClient
    */
   public OperationFuture<Boolean> set(String key, int exp,
           Object value, PersistTo req, ReplicateTo rep) {
+
+    if(mconn instanceof CouchbaseMemcachedConnection) {
+      throw new IllegalArgumentException("Durability options are not supported"
+        + " on memcached type buckets.");
+    }
 
     OperationFuture<Boolean> setOp = set(key, exp, value);
 
@@ -1470,6 +1480,11 @@ public class CouchbaseClient extends MemcachedClient
   public OperationFuture<Boolean> add(String key, int exp,
           Object value, PersistTo req, ReplicateTo rep) {
 
+    if(mconn instanceof CouchbaseMemcachedConnection) {
+      throw new IllegalArgumentException("Durability options are not supported"
+        + " on memcached type buckets.");
+    }
+
     OperationFuture<Boolean> addOp = add(key, exp, value);
 
     if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
@@ -1692,6 +1707,11 @@ public class CouchbaseClient extends MemcachedClient
   public OperationFuture<Boolean> replace(String key, int exp,
           Object value, PersistTo req, ReplicateTo rep) {
 
+    if(mconn instanceof CouchbaseMemcachedConnection) {
+      throw new IllegalArgumentException("Durability options are not supported"
+        + " on memcached type buckets.");
+    }
+
     OperationFuture<Boolean> replaceOp = replace(key, exp, value);
 
     if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
@@ -1895,6 +1915,11 @@ public class CouchbaseClient extends MemcachedClient
    */
   public CASResponse cas(String key, long cas,
           Object value, PersistTo req, ReplicateTo rep) {
+
+    if(mconn instanceof CouchbaseMemcachedConnection) {
+      throw new IllegalArgumentException("Durability options are not supported"
+        + " on memcached type buckets.");
+    }
 
     OperationFuture<CASResponse> casOp = asyncCAS(key, cas, value);
     CASResponse casr = null;
