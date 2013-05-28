@@ -234,32 +234,68 @@ public class ClusterManager extends SpyObject {
   private  void createBucket(BucketType type, String name,
       int memorySizeMB, AuthType authType, int replicas, int port,
       String authpassword, boolean flushEnabled) {
-    BasicHttpEntityEnclosingRequest request =
+
+      List<String> buckets = listBuckets();
+      if(buckets.contains(name)){
+        throw new RuntimeException("Bucket with given name already exists");
+      } else {
+      BasicHttpEntityEnclosingRequest request =
         new BasicHttpEntityEnclosingRequest("POST", "/pools/default/buckets");
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("name=").append(name);
-    sb.append("&ramQuotaMB=").append(memorySizeMB);
-    sb.append("&authType=").append(authType.getAuthType());
-    sb.append("&replicaNumber=").append(replicas);
-    sb.append("&bucketType=").append(type.getBucketType());
-    sb.append("&proxyPort=").append(port);
-    if (authType == AuthType.SASL) {
-      sb.append("&saslPassword=").append(authpassword);
+      StringBuilder sb = new StringBuilder();
+      sb.append("name=").append(name);
+      sb.append("&ramQuotaMB=").append(memorySizeMB);
+      sb.append("&authType=").append(authType.getAuthType());
+      sb.append("&replicaNumber=").append(replicas);
+      sb.append("&bucketType=").append(type.getBucketType());
+      sb.append("&proxyPort=").append(port);
+      if (authType == AuthType.SASL) {
+        sb.append("&saslPassword=").append(authpassword);
+      }
+      if(flushEnabled) {
+        sb.append("&flushEnabled=1");
+      }
+
+      try {
+        request.setEntity(new StringEntity(sb.toString()));
+        System.out.println(request.toString());
+      } catch (UnsupportedEncodingException e) {
+        getLogger().error("Error creating request. Bad arguments");
+        throw new RuntimeException(e);
+      }
+
+      checkError(202, sendRequest(request));
     }
-    if(flushEnabled) {
-      sb.append("&flushEnabled=1");
-    }
+  }
+
+  public void updateBucket(String name, int memorySizeMB,
+    AuthType authType, int replicas, int port,
+    String authpassword, boolean flushEnabled) {
 
     try {
+      BasicHttpEntityEnclosingRequest request =
+      new BasicHttpEntityEnclosingRequest("POST", "/pools/default/buckets/"+name);
+
+      StringBuilder sb = new StringBuilder();
+      sb.append("&ramQuotaMB=").append(memorySizeMB);
+      sb.append("&authType=").append(authType.getAuthType());
+      sb.append("&replicaNumber=").append(replicas);
+      sb.append("&proxyPort=").append(port);
+      if (authType == AuthType.SASL) {
+        sb.append("&saslPassword=").append(authpassword);
+      }
+      if(flushEnabled) {
+        sb.append("&flushEnabled=1");
+      }
+
       request.setEntity(new StringEntity(sb.toString()));
+      checkError(200, sendRequest(request));
     } catch (UnsupportedEncodingException e) {
       getLogger().error("Error creating request. Bad arguments");
       throw new RuntimeException(e);
     }
-
-    checkError(202, sendRequest(request));
   }
+
 
   private HttpResult sendRequest(HttpRequest request) {
     HttpParams params = new SyncBasicHttpParams();

@@ -22,6 +22,7 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.clustermanager.AuthType;
 import com.couchbase.client.clustermanager.BucketType;
 import java.net.URI;
 import java.util.LinkedList;
@@ -38,6 +39,7 @@ import org.apache.http.HttpException;
  */
 public class ClusterManagerTest extends TestCase {
 
+  private static final String BUCKET = "bucket1";
   private ClusterManager manager;
 
   /**
@@ -164,14 +166,14 @@ public class ClusterManagerTest extends TestCase {
    */
   public void testGetBuckets() throws Exception {
     assertEquals(manager.listBuckets().size(), 0);
-    manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, 0,
+    manager.createNamedBucket(BucketType.COUCHBASE, BUCKET, 100, 0,
         "password", false);
     manager.createNamedBucket(BucketType.COUCHBASE, "bucket2", 100, 0,
         "password", false);
     manager.createNamedBucket(BucketType.COUCHBASE, "bucket3", 100, 0,
         "password", false);
     List<String> buckets = manager.listBuckets();
-    assertTrue(buckets.contains("bucket1"));
+    assertTrue(buckets.contains(BUCKET));
     assertTrue(buckets.contains("bucket2"));
     assertTrue(buckets.contains("bucket3"));
     assertEquals(manager.listBuckets().size(), 3);
@@ -187,7 +189,7 @@ public class ClusterManagerTest extends TestCase {
    */
   public void testCreateBucketQuotaTooSmall() {
     try {
-      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 25, 0,
+      manager.createNamedBucket(BucketType.COUCHBASE, BUCKET, 25, 0,
           "password", false);
       fail("Bucket quota too small, but bucket was still created");
     } catch (RuntimeException e) {
@@ -207,7 +209,7 @@ public class ClusterManagerTest extends TestCase {
    */
   public void testCreateBucketQuotaTooBig() {
     try {
-      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100000, 0,
+      manager.createNamedBucket(BucketType.COUCHBASE, BUCKET, 100000, 0,
           "password", false);
       fail("Bucket quota too large, but bucket was still created");
     } catch (RuntimeException e) {
@@ -229,7 +231,7 @@ public class ClusterManagerTest extends TestCase {
    */
   public void testCreateBucketTooManyReplicas() {
     try {
-      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, 4,
+      manager.createNamedBucket(BucketType.COUCHBASE, BUCKET, 100, 4,
           "password", false);
       fail("Replica number too large, but bucket was still created");
     } catch (RuntimeException e) {
@@ -252,7 +254,7 @@ public class ClusterManagerTest extends TestCase {
    */
   public void testCreateBucketTooFewReplicas() {
     try {
-      manager.createNamedBucket(BucketType.COUCHBASE, "bucket1", 100, -1,
+      manager.createNamedBucket(BucketType.COUCHBASE, BUCKET, 100, -1,
           "password", false);
       fail("Replica number too small, but bucket was still created");
     } catch (RuntimeException e) {
@@ -386,4 +388,73 @@ public class ClusterManagerTest extends TestCase {
     Thread.sleep(1000);
     manager.deleteBucket("default");
   }
+
+  /**
+   * Update parameters of an existing bucket.
+   *
+   * @pre SASL bucket is created.
+   * @post The bucket is updated with new password.
+   * @throws Exception
+   */
+  public void testUpdateBucketPswd() throws Exception {
+    manager.createNamedBucket(BucketType.COUCHBASE,BUCKET, 100, 0, "", true);
+    Thread.sleep(1000);
+    manager.updateBucket(BUCKET, 100, AuthType.SASL, 0, 11212, "password", true);
+  }
+
+  /**
+   * Update parameters of an existing bucket.
+   *
+   * @pre SASL bucket is created.
+   * @post The bucket is updated with new ram size.
+   * @throws Exception
+   */
+  public void testUpdateBucketRAM() throws Exception {
+    manager.createNamedBucket(BucketType.COUCHBASE,BUCKET, 100, 0, "", true);
+    Thread.sleep(1000);
+    manager.updateBucket(BUCKET, 200, AuthType.SASL, 0, 11212, "", true);
+  }
+
+  /**
+   * Update parameters of an existing bucket.
+   *
+   * @pre SASL bucket is created.
+   * @post The bucket is updated with new auth type.
+   * @throws Exception
+   */
+  public void testUpdateBucketAuth() throws Exception {
+    manager.createNamedBucket(BucketType.COUCHBASE,BUCKET, 100, 0, "", true);
+    Thread.sleep(1000);
+    manager.updateBucket(BUCKET, 100, AuthType.NONE, 0, 11212, "", true);
+  }
+
+  /**
+   * Update parameters of an existing bucket.
+   *
+   * @pre Port bucket is created.
+   * @post The bucket is updated to SASL auth type.
+   * @throws Exception
+   */
+  public void testUpdateBucketPort() throws Exception {
+    manager.createPortBucket(BucketType.COUCHBASE,BUCKET, 100, 0, 8090, true);
+    Thread.sleep(1000);
+    manager.updateBucket(BUCKET, 100, AuthType.SASL, 0, 11212, "", true);
+  }
+
+  /**
+   * Update parameters of an existing bucket.
+   *
+   * @pre Default bucket is created.
+   * @post The bucket is updated using BucketTool.
+   * The auth type does not get updated as it is a
+   * default bucket. But the RAM gets updated.
+   * @throws Exception
+   */
+  public void testUpdateBucket() throws Exception {
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0, true);
+    Thread.sleep(1000);
+    bucketTool.updateBucket("default", AuthType.SASL, 456, 1, 11212, "", true);
+  }
+
 }
