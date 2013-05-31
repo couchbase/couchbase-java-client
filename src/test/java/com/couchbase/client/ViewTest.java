@@ -1096,6 +1096,14 @@ public class ViewTest {
   }
 
   /**
+   * Test invalid view on valid design doc.
+   */
+  @Test(expected=InvalidViewException.class)
+  public void testInvalidViewOnValidDesignDoc() {
+    View view = client.getView(DESIGN_DOC_W_REDUCE, "invalidViewName");
+  }
+
+  /**
    * This test tries to retrieve the design document
    * with an invalid name.
    *

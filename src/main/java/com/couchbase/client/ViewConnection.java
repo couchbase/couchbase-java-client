@@ -135,7 +135,7 @@ public class ViewConnection extends SpyObject implements
 
       AsyncNHttpClientHandler protocolHandler =
           new AsyncNHttpClientHandler(httpproc,
-              new MyHttpRequestExecutionHandler(),
+              new MyHttpRequestExecutionHandler(this),
               new DefaultConnectionReuseStrategy(),
               new DirectByteBufferAllocator(), params);
       protocolHandler.setEventListener(new EventLogger());

@@ -32,10 +32,13 @@ import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import net.spy.memcached.compat.SpyObject;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.nio.NHttpClientConnection;
 import org.apache.http.nio.NHttpConnection;
 import org.apache.http.nio.entity.BufferingNHttpEntity;
@@ -45,6 +48,7 @@ import org.apache.http.nio.protocol.NHttpRequestExecutionHandler;
 import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.nio.util.HeapByteBufferAllocator;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Establishes a HTTP connection to a single Couchbase node.
@@ -167,11 +171,14 @@ public class ViewNode extends SpyObject {
     return shuttingDown;
   }
 
-  static class MyHttpRequestExecutionHandler implements
-      NHttpRequestExecutionHandler {
+  static class MyHttpRequestExecutionHandler extends SpyObject
+    implements NHttpRequestExecutionHandler  {
 
-    public MyHttpRequestExecutionHandler() {
+    private final ViewConnection vconn;
+
+    public MyHttpRequestExecutionHandler(ViewConnection vconn) {
       super();
+      this.vconn = vconn;
     }
 
     public void initalizeContext(final HttpContext context,
@@ -199,10 +206,85 @@ public class ViewNode extends SpyObject {
       RequestHandle handle =
           (RequestHandle) context.removeAttribute("request-handle");
       HttpOperation op = (HttpOperation) context.removeAttribute("operation");
-      if (handle != null) {
-        handle.completed();
-        op.handleResponse(response);
+
+      try {
+        response.setEntity(new BufferedHttpEntity(response.getEntity()));
+      } catch(IOException ex) {
+        throw new RuntimeException("Could not convert HttpEntity content.");
       }
+
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (handle != null) {
+        boolean shouldRetry = shouldRetry(statusCode, response);
+        if(shouldRetry) {
+          if(!op.isTimedOut() && !op.isCancelled()) {
+            getLogger().info("Retrying HTTP operation Request: "
+              + op.getRequest().getRequestLine() + ", Response: "
+              + response.getStatusLine());
+            vconn.addOp(op);
+          }
+        } else {
+          op.handleResponse(response);
+        }
+        handle.completed();
+      }
+    }
+
+    private boolean shouldRetry(int statusCode, HttpResponse response) {
+      switch(statusCode) {
+        case 200:
+          return false;
+        case 404:
+          return analyse404Response(response);
+        case 500:
+          return analyse500Response(response);
+        case 300:
+        case 301:
+        case 302:
+        case 303:
+        case 307:
+        case 401:
+        case 408:
+        case 409:
+        case 412:
+        case 416:
+        case 417:
+        case 501:
+        case 502:
+        case 503:
+        case 504:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    private boolean analyse404Response(HttpResponse response) {
+      try {
+        String body = EntityUtils.toString(response.getEntity());
+        // Indicates a Not Found Design Document
+        if(body.contains("not_found")
+          && (body.contains("missing") || body.contains("deleted"))) {
+          return false;
+        }
+      } catch(IOException ex) {
+        return false;
+      }
+      return true;
+    }
+
+    private boolean analyse500Response(HttpResponse response) {
+      try {
+        String body = EntityUtils.toString(response.getEntity());
+        // Indicates a Not Found Design Document
+        if(body.contains("error")
+          && body.contains(("{not_found, missing_named_view}"))) {
+          return false;
+        }
+      } catch(IOException ex) {
+        return false;
+      }
+      return true;
     }
 
     @Override
