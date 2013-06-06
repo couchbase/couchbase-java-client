@@ -66,9 +66,9 @@ SOFTWARE.
         conf="common->master" />
     <dependency org="junit-addons" name="junit-addons"
         rev="${junit-addons.version}" conf="common->master" />
-    <dependency org="spy" name="spymemcached"
+    <dependency org="net.spy" name="spymemcached"
         rev="${spymemcached.version}" conf="common->default"/>
-    <dependency org="spy" name="spymemcached-test"
+    <dependency org="net.spy" name="spymemcached-test"
         rev="${spymemcached-test.version}" conf="common->default" />
     <dependency org="org.apache.httpcomponents" name="httpcore"
         rev="${httpcore.version}" conf="common->master"/>

@@ -53,7 +53,7 @@
     <dependency org="org.easymock" name="easymock" rev="${easymock.version}" conf="default" />
     <dependency org="org.easymock" name="easymockclassextension" rev="${easymock-entension.version}" conf="default" />
     <dependency org="junit-addons" name="junit-addons" rev="${junit-addons.version}" conf="default" />
-    <dependency org="spy" name="spymemcached-test" rev="${spymemcached-test.version}" conf="default" />
+    <dependency org="net.spy" name="spymemcached-test" rev="${spymemcached-test.version}" conf="default" />
     <dependency org="org.mockito" name="mockito-all" rev="${mockito.version}" conf="default" />
   </dependencies>
 </ivy-module>
