@@ -252,6 +252,13 @@ public class ConfigurationProviderHTTP extends SpyObject implements
               this.buckets.put(bucketEntry.getKey(), bucketEntry.getValue());
             }
           }
+
+          if (this.buckets.get(bucketToFind) == null) {
+            getLogger().warn("Bucket found, but has no bucket "
+              + "configuration attached...skipping");
+            continue;
+          }
+
           this.loadedBaseUri = baseUri;
           return;
         }
@@ -264,9 +271,9 @@ public class ConfigurationProviderHTTP extends SpyObject implements
           + " ...skipping", e);
         continue;
       }
-      throw new ConfigurationException("Configuration for bucket "
-          + bucketToFind + " was not found.");
     }
+    throw new ConfigurationException("Configuration for bucket \""
+      + bucketToFind + "\" was not found in server list (" + baseList + ").");
   }
 
   public List<InetSocketAddress> getServerList(final String bucketname) {
