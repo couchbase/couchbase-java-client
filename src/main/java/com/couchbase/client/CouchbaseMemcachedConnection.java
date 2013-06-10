@@ -67,6 +67,12 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
 
 
   public void reconfigure(Bucket bucket) {
+    if(reconfiguring) {
+      getLogger().debug("Suppressing attempt to reconfigure again while "
+        + "reconfiguring.");
+      return;
+    }
+
     reconfiguring = true;
     try {
       // get a new collection of addresses from the received config
