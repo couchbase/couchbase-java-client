@@ -33,6 +33,7 @@ import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedSelectorException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.List;
 
@@ -158,6 +159,8 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
         } catch (ClosedSelectorException e) {
           logRunException(e);
         } catch (IllegalStateException e) {
+          logRunException(e);
+        } catch (ConcurrentModificationException e) {
           logRunException(e);
         }
       }
