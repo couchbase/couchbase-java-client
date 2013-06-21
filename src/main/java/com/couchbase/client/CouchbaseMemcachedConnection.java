@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import net.spy.memcached.ConnectionObserver;
@@ -42,6 +43,7 @@ import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.OperationFactory;
+import net.spy.memcached.ops.Operation;
 
 /**
  * Couchbase implementation of CouchbaseConnection.
@@ -58,14 +60,17 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
   Reconfigurable {
 
   protected volatile boolean reconfiguring = false;
+  private final CouchbaseConnectionFactory cf;
 
   public CouchbaseMemcachedConnection(int bufSize, CouchbaseConnectionFactory f,
       List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
       FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
+    this.cf = f;
   }
 
 
+  @Override
   public void reconfigure(Bucket bucket) {
     if(reconfiguring) {
       getLogger().debug("Suppressing attempt to reconfigure again while "
@@ -146,6 +151,54 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       getLogger().error("Connection reconfiguration failed", e);
     } finally {
       reconfiguring = false;
+    }
+  }
+
+  @Override
+  protected void addOperation(final String key, final Operation o) {
+    MemcachedNode placeIn = null;
+    MemcachedNode primary = locator.getPrimary(key);
+
+    if (primary == null) {
+      o.cancel();
+      cf.checkConfigUpdate();
+      return;
+    }
+
+    if(!primary.isActive()) {
+      cf.checkConfigUpdate();
+    }
+
+    if (primary.isActive() || failureMode == FailureMode.Retry) {
+      placeIn = primary;
+    } else if (failureMode == FailureMode.Cancel) {
+      o.cancel();
+    } else {
+      // Look for another node in sequence that is ready.
+      for (Iterator<MemcachedNode> i = locator.getSequence(key); placeIn == null
+          && i.hasNext();) {
+        MemcachedNode n = i.next();
+        if (n.isActive()) {
+          placeIn = n;
+        }
+      }
+
+      // If we didn't find an active node, queue it in the primary node
+      // and wait for it to come back online.
+      if (placeIn == null) {
+        placeIn = primary;
+        this.getLogger().warn(
+            "Could not redistribute "
+                + "to another node, retrying primary node for %s.", key);
+      }
+    }
+
+    assert o.isCancelled() || placeIn != null : "No node found for key " + key;
+    if (placeIn != null) {
+      addOperation(placeIn, o);
+    } else {
+      assert o.isCancelled() : "No node found for " + key
+          + " (and not immediately cancelled)";
     }
   }
 
