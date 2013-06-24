@@ -31,7 +31,7 @@ import org.codehaus.jettison.json.JSONObject;
  * The DesignDocument represents a design document stored and retrieved from a
  * Couchbase cluster.
  */
-public class DesignDocument<T> {
+public class DesignDocument {
 
   /**
    * The name of the design document.
