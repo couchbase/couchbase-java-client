@@ -42,6 +42,7 @@ import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
 
 import org.junit.Ignore;
 import static org.junit.Assume.assumeTrue;
@@ -50,6 +51,9 @@ import static org.junit.Assume.assumeTrue;
  * A CouchbaseClientTest.
  */
 public class CouchbaseClientTest extends BinaryClientTest {
+
+  // Constant for empty string
+  private static final String EMPTY = "";
 
   /**
    * Initialises the client, deletes all the buckets
@@ -67,7 +71,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
     BucketTool.FunctionCallback callback = new FunctionCallback() {
       @Override
       public void callback() throws Exception {
-        initClient(new CouchbaseConnectionFactory(uris, "default", ""));
+        initClient(new CouchbaseConnectionFactory(uris, "default", EMPTY));
       }
 
       @Override
@@ -133,6 +137,67 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   /**
+   * Attempt to add a key which already exists.
+   * @pre Here, first the key is set and then added.
+   * @post Upon calling add, the transaction doesn't
+   * succeed.
+   *
+   * @throws Exception
+   */
+  public void testAddKeyExists() throws Exception {
+    assertNull(client.get("test1"));
+    assertFalse(client.asyncGet("test1").getStatus().isSuccess());
+    assertTrue(client.set("test1", 5, "test1value").get());
+    assertEquals("test1value", client.get("test1"));
+    assertFalse(client.add("test1", 5, "ignoredvalue").get());
+    assertFalse(client.add("test1", 5, "ignoredvalue").getStatus().isSuccess());
+    // Should return the original value
+    assertEquals("test1value", client.get("test1"));
+  }
+
+  /**
+   * Attempt to replace a key which doesn't exist.
+   * @post The transaction doesn't succeed and returns
+   * 'Not Found'
+   *
+   * @throws Exception
+   */
+  public void testReplaceKeyNoExist() throws Exception {
+    OperationFuture<Boolean> replace = client.replace("t1", 5, "replacevalue");
+    OperationStatus status = replace.getStatus();
+    assertFalse(status.isSuccess());
+    assertEquals("Not found", status.getMessage());
+  }
+
+  /**
+   * Attempt to set a key which is blank.
+   * @post The transaction doesn't succeed
+   * and returns an error that the key
+   * must not be empty.
+   *
+   * @throws Exception
+   */
+  public void testSetInvalidKeyBlank() {
+    try {
+      client.set(EMPTY,5,EMPTY);
+    } catch (IllegalArgumentException e) {
+      assertEquals("Key must contain at least one character.", e.getMessage());
+    }
+  }
+
+  /**
+   * Attempt to set a value which is blank.
+   * @pre The blank value is successfully set.
+   * @post The blank value is retrieved successfully.
+   *
+   * @throws Exception
+   */
+  public void testGetValBlank() throws Exception {
+    assertTrue(client.set("blankValue",0,EMPTY).get());
+    assertEquals(EMPTY, client.get("blankValue"));
+  }
+
+  /**
    * Check the graceful shutdown of the client.
    *
    * @pre Once the client shuts down, wait for 5 seconds
@@ -154,7 +219,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
     // Initialize without recreating a bucket
     initClient(new CouchbaseConnectionFactory(
           Arrays.asList(URI.create("http://"
-          + TestConfig.IPV4_ADDR + ":8091/pools")), "default", ""));
+          + TestConfig.IPV4_ADDR + ":8091/pools")), "default", EMPTY));
     Collection<String> keys = new ArrayList<String>();
     for (int i = 0; i < 1000; i++) {
       keys.add("t" + i);
@@ -533,7 +598,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
   protected void syncGetTimeoutsInitClient() throws Exception {
     initClient(new CouchbaseConnectionFactory(Arrays.asList(URI
         .create("http://" + TestConfig.IPV4_ADDR + ":8091/pools")),
-        "default", "") {
+        "default", EMPTY) {
       @Override
       public long getOperationTimeout() {
         return 2;
