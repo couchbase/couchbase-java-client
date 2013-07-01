@@ -2390,6 +2390,9 @@ public class CouchbaseClient extends MemcachedClient
    */
   @Override
   public OperationFuture<Boolean> flush(final int delay) {
+    if(((CouchbaseConnection)mconn).isShutDown()) {
+      throw new IllegalStateException("Flush can not be used after shutdown.");
+    }
 
     final CountDownLatch latch = new CountDownLatch(1);
     final FlushRunner flushRunner = new FlushRunner(latch);
