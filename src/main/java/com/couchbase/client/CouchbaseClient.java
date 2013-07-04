@@ -310,8 +310,9 @@ public class CouchbaseClient extends MemcachedClient
    *           flight
    * @throws ExecutionException if an error occurs during execution
    */
+  @Override
   public HttpFuture<View> asyncGetView(String designDocumentName,
-      final String viewName) {
+                                       final String viewName) {
     CouchbaseConnectionFactory factory =
       (CouchbaseConnectionFactory) connFactory;
 
@@ -367,8 +368,9 @@ public class CouchbaseClient extends MemcachedClient
    *           flight
    * @throws ExecutionException if an error occurs during execution
    */
+  @Override
   public HttpFuture<SpatialView> asyncGetSpatialView(String designDocumentName,
-      final String viewName) {
+                                                     final String viewName) {
     CouchbaseConnectionFactory factory =
       (CouchbaseConnectionFactory) connFactory;
     designDocumentName = MODE_PREFIX + designDocumentName;
@@ -415,8 +417,9 @@ public class CouchbaseClient extends MemcachedClient
    * @param designDocumentName the name of the design document.
    * @return a future containing a DesignDocument from the cluster.
    */
+  @Override
   public HttpFuture<DesignDocument> asyncGetDesignDocument(
-    String designDocumentName) {
+          String designDocumentName) {
     designDocumentName = MODE_PREFIX + designDocumentName;
     String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
     String uri = "/" + bucket + "/_design/" + designDocumentName;
@@ -470,6 +473,7 @@ public class CouchbaseClient extends MemcachedClient
    * @throws InvalidViewException if no design document or view was found.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public View getView(final String designDocumentName, final String viewName) {
     try {
       View view = asyncGetView(designDocumentName, viewName).get();
@@ -504,8 +508,9 @@ public class CouchbaseClient extends MemcachedClient
    * @throws InvalidViewException if no design document or view was found.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public SpatialView getSpatialView(final String designDocumentName,
-    final String viewName) {
+                                    final String viewName) {
     try {
       SpatialView view = asyncGetSpatialView(designDocumentName, viewName)
         .get();
@@ -533,6 +538,7 @@ public class CouchbaseClient extends MemcachedClient
    * @throws InvalidViewException if no design document or view was found.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public DesignDocument getDesignDocument(final String designDocumentName) {
     try {
       DesignDocument design = asyncGetDesignDocument(designDocumentName).get();
@@ -559,6 +565,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the result of the creation operation.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public Boolean createDesignDoc(final DesignDocument doc) {
     try {
       return asyncCreateDesignDoc(doc).get();
@@ -582,6 +589,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param value the full design document definition as a string.
    * @return a future containing the result of the creation operation.
    */
+  @Override
   public HttpFuture<Boolean> asyncCreateDesignDoc(String name, String value)
     throws UnsupportedEncodingException {
     getLogger().info("Creating Design Document:" + name);
@@ -620,6 +628,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param doc the design document to store.
    * @return a future containing the result of the creation operation.
    */
+  @Override
   public HttpFuture<Boolean> asyncCreateDesignDoc(final DesignDocument doc)
     throws UnsupportedEncodingException {
     return asyncCreateDesignDoc(doc.getName(), doc.toJson());
@@ -632,6 +641,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the result of the deletion operation.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public Boolean deleteDesignDoc(final String name) {
     try {
       return asyncDeleteDesignDoc(name).get();
@@ -654,6 +664,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param name the design document to delete.
    * @return a future containing the result of the deletion operation.
    */
+  @Override
   public HttpFuture<Boolean> asyncDeleteDesignDoc(final String name)
     throws UnsupportedEncodingException {
     getLogger().info("Deleting Design Document:" + name);
@@ -685,6 +696,7 @@ public class CouchbaseClient extends MemcachedClient
     return crv;
   }
 
+  @Override
   public HttpFuture<ViewResponse> asyncQuery(AbstractView view, Query query) {
     if(view.hasReduce() && !query.getArgs().containsKey("reduce")) {
       query.setReduce(true);
@@ -859,6 +871,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return a ViewResponseWithDocs containing the results of the query.
    * @throws CancellationException if operation was canceled.
    */
+  @Override
   public ViewResponse query(AbstractView view, Query query) {
     try {
       return asyncQuery(view, query).get();
@@ -885,6 +898,7 @@ public class CouchbaseClient extends MemcachedClient
    * @param docsPerPage the amount of documents per page.
    * @return A Paginator (iterator) to use for reading the results of the query.
    */
+  @Override
   public Paginator paginatedQuery(View view, Query query, int docsPerPage) {
     return new Paginator(this, view, query, docsPerPage);
   }
