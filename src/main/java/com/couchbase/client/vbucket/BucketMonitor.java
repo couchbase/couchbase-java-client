@@ -174,6 +174,10 @@ public class BucketMonitor extends Observable {
   }
 
   public void startMonitor() {
+    startMonitor(Long.getLong("cbclient.bucket.monitor.timeout",10000L));
+  }
+
+  public void startMonitor(long timeoutMs) {
     if (channel != null) {
       Logger.getLogger(BucketMonitor.class.getName()).log(Level.WARNING,
           "Bucket monitor is already started.");
@@ -198,7 +202,11 @@ public class BucketMonitor extends Observable {
     });
 
     try {
-      channelLatch.await();
+
+        if(!channelLatch.await(timeoutMs, TimeUnit.MILLISECONDS))
+            throw new ConnectionException("Timed out while waiting for streaming "
+                    + "connection to arrive.");
+
     } catch(InterruptedException ex) {
       throw new ConnectionException("Interrupted while waiting for streaming "
         + "connection to arrive.");
@@ -268,7 +276,7 @@ public class BucketMonitor extends Observable {
   /**
    * Update the config if it has changed and notify our observers.
    *
-   * @param bucketToMonitor the bucketToMonitor to set
+   * @param newBucket the bucketToMonitor to set
    */
   private void setBucket(Bucket newBucket) {
     if (this.bucket == null || !this.bucket.equals(newBucket)) {
