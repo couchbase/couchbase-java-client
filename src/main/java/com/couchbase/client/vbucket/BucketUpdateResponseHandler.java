@@ -110,13 +110,16 @@ public class BucketUpdateResponseHandler extends SimpleChannelUpstreamHandler {
     if (response.getStatus().getCode() == 200 && response.isChunked()) {
       readingChunks = true;
       finerLog("CHUNKED CONTENT {");
-    } else {
+    } else if(response.getStatus().getCode() == 200) {
       ChannelBuffer content = response.getContent();
       if (content.readable()) {
         finerLog("CONTENT {");
         finerLog(content.toString("UTF-8"));
         finerLog("} END OF CONTENT");
       }
+    } else {
+      throw new ConnectionException("Could not retrieve configuration chunk. "
+        + "Response Code is: " + response.getStatus());
     }
   }
 

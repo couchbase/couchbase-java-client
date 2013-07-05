@@ -34,7 +34,7 @@ import net.spy.memcached.TestConfig;
  * A BucketMonitorTest.
  */
 public class BucketMonitorTest extends TestCase {
-  private static final String USERNAME = "";
+  private static final String USERNAME = "default";
   private static final String PASSWORD = "";
   private static final String STREAMING_URI = "http://" + TestConfig.IPV4_ADDR
       + ":8091/pools/default/bucketsStreaming/default";
