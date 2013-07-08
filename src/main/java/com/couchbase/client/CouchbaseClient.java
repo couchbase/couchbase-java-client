@@ -86,7 +86,6 @@ import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
-import net.spy.memcached.ops.GetOperation;
 import net.spy.memcached.ops.GetlOperation;
 import net.spy.memcached.ops.ObserveOperation;
 import net.spy.memcached.ops.Operation;
@@ -1060,9 +1059,10 @@ public class CouchbaseClient extends MemcachedClient
    *         argument defined.
    */
   @Override
-  public <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key, final Transcoder<T> tc) {
+  public <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key,
+    final Transcoder<T> tc) {
     int replicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
-    if(replicaCount == 0) {
+    if (replicaCount == 0) {
       throw new RuntimeException("Currently, there is no replica available for"
         + " the given key (\"" + key + "\").");
     }
@@ -1071,23 +1071,24 @@ public class CouchbaseClient extends MemcachedClient
     for(int index=0; index < replicaCount; index++) {
       final CountDownLatch latch = new CountDownLatch(1);
       final GetFuture<T> rv = new GetFuture<T>(latch, operationTimeout, key);
-      Operation op = opFact.replicaGet(key, index, new ReplicaGetOperation.Callback() {
-        private Future<T> val = null;
+      Operation op = opFact.replicaGet(key, index,
+        new ReplicaGetOperation.Callback() {
+          private Future<T> val = null;
 
-        public void receivedStatus(OperationStatus status) {
-          rv.set(val, status);
-        }
+          public void receivedStatus(OperationStatus status) {
+            rv.set(val, status);
+          }
 
-        public void gotData(String k, int flags, byte[] data) {
-          assert key.equals(k) : "Wrong key returned";
-          val =
-              tcService.decode(tc, new CachedData(flags, data, tc.getMaxSize()));
-        }
+          public void gotData(String k, int flags, byte[] data) {
+            assert key.equals(k) : "Wrong key returned";
+            val = tcService.decode(tc, new CachedData(flags, data,
+              tc.getMaxSize()));
+          }
 
-        public void complete() {
-          latch.countDown();
-        }
-      });
+          public void complete() {
+            latch.countDown();
+          }
+        });
       rv.setOperation(op);
       mconn.enqueueOperation(key, op);
       futures.add(rv);
@@ -1316,38 +1317,38 @@ public class CouchbaseClient extends MemcachedClient
     return delete(key, PersistTo.ZERO, req);
   }
 
-   /**
-     * Set a value without any durability options with no TTL.
-     *
-     * To make sure that a value is stored the way you want it to in the
-     * cluster, you can use the PersistTo and ReplicateTo arguments. The
-     * operation will block until the desired state is satisfied or
-     * otherwise an exception is raised. There are many reasons why this could
-     * happen, the more frequent ones are as follows:
-     *
-     * - The given replication settings are invalid.
-     * - The operation could not be completed within the timeout.
-     * - Something goes wrong and a cluster failover is triggered.
-     *
-     * The client does not attempt to guarantee the given durability
-     * constraints, it just reports whether the operation has been completed
-     * or not. If it is not achieved, it is the responsibility of the
-     * application code using this API to re-retrieve the items to verify
-     * desired state, redo the operation or both.
-     *
-     * Note that even if an exception during the observation is raised,
-     * this doesn't mean that the operation has failed. A normal set()
-     * operation is initiated and after the OperationFuture has returned,
-     * the key itself is observed with the given durability options (watch
-     * out for Observed*Exceptions) in this case.
-     *
-     * @param key the key to store.
-     * @param value the value of the key.
-     * @return the future result of the set operation.
-     */
-    public OperationFuture<Boolean> set(String key,  Object value) {
-        return set(key, 0 ,value);
-    }
+  /**
+   * Set a value without any durability options with no TTL.
+   *
+   * To make sure that a value is stored the way you want it to in the
+   * cluster, you can use the PersistTo and ReplicateTo arguments. The
+   * operation will block until the desired state is satisfied or
+   * otherwise an exception is raised. There are many reasons why this could
+   * happen, the more frequent ones are as follows:
+   *
+   * - The given replication settings are invalid.
+   * - The operation could not be completed within the timeout.
+   * - Something goes wrong and a cluster failover is triggered.
+   *
+   * The client does not attempt to guarantee the given durability
+   * constraints, it just reports whether the operation has been completed
+   * or not. If it is not achieved, it is the responsibility of the
+   * application code using this API to re-retrieve the items to verify
+   * desired state, redo the operation or both.
+   *
+   * Note that even if an exception during the observation is raised,
+   * this doesn't mean that the operation has failed. A normal set()
+   * operation is initiated and after the OperationFuture has returned,
+   * the key itself is observed with the given durability options (watch
+   * out for Observed*Exceptions) in this case.
+   *
+   * @param key the key to store.
+   * @param value the value of the key.
+   * @return the future result of the set operation.
+   */
+  public OperationFuture<Boolean> set(String key,  Object value) {
+    return set(key, 0, value);
+  }
 
 
   /**
@@ -1462,9 +1463,10 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the set operation.
    */
-   public OperationFuture<Boolean> set(String key, Object value, PersistTo req, ReplicateTo rep) {
-       return set(key, 0, value, req, rep);
-   }
+  public OperationFuture<Boolean> set(String key, Object value, PersistTo req,
+    ReplicateTo rep) {
+    return set(key, 0, value, req, rep);
+  }
 
   /**
    * Set a value with durability options and no TTL.
@@ -1504,7 +1506,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the set operation.
    */
   public OperationFuture<Boolean> set(String key, int exp,
-          Object value, PersistTo req) {
+    Object value, PersistTo req) {
     return set(key, exp, value, req, ReplicateTo.ZERO);
   }
 
@@ -1550,7 +1552,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the set operation.
    */
   public OperationFuture<Boolean> set(String key, int exp,
-          Object value, ReplicateTo rep) {
+    Object value, ReplicateTo rep) {
     return set(key, exp, value, PersistTo.ZERO, rep);
   }
 
@@ -1573,9 +1575,10 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the set operation.
    */
-    public OperationFuture<Boolean> set(String key, Object value, ReplicateTo rep) {
-        return set(key, 0, value, rep);
-    }
+  public OperationFuture<Boolean> set(String key, Object value,
+    ReplicateTo rep) {
+    return set(key, 0, value, rep);
+  }
 
   /**
    * Add a value with durability options.
@@ -1612,7 +1615,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          Object value, PersistTo req, ReplicateTo rep) {
+    Object value, PersistTo req, ReplicateTo rep) {
 
     if(mconn instanceof CouchbaseMemcachedConnection) {
       throw new IllegalArgumentException("Durability options are not supported"
@@ -1689,9 +1692,10 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the add operation.
    */
-   public OperationFuture<Boolean> add(String key, Object value, PersistTo req, ReplicateTo rep) {
-      return this.add(key, 0, value, req, rep);
-   }
+  public OperationFuture<Boolean> add(String key, Object value, PersistTo req,
+    ReplicateTo rep) {
+    return this.add(key, 0, value, req, rep);
+  }
 
   /**
    * Add a value with durability options.
@@ -1709,7 +1713,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> replace(String key, Object value) {
-      return replace(key, 0, value);
+    return replace(key, 0, value);
   }
 
   /**
@@ -1731,7 +1735,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          Object value, PersistTo req) {
+    Object value, PersistTo req) {
     return add(key, exp, value, req, ReplicateTo.ZERO);
   }
 
@@ -1753,7 +1757,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, Object value, PersistTo req) {
-      return add(key, 0, value, req);
+    return add(key, 0, value, req);
   }
 
   /**
@@ -1777,7 +1781,7 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the add operation.
    */
   public OperationFuture<Boolean> add(String key, int exp,
-          Object value, ReplicateTo rep) {
+    Object value, ReplicateTo rep) {
     return add(key, exp, value, PersistTo.ZERO, rep);
   }
 
@@ -1800,9 +1804,10 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the add operation.
    */
-    public OperationFuture<Boolean> add(String key, Object value, ReplicateTo rep) {
-        return add(key, 0, value, rep);
-    }
+  public OperationFuture<Boolean> add(String key, Object value,
+    ReplicateTo rep) {
+    return add(key, 0, value, rep);
+  }
 
   /**
    * Replace a value with durability options.
@@ -1839,16 +1844,16 @@ public class CouchbaseClient extends MemcachedClient
    * @return the future result of the replace operation.
    */
   public OperationFuture<Boolean> replace(String key, int exp,
-          Object value, PersistTo req, ReplicateTo rep) {
+    Object value, PersistTo req, ReplicateTo rep) {
 
-    if(mconn instanceof CouchbaseMemcachedConnection) {
+    if (mconn instanceof CouchbaseMemcachedConnection) {
       throw new IllegalArgumentException("Durability options are not supported"
         + " on memcached type buckets.");
     }
 
     OperationFuture<Boolean> replaceOp = replace(key, exp, value);
 
-    if(req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+    if (req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
       return replaceOp;
     }
 
@@ -1917,8 +1922,9 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the replace operation.
    */
-  public OperationFuture<Boolean> replace(String key, Object value, PersistTo req, ReplicateTo rep) {
-      return replace(key, 0, value, req, rep);
+  public OperationFuture<Boolean> replace(String key, Object value,
+    PersistTo req, ReplicateTo rep) {
+    return replace(key, 0, value, req, rep);
   }
 
   /**
@@ -1961,8 +1967,9 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the replace operation.
    */
-  public OperationFuture<Boolean> replace(String key, Object value, PersistTo req) {
-      return this.replace(key, 0, value, req);
+  public OperationFuture<Boolean> replace(String key, Object value,
+    PersistTo req) {
+    return this.replace(key, 0, value, req);
   }
 
   /**
@@ -2009,8 +2016,9 @@ public class CouchbaseClient extends MemcachedClient
    *            returning.
    * @return the future result of the replace operation.
    */
-  public OperationFuture<Boolean> replace(String key, Object value, ReplicateTo rep) {
-      return replace(key, 0, value, rep);
+  public OperationFuture<Boolean> replace(String key, Object value,
+    ReplicateTo rep) {
+    return replace(key, 0, value, rep);
   }
 
   /**

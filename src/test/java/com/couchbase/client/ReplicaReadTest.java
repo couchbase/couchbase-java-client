@@ -23,14 +23,15 @@
 package com.couchbase.client;
 
 import com.couchbase.client.clustermanager.BucketType;
+import com.couchbase.client.internal.ReplicaGetFuture;
 import java.net.URI;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
+
+import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
-import com.couchbase.client.internal.ReplicaGetFuture;
-import java.util.Arrays;
-import net.spy.memcached.ConnectionFactory;
+
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

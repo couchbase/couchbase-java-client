@@ -119,7 +119,7 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
    * @throws RuntimeException when no replica is defined for the given key
    */
   public MemcachedNode getReplica(String key, int index) {
-     TotalConfig totConfig = fullConfig.get();
+    TotalConfig totConfig = fullConfig.get();
     Config config = totConfig.getConfig();
     Map<String, MemcachedNode> nodesMap = totConfig.getNodesMap();
     int vbucket = config.getVbucketByKey(key);

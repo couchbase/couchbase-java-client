@@ -179,7 +179,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   public void testSetInvalidKeyBlank() {
     try {
-      client.set(EMPTY,5,EMPTY);
+      client.set(EMPTY, 5, EMPTY);
     } catch (IllegalArgumentException e) {
       assertEquals("Key must contain at least one character.", e.getMessage());
     }
@@ -193,7 +193,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    * @throws Exception
    */
   public void testGetValBlank() throws Exception {
-    assertTrue(client.set("blankValue",0,EMPTY).get());
+    assertTrue(client.set("blankValue", 0, EMPTY).get());
     assertEquals(EMPTY, client.get("blankValue"));
   }
 

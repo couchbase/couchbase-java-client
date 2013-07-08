@@ -32,9 +32,7 @@ import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import net.spy.memcached.compat.SpyObject;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -232,30 +230,30 @@ public class ViewNode extends SpyObject {
 
     private boolean shouldRetry(int statusCode, HttpResponse response) {
       switch(statusCode) {
-        case 200:
-          return false;
-        case 404:
-          return analyse404Response(response);
-        case 500:
-          return analyse500Response(response);
-        case 300:
-        case 301:
-        case 302:
-        case 303:
-        case 307:
-        case 401:
-        case 408:
-        case 409:
-        case 412:
-        case 416:
-        case 417:
-        case 501:
-        case 502:
-        case 503:
-        case 504:
-          return true;
-        default:
-          return false;
+      case 200:
+        return false;
+      case 404:
+        return analyse404Response(response);
+      case 500:
+        return analyse500Response(response);
+      case 300:
+      case 301:
+      case 302:
+      case 303:
+      case 307:
+      case 401:
+      case 408:
+      case 409:
+      case 412:
+      case 416:
+      case 417:
+      case 501:
+      case 502:
+      case 503:
+      case 504:
+        return true;
+      default:
+        return false;
       }
     }
 

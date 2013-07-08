@@ -34,9 +34,9 @@ import net.spy.memcached.internal.GetFuture;
  */
 public class ReplicaGetFuture<T extends Object> implements Future<T> {
 
-  final long timeout;
-  final List<GetFuture<T>> futures;
-  boolean cancelled = false;
+  private final long timeout;
+  private final List<GetFuture<T>> futures;
+  private boolean cancelled = false;
 
   public ReplicaGetFuture(long timeout, List<GetFuture<T>> futures) {
     this.timeout = timeout;
@@ -54,10 +54,10 @@ public class ReplicaGetFuture<T extends Object> implements Future<T> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public T get(long timeout, TimeUnit unit) throws InterruptedException,
+  public T get(long userTimeout, TimeUnit unit) throws InterruptedException,
     ExecutionException, TimeoutException {
     long start = System.currentTimeMillis();
-    long timeoutMs =TimeUnit.MILLISECONDS.convert(timeout, unit);
+    long timeoutMs = TimeUnit.MILLISECONDS.convert(userTimeout, unit);
 
     while(System.currentTimeMillis() - start <= timeoutMs) {
       for(GetFuture future: futures) {
