@@ -115,25 +115,8 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   @Override
   public void testAvailableServers() {
-    // CouchbaseClient tracks hostname and ip address of servers need to
-    // make sure the available server list is 2 * (num servers)
-    try {
-      Thread.sleep(10); // Let the client warm up
-    } catch (InterruptedException e) {
-      fail("Interrupted while client was warming up");
-    }
-
-    StringBuilder availableServers = new StringBuilder();
-    for(SocketAddress sa : client.getAvailableServers()) {
-      if (availableServers.length() > 0) {
-        availableServers.append(";");
-      }
-      availableServers.append(sa.toString());
-    }
-
-    assert (client.getAvailableServers().size() % 2) ==  0 : "Num servers "
-      + client.getAvailableServers().size() + ". They are: "
-      + availableServers;
+    final Collection<SocketAddress> servers = client.getAvailableServers();
+    assertTrue("There are no servers available.", servers.size() > 0);
   }
 
   /**
