@@ -181,6 +181,21 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   /**
+   * Test whether the delete operation
+   * returns the CAS value.
+   * @pre The key is successfully set.
+   * @post The key is deleted and checked for CAS.
+   *
+   * @throws Exception
+   */
+  public void testDelReturnsCAS() throws Exception {
+    OperationFuture<Boolean> setOp = client.set("testDelReturnsCAS", 0, EMPTY);
+    assertTrue(setOp.isDone());
+    OperationFuture<Boolean> delOp = client.delete("testDelReturnsCAS");
+    assertTrue(delOp.getCas() > 0);
+  }
+
+  /**
    * Check the graceful shutdown of the client.
    *
    * @pre Once the client shuts down, wait for 5 seconds
@@ -399,6 +414,43 @@ public class CouchbaseClientTest extends BinaryClientTest {
   }
 
   /**
+   * Test observe with zero in both rep and persist.
+   *
+   * @pre No replication and persisting of key value pair for the
+   * add operations.
+   * @post Test succeeds to return an assert that the key was persisted
+   * to master or not. In case of the add operation it also returns
+   * whether the key has been replicated to other nodes.
+   *
+   * @throws Exception
+   */
+  public void testNoPersistRepObserve() throws Exception {
+    OperationFuture<Boolean> noPersistRep =
+      (((CouchbaseClient)client).add("testNoPersistRepObserve", 0, "value",
+      PersistTo.ZERO, ReplicateTo.ZERO));
+    assertTrue("Key not added and not persisted to master : "
+      + noPersistRep.getStatus().getMessage(), noPersistRep.get());
+  }
+
+  /**
+   * Test observe with stale CAS
+   *
+   * @pre Perform an add operation with cas1 and then set with cas2
+   * @post Append should not succeed if performed with cas1
+   *
+   * @throws Exception
+   */
+  public void testStaleCAS() throws Exception {
+    OperationFuture<Boolean> staleCasOp =
+      (((CouchbaseClient)client).add("testStaleCAS", 0, "value"));
+    long cas1 = staleCasOp.getCas();
+    client.set("testStaleCAS", 0, "value2").getCas();
+    assertFalse(client.append(cas1, "testStaleCAS", "")
+      .getStatus().isSuccess());
+    assertEquals((client.append(cas1, "testStaleCAS", "")
+      .getStatus().getMessage()),"Data exists for key");
+  }
+  /**
    * Get the key status from the client in the operation future object.
    *
    * @pre set a key value pair to db using the client. On the client object
@@ -556,6 +608,70 @@ public class CouchbaseClientTest extends BinaryClientTest {
                 PersistTo.MASTER));
     assert delOp.get();
     assertNotNull(delOp.getStatus().getMessage());
+  }
+
+  public void testIncrDecrZero() throws Exception {
+    String k = "testIncrDecrZero";
+    client.set(k, 0, "5");
+    assertEquals(5, client.incr(k, 0));
+    assertEquals(5, client.decr(k, 0));
+  }
+
+  public void testIncrDecrMax() throws Exception {
+    String k = "testIncrDecrMax";
+    client.set(k, 0, "5");
+    assertEquals(client.incr(k, Integer.MAX_VALUE),Integer.MAX_VALUE+(long)5);
+    client.set(k, 0, "5");
+    assertEquals(0, client.decr(k, Integer.MAX_VALUE));
+  }
+
+  /**
+   * Test deletion of non existent key.
+   * @pre The key is deleted and checked for CAS.
+   * @post assert is false
+   *
+   * @throws Exception
+   */
+  public void testDelNoExist() throws Exception {
+    OperationFuture<Boolean> delOp = client.delete("testDelNoExist");
+    assertTrue(delOp.isDone());
+    assertNull(delOp.getCas());
+  }
+
+  /**
+   * Get a value and update the expiration time to near zero for a key.
+   *
+   * @pre Call the simple get and touch operation for the same key
+   * and update the expiry time to 1.
+   * @post Test succeeds to call the get and touch operation and
+   * fetch the key/val as it never expires.
+   *
+   * @throws Exception
+   */
+  public void testGATZeroTimeout() throws Exception {
+    assertNull(client.get("gatkey"));
+    assertTrue(client.set("gatkey", 1, "gatvalue").get().booleanValue());
+    Thread.sleep(1500);
+    assertFalse("gatvalue".equals(client.get("gatkey")));
+    assertNull(client.getAndTouch("gatkey", 0));
+  }
+
+  /**
+   * Get a value and update the expiration time to a negative value.
+   *
+   * @pre Call the simple get and touch operation for the same key
+   * and update the expiry time to -1.
+   * @post Test succeeds to call the get and touch operation and
+   * fetch the key/val as it never expires.
+   *
+   * @throws Exception
+   */
+  public void testGATNegativeTimeout() throws Exception {
+    assertNull(client.get("gatkey"));
+    assertTrue(client.set("gatkey", -1, "gatvalue").get().booleanValue());
+    Thread.sleep(1500);
+    assertTrue("gatvalue".equals(client.get("gatkey")));
+    assertNotNull(client.getAndTouch("gatkey", -1));
   }
 
   @Override
