@@ -2300,7 +2300,6 @@ public class CouchbaseClient extends MemcachedClient
     long obsPollInterval = cbConnFactory.getObsPollInterval();
     boolean persistMaster = persist.getValue() > 0;
 
-    Config cfg = ((CouchbaseConnectionFactory) connFactory).getVBucketConfig();
     VBucketNodeLocator locator = ((VBucketNodeLocator)
         ((CouchbaseConnection) mconn).getLocator());
 
@@ -2324,7 +2323,9 @@ public class CouchbaseClient extends MemcachedClient
       Map<MemcachedNode, ObserveResponse> response = observe(key, cas);
 
       int vb = locator.getVBucketIndex(key);
-      MemcachedNode master = locator.getServerByIndex(cfg.getMaster(vb));
+      int index = ((CouchbaseConnectionFactory) connFactory)
+        .getVBucketConfig().getMaster(vb);
+      MemcachedNode master = locator.getServerByIndex(index);
 
       replicaPersistedTo = 0;
       replicatedTo = 0;
