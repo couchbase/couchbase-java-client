@@ -52,6 +52,21 @@ public class CouchbaseConnectionFactoryTest {
     return instance.buildCouchbaseConnection(uris, "default", "");
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowIfBucketIsNull() throws Exception {
+    new CouchbaseConnectionFactory(uris, null, "");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowIfBucketIsEmpty() throws Exception {
+    new CouchbaseConnectionFactory(uris, "", "");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowIfPasswordIsNull() throws Exception {
+    new CouchbaseConnectionFactory(uris, "default", null);
+  }
+
   /**
    * Make sure that the first calls to pastReconnThreshold() yield false
    * and the first one who is over getMaxConfigCheck() yields true.
