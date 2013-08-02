@@ -206,7 +206,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   public void testDelReturnsCAS() throws Exception {
     OperationFuture<Boolean> setOp = client.set("testDelReturnsCAS", 0, EMPTY);
-    assertTrue(setOp.isDone());
+    assertTrue(setOp.get());
     OperationFuture<Boolean> delOp = client.delete("testDelReturnsCAS");
     assertTrue(delOp.getCas() > 0);
   }
@@ -650,7 +650,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   public void testDelNoExist() throws Exception {
     OperationFuture<Boolean> delOp = client.delete("testDelNoExist");
-    assertTrue(delOp.isDone());
+    assertFalse(delOp.get());
     assertNull(delOp.getCas());
   }
 
@@ -666,7 +666,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   public void testGATZeroTimeout() throws Exception {
     assertNull(client.get("gatkey"));
-    assertTrue(client.set("gatkey", 1, "gatvalue").get().booleanValue());
+    assertTrue(client.set("gatkey", 1, "gatvalue").get());
     Thread.sleep(1500);
     assertFalse("gatvalue".equals(client.get("gatkey")));
     assertNull(client.getAndTouch("gatkey", 0));
@@ -684,7 +684,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   public void testGATNegativeTimeout() throws Exception {
     assertNull(client.get("gatkey"));
-    assertTrue(client.set("gatkey", -1, "gatvalue").get().booleanValue());
+    assertTrue(client.set("gatkey", -1, "gatvalue").get());
     Thread.sleep(1500);
     assertTrue("gatvalue".equals(client.get("gatkey")));
     assertNotNull(client.getAndTouch("gatkey", -1));
