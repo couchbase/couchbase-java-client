@@ -34,6 +34,7 @@ import javax.naming.ConfigurationException;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionObserver;
+import net.spy.memcached.MemcachedNode;
 
 /**
  * A TapConnectionProvider for Couchbase Server.
@@ -87,6 +88,11 @@ public class TapConnectionProvider
 
   public void reconfigure(Bucket bucket) {
     ((CouchbaseConnection)conn).reconfigure(bucket);
+  }
+
+  public boolean isPrimaryForKey(MemcachedNode node, String key) {
+    MemcachedNode primary = conn.getLocator().getPrimary(key);
+    return primary.getSocketAddress().equals(node.getSocketAddress());
   }
 
   public void shutdown() {
