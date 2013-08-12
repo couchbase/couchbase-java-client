@@ -26,6 +26,8 @@ import com.couchbase.client.protocol.views.HttpOperation;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationException;
 import org.apache.http.HttpRequest;
@@ -45,8 +47,9 @@ public class HttpFutureTest {
   public void testCancellation() throws Exception {
     CountDownLatch latch = new CountDownLatch(1);
     long timeout = 1000;
+    ExecutorService service = Executors.newCachedThreadPool();
     HttpFuture<CancellableOperation> future =
-      new HttpFuture<CancellableOperation>(latch, timeout);
+      new HttpFuture<CancellableOperation>(latch, timeout, service);
     HttpOperation op = new CancellableOperation();
     latch.countDown();
     future.setOperation(op);

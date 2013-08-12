@@ -24,6 +24,7 @@ package com.couchbase.client;
 
 import com.couchbase.client.BucketTool.FunctionCallback;
 import com.couchbase.client.clustermanager.BucketType;
+import com.couchbase.client.internal.HttpCompletionListener;
 import com.couchbase.client.internal.HttpFuture;
 import com.couchbase.client.protocol.views.ComplexKey;
 import com.couchbase.client.protocol.views.DesignDocument;
@@ -51,7 +52,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.spy.memcached.PersistTo;
@@ -299,6 +302,35 @@ public class ViewTest {
       }
     }
     assert response.size() == ITEMS.size() : future.getStatus();
+  }
+
+  @Test
+  public void testViewQueryWithListener() throws Exception {
+    final Query query = new Query();
+    query.setReduce(false);
+
+    HttpFuture<View> future =
+      client.asyncGetView(DESIGN_DOC_W_REDUCE, VIEW_NAME_W_REDUCE);
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    future.addListener(new HttpCompletionListener() {
+      @Override
+      public void onComplete(HttpFuture<?> f) throws Exception {
+        View view = (View) f.get();
+        HttpFuture<ViewResponse> queryFuture = client.asyncQuery(view, query);
+        queryFuture.addListener(new HttpCompletionListener() {
+          @Override
+          public void onComplete(HttpFuture<?> f) throws Exception {
+            ViewResponse resp = (ViewResponse) f.get();
+            if (resp.size() == ITEMS.size()) {
+              latch.countDown();
+            }
+          }
+        });
+      }
+    });
+
+    assertTrue(latch.await(3, TimeUnit.SECONDS));
   }
 
   /**

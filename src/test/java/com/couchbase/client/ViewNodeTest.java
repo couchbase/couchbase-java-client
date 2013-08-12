@@ -32,6 +32,8 @@ import com.couchbase.client.protocol.views.ViewOperation;
 import com.couchbase.client.protocol.views.ViewResponse;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.ops.OperationStatus;
 import org.apache.http.HttpHost;
@@ -88,8 +90,9 @@ public class ViewNodeTest {
   private HttpOperation createHttpOperation() {
     View view = new View("a", "b", "c", true, true);
     final CountDownLatch couchLatch = new CountDownLatch(1);
+    ExecutorService service = Executors.newCachedThreadPool();
     final HttpFuture<ViewResponse> crv =
-        new HttpFuture<ViewResponse>(couchLatch, 60000);
+        new HttpFuture<ViewResponse>(couchLatch, 60000, service);
     final HttpRequest request = new BasicHttpRequest("GET", "/pools",
       HttpVersion.HTTP_1_1);
     return new NoDocsOperationImpl(

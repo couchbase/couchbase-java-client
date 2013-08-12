@@ -23,10 +23,13 @@
 package com.couchbase.client;
 
 import com.couchbase.client.clustermanager.BucketType;
+import com.couchbase.client.internal.ReplicaGetCompletionListener;
 import com.couchbase.client.internal.ReplicaGetFuture;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ReplicateTo;
@@ -35,6 +38,7 @@ import net.spy.memcached.TestConfig;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the correct functionality when reading from replicas.
@@ -76,14 +80,38 @@ public class ReplicaReadTest {
 
   @Test
   public void testGetFromReplica() throws Exception {
-    if(client.getAvailableServers().size() < 2) {
+    if (client.getAvailableServers().size() < 2) {
       return;
     }
 
-    Boolean get = client.set("fookey", 0, "foovalue", ReplicateTo.ONE).get();
+    assertTrue(client.set("fookey", 0, "foovalue", ReplicateTo.ONE).get());
     ReplicaGetFuture<Object> future = client.asyncGetFromReplica("fookey");
     String result = (String) future.get();
     assertEquals(result, "foovalue");
+  }
+
+  @Test
+  public void testGetFromReplicaListener() throws Exception {
+    if (client.getAvailableServers().size() < 2) {
+      return;
+    }
+
+    assertTrue(client.set("asyncKey", "value", ReplicateTo.ONE).get());
+    ReplicaGetFuture<Object> future = client.asyncGetFromReplica("asyncKey");
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    future.addListener(new ReplicaGetCompletionListener() {
+      @Override
+      public void onComplete(ReplicaGetFuture<?> f) throws Exception {
+        String found = (String) f.get();
+        if(found.equals("value")) {
+          latch.countDown();
+        }
+      }
+    });
+
+    assertTrue("Async latch was not counted down",
+      latch.await(5, TimeUnit.SECONDS));
   }
 
 }
