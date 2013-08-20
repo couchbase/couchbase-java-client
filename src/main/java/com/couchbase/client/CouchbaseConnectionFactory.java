@@ -216,8 +216,8 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   public AuthDescriptor getAuthDescriptor() {
     if (!configurationProvider.getAnonymousAuthBucket().equals(bucket)
         && bucket != null) {
-      return new AuthDescriptor(new String[] { "PLAIN" },
-              new PlainCallbackHandler(bucket, pass));
+      return new AuthDescriptor(new String[] {},
+        new PlainCallbackHandler(bucket, pass));
     } else {
       return null;
     }
