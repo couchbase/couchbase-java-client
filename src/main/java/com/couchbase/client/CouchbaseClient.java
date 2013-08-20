@@ -1070,6 +1070,8 @@ public class CouchbaseClient extends MemcachedClient
   @Override
   public <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key,
     final Transcoder<T> tc) {
+    int discardedOps = 0;
+
     int replicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
     if (replicaCount == 0) {
       throw new RuntimeException("Currently, there is no replica available for"
@@ -1087,6 +1089,7 @@ public class CouchbaseClient extends MemcachedClient
         new ReplicaGetOperation.Callback() {
           private Future<T> val = null;
 
+          @Override
           public void receivedStatus(OperationStatus status) {
             rv.set(val, status);
             if (!replicaFuture.isDone()) {
@@ -1094,19 +1097,44 @@ public class CouchbaseClient extends MemcachedClient
             }
           }
 
+          @Override
           public void gotData(String k, int flags, byte[] data) {
             assert key.equals(k) : "Wrong key returned";
             val = tcService.decode(tc, new CachedData(flags, data,
               tc.getMaxSize()));
           }
 
+          @Override
           public void complete() {
             latch.countDown();
           }
         });
+
       rv.setOperation(op);
       mconn.enqueueOperation(key, op);
-      replicaFuture.addFutureToMonitor(rv);
+
+      if (op.isCancelled()) {
+        discardedOps++;
+        getLogger().debug("Silently discarding replica get for key \""
+          + key + "\" (cancelled).");
+      } else {
+        replicaFuture.addFutureToMonitor(rv);
+      }
+
+    }
+
+    GetFuture<T> additionalActiveGet = asyncGet(key, tc);
+    if (additionalActiveGet.isCancelled()) {
+      discardedOps++;
+      getLogger().debug("Silently discarding replica (active) get for key \""
+        + key + "\" (cancelled).");
+    } else {
+      replicaFuture.addFutureToMonitor(additionalActiveGet);
+    }
+
+    if (discardedOps == replicaCount + 1) {
+      throw new IllegalStateException("No replica get operation could be "
+        + "dispatched because all operations have been cancelled.");
     }
 
     return replicaFuture;
