@@ -42,8 +42,10 @@ import static org.junit.Assert.assertTrue;
 public class FlushTest {
 
   private static String noflushBucket = "noflush";
+  private static String memcachedBucket = "cache";
   private static CouchbaseClient defaultClient;
   private static CouchbaseClient saslClient;
+  private static CouchbaseClient memcachedClient;
 
   /**
    * Setup the cluster and buckets to have a reliable and reproducible
@@ -53,9 +55,10 @@ public class FlushTest {
   public static void prepareBuckets() throws Exception {
     BucketTool bucketTool = new BucketTool();
     bucketTool.deleteAllBuckets();
-    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0, true);
-    bucketTool.createSaslBucket(noflushBucket, BucketType.COUCHBASE, 256, 0,
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 128, 0, true);
+    bucketTool.createSaslBucket(noflushBucket, BucketType.COUCHBASE, 128, 0,
       false);
+    bucketTool.createSaslBucket(memcachedBucket, BucketType.MEMCACHED, 128, 0, true);
 
     BucketTool.FunctionCallback callback = new BucketTool.FunctionCallback() {
       @Override
@@ -65,6 +68,7 @@ public class FlushTest {
         defaultClient = new CouchbaseClient(uris, "default", "");
         saslClient = new CouchbaseClient(uris,
           noflushBucket, noflushBucket);
+        memcachedClient = new CouchbaseClient(uris, memcachedBucket, memcachedBucket);
       }
 
       @Override
@@ -75,6 +79,7 @@ public class FlushTest {
     bucketTool.poll(callback);
     bucketTool.waitForWarmup(defaultClient);
     bucketTool.waitForWarmup(saslClient);
+    bucketTool.waitForWarmup(memcachedClient);
   }
 
   /**
@@ -85,7 +90,7 @@ public class FlushTest {
    * @post Shutdown the client.
    * @throws Exception
    */
-  @Ignore("Disabled for JCBC-173/MB-7381.") @Test
+  @Test
   public void testFlushWhenEnabled() throws Exception {
     List<URI> uris = new ArrayList<URI>();
     uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
@@ -117,7 +122,7 @@ public class FlushTest {
    * @post Shutdown the client.
    * @throws Exception
    */
-  @Ignore("Disabled for JCBC-173/MB-7381.") @Test
+  @Test
   public void testFlushWhenDisabled() throws Exception {
     List<URI> uris = new ArrayList<URI>();
     uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
@@ -138,6 +143,24 @@ public class FlushTest {
     for(int i = 0; i <= 10; i++) {
       assertEquals("sampledocument", (String) client.get("doc:" + i));
     }
+
+    client.shutdown();
+  }
+
+  /**
+   * Make sure that flush() works on memcached type buckets.
+   *
+   * Note that this is a regression test for JCBC-349.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testFlushOnMemcachedBucket() throws Exception {
+    List<URI> uris = new ArrayList<URI>();
+    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
+    CouchbaseClient client = new CouchbaseClient(uris, memcachedBucket, memcachedBucket);
+
+    assertTrue(client.flush().get());
 
     client.shutdown();
   }

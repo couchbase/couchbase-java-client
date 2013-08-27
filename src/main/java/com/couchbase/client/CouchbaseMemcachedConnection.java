@@ -236,4 +236,9 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       getLogger().warn("Problem handling Couchbase IO", e);
     }
   }
+
+  boolean isShutDown() {
+    return shutDown;
+  }
+
 }

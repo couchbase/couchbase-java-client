@@ -2422,7 +2422,7 @@ public class CouchbaseClient extends MemcachedClient
    */
   @Override
   public OperationFuture<Boolean> flush(final int delay) {
-    if(((CouchbaseConnection)mconn).isShutDown()) {
+    if(connectionShutDown()) {
       throw new IllegalStateException("Flush can not be used after shutdown.");
     }
 
@@ -2530,4 +2530,14 @@ public class CouchbaseClient extends MemcachedClient
     }
   }
 
+  protected boolean connectionShutDown() {
+    if (mconn instanceof CouchbaseConnection) {
+      return ((CouchbaseConnection)mconn).isShutDown();
+    } else if (mconn instanceof CouchbaseMemcachedConnection) {
+      return ((CouchbaseMemcachedConnection)mconn).isShutDown();
+    } else {
+      throw new IllegalStateException("Unknown connection type: "
+        + mconn.getClass().getCanonicalName());
+    }
+  }
 }
