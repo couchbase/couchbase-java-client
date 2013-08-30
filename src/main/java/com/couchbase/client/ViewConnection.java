@@ -29,6 +29,7 @@ import com.couchbase.client.http.RequeueOpCallback;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
+import com.couchbase.client.vbucket.config.DefaultConfig;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -179,7 +180,7 @@ public class ViewConnection extends SpyObject implements
             break;
           }
           ViewNode node = couchNodes.get(getNextNode());
-          if(node.isShuttingDown()) {
+          if(node.isShuttingDown() || !hasActiveVBuckets(node)) {
             continue;
           }
           if(retries > 0) {
@@ -207,6 +208,17 @@ public class ViewConnection extends SpyObject implements
    */
   private int getNextNode() {
     return nextNode = (++nextNode % couchNodes.size());
+  }
+
+  /**
+   * Check if the {@link ViewNode} has active VBuckets.
+   *
+   * @param node the node to check
+   * @return true or false if it has active VBuckets.
+   */
+  private boolean hasActiveVBuckets(ViewNode node) {
+    DefaultConfig config = (DefaultConfig) connFactory.getVBucketConfig();
+    return config.nodeHasActiveVBuckets(node.getSocketAddress());
   }
 
   /**

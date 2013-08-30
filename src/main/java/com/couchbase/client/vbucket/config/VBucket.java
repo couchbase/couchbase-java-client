@@ -22,6 +22,8 @@
 
 package com.couchbase.client.vbucket.config;
 
+import java.util.Arrays;
+
 /**
  * A VBucket.
  */
@@ -50,5 +52,10 @@ public class VBucket {
 
   public void setMaster(int rv) {
     master = rv;
+  }
+
+  @Override
+  public String toString() {
+    return "m: " + master + ", r: " + Arrays.toString(replicas);
   }
 }

@@ -22,15 +22,23 @@
 
 package com.couchbase.client.vbucket.config;
 
+import java.net.InetSocketAddress;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.spy.memcached.HashAlgorithm;
+import net.spy.memcached.compat.SpyObject;
 
 /**
- * A DefaultConfig.
+ * A {@link Config} implementation that represents a "couchbase" bucket config.
+ *
+ * This {@link Config} implementation is VBucket-aware and allows several
+ * operations against a list of nodes and VBuckets. For "memcached" type
+ * buckets, see the {@link CacheConfig} implementation.
  */
-public class DefaultConfig implements Config {
+public class DefaultConfig extends SpyObject implements Config {
 
   private final HashAlgorithm hashAlgorithm;
 
@@ -48,6 +56,8 @@ public class DefaultConfig implements Config {
 
   private final List<URL> couchServers;
 
+  private final Set<String> serversWithVBuckets;
+
   public DefaultConfig(HashAlgorithm hashAlgorithm, int serversCount,
       int replicasCount, int vbucketsCount, List<String> servers,
       List<VBucket> vbuckets, List<URL> couchServers) {
@@ -59,6 +69,31 @@ public class DefaultConfig implements Config {
     this.servers = servers;
     this.vbuckets = vbuckets;
     this.couchServers = couchServers;
+    this.serversWithVBuckets = new HashSet<String>();
+
+    cacheServersWithVBuckets();
+  }
+
+  /**
+   * Cache all servers with active VBuckets.
+   *
+   * This methods is called during construction to compute a set of nodes
+   * that has active VBuckets. This set is cached and during runtime only
+   * needs to be checked upon.
+   */
+  private void cacheServersWithVBuckets() {
+    int serverIndex = 0;
+    for (String server : servers) {
+      for (VBucket vbucket : vbuckets) {
+        if (vbucket.getMaster() == serverIndex) {
+          serversWithVBuckets.add(server.split(":")[0]);
+          break;
+        }
+      }
+      serverIndex++;
+    }
+
+    getLogger().debug("Nodes with active VBuckets: " + serversWithVBuckets);
   }
 
   @Override
@@ -169,6 +204,28 @@ public class DefaultConfig implements Config {
     return hashAlgorithm;
   }
 
+  /**
+   * Check if the given node has active VBuckets.
+   *
+   * Note that the passed in node needs to have the port stripped off, so it
+   * can be checked independent of ports.
+   *
+   * @param node the node to verify.
+   * @return if it has active VBuckets or not.
+   */
+  public boolean nodeHasActiveVBuckets(InetSocketAddress node) {
+    boolean result = serversWithVBuckets.contains(node.getHostName());
+    if (!result && node.getAddress() != null) {
+      result = serversWithVBuckets.contains(node.getAddress().getHostAddress());
+    }
+
+    if (!result) {
+      getLogger().debug("Given node " + node + " has no active VBuckets.");
+    }
+    return result;
+  }
+
+  @Override
   public ConfigType getConfigType() {
     return ConfigType.COUCHBASE;
   }
