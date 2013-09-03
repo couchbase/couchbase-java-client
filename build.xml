@@ -582,6 +582,8 @@
         <exclude name="TESTING.md" />
         <exclude name="README.md" />
         <exclude name="cbclient.properties.dist" />
+	<exclude name=".git/**" />
+	<exclude name=".idea/**" />
       </fileset>
     </delete>
   </target>
