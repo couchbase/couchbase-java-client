@@ -24,6 +24,9 @@ package com.couchbase.client.vbucket;
 
 import com.couchbase.client.vbucket.config.Bucket;
 
+import java.net.URI;
+import java.util.List;
+
 /**
  * A ConfigurationProvider.
  */
@@ -89,5 +92,12 @@ public interface ConfigurationProvider {
    * Returns the current bucket name.
    */
   String getBucket();
+
+  /**
+   * Update the configured baseList on bootstrap with a new one.
+   *
+   * @param baseList the list to replace with.
+   */
+  void updateBaseListFromConfig(List<URI> baseList);
 
 }

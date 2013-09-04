@@ -23,6 +23,7 @@
 package com.couchbase.client;
 
 import com.couchbase.client.vbucket.ConfigurationProvider;
+import com.couchbase.client.vbucket.CouchbaseNodeOrder;
 import com.couchbase.client.vbucket.config.Bucket;
 import java.io.IOException;
 import java.net.URI;
@@ -34,16 +35,29 @@ import java.util.List;
  */
 public class CouchbaseConnectionFactoryMock extends CouchbaseConnectionFactory {
 
+  private CouchbaseNodeOrder order;
+
   public CouchbaseConnectionFactoryMock(final List<URI> baseList,
-    final String bucketName, String password, ConfigurationProvider cp)
+    final String bucketName, String password, ConfigurationProvider cp, CouchbaseNodeOrder order)
     throws IOException {
     super(baseList, bucketName, password);
 
     this.configurationProvider = cp;
+    this.order = order;
+  }
+
+  public CouchbaseConnectionFactoryMock(final List<URI> baseList,
+    final String bucketName, String password, ConfigurationProvider cp)
+    throws IOException {
+    this(baseList, bucketName, password, cp, DEFAULT_STREAMING_NODE_ORDER);
   }
 
   public Bucket getBucket(String bucketName) {
     return this.configurationProvider.getBucketConfiguration(bucketName);
   }
 
+  @Override
+  public CouchbaseNodeOrder getStreamingNodeOrder() {
+    return order;
+  }
 }

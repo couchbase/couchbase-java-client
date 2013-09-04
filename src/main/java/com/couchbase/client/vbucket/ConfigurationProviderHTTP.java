@@ -42,7 +42,6 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-
 import java.text.ParseException;
 
 import java.util.HashMap;
@@ -461,6 +460,20 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     result += "reconf:" + reSubRec;
     result += "baseList:" + baseList;
     return result;
+  }
+
+  /**
+   * Override the old baseList with new values.
+   *
+   * Updating the original baseList ensures that subsequent node
+   * reconfigurations make their way into this list which will be used if
+   * the streaming node gets removed (or is stale) and a new one needs to be
+   * selected.
+   *
+   * @param newList the new BaseList.
+   */
+  public void updateBaseListFromConfig(List<URI> newList) {
+    baseList = newList;
   }
 
 }

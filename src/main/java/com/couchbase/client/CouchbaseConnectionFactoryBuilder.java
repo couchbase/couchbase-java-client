@@ -22,6 +22,7 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.vbucket.CouchbaseNodeOrder;
 import com.couchbase.client.vbucket.config.Config;
 
 import java.io.IOException;
@@ -55,6 +56,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
     CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL;
   private int obsPollMax = CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX;
   private int viewTimeout = CouchbaseConnectionFactory.DEFAULT_VIEW_TIMEOUT;
+  private CouchbaseNodeOrder nodeOrder
+    = CouchbaseConnectionFactory.DEFAULT_STREAMING_NODE_ORDER;
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactoryBuilder.class.getName());
 
@@ -90,6 +93,17 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder{
         + "more than 2500ms.");
     }
     viewTimeout = timeout;
+    return this;
+  }
+
+  /**
+   * Set the streaming connection node ordering.
+   *
+   * @param order the ordering to use.
+   * @return the builder for chaining.
+   */
+  public CouchbaseConnectionFactoryBuilder setStreamingNodeOrder(CouchbaseNodeOrder order) {
+    nodeOrder = order;
     return this;
   }
 
