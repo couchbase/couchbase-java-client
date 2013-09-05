@@ -58,6 +58,9 @@ public class CouchbaseConnectionFactoryMock extends CouchbaseConnectionFactory {
 
   @Override
   public CouchbaseNodeOrder getStreamingNodeOrder() {
+    if (order == null) {
+      return super.getStreamingNodeOrder();
+    }
     return order;
   }
 }

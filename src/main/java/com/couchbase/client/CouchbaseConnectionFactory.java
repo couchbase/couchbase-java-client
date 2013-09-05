@@ -141,9 +141,56 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private CouchbaseNodeOrder nodeOrder = DEFAULT_STREAMING_NODE_ORDER;
   private ClusterManager clusterManager;
 
+  /**
+   * Create a new {@link CouchbaseConnectionFactory} and load the required
+   * connection information from system properties.
+   *
+   * <p>The following properties need to be set in order to bootstrap:
+   *  - cbclient.nodes: ;-separated list of URIs
+   *  - cbclient.bucket: name of the bucket
+   *  - cbclient.password: password of the bucket
+   * </p>
+   */
+  public CouchbaseConnectionFactory() {
+    String nodes = CouchbaseProperties.getProperty("nodes");
+    String bucket =  CouchbaseProperties.getProperty("bucket");
+    String password = CouchbaseProperties.getProperty("password");
+
+    if (nodes == null) {
+      throw new IllegalArgumentException("System property cbclient.nodes "
+        + "not set or empty");
+    }
+    if (bucket == null) {
+      throw new IllegalArgumentException("System property cbclient.bucket "
+        + "not set or empty");
+    }
+    if (password == null) {
+      throw new IllegalArgumentException("System property cbclient.password "
+        + "not set or empty");
+    }
+
+    List<URI> baseList = new ArrayList<URI>();
+    String[] nodeList = nodes.split(";");
+    for (String node : nodeList) {
+      try {
+        baseList.add(new URI(node));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Could not parse node list into "
+          + " URI format.");
+      }
+    }
+
+    initialize(baseList, bucket, password);
+  }
+
   public CouchbaseConnectionFactory(final List<URI> baseList,
-      final String bucketName, String password)
-    throws IOException {
+    final String bucketName, String password) throws IOException {
+    initialize(baseList, bucketName, password);
+  }
+
+  private void initialize(List<URI> baseList, String bucket, String password) {
+    potentiallyRandomizeNodeList(baseList);
+
     storedBaseList = new ArrayList<URI>();
     for (URI bu : baseList) {
       if (!bu.isAbsolute()) {
@@ -152,7 +199,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       storedBaseList.add(bu);
     }
 
-    if (bucketName == null || bucketName.isEmpty()) {
+    if (bucket == null || bucket.isEmpty()) {
       throw new IllegalArgumentException("The bucket name must not be null "
         + "or empty.");
     }
@@ -161,10 +208,10 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
         + " null.");
     }
 
-    bucket = bucketName;
+    this.bucket = bucket;
     pass = password;
     configurationProvider =
-        new ConfigurationProviderHTTP(baseList, bucketName, password);
+      new ConfigurationProviderHTTP(baseList, bucket, password);
   }
 
   public ViewNode createViewNode(InetSocketAddress addr,
