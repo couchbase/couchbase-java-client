@@ -21,7 +21,7 @@ SOFTWARE.
 -->
 
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-  <info organisation="couchbase" module="${name}" revision="${version}"/>
+  <info organisation="com.couchbase.client" module="${name}" revision="${version}"/>
 
   <configurations>
     <!--these match the Maven configurations-->
