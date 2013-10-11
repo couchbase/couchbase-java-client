@@ -26,6 +26,7 @@ package com.couchbase.client.vbucket.config;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ConfigurationParserMock implements ConfigurationParser {
   private String poolStreamingUri = "/poolsStreaming/default";
   private String bucketName = "Administrator";
   private DefaultConfig vbuckets = new DefaultConfig(
-    DefaultHashAlgorithm.NATIVE_HASH, 1, 1, 1, null, null, null);
+    DefaultHashAlgorithm.NATIVE_HASH, 1, 1, 1, new ArrayList<String>(), null, null);
   private String bucketsUri = "/pools/default/buckets";
   private String bucketStreamingUri =
       "/pools/default/bucketsStreaming/Administrator";
