@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.BinaryClientTest;
+import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.PersistTo;
@@ -668,7 +669,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertNull(client.get("gatkey"));
     assertTrue(client.set("gatkey", 1, "gatvalue").get());
     Thread.sleep(1500);
-    assertFalse("gatvalue".equals(client.get("gatkey")));
+    assertNull(client.get("gatkey"));
     assertNull(client.getAndTouch("gatkey", 0));
   }
 
@@ -686,8 +687,25 @@ public class CouchbaseClientTest extends BinaryClientTest {
     assertNull(client.get("gatkey"));
     assertTrue(client.set("gatkey", -1, "gatvalue").get());
     Thread.sleep(1500);
-    assertTrue("gatvalue".equals(client.get("gatkey")));
+    assertEquals("gatvalue", client.get("gatkey"));
     assertNotNull(client.getAndTouch("gatkey", -1));
+  }
+
+  @Override
+  public void testAsyncCASWithExpiration() throws Exception {
+    final String key = "casWithExpiration";
+    final String value = "value";
+
+    OperationFuture<Boolean> future = client.set(key, 0, value);
+    assertTrue(future.get());
+
+    OperationFuture<CASResponse> casFuture =
+      client.asyncCAS(key, future.getCas(), 1, value);
+    assertEquals(CASResponse.OK, casFuture.get());
+
+    Thread.sleep(2500);
+    Object response = client.get(key);
+    assertNull("casWithExpiration key should be null but was: " + response, response);
   }
 
   @Override
