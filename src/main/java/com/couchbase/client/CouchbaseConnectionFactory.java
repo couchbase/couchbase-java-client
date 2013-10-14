@@ -135,9 +135,6 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private volatile long configProviderLastUpdateTimestamp;
   private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
   private final ExecutorService resubExec = Executors.newSingleThreadExecutor();
-  private long obsPollInterval = DEFAULT_OBS_POLL_INTERVAL;
-  private int obsPollMax = DEFAULT_OBS_POLL_MAX;
-  private int viewTimeout = DEFAULT_VIEW_TIMEOUT;
   private final CouchbaseNodeOrder nodeOrder = DEFAULT_STREAMING_NODE_ORDER;
   private ClusterManager clusterManager;
 
@@ -285,7 +282,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   }
 
   public int getViewTimeout() {
-    return this.viewTimeout;
+    return DEFAULT_VIEW_TIMEOUT;
   }
 
   public CouchbaseNodeOrder getStreamingNodeOrder() {
@@ -408,11 +405,11 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   }
 
   long getObsPollInterval() {
-    return obsPollInterval;
+    return DEFAULT_OBS_POLL_INTERVAL;
   }
 
   int getObsPollMax() {
-    return obsPollMax;
+    return DEFAULT_OBS_POLL_MAX;
   }
 
   /**

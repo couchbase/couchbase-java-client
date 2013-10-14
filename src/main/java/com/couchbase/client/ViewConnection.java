@@ -81,7 +81,7 @@ public class ViewConnection extends SpyObject implements
 
   private final CouchbaseConnectionFactory connFactory;
   private final Collection<ConnectionObserver> connObservers =
-      new ConcurrentLinkedQueue<ConnectionObserver>();
+    new ConcurrentLinkedQueue<ConnectionObserver>();
   private List<ViewNode> couchNodes;
   private int nextNode;
 
