@@ -34,25 +34,6 @@ import static org.junit.Assert.*;
  */
 public class ViewDesignTest {
 
-  public ViewDesignTest() {
-  }
-
-  @BeforeClass
-  public static void setUpClass() {
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-  }
-
-  @Before
-  public void setUp() {
-  }
-
-  @After
-  public void tearDown() {
-  }
-
   /**
    * Tests the ViewDesign instance created
    * from a view name and a map.
@@ -60,7 +41,6 @@ public class ViewDesignTest {
    * @pre Prepare ViewDesign using view
    * name and a map as the criteria.
    * @post Asserts true.
-   * @throws UnsupportedEncodingException
    */
   @Test
   public void testViewDesignWithoutReduce() {
@@ -79,7 +59,6 @@ public class ViewDesignTest {
    * @pre Prepare ViewDesign using view name,
    * map and reduce functions as the criteria.
    * @post Asserts true.
-   * @throws UnsupportedEncodingException
    */
   @Test
   public void testViewDesignWithReduce() {

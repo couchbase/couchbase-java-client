@@ -41,8 +41,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class FlushTest {
 
-  private static String noflushBucket = "noflush";
-  private static String memcachedBucket = "cache";
+  private static final String noflushBucket = "noflush";
+  private static final String memcachedBucket = "cache";
   private static CouchbaseClient defaultClient;
   private static CouchbaseClient saslClient;
   private static CouchbaseClient memcachedClient;
@@ -100,7 +100,7 @@ public class FlushTest {
     }
 
     for(int i = 0; i <= 10; i++) {
-      assertEquals("sampledocument", (String) client.get("doc:" + i));
+      assertEquals("sampledocument", client.get("doc:" + i));
     }
 
     Boolean response = client.flush().get();
@@ -133,14 +133,14 @@ public class FlushTest {
     }
 
     for(int i = 0; i <= 10; i++) {
-      assertEquals("sampledocument", (String) client.get("doc:" + i));
+      assertEquals("sampledocument", client.get("doc:" + i));
     }
 
     Boolean response = client.flush().get();
     assertFalse(response);
 
     for(int i = 0; i <= 10; i++) {
-      assertEquals("sampledocument", (String) client.get("doc:" + i));
+      assertEquals("sampledocument", client.get("doc:" + i));
     }
 
     client.shutdown();

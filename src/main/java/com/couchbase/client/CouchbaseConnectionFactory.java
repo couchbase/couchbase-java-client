@@ -127,18 +127,18 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactory.class.getName());
   private volatile boolean needsReconnect;
-  private AtomicBoolean doingResubscribe = new AtomicBoolean(false);
+  private final AtomicBoolean doingResubscribe = new AtomicBoolean(false);
   private volatile long thresholdLastCheck = System.nanoTime();
-  private AtomicInteger configThresholdCount = new AtomicInteger(0);
+  private final AtomicInteger configThresholdCount = new AtomicInteger(0);
   private final int maxConfigCheck = 10; //maximum allowed checks before we
                                          // reconnect in a 10 sec interval
   private volatile long configProviderLastUpdateTimestamp;
   private long minReconnectInterval = DEFAULT_MIN_RECONNECT_INTERVAL;
-  private ExecutorService resubExec = Executors.newSingleThreadExecutor();
+  private final ExecutorService resubExec = Executors.newSingleThreadExecutor();
   private long obsPollInterval = DEFAULT_OBS_POLL_INTERVAL;
   private int obsPollMax = DEFAULT_OBS_POLL_MAX;
   private int viewTimeout = DEFAULT_VIEW_TIMEOUT;
-  private CouchbaseNodeOrder nodeOrder = DEFAULT_STREAMING_NODE_ORDER;
+  private final CouchbaseNodeOrder nodeOrder = DEFAULT_STREAMING_NODE_ORDER;
   private ClusterManager clusterManager;
 
   /**

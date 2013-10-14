@@ -269,7 +269,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   @Override
   public void testGetVersions() {
-    Map<SocketAddress, String> vs = ((CouchbaseClient)client).getVersions();
+    Map<SocketAddress, String> vs = client.getVersions();
     System.out.println(vs);
     assertEquals(client.getAvailableServers().size(), vs.size());
   }
@@ -284,8 +284,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    */
   @Override
   public void testGetStats() throws Exception {
-    Map<SocketAddress, Map<String, String>> stats =
-        ((CouchbaseClient)client).getStats();
+    Map<SocketAddress, Map<String, String>> stats = client.getStats();
     assertEquals(client.getAvailableServers().size(), stats.size());
     Map<String, String> oneStat = stats.values().iterator().next();
     assertTrue(oneStat.containsKey("curr_items"));
@@ -458,8 +457,7 @@ public class CouchbaseClientTest extends BinaryClientTest {
    * @throws Exception
    */
   public void testStaleCAS() throws Exception {
-    OperationFuture<Boolean> staleCasOp =
-      (((CouchbaseClient)client).add("testStaleCAS", 0, "value"));
+    OperationFuture<Boolean> staleCasOp = client.add("testStaleCAS", 0, "value");
     long cas1 = staleCasOp.getCas();
     client.set("testStaleCAS", 0, "value2").getCas();
     assertFalse(client.append(cas1, "testStaleCAS", "")
@@ -715,10 +713,6 @@ public class CouchbaseClientTest extends BinaryClientTest {
 
   @Override
   public void testGetStatsSizes() throws Exception {
-    // Empty
-  }
-
-  public void testGetStatsCacheDump() throws Exception {
     // Empty
   }
 

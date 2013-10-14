@@ -72,10 +72,10 @@ public class SpatialViewTest {
    * Helper class to generate city JSON documents.
    */
   public static class City {
-    private String type = "city";
-    private String name;
-    private double lat;
-    private double lng;
+    private final String type = "city";
+    private final String name;
+    private final double lat;
+    private final double lng;
 
     /**
      * Instantiates a new city.

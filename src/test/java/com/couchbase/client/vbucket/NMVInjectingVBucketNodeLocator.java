@@ -32,7 +32,7 @@ import net.spy.memcached.MemcachedNode;
  */
 public class NMVInjectingVBucketNodeLocator extends VBucketNodeLocator {
 
-  private ArrayList<String> bogused; // chosen for size over speed, only 20 ops
+  private final ArrayList<String> bogused; // chosen for size over speed, only 20 ops
 
   public NMVInjectingVBucketNodeLocator(List<MemcachedNode> nodes,
     Config jsonConfig) {

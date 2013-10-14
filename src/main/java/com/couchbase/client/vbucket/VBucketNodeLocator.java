@@ -271,8 +271,8 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
   }
 
   private static class TotalConfig {
-    private Config config;
-    private Map<String, MemcachedNode> nodesMap;
+    private final Config config;
+    private final Map<String, MemcachedNode> nodesMap;
 
     public TotalConfig(Config newConfig, Map<String, MemcachedNode> newMap) {
       config = newConfig;

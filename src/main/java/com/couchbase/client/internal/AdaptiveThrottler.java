@@ -83,16 +83,16 @@ public class AdaptiveThrottler extends SpyObject implements Throttler {
    * Holds a reference to the CouchbaseConnection in order to schedule stats
    * operations.
    */
-  private CouchbaseConnection conn;
+  private final CouchbaseConnection conn;
 
-  private InetSocketAddress node;
+  private final InetSocketAddress node;
 
   /**
    * Holds the current state of the throttler.
    */
   private ThrottlerState currentState = ThrottlerState.NORMAL;
 
-  private BinaryOperationFactory opFact;
+  private final BinaryOperationFactory opFact;
 
   /**
    * Initialize the Throttler with sensible default settings.

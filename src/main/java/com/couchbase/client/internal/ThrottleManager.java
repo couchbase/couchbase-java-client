@@ -42,8 +42,8 @@ public class ThrottleManager<T extends Throttler> {
 
   private static final Logger LOGGER = Logger.getLogger(
     ThrottleManager.class.getName());
-  private Map<InetSocketAddress, T> throttles;
-  private Class<T> throttler;
+  private final Map<InetSocketAddress, T> throttles;
+  private final Class<T> throttler;
   private final CouchbaseConnection conn;
   private final OperationFactory opFact;
 

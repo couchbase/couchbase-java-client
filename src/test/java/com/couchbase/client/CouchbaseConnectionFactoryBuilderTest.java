@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class CouchbaseConnectionFactoryBuilderTest {
 
-  private List<URI> uris = Arrays.asList(URI.create(
+  private final List<URI> uris = Arrays.asList(URI.create(
     "http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
 
   /**

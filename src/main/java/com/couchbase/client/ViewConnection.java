@@ -313,7 +313,7 @@ public class ViewConnection extends SpyObject implements
         for (ViewNode current : couchNodes) {
           if (newServerAddresses.contains(current.getSocketAddress())) {
             stayNodes.add(current);
-            stayServers.add((InetSocketAddress) current.getSocketAddress());
+            stayServers.add(current.getSocketAddress());
           } else {
             shutdownNodes.add(current);
           }

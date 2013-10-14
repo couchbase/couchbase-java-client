@@ -36,25 +36,6 @@ import static org.junit.Assert.*;
  */
 public class DesignDocumentTest {
 
-  public DesignDocumentTest() {
-  }
-
-  @BeforeClass
-  public static void setUpClass() {
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-  }
-
-  @Before
-  public void setUp() {
-  }
-
-  @After
-  public void tearDown() {
-  }
-
   /**
    * Tests the design documents without passing any
    * spatial parameters or dimensions.

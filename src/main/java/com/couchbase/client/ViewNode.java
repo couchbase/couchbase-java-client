@@ -81,7 +81,7 @@ public class ViewNode extends SpyObject {
     pass = pwd;
   }
 
-  public void init() throws IOReactorException {
+  public void init() {
     // Start the I/O reactor in a separate thread
     ioThread = new Thread(new Runnable() {
       public void run() {

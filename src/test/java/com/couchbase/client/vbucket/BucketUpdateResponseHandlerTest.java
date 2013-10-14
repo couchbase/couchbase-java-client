@@ -46,12 +46,6 @@ import static org.junit.Assert.assertNull;
  * A BucketUpdateResponseHandler.
  */
 public class BucketUpdateResponseHandlerTest {
-
-  @Before
-  public void setUp() {
-
-  }
-
   /**
    * Test checks if setReceivedFuture() method properly
    * sets a field receivedFuture.
@@ -155,10 +149,4 @@ public class BucketUpdateResponseHandlerTest {
     verify(eventMock, futureMock, chunkMock, bufferMock);
   }
 
-  /**
-   * Test log response.
-   */
-  public void testLogResponse() {
-
-  }
 }

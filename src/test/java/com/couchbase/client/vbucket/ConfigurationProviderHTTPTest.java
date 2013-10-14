@@ -39,7 +39,7 @@ import net.spy.memcached.TestConfig;
 public class ConfigurationProviderHTTPTest extends TestCase {
   private static final String DEFAULT_BUCKET_NAME = "default";
   private ConfigurationProviderHTTP configProvider;
-  private ReconfigurableMock reconfigurable = new ReconfigurableMock();
+  private final ReconfigurableMock reconfigurable = new ReconfigurableMock();
 
   @Override
   protected void setUp() throws Exception {

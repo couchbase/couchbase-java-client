@@ -41,7 +41,7 @@ public enum AuthType {
   /**
    * Holds the authentication type.
    */
-  private String auth;
+  private final String auth;
 
   /**
    * Creates an Auth instance.

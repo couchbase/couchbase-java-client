@@ -87,8 +87,7 @@ public class TestingClient extends CouchbaseClient {
     return crv;
   }
 
-  public HttpFuture<String> asyncHttpGet(String uri)
-    throws UnsupportedEncodingException {
+  public HttpFuture<String> asyncHttpGet(String uri) {
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<String> crv = new HttpFuture<String>(couchLatch,
         operationTimeout, executorService);
@@ -118,8 +117,7 @@ public class TestingClient extends CouchbaseClient {
     return crv;
   }
 
-  public HttpFuture<String> asyncHttpDelete(String uri)
-    throws UnsupportedEncodingException {
+  public HttpFuture<String> asyncHttpDelete(String uri) {
     final CountDownLatch couchLatch = new CountDownLatch(1);
     final HttpFuture<String> crv = new HttpFuture<String>(couchLatch,
         operationTimeout, executorService);

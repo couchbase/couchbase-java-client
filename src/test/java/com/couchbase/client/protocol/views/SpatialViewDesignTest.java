@@ -34,25 +34,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class SpatialViewDesignTest {
 
-  public SpatialViewDesignTest() {
-  }
-
-  @BeforeClass
-  public static void setUpClass() {
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-  }
-
-  @Before
-  public void setUp() {
-  }
-
-  @After
-  public void tearDown() {
-  }
-
   /**
    * Tests the SpatialViewDesign instance created
    * from a view name and a map.

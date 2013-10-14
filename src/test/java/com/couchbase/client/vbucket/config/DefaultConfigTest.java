@@ -40,7 +40,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class DefaultConfigTest {
 
-  private HashAlgorithm hashAlgorithm = DefaultHashAlgorithm.CRC_HASH;
+  private final HashAlgorithm hashAlgorithm = DefaultHashAlgorithm.CRC_HASH;
 
   /**
    * This test creates a mock VBucket configuration, where only 2 of the

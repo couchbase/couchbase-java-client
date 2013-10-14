@@ -36,28 +36,6 @@ import static org.junit.Assert.assertEquals;
 public class ComplexKeyTest {
 
   /**
-   * Instantiates a new complex key test.
-   */
-  public ComplexKeyTest() {
-  }
-
-  @BeforeClass
-  public static void setUpClass() {
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-  }
-
-  @Before
-  public void setUp() {
-  }
-
-  @After
-  public void tearDown() {
-  }
-
-  /**
    * Prepare complex keys using different expressions.
    *
    * @pre  Prepare the expressions for the complex keys.

@@ -49,7 +49,7 @@ import net.spy.memcached.ops.OperationStatus;
 public class ViewFuture extends HttpFuture<ViewResponse> {
   private final AtomicReference<BulkFuture<Map<String, Object>>> multigetRef;
 
-  private AbstractView view;
+  private final AbstractView view;
 
   public ViewFuture(CountDownLatch latch, long timeout, AbstractView view,
     ExecutorService service) {

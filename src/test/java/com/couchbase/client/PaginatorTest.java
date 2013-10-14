@@ -80,11 +80,11 @@ public class PaginatorTest {
    * Helper class to generate city JSON documents.
    */
   public static class City {
-    private String type = "city";
-    private String name;
-    private String country;
-    private String continent;
-    private long population;
+    private final String type = "city";
+    private final String name;
+    private final String country;
+    private final String continent;
+    private final long population;
 
     /**
      * Instantiates a new city.

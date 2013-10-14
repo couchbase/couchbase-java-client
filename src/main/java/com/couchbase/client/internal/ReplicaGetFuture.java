@@ -43,7 +43,7 @@ public class ReplicaGetFuture<T extends Object>
 
   private final long timeout;
   private GetFuture<T> completedFuture;
-  private List<GetFuture<T>> monitoredFutures;
+  private final List<GetFuture<T>> monitoredFutures;
   private boolean cancelled = false;
 
   public ReplicaGetFuture(long timeout, ExecutorService service) {
@@ -81,7 +81,7 @@ public class ReplicaGetFuture<T extends Object>
       if (completedFuture != null && completedFuture.isDone()
         && !completedFuture.isCancelled()) {
         cancelOtherFutures(completedFuture);
-        return (T) completedFuture.get();
+        return completedFuture.get();
       }
     }
 

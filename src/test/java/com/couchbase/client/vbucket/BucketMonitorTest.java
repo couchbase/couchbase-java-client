@@ -67,8 +67,8 @@ public class BucketMonitorTest {
    */
   @Test
   public void testInstantiate() throws Exception {
-   BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
-        BUCKET_NAME, USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
+    BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
+      USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
     assertEquals(USERNAME, bucketMonitor.getHttpUser());
     assertEquals(PASSWORD, bucketMonitor.getHttpPass());
   }
@@ -87,8 +87,8 @@ public class BucketMonitorTest {
    */
   @Test
   public void testObservable() throws Exception {
-   BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
-        BUCKET_NAME, USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
+    BucketMonitor bucketMonitor = new BucketMonitor(new URI(STREAMING_URI),
+      USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
 
     BucketObserverMock observer = new BucketObserverMock();
     bucketMonitor.addObserver(observer);
@@ -96,7 +96,7 @@ public class BucketMonitorTest {
     bucketMonitor.startMonitor();
 
     assertTrue("Update for observer was not called.",
-        observer.isUpdateCalled());
+      observer.isUpdateCalled());
     bucketMonitor.shutdown();
   }
 
@@ -108,7 +108,7 @@ public class BucketMonitorTest {
   @Test(expected = ConnectionException.class)
   public void shouldFailOnInvalidPeer() throws Exception {
     BucketMonitor monitor = new BucketMonitor(new URI("http://invalidHost:8091/"),
-      BUCKET_NAME, USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
+      USERNAME, PASSWORD, CONFIG_PARSER, configProvider);
     monitor.startMonitor();
   }
 

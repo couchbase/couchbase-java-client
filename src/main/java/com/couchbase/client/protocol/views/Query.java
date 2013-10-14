@@ -71,7 +71,7 @@ public class Query {
   private static final String DEBUG = "debug";
   private boolean includedocs = false;
 
-  private Map<String, Object> args;
+  private final Map<String, Object> args;
 
   /**
    * Creates a new Query object with default settings.
@@ -546,9 +546,9 @@ public class Query {
     if (key.equals(STARTKEYDOCID) || key.equals(BBOX)) {
       encoded = (String) value;
     } else if (value instanceof Stale) {
-      encoded = ((Stale) value).toString();
+      encoded = value.toString();
     } else if (value instanceof OnError) {
-      encoded = ((OnError) value).toString();
+      encoded = value.toString();
     } else if (StringUtils.isJsonObject(value.toString())) {
       encoded = value.toString();
     } else if(value.toString().startsWith("\"")) {

@@ -73,14 +73,13 @@ public class BucketMonitor extends Observable {
 
   /**
    * @param cometStreamURI the URI which will stream node changes
-   * @param bucketname the bucketToMonitor name we are monitoring
    * @param username the username required for HTTP Basic Auth to the restful
    *          service
    * @param password the password required for HTTP Basic Auth to the restful
    *          service
    */
-  public BucketMonitor(URI cometStreamURI, String bucketname, String username,
-      String password, ConfigurationParser configParser, ConfigurationProviderHTTP provider) {
+  public BucketMonitor(URI cometStreamURI, String username, String password,
+    ConfigurationParser configParser, ConfigurationProviderHTTP provider) {
     super();
     if (cometStreamURI == null) {
       throw new IllegalArgumentException("cometStreamURI cannot be NULL");
