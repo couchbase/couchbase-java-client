@@ -57,7 +57,6 @@ import org.jboss.netty.handler.codec.http.HttpVersion;
 public class BucketMonitor extends Observable {
 
   private final URI cometStreamURI;
-  private Bucket bucket;
   private final String httpUser;
   private final String httpPass;
   private final ChannelFactory factory;
@@ -70,12 +69,7 @@ public class BucketMonitor extends Observable {
   private static final Logger LOGGER =
     LoggerFactory.getLogger(BucketMonitor.class.getName());
   private ClientBootstrap bootstrap;
-
-  /**
-   * The specification version which this client meets. This will be included in
-   * requests to the server.
-   */
-  public static final String CLIENT_SPEC_VER = "1.0";
+  private final ConfigurationProviderHTTP provider;
 
   /**
    * @param cometStreamURI the URI which will stream node changes
@@ -86,7 +80,7 @@ public class BucketMonitor extends Observable {
    *          service
    */
   public BucketMonitor(URI cometStreamURI, String bucketname, String username,
-      String password, ConfigurationParser configParser) {
+      String password, ConfigurationParser configParser, ConfigurationProviderHTTP provider) {
     super();
     if (cometStreamURI == null) {
       throw new IllegalArgumentException("cometStreamURI cannot be NULL");
@@ -107,19 +101,21 @@ public class BucketMonitor extends Observable {
     factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
       Executors.newCachedThreadPool());
     this.headers = new HttpMessageHeaders();
+      this.provider = provider;
   }
 
   /**
    * Take any action required when the monitor appears to be disconnected.
    */
   protected void notifyDisconnected() {
-    this.bucket.setIsNotUpdating();
-    setChanged();
-    LOGGER.trace("Marked bucket " + this.bucket.getName()
+    Bucket bucket = provider.getBucketConfiguration(provider.getBucket());
+    bucket.setIsNotUpdating();
+    LOGGER.trace("Marked bucket " + bucket.getName()
       + " as not updating.  Notifying observers.");
     LOGGER.trace("There appear to be " + this.countObservers()
       + " observers waiting for notification");
-    notifyObservers(this.bucket);
+    setChanged();
+    notifyObservers();
   }
 
   /**
@@ -217,7 +213,8 @@ public class BucketMonitor extends Observable {
       LOGGER.debug("Getting server list returns this last chunked response:\n"
           + response);
       Bucket bucketToMonitor = this.configParser.parseBucket(response);
-      setBucket(bucketToMonitor);
+      setChanged();
+      notifyObservers(bucketToMonitor);
     } catch (ParseException ex) {
       LOGGER.warn("Invalid client configuration received from server. "
         + "Staying with existing configuration.", ex);
@@ -261,23 +258,8 @@ public class BucketMonitor extends Observable {
       HttpHeaders.Values.NO_CACHE);
     headers.setHeader(request, HttpHeaders.Names.ACCEPT, "application/json");
     headers.setHeader(request, HttpHeaders.Names.USER_AGENT,
-      "spymemcached vbucket client");
-    headers.setHeader(request,
-      "X-memcachekv-Store-Client-Specification-Version", CLIENT_SPEC_VER);
+      "Couchbase Java Client");
     return request;
-  }
-
-  /**
-   * Update the config if it has changed and notify our observers.
-   *
-   * @param newBucket the bucketToMonitor to set
-   */
-  private void setBucket(Bucket newBucket) {
-    if (this.bucket == null || !this.bucket.equals(newBucket)) {
-      this.bucket = newBucket;
-      setChanged();
-      notifyObservers(this.bucket);
-    }
   }
 
   /**
@@ -322,7 +304,8 @@ public class BucketMonitor extends Observable {
     try {
       String response = handler.getLastResponse();
       Bucket updatedBucket = this.configParser.parseBucket(response);
-      setBucket(updatedBucket);
+      setChanged();
+      notifyObservers(updatedBucket);
     } catch (ParseException e) {
       LOGGER.warn("Invalid client configuration received from server. Staying with "
         +  "existing configuration.", e);
