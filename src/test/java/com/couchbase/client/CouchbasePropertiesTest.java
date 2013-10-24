@@ -33,14 +33,19 @@ import static org.junit.Assert.assertNull;
  */
 public class CouchbasePropertiesTest {
 
+  @Before
+  public void resetProperties() {
+    System.clearProperty("viewmode");
+    System.clearProperty("cbclient.viewmode");
+    System.clearProperty("throttler");
+    CouchbaseProperties.resetFileProperties();
+  }
+
   @Test
   public void testDefaults() {
-    String namespace = CouchbaseProperties.getNamespace();
-    assertEquals("cbclient", namespace);
+    assertEquals("cbclient", CouchbaseProperties.getNamespace());
     assertFalse(CouchbaseProperties.hasFileProperties());
 
-    System.clearProperty("viewmode");
-    System.clearProperty("cbcclient.viewmode");
     assertNull(CouchbaseProperties.getProperty("viewmode"));
     assertNull(CouchbaseProperties.getProperty("viewmode", true));
     assertEquals("default",
@@ -63,15 +68,12 @@ public class CouchbasePropertiesTest {
   public void testPropertiesThroughFile() {
     assertFalse(CouchbaseProperties.hasFileProperties());
 
-    System.clearProperty("throttler");
     assertNull(CouchbaseProperties.getProperty("throttler"));
     CouchbaseProperties.setPropertyFile("cbclient-test.properties");
     assertEquals("demo_throttler",
       CouchbaseProperties.getProperty("throttler"));
     assertEquals("demo_throttler",
       CouchbaseProperties.getProperty("throttler", true));
-
-    CouchbaseProperties.resetFileProperties();
   }
 
   @Test
