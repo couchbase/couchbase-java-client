@@ -53,6 +53,35 @@ import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigType;
+import net.spy.memcached.AddrUtil;
+import net.spy.memcached.BroadcastOpFactory;
+import net.spy.memcached.CASResponse;
+import net.spy.memcached.CASValue;
+import net.spy.memcached.CachedData;
+import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.ObserveResponse;
+import net.spy.memcached.OperationTimeoutException;
+import net.spy.memcached.PersistTo;
+import net.spy.memcached.ReplicateTo;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.GetOperation;
+import net.spy.memcached.ops.GetlOperation;
+import net.spy.memcached.ops.ObserveOperation;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.ReplicaGetOperation;
+import net.spy.memcached.ops.StatsOperation;
+import net.spy.memcached.transcoders.Transcoder;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpVersion;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHttpEntityEnclosingRequest;
+import org.apache.http.message.BasicHttpRequest;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -74,33 +103,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.BroadcastOpFactory;
-import net.spy.memcached.CASResponse;
-import net.spy.memcached.CASValue;
-import net.spy.memcached.CachedData;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.ObserveResponse;
-import net.spy.memcached.OperationTimeoutException;
-import net.spy.memcached.PersistTo;
-import net.spy.memcached.ReplicateTo;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.internal.OperationFuture;
-import net.spy.memcached.ops.GetlOperation;
-import net.spy.memcached.ops.ObserveOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationCallback;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.ops.ReplicaGetOperation;
-import net.spy.memcached.ops.StatsOperation;
-import net.spy.memcached.transcoders.Transcoder;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpVersion;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
 
 /**
  * A client for Couchbase Server.
@@ -1085,15 +1087,66 @@ public class CouchbaseClient extends MemcachedClient
       final CountDownLatch latch = new CountDownLatch(1);
       final GetFuture<T> rv =
         new GetFuture<T>(latch, operationTimeout, key, executorService);
-      Operation op = opFact.replicaGet(key, index,
+      Operation op = createOperationForReplicaGet(key, rv, replicaFuture,
+        latch, tc, index, true);
+
+      rv.setOperation(op);
+      mconn.enqueueOperation(key, op);
+
+      if (op.isCancelled()) {
+        discardedOps++;
+        getLogger().debug("Silently discarding replica get for key \""
+          + key + "\" (cancelled).");
+      } else {
+        replicaFuture.addFutureToMonitor(rv);
+      }
+
+    }
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    final GetFuture<T> additionalActiveGet = new GetFuture<T>(latch, operationTimeout, key,
+      executorService);
+    Operation op = createOperationForReplicaGet(key, additionalActiveGet,
+      replicaFuture, latch, tc, 0, false);
+    additionalActiveGet.setOperation(op);
+    mconn.enqueueOperation(key, op);
+
+    if (op.isCancelled()) {
+      discardedOps++;
+      getLogger().debug("Silently discarding replica (active) get for key \""
+        + key + "\" (cancelled).");
+    } else {
+      replicaFuture.addFutureToMonitor(additionalActiveGet);
+    }
+
+    if (discardedOps == replicaCount + 1) {
+      throw new IllegalStateException("No replica get operation could be "
+        + "dispatched because all operations have been cancelled.");
+    }
+
+    return replicaFuture;
+  }
+
+  /**
+   * Helper method to create an operation for the asyncGetFromReplica method.
+   *
+   * @param replica if the operation should go to a replica node.
+   * @return the created {@link Operation}.
+   */
+  private <T> Operation createOperationForReplicaGet(final String key,
+    final GetFuture<T> future, final ReplicaGetFuture<T> replicaFuture,
+    final CountDownLatch latch, final Transcoder<T> tc, final int replicaIndex,
+    final boolean replica) {
+    if (replica) {
+      return opFact.replicaGet(key, replicaIndex,
         new ReplicaGetOperation.Callback() {
           private Future<T> val = null;
 
           @Override
           public void receivedStatus(OperationStatus status) {
-            rv.set(val, status);
+            future.set(val, status);
             if (!replicaFuture.isDone()) {
-              replicaFuture.setCompletedFuture(rv);
+              replicaFuture.setCompletedFuture(future);
             }
           }
 
@@ -1109,35 +1162,31 @@ public class CouchbaseClient extends MemcachedClient
             latch.countDown();
           }
         });
-
-      rv.setOperation(op);
-      mconn.enqueueOperation(key, op);
-
-      if (op.isCancelled()) {
-        discardedOps++;
-        getLogger().debug("Silently discarding replica get for key \""
-          + key + "\" (cancelled).");
-      } else {
-        replicaFuture.addFutureToMonitor(rv);
-      }
-
-    }
-
-    GetFuture<T> additionalActiveGet = asyncGet(key, tc);
-    if (additionalActiveGet.isCancelled()) {
-      discardedOps++;
-      getLogger().debug("Silently discarding replica (active) get for key \""
-        + key + "\" (cancelled).");
     } else {
-      replicaFuture.addFutureToMonitor(additionalActiveGet);
-    }
+      return opFact.get(key, new GetOperation.Callback() {
+        private Future<T> val = null;
 
-    if (discardedOps == replicaCount + 1) {
-      throw new IllegalStateException("No replica get operation could be "
-        + "dispatched because all operations have been cancelled.");
-    }
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          future.set(val, status);
+          if (!replicaFuture.isDone()) {
+            replicaFuture.setCompletedFuture(future);
+          }
+        }
 
-    return replicaFuture;
+        @Override
+        public void gotData(String k, int flags, byte[] data) {
+          assert key.equals(k) : "Wrong key returned";
+          val = tcService.decode(tc, new CachedData(flags, data,
+            tc.getMaxSize()));
+        }
+
+        @Override
+        public void complete() {
+          latch.countDown();
+        }
+      });
+    }
   }
 
   /**
