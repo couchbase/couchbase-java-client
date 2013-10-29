@@ -57,7 +57,7 @@ public class DefaultConfigTest {
     final int numVBuckets = 32;
     List<VBucket> vbuckets = new ArrayList<VBucket>();
     for (int i = 0; i < numVBuckets; i++) {
-      vbuckets.add(new VBucket(i % 2, new int[] {}));
+      vbuckets.add(new VBucket((short)(i % 2)));
     }
 
     DefaultConfig config = new DefaultConfig(

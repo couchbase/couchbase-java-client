@@ -143,7 +143,7 @@ public class DefaultConfig extends SpyObject implements Config {
     int rv = mappedServer;
     if (mappedServer == wrongServer) {
       rv = (rv + 1) % this.serversCount;
-      this.vbuckets.get(vbucket).setMaster(rv);
+      this.vbuckets.get(vbucket).setMaster((short) rv);
     }
     return rv;
   }
