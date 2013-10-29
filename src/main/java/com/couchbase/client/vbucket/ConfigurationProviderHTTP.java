@@ -212,7 +212,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
             + " response... skipping");
           continue;
         }
-        Map<String, Pool> pools = this.configurationParser.parseBase(base);
+        Map<String, Pool> pools = this.configurationParser.parsePools(base);
 
         // check for the default pool name
         if (!pools.containsKey(DEFAULT_POOL_NAME)) {
@@ -227,7 +227,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
           URLConnection poolConnection = urlConnBuilder(baseUri,
             pool.getUri());
           String poolString = readToString(poolConnection);
-          configurationParser.loadPool(pool, poolString);
+          configurationParser.parsePool(pool, poolString);
           URLConnection poolBucketsConnection = urlConnBuilder(baseUri,
             pool.getBucketsUri());
           String sBuckets = readToString(poolBucketsConnection);

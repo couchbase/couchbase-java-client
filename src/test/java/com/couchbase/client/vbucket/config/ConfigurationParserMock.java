@@ -54,7 +54,7 @@ public class ConfigurationParserMock implements ConfigurationParser {
   private List<Node> nodes = Collections.singletonList(new Node(Status.healthy,
       "localhost", Collections.singletonMap(Port.direct, "11210")));
 
-  public Map<String, Pool> parseBase(String base) throws ParseException {
+  public Map<String, Pool> parsePools(String base) throws ParseException {
     Map<String, Pool> result = new HashMap<String, Pool>();
     try {
       parseBaseCalled = true;
@@ -93,7 +93,7 @@ public class ConfigurationParserMock implements ConfigurationParser {
 
   }
 
-  public void loadPool(Pool pool, String sPool) throws ParseException {
+  public void parsePool(Pool pool, String sPool) throws ParseException {
     try {
       loadPoolCalled = true;
       pool.setBucketsUri(new URI(bucketsUri));

@@ -22,7 +22,6 @@
 
 package com.couchbase.client.vbucket.config;
 
-
 import com.couchbase.client.vbucket.ConnectionException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,55 +38,70 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
- * A ConfigParserJSON.
+ * This {@link ConfigurationParser} takes JSON-based configuration information
+ * and transforms it into a {@link Bucket}.
  */
-public class ConfigurationParserJSON extends SpyObject implements
-    ConfigurationParser {
-  private static final String NAME_ATTR = "name";
-  private static final String URI_ATTR = "uri";
-  private static final String STREAMING_URI_ATTR = "streamingUri";
+public class ConfigurationParserJSON extends SpyObject
+  implements ConfigurationParser {
 
-  public Map<String, Pool> parseBase(String base) throws ParseException {
-    Map<String, Pool> parsedBase = new HashMap<String, Pool>();
-    JSONArray poolsJA = null;
+  private final ConfigFactory configFactory = new DefaultConfigFactory();
+
+  /**
+   * Parses the /pools URI and returns a map of found pools.
+   *
+   * @param poolsJson the raw JSON of the pools response.
+   * @return a map of found pools.
+   * @throws ParseException if the JSON could not be parsed properly.
+   * @throws ConnectionException if a non-recoverable connect error happened.
+   */
+  public Map<String, Pool> parsePools(final String poolsJson)
+    throws ParseException {
+    final Map<String, Pool> parsedBase = new HashMap<String, Pool>();
+    final JSONArray allPools;
+
     try {
-      JSONObject baseJO = new JSONObject(base);
-      poolsJA = baseJO.getJSONArray("pools");
+      allPools = new JSONObject(poolsJson).getJSONArray("pools");
     } catch (JSONException e) {
-      getLogger().debug("Received the folloing unparsable response: "
+      getLogger().info("Received the following unparsable response: "
         + e.getMessage());
       throw new ConnectionException("Connection URI is either incorrect "
         + "or invalid as it cannot be parsed.");
     }
-    for (int i = 0; i < poolsJA.length(); ++i) {
+
+    for (int i = 0; i < allPools.length(); i++) {
       try {
-        JSONObject poolJO = poolsJA.getJSONObject(i);
-        String name = (String) poolJO.get(NAME_ATTR);
-        if (name == null || "".equals(name)) {
+        final JSONObject currentPool = allPools.getJSONObject(i);
+        final String name = currentPool.getString("name");
+        if (name == null || name.isEmpty()) {
           throw new ParseException("Pool's name is missing.", 0);
         }
-        String uri = (String) poolJO.get(URI_ATTR);
-        if (uri == null || "".equals(uri)) {
-          throw new ParseException("Pool's uri is missing.", 0);
-        }
-        String streamingUri = (String) poolJO.get(STREAMING_URI_ATTR);
-        Pool pool = new Pool(name, new URI(uri), new URI(streamingUri));
+        final URI uri = new URI(currentPool.getString("uri"));
+        final URI streamingUri = new URI(currentPool.getString("streamingUri"));
+        final Pool pool = new Pool(name, uri, streamingUri);
         parsedBase.put(name, pool);
       } catch (JSONException e) {
-        getLogger().error("One of the pool configuration can not be parsed.",
-            e);
+        getLogger().error("One of the pool configurations can not be parsed.",
+          e);
       } catch (URISyntaxException e) {
         getLogger().error("Server provided an incorrect uri.", e);
       }
     }
+
     return parsedBase;
   }
 
-  public void loadPool(Pool pool, String sPool) throws ParseException {
+  /**
+   * Parses a given /pools/{pool} JSON for the buckets URI.
+   *
+   * @param pool the actual pool object to attach to.
+   * @param poolsJson the raw JSON for the pool response.
+   * @throws ParseException if the JSON could not be parsed properly.
+   */
+  public void parsePool(final Pool pool, final String poolsJson)
+    throws ParseException {
     try {
-      JSONObject poolJO = new JSONObject(sPool);
-      JSONObject poolBucketsJO = poolJO.getJSONObject("buckets");
-      URI bucketsUri = new URI((String) poolBucketsJO.get("uri"));
+      JSONObject buckets = new JSONObject(poolsJson).getJSONObject("buckets");
+      URI bucketsUri = new URI(buckets.getString("uri"));
       pool.setBucketsUri(bucketsUri);
     } catch (JSONException e) {
       throw new ParseException(e.getMessage(), 0);
@@ -96,66 +110,115 @@ public class ConfigurationParserJSON extends SpyObject implements
     }
   }
 
-  public Map<String, Bucket> parseBuckets(String buckets)
+  /**
+   * Parses the /pools/{pool}/buckets URI for a list of contained buckets.
+   *
+   * @param bucketsJson the raw JSON of the buckets response.
+   * @return a map containing all found buckets.
+   * @throws ParseException if the JSON could not be parsed properly.
+   */
+  public Map<String, Bucket> parseBuckets(final String bucketsJson)
     throws ParseException {
-    Map<String, Bucket> bucketsMap = new HashMap<String, Bucket>();
     try {
-      JSONArray bucketsJA = new JSONArray(buckets);
-      for (int i = 0; i < bucketsJA.length(); ++i) {
-        JSONObject bucketJO = bucketsJA.getJSONObject(i);
-        Bucket bucket = parseBucketFromJSON(bucketJO);
+      Map<String, Bucket> bucketsMap = new HashMap<String, Bucket>();
+      JSONArray allBuckets = new JSONArray(bucketsJson);
+
+      for (int i = 0; i < allBuckets.length(); i++) {
+        JSONObject currentBucket = allBuckets.getJSONObject(i);
+        Bucket bucket = parseBucketFromJSON(currentBucket);
         bucketsMap.put(bucket.getName(), bucket);
       }
+
+      return bucketsMap;
     } catch (JSONException e) {
       throw new ParseException(e.getMessage(), 0);
     }
-    return bucketsMap;
   }
 
-  public Bucket parseBucket(String sBucket) throws ParseException {
+  /**
+   * Parse a raw bucket config string into a {@link Bucket} configuration.
+   *
+   * @param bucketJson the raw JSON.
+   * @return the parsed configuration.
+   * @throws ParseException if the JSON could not be parsed properly.
+   */
+  public Bucket parseBucket(String bucketJson) throws ParseException {
     try {
-      return parseBucketFromJSON(new JSONObject(sBucket));
+      return parseBucketFromJSON(new JSONObject(bucketJson));
     } catch (JSONException e) {
       throw new ParseException(e.getMessage(), 0);
     }
   }
 
-  private Bucket parseBucketFromJSON(JSONObject bucketJO)
+  /**
+   * Helper method to create a {@link Bucket} config from JSON.
+   *
+   * @param bucketJson the input as a {@link JSONObject}.
+   * @return a parsed {@link Bucket} configuration.
+   * @throws ParseException if the JSON could not be parsed properly.
+   */
+  private Bucket parseBucketFromJSON(JSONObject bucketJson)
     throws ParseException {
     try {
-      String bucketname = bucketJO.get("name").toString();
-      String streamingUri = bucketJO.get("streamingUri").toString();
-      ConfigFactory cf = new DefaultConfigFactory();
-      Config config = cf.create(bucketJO);
+      String bucketName = bucketJson.getString("name");
+      URI streamingUri = new URI(bucketJson.getString("streamingUri"));
+      Config config = configFactory.create(bucketJson);
+
       List<Node> nodes = new ArrayList<Node>();
-      JSONArray nodesJA = bucketJO.getJSONArray("nodes");
-      for (int i = 0; i < nodesJA.length(); ++i) {
-        JSONObject nodeJO = nodesJA.getJSONObject(i);
-        String statusValue = nodeJO.get("status").toString();
-        Status status = null;
-        try {
-          status = Status.valueOf(statusValue);
-        } catch (IllegalArgumentException e) {
-          getLogger().error("Unknown status value: " + statusValue);
-        }
-        String hostname = nodeJO.get("hostname").toString();
-        JSONObject portsJO = nodeJO.getJSONObject("ports");
-        Map<Port, String> ports = new HashMap<Port, String>();
-        for (Port port : Port.values()) {
-          String portValue = portsJO.get(port.toString()).toString();
-          if (portValue == null || portValue.isEmpty()) {
-            continue;
-          }
-          ports.put(port, portValue);
-        }
-        Node node = new Node(status, hostname, ports);
-        nodes.add(node);
+      JSONArray allNodes = bucketJson.getJSONArray("nodes");
+      for (int i = 0; i < allNodes.length(); i++) {
+        JSONObject currentNode = allNodes.getJSONObject(i);
+        Status status = parseNodeStatus(currentNode.getString("status"));
+        String hostname = currentNode.getString("hostname");
+        Map<Port, String> ports = extractPorts(
+          currentNode.getJSONObject("ports"));
+        nodes.add(new Node(status, hostname, ports));
       }
-      return new Bucket(bucketname, config, new URI(streamingUri), nodes);
+      return new Bucket(bucketName, config, streamingUri, nodes);
     } catch (JSONException e) {
       throw new ParseException(e.getMessage(), 0);
     } catch (URISyntaxException e) {
       throw new ParseException(e.getMessage(), 0);
     }
   }
+
+  /**
+   * Helper method to parse a node {@link Status} out of the raw response.
+   *
+   * @param status the status to parse.
+   * @return the parsed status enum value.
+   */
+  private Status parseNodeStatus(String status) {
+    if (status == null || status.isEmpty()) {
+      return null;
+    }
+
+    try {
+      return Status.valueOf(status);
+    } catch (IllegalArgumentException e) {
+      getLogger().error("Unknown status value: " + status);
+      return null;
+    }
+  }
+
+  /**
+   * Helper method to extract a map of node ports from a {@link JSONObject}.
+   *
+   * @param portsJson the port information.
+   * @return the extracted port map.
+   * @throws JSONException if the JSON could not be parsed as expected.
+   */
+  private Map<Port, String> extractPorts(JSONObject portsJson)
+    throws JSONException {
+    Map<Port, String> ports = new HashMap<Port, String>();
+    for (Port port : Port.values()) {
+      String portValue = portsJson.getString(port.toString());
+      if (portValue == null || portValue.isEmpty()) {
+        continue;
+      }
+      ports.put(port, portValue);
+    }
+    return ports;
+  }
+
 }
