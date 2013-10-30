@@ -102,6 +102,12 @@ public class ConfigurationParserMock implements ConfigurationParser {
     }
   }
 
+  @Override
+  public Bucket updateBucket(String bucketJson, Bucket currentBucket)
+    throws ParseException {
+    return parseBucket(bucketJson);
+  }
+
   public boolean isParseBaseCalled() {
     return parseBaseCalled;
   }

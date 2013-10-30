@@ -36,4 +36,7 @@ public interface ConfigFactory {
   Config create(String data);
 
   Config create(JSONObject jsonObject);
+
+  Config create(JSONObject jsonObject, Config oldConfig);
+
 }

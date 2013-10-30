@@ -302,7 +302,10 @@ public class BucketMonitor extends Observable {
   protected void replaceConfig() {
     try {
       String response = handler.getLastResponse();
-      Bucket updatedBucket = this.configParser.parseBucket(response);
+      Bucket updatedBucket = this.configParser.updateBucket(
+        response,
+        provider.getBucketConfiguration(provider.getBucket())
+      );
       setChanged();
       notifyObservers(updatedBucket);
     } catch (ParseException e) {
