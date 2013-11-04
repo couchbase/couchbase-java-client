@@ -846,16 +846,19 @@ public class CouchbaseClient extends MemcachedClient
     final Transcoder<T> tc) {
     int discardedOps = 0;
 
-    int replicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
-    if (replicaCount == 0) {
-      throw new RuntimeException("Currently, there is no replica available for"
-        + " the given key (\"" + key + "\").");
+    int bucketReplicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
+    if (bucketReplicaCount == 0) {
+      getLogger().debug("No replica configured for this bucket, trying to get "
+        + "the document from active node only.");
     }
+
+    VBucketNodeLocator locator = (VBucketNodeLocator) mconn.getLocator();
+    List<Integer> actualReplicaIndexes = locator.getReplicaIndexes(key);
 
     final ReplicaGetFuture<T> replicaFuture = new ReplicaGetFuture<T>(
       operationTimeout, executorService);
 
-    for(int index=0; index < replicaCount; index++) {
+    for(int index : actualReplicaIndexes) {
       final CountDownLatch latch = new CountDownLatch(1);
       final GetFuture<T> rv =
         new GetFuture<T>(latch, operationTimeout, key, executorService);
@@ -875,23 +878,27 @@ public class CouchbaseClient extends MemcachedClient
 
     }
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    final GetFuture<T> additionalActiveGet = new GetFuture<T>(latch, operationTimeout, key,
-      executorService);
-    Operation op = createOperationForReplicaGet(key, additionalActiveGet,
-      replicaFuture, latch, tc, 0, false);
-    additionalActiveGet.setOperation(op);
-    mconn.enqueueOperation(key, op);
+    if (locator.hasActiveMaster(key)) {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final GetFuture<T> additionalActiveGet = new GetFuture<T>(latch, operationTimeout, key,
+        executorService);
+      Operation op = createOperationForReplicaGet(key, additionalActiveGet,
+        replicaFuture, latch, tc, 0, false);
+      additionalActiveGet.setOperation(op);
+      mconn.enqueueOperation(key, op);
 
-    if (op.isCancelled()) {
-      discardedOps++;
-      getLogger().debug("Silently discarding replica (active) get for key \""
-        + key + "\" (cancelled).");
+      if (op.isCancelled()) {
+        discardedOps++;
+        getLogger().debug("Silently discarding replica (active) get for key \""
+          + key + "\" (cancelled).");
+      } else {
+        replicaFuture.addFutureToMonitor(additionalActiveGet);
+      }
     } else {
-      replicaFuture.addFutureToMonitor(additionalActiveGet);
+      discardedOps++;
     }
 
-    if (discardedOps == replicaCount + 1) {
+    if (discardedOps == actualReplicaIndexes.size() + 1) {
       throw new IllegalStateException("No replica get operation could be "
         + "dispatched because all operations have been cancelled.");
     }
@@ -917,7 +924,7 @@ public class CouchbaseClient extends MemcachedClient
           @Override
           public void receivedStatus(OperationStatus status) {
             future.set(val, status);
-            if (!replicaFuture.isDone()) {
+            if (!replicaFuture.isDone() && status.isSuccess()) {
               replicaFuture.setCompletedFuture(future);
             }
           }
@@ -941,7 +948,7 @@ public class CouchbaseClient extends MemcachedClient
         @Override
         public void receivedStatus(OperationStatus status) {
           future.set(val, status);
-          if (!replicaFuture.isDone()) {
+          if (!replicaFuture.isDone() && status.isSuccess()) {
             replicaFuture.setCompletedFuture(future);
           }
         }

@@ -26,6 +26,7 @@ import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigDifference;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.couchbase.client.vbucket.config.VBucket;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.NodeLocator;
 import net.spy.memcached.compat.SpyObject;
@@ -268,6 +270,44 @@ public class VBucketNodeLocator extends SpyObject implements NodeLocator {
     } else {
       return nodes.iterator().next();
     }
+  }
+
+  /**
+   * Gets a list of vBucket indexes for the current replicas defined.
+   *
+   * This method helps in identifying the actual current replicas because
+   * during a rebalance or failover scenario this list can differ from the
+   * actual config setting in the bucket.
+   *
+   * @param key the key to check for.
+   * @return a list of currently usable replica indexes.
+   */
+  public List<Integer> getReplicaIndexes(String key) {
+    TotalConfig totConfig = fullConfig.get();
+    Config config = totConfig.getConfig();
+    int vbucket = config.getVbucketByKey(key);
+    VBucket bucket = config.getVbuckets().get(vbucket);
+    List<Integer> indexes = new ArrayList<Integer>();
+    for (int i = 0; i < VBucket.MAX_REPLICAS; i++) {
+      if (bucket.getReplica(i) != VBucket.REPLICA_NOT_USED) {
+        indexes.add(i);
+      }
+    }
+    return indexes;
+  }
+
+  /**
+   * Checks if in the current vbucket the master is not "-1".
+   *
+   * @param key the key to check for.
+   * @return true if there is a master assigned for the key.
+   */
+  public boolean hasActiveMaster(String key) {
+    TotalConfig totConfig = fullConfig.get();
+    Config config = totConfig.getConfig();
+    int vbucket = config.getVbucketByKey(key);
+    VBucket bucket = config.getVbuckets().get(vbucket);
+    return bucket.getMaster() != -1;
   }
 
   private static class TotalConfig {
