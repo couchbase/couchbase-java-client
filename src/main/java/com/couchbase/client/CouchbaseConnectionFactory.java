@@ -444,17 +444,14 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
           Thread.sleep(waitTime);
 
           ConfigurationProvider oldConfigProvider = getConfigurationProvider();
-
-          if (null != oldConfigProvider) {
-            oldConfigProvider.shutdown();
-          }
+          Reconfigurable oldRec = oldConfigProvider.getReconfigurable();
 
           ConfigurationProvider newConfigProvider =
             new ConfigurationProviderHTTP(storedBaseList, bucket, pass);
-          setConfigurationProvider(newConfigProvider);
+          newConfigProvider.subscribe(bucket, oldRec);
 
-          newConfigProvider.subscribe(bucket,
-            oldConfigProvider.getReconfigurable());
+          setConfigurationProvider(newConfigProvider);
+          oldConfigProvider.shutdown();
 
           if (!doingResubscribe.compareAndSet(true, false)) {
             LOGGER.log(Level.WARNING,
