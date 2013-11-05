@@ -567,8 +567,9 @@ public class CouchbaseClientTest extends BinaryClientTest {
     OperationFuture<Boolean> invalid = cb.set("something", 0,
       "to_store", ReplicateTo.THREE);
     assertFalse(invalid.get());
-    assertTrue(invalid.getStatus().getMessage().matches(
-      "Requested replication to 3 node\\(s\\), but only \\d are available\\."));
+    String expected = "Currently, there is no replica node available for "
+      + "the given replication index (3).";
+    assertTrue(invalid.getStatus().getMessage().equals(expected));
   }
 
   /**
