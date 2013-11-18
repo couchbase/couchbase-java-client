@@ -58,6 +58,8 @@ public interface Config {
 
   List<String> getServers();
 
+  List<String> getRestEndpoints();
+
   List<URL> getCouchServers();
 
   List<VBucket> getVbuckets();

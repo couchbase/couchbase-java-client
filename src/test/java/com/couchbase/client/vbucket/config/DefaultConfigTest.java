@@ -53,6 +53,8 @@ public class DefaultConfigTest {
     List<String> servers = Arrays.asList("node1", "node2", "node3");
     List<URL> couchServers = Arrays.asList(new URL("http://node1:8092/"),
       new URL("http://node2:8092/"), new URL("http://node3:8092/"));
+    List<String> endpoints = Arrays.asList("http://node1:8091/pools",
+      "http://node2:8091/pools", "http://node3:8091/pools");
 
     final int numVBuckets = 32;
     List<VBucket> vbuckets = new ArrayList<VBucket>();
@@ -61,7 +63,8 @@ public class DefaultConfigTest {
     }
 
     DefaultConfig config = new DefaultConfig(
-      hashAlgorithm, 3, 0, numVBuckets, servers, vbuckets, couchServers);
+      hashAlgorithm, 3, 0, numVBuckets, servers, vbuckets, couchServers,
+      endpoints);
     assertTrue(config.nodeHasActiveVBuckets(new InetSocketAddress("node1", 8092)));
     assertTrue(config.nodeHasActiveVBuckets(new InetSocketAddress("node2", 8092)));
     assertFalse(config.nodeHasActiveVBuckets(new InetSocketAddress("node3", 8092)));
