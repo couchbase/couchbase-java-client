@@ -28,7 +28,8 @@ import com.couchbase.client.http.ViewPool;
 import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
-import com.couchbase.client.vbucket.config.DefaultConfig;
+import com.couchbase.client.vbucket.config.CouchbaseConfig;
+
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;

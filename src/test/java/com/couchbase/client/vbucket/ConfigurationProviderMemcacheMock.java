@@ -23,7 +23,7 @@
 package com.couchbase.client.vbucket;
 
 import com.couchbase.client.vbucket.config.Bucket;
-import com.couchbase.client.vbucket.config.CacheConfig;
+import com.couchbase.client.vbucket.config.MemcacheConfig;
 import com.couchbase.client.vbucket.config.Node;
 import java.net.URI;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class ConfigurationProviderMemcacheMock
     String uri = "http://"+TestConfig.IPV4_ADDR+":8091";
     URI streamingURI = URI.create(uri);
     List<String> restEndpoints = Arrays.asList(uri + "/pools");
-    CacheConfig config = new CacheConfig(1, restEndpoints);
+    MemcacheConfig config = new MemcacheConfig(1, restEndpoints);
     config.setServers(nodeList);
 
     List<Node> nodes = new ArrayList<Node>();

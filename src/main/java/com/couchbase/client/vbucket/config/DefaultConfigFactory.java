@@ -30,7 +30,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import net.spy.memcached.HashAlgorithm;
@@ -145,19 +144,19 @@ public class DefaultConfigFactory extends SpyObject implements ConfigFactory {
     }
 
     final List<String> populatedRestEndpoints = populateRestEndpoints(nodes);
-    CacheConfig config = new CacheConfig(amountOfNodes, populatedRestEndpoints);
+    MemcacheConfig config = new MemcacheConfig(amountOfNodes, populatedRestEndpoints);
     populateServersForMemcacheBucket(config, nodes);
     return config;
   }
 
   /**
-   * Helper method to populate the servers into the {@link CacheConfig}.
+   * Helper method to populate the servers into the {@link MemcacheConfig}.
    *
-   * @param config the {@link CacheConfig} to use.
+   * @param config the {@link MemcacheConfig} to use.
    * @param nodes the original list of nodes.
    * @throws JSONException if parsing the JSON was not successful.
    */
-  private void populateServersForMemcacheBucket(CacheConfig config,
+  private void populateServersForMemcacheBucket(MemcacheConfig config,
     JSONArray nodes) throws JSONException {
     List<String> serverNames = new ArrayList<String>(nodes.length());
     for (int i = 0; i < nodes.length(); i++) {
@@ -225,7 +224,7 @@ public class DefaultConfigFactory extends SpyObject implements ConfigFactory {
     final List<String> populatedRestEndpoints =
       populateRestEndpoints(viewServers);
 
-    return new DefaultConfig(hashAlgorithm, serversCount, replicasCount,
+    return new CouchbaseConfig(hashAlgorithm, serversCount, replicasCount,
       vBucketsCount, populatedServers, populatedVBuckets,
       populatedViewServers, populatedRestEndpoints);
   }
