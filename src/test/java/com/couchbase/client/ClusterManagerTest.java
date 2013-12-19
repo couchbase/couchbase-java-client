@@ -25,6 +25,7 @@ package com.couchbase.client;
 import com.couchbase.client.clustermanager.AuthType;
 import com.couchbase.client.clustermanager.BucketType;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -454,6 +455,27 @@ public class ClusterManagerTest extends TestCase {
     bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 0, true);
     Thread.sleep(1000);
     bucketTool.updateBucket("default", AuthType.SASL, 456, 1, 11212, "", true);
+  }
+
+  /**
+   * Use the {@link ClusterManagerBuilder} to create a customized
+   * {@link ClusterManager}.
+   *
+   * @throws Exception
+   */
+  public void testCreateFromBuilder() throws Exception {
+    ClusterManager manager = new ClusterManagerBuilder()
+      .setTcpNoDelay(false)
+      .setIoThreadCount(10)
+      .build(
+        Arrays.asList(URI.create("http://" + TestConfig.IPV4_ADDR
+          + ":8091/pools")),
+        CbTestConfig.CLUSTER_ADMINNAME,
+        CbTestConfig.CLUSTER_PASS
+      );
+
+    manager.createNamedBucket(BucketType.COUCHBASE, "custom", 256, 0, "foo",
+      false);
   }
 
 }
