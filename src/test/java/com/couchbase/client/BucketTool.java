@@ -127,7 +127,7 @@ public class BucketTool extends SpyObject {
         }
         @Override
         public String success(long elapsedTime) {
-          return "Bucket updation took " + elapsedTime + "ms";
+          return "Bucket update took " + elapsedTime + "ms";
         }
       };
     poll(callback);

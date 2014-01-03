@@ -85,7 +85,7 @@ public class ClusterManagerBuilder {
   }
 
   /**
-   * Set the HTTP connection timeout (5000 by default).
+   * Set the HTTP connection timeout (2 minutes by default).
    *
    * @param connectionTimeout the timeout of the connection.
    */
@@ -95,7 +95,7 @@ public class ClusterManagerBuilder {
   }
 
   /**
-   * The HTTP connection socket timeout (5000 by default).
+   * The HTTP connection socket timeout (2 minutes by default).
    *
    * @param socketTimeout the timeout of the socket on connect.
    */
