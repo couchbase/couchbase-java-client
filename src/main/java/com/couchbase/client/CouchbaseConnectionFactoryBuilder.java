@@ -58,6 +58,7 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
   private long obsPollInterval =
     CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL;
   private int obsPollMax = CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX;
+  private long obsTimeout = CouchbaseConnectionFactory.DEFAULT_OBS_TIMEOUT;
 
   private int viewTimeout = CouchbaseConnectionFactory.DEFAULT_VIEW_TIMEOUT;
   private int viewWorkers = CouchbaseConnectionFactory.DEFAULT_VIEW_WORKER_SIZE;
@@ -84,11 +85,41 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
     reconnThresholdTimeMsecs = TimeUnit.MILLISECONDS.convert(time, unit);
   }
 
+  /**
+   * Set the interval between observe polls in milliseconds.
+   *
+   * @param interval the interval in milliseconds.
+   * @return the builder for proper chaining.
+   */
   public CouchbaseConnectionFactoryBuilder setObsPollInterval(long interval) {
     obsPollInterval = interval;
     return this;
   }
 
+  /**
+   * Set the timeout for observe-based operations in milliseconds.
+   *
+   * This timeout is always used when PersistTo or ReplicateTo overloaded
+   * methods are used, instead of the default operation timeout.
+   *
+   * @param timeout the timeout in milliseconds.
+   * @return the builder for proper chaining.
+   */
+  public CouchbaseConnectionFactoryBuilder setObsTimeout(long timeout) {
+    obsTimeout = timeout;
+    return this;
+  }
+
+  /**
+   * Sets the maximum number of observe polls.
+   *
+   * Do not use this method directly, but instead use a combination of
+   * {@link #setObsPollInterval(long)} and {@link #setObsTimeout(long)}.
+   *
+   * @param maxPoll the maximum number of polls to run before giving up.
+   * @return the builder for proper chaining.
+   */
+  @Deprecated
   public CouchbaseConnectionFactoryBuilder setObsPollMax(int maxPoll) {
     obsPollMax = maxPoll;
     return this;
@@ -304,8 +335,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
       }
 
       @Override
-      public int getObsPollMax() {
-        return obsPollMax;
+      public long getObsTimeout() {
+        return obsTimeout;
       }
 
       @Override
@@ -450,8 +481,8 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
       }
 
       @Override
-      public int getObsPollMax() {
-        return obsPollMax;
+      public long getObsTimeout() {
+        return obsTimeout;
       }
 
       @Override
@@ -503,6 +534,13 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
    */
   public int getObsPollMax() {
     return obsPollMax;
+  }
+
+  /**
+   * @return the observe timeout
+   */
+  public long getObsTimeout() {
+    return obsTimeout;
   }
 
   /**

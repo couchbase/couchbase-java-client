@@ -1229,8 +1229,9 @@ public class CouchbaseClient extends MemcachedClient
     final ReplicateTo rep, final String prefix, final boolean delete) {
 
     final CountDownLatch latch = new CountDownLatch(1);
+
     final ObserveFuture<Boolean> observeFuture = new ObserveFuture<Boolean>(
-      key, latch, operationTimeout, executorService);
+      key, latch, cbConnFactory.getObsTimeout(), executorService);
 
     original.addListener(new OperationCompletionListener() {
       @Override
@@ -1321,7 +1322,13 @@ public class CouchbaseClient extends MemcachedClient
     try {
       OperationFuture<CASResponse> casOp = asyncCas(key, cas, exp, value, req,
         rep);
-      casr = casOp.get(operationTimeout, TimeUnit.MILLISECONDS);
+
+      long timeout = cbConnFactory.getObsTimeout();
+      if (req == PersistTo.ZERO && rep == ReplicateTo.ZERO) {
+        timeout = operationTimeout;
+      }
+
+      casr = casOp.get(timeout, TimeUnit.MILLISECONDS);
       return casr;
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted waiting for value", e);
@@ -1404,7 +1411,7 @@ public class CouchbaseClient extends MemcachedClient
 
     final CountDownLatch latch = new CountDownLatch(1);
     final ObserveFuture<CASResponse> observeFuture =
-      new ObserveFuture<CASResponse>(key, latch, operationTimeout,
+      new ObserveFuture<CASResponse>(key, latch, cbConnFactory.getObsTimeout(),
         executorService);
 
     casOp.addListener(new OperationCompletionListener() {

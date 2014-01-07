@@ -76,6 +76,7 @@ public class CouchbaseConnectionFactoryBuilderTest {
    * Signals that an I/O exception has occurred.
    */
   @Test
+  @SuppressWarnings("deprecation")
   public void testSetObsPollMax() throws IOException {
     int maxPoll = 40;
     CouchbaseConnectionFactoryBuilder instance =
@@ -119,6 +120,26 @@ public class CouchbaseConnectionFactoryBuilderTest {
     instance.buildCouchbaseConnection(uris, "default", "");
   }
 
+  @Test
+  public void testSetObsTimeout() throws IOException {
+    CouchbaseConnectionFactoryBuilder instance =
+      new CouchbaseConnectionFactoryBuilder();
+
+    int timeout = 7500;
+    int interval = 40;
+    instance.setObsTimeout(timeout);
+    instance.setObsPollInterval(interval);
+
+    CouchbaseConnectionFactory connFact =
+      instance.buildCouchbaseConnection(uris, "default", "");
+
+    assertEquals(timeout, connFact.getObsTimeout());
+    assertEquals(interval, connFact.getObsPollInterval());
+
+    int expected = (timeout / interval) + 1; // rounding
+    assertEquals(expected, connFact.getObsPollMax());
+  }
+
   /**
    * Test to be sure that the default values are the expected values.
    *
@@ -128,6 +149,7 @@ public class CouchbaseConnectionFactoryBuilderTest {
    * @throws IOException
    */
   @Test
+  @SuppressWarnings("deprecation")
   public void testDefaultValues() throws IOException {
 
     CouchbaseConnectionFactoryBuilder instance =
@@ -140,14 +162,20 @@ public class CouchbaseConnectionFactoryBuilderTest {
       connFact.getViewTimeout());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL,
       connFact.getObsPollInterval());
-    assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX,
-      connFact.getObsPollMax());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_TIMEOUT,
+      connFact.getObsTimeout());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_MIN_RECONNECT_INTERVAL,
       connFact.getMinReconnectInterval());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_FAILURE_MODE,
       connFact.getFailureMode());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_HASH,
       connFact.getHashAlg());
+
+    int obsPollMax = new Long(CouchbaseConnectionFactory.DEFAULT_OBS_TIMEOUT
+      / CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL).intValue();
+    assertEquals(obsPollMax, connFact.getObsPollMax());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_OBS_POLL_MAX,
+      connFact.getObsPollMax());
   }
 
   /**
