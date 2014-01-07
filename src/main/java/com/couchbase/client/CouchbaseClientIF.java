@@ -1143,11 +1143,24 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * If no design document was found, the enclosed DesignDocument inside
    * the future will be null.
    *
+   * Use {@link #asyncGetDesignDoc(String)} instead.
+   *
    * @param designDocumentName the name of the design document.
    * @return a future containing a DesignDocument from the cluster.
    */
+  @Deprecated
   HttpFuture<DesignDocument> asyncGetDesignDocument(String designDocumentName);
 
+  /**
+   * Gets a future with a design document from the cluster.
+   *
+   * If no design document was found, the enclosed DesignDocument inside
+   * the future will be null.
+   *
+   * @param designDocumentName the name of the design document.
+   * @return a future containing a DesignDocument from the cluster.
+   */
+  HttpFuture<DesignDocument> asyncGetDesignDoc(String designDocumentName);
 
   /**
    * Store a design document in the cluster.
@@ -1170,12 +1183,25 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
   /**
    * Returns a representation of a design document stored in the cluster.
    *
+   * Use {@link #getDesignDoc(String)} instead.
+   *
    * @param designDocumentName the name of the design document.
    * @return a DesignDocument object from the cluster.
    * @throws com.couchbase.client.protocol.views.InvalidViewException if no design document or view was found.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
+  @Deprecated
   DesignDocument getDesignDocument(final String designDocumentName);
+
+  /**
+   * Returns a representation of a design document stored in the cluster.
+   *
+   * @param designDocumentName the name of the design document.
+   * @return a DesignDocument object from the cluster.
+   * @throws com.couchbase.client.protocol.views.InvalidViewException if no design document or view was found.
+   * @throws java.util.concurrent.CancellationException if operation was canceled.
+   */
+  DesignDocument getDesignDoc(final String designDocumentName);
 
   /**
    * Get a document from a replica node.

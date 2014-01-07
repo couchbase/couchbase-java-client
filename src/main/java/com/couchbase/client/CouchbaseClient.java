@@ -379,7 +379,7 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   @Override
-  public HttpFuture<DesignDocument> asyncGetDesignDocument(
+  public HttpFuture<DesignDocument> asyncGetDesignDoc(
     String designDocumentName) {
     designDocumentName = MODE_PREFIX + designDocumentName;
     String bucket = ((CouchbaseConnectionFactory)connFactory).getBucketName();
@@ -459,7 +459,7 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   @Override
-  public DesignDocument getDesignDocument(final String designDocumentName) {
+  public DesignDocument getDesignDoc(final String designDocumentName) {
     try {
       DesignDocument design = asyncGetDesignDocument(designDocumentName).get();
       if(design == null) {
@@ -476,6 +476,19 @@ public class CouchbaseClient extends MemcachedClient
         throw new RuntimeException("Failed getting design document", e);
       }
     }
+  }
+
+  @Override
+  @Deprecated
+  public HttpFuture<DesignDocument> asyncGetDesignDocument(
+    final String designDocumentName) {
+    return asyncGetDesignDoc(designDocumentName);
+  }
+
+  @Override
+  @Deprecated
+  public DesignDocument getDesignDocument(final String designDocumentName) {
+    return getDesignDoc(designDocumentName);
   }
 
   @Override
