@@ -1243,7 +1243,9 @@ public class CouchbaseClient extends MemcachedClient
         try {
           replaceStatus = (Boolean) future.get();
           observeFuture.set(replaceStatus, future.getStatus());
-          observeFuture.setCas(future.getCas());
+          if (future.getCas() != null) {
+            observeFuture.setCas(future.getCas());
+          }
         } catch (InterruptedException e) {
           observeFuture.set(false, new OperationStatus(false, prefix + " get "
             + "timed out"));
@@ -1424,7 +1426,9 @@ public class CouchbaseClient extends MemcachedClient
         try {
           casr = (CASResponse) future.get();
           observeFuture.set(casr, future.getStatus());
-          observeFuture.setCas(future.getCas());
+          if (future.getCas() != null) {
+            observeFuture.setCas(future.getCas());
+          }
         } catch (InterruptedException e) {
           casr = CASResponse.EXISTS;
         } catch (ExecutionException e) {
