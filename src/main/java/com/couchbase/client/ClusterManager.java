@@ -191,8 +191,8 @@ public class ClusterManager extends SpyObject {
     if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("Username is null or empty");
     }
-    if (password == null || password.isEmpty()) {
-      throw new IllegalArgumentException("Password is null or empty");
+    if (password == null) {
+      throw new IllegalArgumentException("Password is null");
     }
 
     this.username = username;

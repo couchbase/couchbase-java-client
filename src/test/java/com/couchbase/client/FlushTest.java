@@ -26,7 +26,12 @@ import com.couchbase.client.clustermanager.BucketType;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import net.spy.memcached.TestConfig;
+import net.spy.memcached.internal.OperationCompletionListener;
+import net.spy.memcached.internal.OperationFuture;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -161,6 +166,24 @@ public class FlushTest {
 
     assertTrue(client.flush().get());
 
+    client.shutdown();
+  }
+
+  @Test
+  public void testFlushCallback() throws Exception {
+    List<URI> uris = new ArrayList<URI>();
+    uris.add(URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
+    CouchbaseClient client = new CouchbaseClient(uris, "default", "");
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    client.flush().addListener(new OperationCompletionListener() {
+      @Override
+      public void onComplete(OperationFuture<?> f) throws Exception {
+        latch.countDown();
+      }
+    });
+
+    assertTrue(latch.await(1, TimeUnit.MINUTES));
     client.shutdown();
   }
 

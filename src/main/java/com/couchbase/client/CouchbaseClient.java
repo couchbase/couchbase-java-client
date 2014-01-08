@@ -104,6 +104,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -327,6 +328,7 @@ public class CouchbaseClient extends MemcachedClient
               @Override
               public void complete() {
                 couchLatch.countDown();
+                crv.signalComplete();
               }
 
               @Override
@@ -367,6 +369,7 @@ public class CouchbaseClient extends MemcachedClient
               @Override
               public void complete() {
                 couchLatch.countDown();
+                crv.signalComplete();
               }
 
               @Override
@@ -406,6 +409,7 @@ public class CouchbaseClient extends MemcachedClient
           @Override
           public void complete() {
             couchLatch.countDown();
+            crv.signalComplete();
           }
 
           @Override
@@ -536,6 +540,7 @@ public class CouchbaseClient extends MemcachedClient
         @Override
         public void complete() {
           couchLatch.countDown();
+          crv.signalComplete();
         }
       });
 
@@ -592,6 +597,7 @@ public class CouchbaseClient extends MemcachedClient
         @Override
         public void complete() {
           couchLatch.countDown();
+          crv.signalComplete();
         }
       });
 
@@ -663,6 +669,7 @@ public class CouchbaseClient extends MemcachedClient
         @Override
         public void complete() {
           couchLatch.countDown();
+          crv.signalComplete();
         }
 
         @Override
@@ -707,6 +714,7 @@ public class CouchbaseClient extends MemcachedClient
           @Override
           public void complete() {
             couchLatch.countDown();
+            crv.signalComplete();
           }
 
           @Override
@@ -752,6 +760,7 @@ public class CouchbaseClient extends MemcachedClient
           @Override
           public void complete() {
             couchLatch.countDown();
+            crv.signalComplete();
           }
 
           @Override
@@ -821,6 +830,7 @@ public class CouchbaseClient extends MemcachedClient
 
       public void complete() {
         latch.countDown();
+        rv.signalComplete();
       }
     });
     rv.setOperation(op);
@@ -936,13 +946,14 @@ public class CouchbaseClient extends MemcachedClient
     if (replica) {
       return opFact.replicaGet(key, replicaIndex,
         new ReplicaGetOperation.Callback() {
-          private Future<T> val = null;
+          private Future<T> val;
+          private boolean usedFuture;
 
           @Override
           public void receivedStatus(OperationStatus status) {
             future.set(val, status);
             if (!replicaFuture.isDone() && status.isSuccess()) {
-              replicaFuture.setCompletedFuture(future);
+              usedFuture = replicaFuture.setCompletedFuture(future);
             }
           }
 
@@ -956,17 +967,21 @@ public class CouchbaseClient extends MemcachedClient
           @Override
           public void complete() {
             latch.countDown();
+            if (usedFuture) {
+              replicaFuture.signalComplete();
+            }
           }
         });
     } else {
       return opFact.get(key, new GetOperation.Callback() {
         private Future<T> val = null;
+        private boolean usedFuture;
 
         @Override
         public void receivedStatus(OperationStatus status) {
           future.set(val, status);
           if (!replicaFuture.isDone() && status.isSuccess()) {
-            replicaFuture.setCompletedFuture(future);
+            usedFuture = replicaFuture.setCompletedFuture(future);
           }
         }
 
@@ -980,6 +995,9 @@ public class CouchbaseClient extends MemcachedClient
         @Override
         public void complete() {
           latch.countDown();
+          if (usedFuture) {
+            replicaFuture.signalComplete();
+          }
         }
       });
     }
@@ -1024,6 +1042,7 @@ public class CouchbaseClient extends MemcachedClient
       @Override
       public void complete() {
         latch.countDown();
+        rv.signalComplete();
       }
     });
     rv.setOperation(op);
@@ -1261,6 +1280,7 @@ public class CouchbaseClient extends MemcachedClient
 
         if (!replaceStatus) {
           latch.countDown();
+          observeFuture.signalComplete();
           return;
         }
 
@@ -1276,6 +1296,7 @@ public class CouchbaseClient extends MemcachedClient
         }
 
         latch.countDown();
+        observeFuture.signalComplete();
       }
     });
 
@@ -1438,6 +1459,7 @@ public class CouchbaseClient extends MemcachedClient
         if((casr != CASResponse.OK)
           || (req == PersistTo.ZERO && rep == ReplicateTo.ZERO)) {
           latch.countDown();
+          observeFuture.signalComplete();
           return;
         }
 
@@ -1456,6 +1478,7 @@ public class CouchbaseClient extends MemcachedClient
         }
 
         latch.countDown();
+        observeFuture.signalComplete();
       }
     });
 
@@ -1691,6 +1714,7 @@ public class CouchbaseClient extends MemcachedClient
 
       public void complete() {
         latch.countDown();
+        rv.signalComplete();
       }
     });
     rv.setOperation(op);
@@ -1725,10 +1749,10 @@ public class CouchbaseClient extends MemcachedClient
     }
 
     final CountDownLatch latch = new CountDownLatch(1);
-    final FlushRunner flushRunner = new FlushRunner(latch);
-
-    final OperationFuture<Boolean> rv =
-      new OperationFuture<Boolean>("", latch, operationTimeout,
+    final AtomicReference<OperationFuture<Boolean>> rv =
+      new AtomicReference<OperationFuture<Boolean>>();
+    final FlushRunner flushRunner = new FlushRunner(latch, rv);
+    rv.set(new OperationFuture<Boolean>("", latch, operationTimeout,
         executorService) {
         private final CouchbaseConnectionFactory factory =
           (CouchbaseConnectionFactory) connFactory;
@@ -1790,13 +1814,13 @@ public class CouchbaseClient extends MemcachedClient
           throw new UnsupportedOperationException("Flush cannot be"
             + " canceled.");
         }
-      };
+      });
 
     Thread flusher = new Thread(flushRunner, "Temporary Flusher");
     flusher.setDaemon(true);
     flusher.start();
 
-    return rv;
+    return rv.get();
   }
 
   /**
@@ -1814,14 +1838,20 @@ public class CouchbaseClient extends MemcachedClient
 
     private final CountDownLatch flatch;
     private Boolean flushStatus = false;
+    private AtomicReference<OperationFuture<Boolean>>  future;
 
-    public FlushRunner(CountDownLatch latch) {
+    public FlushRunner(CountDownLatch latch,
+      AtomicReference<OperationFuture<Boolean>> rv) {
       flatch = latch;
+      future = rv;
     }
 
     public void run() {
       flushStatus = flushBucket();
       flatch.countDown();
+      if (future.get() != null) {
+        future.get().signalComplete();
+      }
     }
 
     private boolean status() {
