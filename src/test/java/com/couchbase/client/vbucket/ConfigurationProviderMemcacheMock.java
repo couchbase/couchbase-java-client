@@ -91,7 +91,7 @@ public class ConfigurationProviderMemcacheMock
 
   @Override
   public String getAnonymousAuthBucket() {
-    return null;
+    return "default";
   }
 
   @Override

@@ -23,6 +23,8 @@
 
 package net.spy.memcached.protocol.binary;
 
+import com.couchbase.client.BucketTool;
+import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseClientBaseCase;
 import com.couchbase.client.CouchbaseConnectionFactory;
 import com.couchbase.client.FailInjectingCouchbaseConnectionFactory;
@@ -30,7 +32,10 @@ import com.couchbase.client.TestingCouchbaseClient;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import com.couchbase.client.clustermanager.BucketType;
 import net.spy.memcached.BuildInfo;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.TestConfig;
@@ -46,19 +51,38 @@ import net.spy.memcached.ops.StoreType;
  * wrong vbucket in the middle of the group.
  */
 public class OptimizedStoreVbucketTest extends CouchbaseClientBaseCase {
+
   private TestingCouchbaseClient tclient;
-  @Override
-  protected void initClient() throws Exception {
-    initClient(new FailInjectingCouchbaseConnectionFactory(Arrays.asList(
-      URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools")), "default",
-      ""));
-  }
+
+  private final List<URI> uris = Arrays.asList(
+    URI.create("http://" + TestConfig.IPV4_ADDR + ":8091/pools"));
 
   @Override
-  protected void initClient(ConnectionFactory cf) throws Exception {
-    tclient = new TestingCouchbaseClient((CouchbaseConnectionFactory) cf);
+  protected void initClient() throws Exception {
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.deleteAllBuckets();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 1, true);
+
+    BucketTool.FunctionCallback callback = new BucketTool.FunctionCallback() {
+      @Override
+      public void callback() throws Exception {
+        initClient(new CouchbaseConnectionFactory(uris, "default", ""));
+      }
+
+      @Override
+      public String success(long elapsedTime) {
+        return "Client Initialization took " + elapsedTime + "ms";
+      }
+    };
+    bucketTool.poll(callback);
+    bucketTool.waitForWarmup(client);
+
+    tclient = new TestingCouchbaseClient(
+      new FailInjectingCouchbaseConnectionFactory(uris, "default", "")
+    );
     client = tclient;
   }
+
 
   /**
    * Failed to test optimised store.

@@ -154,15 +154,16 @@ public class SpatialViewTest {
         + VIEW_NAME_SPATIAL + "\":\"function (doc, meta) { "
         + "if(doc.type == \\\"city\\\") {emit({type: \\\"Point\\\", "
         + "coordinates: [doc.lng, doc.lat]}, [meta.id, doc.name])}}\"}}";
-    client.asyncHttpPut(docUri, view);
+    client.asyncHttpPut(docUri, view).get();
 
     for(City city : CITY_DOCS) {
-      client.set(city.getKey(), 0, city.toJson(), PersistTo.MASTER);
+      client.set(city.getKey(), 0, city.toJson(), PersistTo.MASTER).get();
     }
 
-    System.out.println("Setup of design docs complete, "
-            + "sleeping until they propogate.");
     client.shutdown(10, TimeUnit.SECONDS);
+    System.out.println("Setup of design docs complete, "
+      + "sleeping until they propogate.");
+    Thread.sleep(5000);
   }
 
   /**
