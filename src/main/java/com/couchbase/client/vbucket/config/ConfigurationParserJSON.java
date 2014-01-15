@@ -194,7 +194,9 @@ public class ConfigurationParserJSON extends SpyObject
       JSONArray allNodes = bucketJson.getJSONArray("nodes");
       for (int i = 0; i < allNodes.length(); i++) {
         JSONObject currentNode = allNodes.getJSONObject(i);
-        Status status = parseNodeStatus(currentNode.getString("status"));
+        // TODO: remove status field completely, not needed.
+        //Status status = parseNodeStatus(currentNode.getString("status"));
+        Status status = Status.healthy;
         String hostname = currentNode.getString("hostname");
         Map<Port, String> ports = extractPorts(
           currentNode.getJSONObject("ports"));
