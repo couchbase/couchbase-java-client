@@ -22,7 +22,7 @@
 
 package com.couchbase.client;
 
-import com.couchbase.client.vbucket.ConfigurationProvider;
+import com.couchbase.client.vbucket.provider.ConfigurationProvider;
 import com.couchbase.client.vbucket.ConfigurationProviderMemcacheMock;
 import java.io.IOException;
 import java.net.URI;
@@ -58,7 +58,7 @@ public class CouchbaseClientMemcachedBucketTest {
     try {
       List<URI> baseList = new ArrayList<URI>();
       baseList.add(URI.create("http://"+TestConfig.IPV4_ADDR+":8091/pools"));
-      ConfigurationProvider provider = new ConfigurationProviderMemcacheMock();
+      ConfigurationProvider provider = new ConfigurationProviderMemcacheMock("memcached-default");
 
       CouchbaseConnectionFactoryMock factory;
       factory = new CouchbaseConnectionFactoryMock(

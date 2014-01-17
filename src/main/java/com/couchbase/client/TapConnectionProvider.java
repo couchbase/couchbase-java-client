@@ -22,7 +22,7 @@
 
 package com.couchbase.client;
 
-import com.couchbase.client.vbucket.ConfigurationProvider;
+import com.couchbase.client.vbucket.provider.ConfigurationProvider;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
 
@@ -71,7 +71,7 @@ public class TapConnectionProvider
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
     this.cf=cf;
     ConfigurationProvider cp = cf.getConfigurationProvider();
-    cp.subscribe(cf.getBucketName(), this);
+    cp.subscribe(this);
   }
 
   /**

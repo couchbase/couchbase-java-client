@@ -34,6 +34,7 @@ import com.couchbase.client.vbucket.CouchbaseNodeOrder;
 import com.couchbase.client.vbucket.config.Config;
 import net.spy.memcached.TestConfig;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -112,46 +113,6 @@ public class CouchbaseConnectionFactoryTest {
       boolean pastReconnThreshold = connFact.pastReconnThreshold();
       assertFalse(pastReconnThreshold);
     }
-  }
-
-  @Test
-  public void shouldRandomizeNodeList() throws Exception {
-    ConfigurationProviderMemcacheMock providerMock = new ConfigurationProviderMemcacheMock(
-      Arrays.asList("127.0.0.1:8091/pools", "127.0.0.2:8091/pools",
-        "127.0.0.3:8091/pools", "127.0.0.4:8091/pools")
-    );
-
-    CouchbaseConnectionFactory connFact = new CouchbaseConnectionFactoryMock(
-      Arrays.asList(
-        new URI("http://127.0.0.1:8091/pools"), new URI("http://127.0.0.2:8091/pools"),
-        new URI("http://127.0.0.3:8091/pools"), new URI("http://127.0.0.5:8091/pools")
-      ), "default", "", providerMock, CouchbaseNodeOrder.RANDOM
-    );
-
-    List<URI> oldList = connFact.getStoredBaseList();
-    int oIndex1 = oldList.indexOf(new URI("http://127.0.0.1:8091/pools"));
-    int oIndex2 = oldList.indexOf(new URI("http://127.0.0.2:8091/pools"));
-    int oIndex3 = oldList.indexOf(new URI("http://127.0.0.3:8091/pools"));
-    int oIndex4 = oldList.indexOf(new URI("http://127.0.0.5:8091/pools"));
-
-    int tries = 100;
-    for(int i = 0; i < tries; i++) {
-      connFact.updateStoredBaseList(connFact.getVBucketConfig());
-      assertTrue(providerMock.baseListUpdated);
-      List<URI> newList = connFact.getStoredBaseList();
-      System.out.println("old: " + oldList);
-      System.out.println("new: " + newList);
-      int nIndex1 = newList.indexOf(new URI("http://127.0.0.1:8091/pools"));
-      int nIndex2 = newList.indexOf(new URI("http://127.0.0.2:8091/pools"));
-      int nIndex3 = newList.indexOf(new URI("http://127.0.0.3:8091/pools"));
-      int nIndex4 = newList.indexOf(new URI("http://127.0.0.5:8091/pools"));
-      if (oIndex1 != nIndex1 || oIndex2 != nIndex2 || oIndex3 != nIndex3 || oIndex4 == nIndex4) {
-        assertTrue(true);
-        return;
-      }
-    }
-
-    assertTrue("Node list was not different after " + tries + " tries", false);
   }
 
   @Test

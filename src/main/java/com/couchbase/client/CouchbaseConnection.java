@@ -163,7 +163,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
       // schedule shutdown for the oddNodes
       for(MemcachedNode shutDownNode : oddNodes) {
         getLogger().info("Scheduling Node "
-          + shutDownNode.getSocketAddress() + "for shutdown.");
+          + shutDownNode.getSocketAddress() + " for shutdown.");
       }
       nodesToShutdown.addAll(oddNodes);
     } catch (IOException e) {
@@ -313,7 +313,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
   protected void handleRetryInformation(byte[] retryMessage) {
     String message = new String(retryMessage).trim();
     if (message.startsWith("{")) {
-      cf.getConfigurationProvider().updateBucket(
+      cf.getConfigurationProvider().setConfig(
         replaceConfigWildcards(message)
       );
     }
@@ -328,7 +328,7 @@ public class CouchbaseConnection extends MemcachedConnection  implements
    * @param original the raw new config string.
    * @return the potentially changed config string.
    */
-  private String replaceConfigWildcards(String original) {
+  public String replaceConfigWildcards(String original) {
     if (original.contains("$HOST")) {
       ArrayList<MemcachedNode> nodes =
         new ArrayList<MemcachedNode>(getLocator().getAll());

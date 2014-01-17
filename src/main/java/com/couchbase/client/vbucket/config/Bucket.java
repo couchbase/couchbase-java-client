@@ -117,4 +117,15 @@ public class Bucket {
     LOGGER.finest("Marking bucket as not updating,"
       + " disconnected from config stream");
   }
+
+  @Override
+  public String toString() {
+    return "Bucket{" +
+      "name='" + name + '\'' +
+      ", configuration=" + configuration +
+      ", streamingURI=" + streamingURI +
+      ", isNotUpdating=" + isNotUpdating +
+      ", nodes=" + nodes +
+      '}';
+  }
 }

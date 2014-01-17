@@ -263,24 +263,13 @@ public class CouchbaseClient extends MemcachedClient
     executorService = cbConnFactory.getListenerExecutorService();
 
     getLogger().info(MODE_ERROR);
-    cf.getConfigurationProvider().subscribe(cf.getBucketName(), this);
+    cf.getConfigurationProvider().subscribe(this);
   }
 
   @Override
   public void reconfigure(Bucket bucket) {
     reconfiguring = true;
-    if (bucket.isNotUpdating()) {
-      getLogger().info("Bucket configuration is disconnected from cluster "
-        + "configuration updates, attempting to reconnect.");
-      CouchbaseConnectionFactory cbcf = (CouchbaseConnectionFactory)connFactory;
-      cbcf.requestConfigReconnect(cbcf.getBucketName(), this);
-      cbcf.checkConfigUpdate();
-    }
     try {
-      cbConnFactory.getConfigurationProvider().updateBucket(
-        cbConnFactory.getBucketName(), bucket);
-      cbConnFactory.updateStoredBaseList(bucket.getConfig());
-
       if(vconn != null) {
         vconn.reconfigure(bucket);
       }

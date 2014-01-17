@@ -22,7 +22,7 @@
 
 package com.couchbase.client;
 
-import com.couchbase.client.vbucket.ConfigurationProvider;
+import com.couchbase.client.vbucket.provider.ConfigurationProvider;
 import com.couchbase.client.vbucket.CouchbaseNodeOrder;
 import com.couchbase.client.vbucket.config.Bucket;
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class CouchbaseConnectionFactoryMock extends CouchbaseConnectionFactory {
   }
 
   public Bucket getBucket(String bucketName) {
-    return this.configurationProvider.getBucketConfiguration(bucketName);
+    return this.configurationProvider.getConfig();
   }
 
   @Override
