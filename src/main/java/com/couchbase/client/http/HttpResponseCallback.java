@@ -22,6 +22,7 @@
 
 package com.couchbase.client.http;
 
+import com.couchbase.client.CouchbaseConnectionFactory;
 import com.couchbase.client.ViewConnection;
 import com.couchbase.client.protocol.views.HttpOperation;
 import net.spy.memcached.compat.SpyObject;
@@ -36,6 +37,7 @@ import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 
 /**
@@ -118,9 +120,12 @@ public class HttpResponseCallback implements FutureCallback<HttpResponse> {
 
   @Override
   public void failed(final Exception e) {
-    if (e instanceof SocketTimeoutException
-      || e instanceof ConnectionClosedException) {
+    if (e instanceof SocketTimeoutException) {
       retryOperation(op);
+    } else if(e instanceof ConnectionClosedException
+      || e instanceof ConnectException) {
+      retryOperation(op);
+      vconn.signalOutdatedConfig();
     } else {
       LOGGER.info("View Operation " + op.getRequest().getRequestLine()
         + " failed because of: ", e);

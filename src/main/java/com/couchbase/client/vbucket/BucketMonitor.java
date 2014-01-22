@@ -114,7 +114,7 @@ public class BucketMonitor extends Observable {
     LOGGER.trace("There appear to be " + this.countObservers()
       + " observers waiting for notification");
     setChanged();
-    notifyObservers();
+    notifyObservers(bucket);
   }
 
   /**
