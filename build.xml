@@ -106,6 +106,8 @@
   <property name="server.address_v4" value="127.0.0.1"/>
   <property name="server.address_v6" value="::1"/>
   <property name="server.type" value="memcached"/>
+  <property name="cluster.adminname" value="Administrator"/>
+  <property name="cluster.password" value="password"/>
   <property name="test.type" value="unit"/>
 
   <!-- Maven Central URLs -->
@@ -239,6 +241,8 @@
       description="Run couchbase-client unit tests">
     <echo>IPV4 address ${server.address_v4}</echo>
     <echo>IPV6 address ${server.address_v6}</echo>
+    <echo>Admin user ${cluster.adminname}</echo>
+    <echo>Admin password ${cluster.password}</echo>
     <echo>Test Type (unit|ci) ${test.type}</echo>
     <echo>Used Java version is: ${java.version}</echo>
     <delete dir="${junit.dir}"/>
@@ -252,6 +256,8 @@
       </batchtest>
       <jvmarg value="-ea" />
       <sysproperty key="server.address_v4" value="${server.address_v4}"/>
+      <sysproperty key="cluster.password" value="${cluster.password}"/>
+      <sysproperty key="cluster.adminname" value="${cluster.adminname}"/>
       <sysproperty key="server.address_v6" value="${server.address_v6}"/>
       <sysproperty key="server.type" value="${server.type}"/>
       <sysproperty key="test.type" value="${test.type}"/>
