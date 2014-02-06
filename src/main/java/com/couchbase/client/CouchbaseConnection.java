@@ -318,9 +318,4 @@ public class CouchbaseConnection extends MemcachedConnection  implements
     }
   }
 
-  boolean isShutDown() {
-    return shutDown;
-  }
-
-
 }
