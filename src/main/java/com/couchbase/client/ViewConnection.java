@@ -281,20 +281,28 @@ public class ViewConnection extends SpyObject implements Reconfigurable {
       currentViewServers.add(host);
 
       if (!viewNodes.contains(host) && hasActiveVBuckets(config, host)) {
+        getLogger().debug("Adding view node: " + host);
         viewNodes.add(host);
       }
     }
 
+    List<HttpHost> connectionsToClose = new ArrayList<HttpHost>();
     synchronized (viewNodes) {
       Iterator<HttpHost> iter = viewNodes.iterator();
       while (iter.hasNext()) {
         HttpHost current = iter.next();
         if (!currentViewServers.contains(current)
           || !hasActiveVBuckets(config, current)) {
+          connectionsToClose.add(current);
           iter.remove();
-          pool.closeConnectionsForHost(current);
+          getLogger().debug("Removing view node: " + current);
         }
       }
+    }
+
+    for (HttpHost host : connectionsToClose) {
+      getLogger().debug("Closing old connections for node: " + host);
+      pool.closeConnectionsForHost(host);
     }
 
     if (sizeBeforeReconfigure != viewNodes.size()) {
