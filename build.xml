@@ -555,6 +555,16 @@
     </artifact:mvn>
   </target>
 
+  <target name="mvn-deploy" depends="mvn-install" description="deploy snapshot version to maven snapshot repository">
+      <artifact:mvn>
+          <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+          <arg value="-Durl=${maven-snapshots-repository-url}" />
+          <arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
+          <arg value="-DpomFile=${couchbase-client.pom}" />
+          <arg value="-Dfile=${build.dir}/jars/${name}-${version}.jar" />
+      </artifact:mvn>
+  </target>
+
   <!-- ======================================
         Section: Stage Maven locally
        ====================================== -->
