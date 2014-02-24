@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.TestConfig;
@@ -105,6 +106,44 @@ public class ReplicaReadTest {
       public void onComplete(ReplicaGetFuture<?> f) throws Exception {
         String found = (String) f.get();
         if(found.equals("value")) {
+          latch.countDown();
+        }
+      }
+    });
+
+    assertTrue("Async latch was not counted down",
+      latch.await(5, TimeUnit.SECONDS));
+  }
+
+  @Test
+  public void testGetsFromReplica() throws Exception {
+    if (client.getAvailableServers().size() < 2) {
+      return;
+    }
+
+    assertTrue(client.set("getskey", 0, "foovalue", ReplicateTo.ONE).get());
+    ReplicaGetFuture<CASValue<Object>> future = client.asyncGetsFromReplica("getskey");
+    CASValue<Object> result = future.get();
+    assertTrue(result.getCas() != 0);
+    assertEquals(result.getValue(), "foovalue");
+  }
+
+  @Test
+  public void testGetsFromReplicaListener() throws Exception {
+    if (client.getAvailableServers().size() < 2) {
+      return;
+    }
+
+    assertTrue(client.set("asyncKeyGets", "value", ReplicateTo.ONE).get());
+    ReplicaGetFuture<CASValue<Object>> future =
+      client.asyncGetsFromReplica("asyncKeyGets");
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    future.addListener(new ReplicaGetCompletionListener() {
+      @Override
+      public void onComplete(ReplicaGetFuture<?> f) throws Exception {
+        CASValue<Object> found = (CASValue<Object>) f.get();
+        if(found.getValue().equals("value") && found.getCas() != 0) {
           latch.countDown();
         }
       }

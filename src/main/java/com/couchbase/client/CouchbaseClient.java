@@ -70,11 +70,13 @@ import net.spy.memcached.internal.OperationCompletionListener;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.GetOperation;
 import net.spy.memcached.ops.GetlOperation;
+import net.spy.memcached.ops.GetsOperation;
 import net.spy.memcached.ops.ObserveOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.ReplicaGetOperation;
+import net.spy.memcached.ops.ReplicaGetsOperation;
 import net.spy.memcached.ops.StatsOperation;
 import net.spy.memcached.transcoders.Transcoder;
 import org.apache.http.HttpRequest;
@@ -839,6 +841,11 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   @Override
+  public CASValue<Object> getsFromReplica(String key) {
+    return getsFromReplica(key, transcoder);
+  }
+
+  @Override
   public <T> T getFromReplica(String key, Transcoder<T> tc) {
     try {
       return asyncGetFromReplica(key, tc).get(operationTimeout,
@@ -853,8 +860,27 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   @Override
+  public <T> CASValue<T> getsFromReplica(String key, Transcoder<T> tc) {
+    try {
+      return asyncGetsFromReplica(key, tc).get(operationTimeout,
+        TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted waiting for value", e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Exception waiting for value", e);
+    } catch (TimeoutException e) {
+      throw new OperationTimeoutException("Timeout waiting for value", e);
+    }
+  }
+
+  @Override
   public ReplicaGetFuture<Object> asyncGetFromReplica(final String key) {
     return asyncGetFromReplica(key, transcoder);
+  }
+
+  @Override
+  public ReplicaGetFuture<CASValue<Object>> asyncGetsFromReplica(final String key) {
+    return asyncGetsFromReplica(key, transcoder);
   }
 
   @Override
@@ -899,6 +925,71 @@ public class CouchbaseClient extends MemcachedClient
       final GetFuture<T> additionalActiveGet = new GetFuture<T>(latch, operationTimeout, key,
         executorService);
       Operation op = createOperationForReplicaGet(key, additionalActiveGet,
+        replicaFuture, latch, tc, 0, false);
+      additionalActiveGet.setOperation(op);
+      mconn.enqueueOperation(key, op);
+
+      if (op.isCancelled()) {
+        discardedOps++;
+        getLogger().debug("Silently discarding replica (active) get for key \""
+          + key + "\" (cancelled).");
+      } else {
+        replicaFuture.addFutureToMonitor(additionalActiveGet);
+      }
+    } else {
+      discardedOps++;
+    }
+
+    if (discardedOps == actualReplicaIndexes.size() + 1) {
+      throw new IllegalStateException("No replica get operation could be "
+        + "dispatched because all operations have been cancelled.");
+    }
+
+    return replicaFuture;
+  }
+
+  @Override
+  public <T> ReplicaGetFuture<CASValue<T>> asyncGetsFromReplica(final String key,
+    final Transcoder<T> tc) {
+    int discardedOps = 0;
+
+    int bucketReplicaCount = cbConnFactory.getVBucketConfig().getReplicasCount();
+    if (bucketReplicaCount == 0) {
+      getLogger().debug("No replica configured for this bucket, trying to get "
+        + "the document from active node only.");
+    }
+
+    VBucketNodeLocator locator = (VBucketNodeLocator) mconn.getLocator();
+    List<Integer> actualReplicaIndexes = locator.getReplicaIndexes(key);
+
+    final ReplicaGetFuture<CASValue<T>> replicaFuture = new ReplicaGetFuture<CASValue<T>>(
+      operationTimeout, executorService);
+
+    for(int index : actualReplicaIndexes) {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final OperationFuture<CASValue<T>> rv =
+        new OperationFuture<CASValue<T>>(key, latch, operationTimeout, executorService);
+      Operation op = createOperationForReplicaGets(key, rv, replicaFuture,
+        latch, tc, index, true);
+
+      rv.setOperation(op);
+      mconn.enqueueOperation(key, op);
+
+      if (op.isCancelled()) {
+        discardedOps++;
+        getLogger().debug("Silently discarding replica get for key \""
+          + key + "\" (cancelled).");
+      } else {
+        replicaFuture.addFutureToMonitor(rv);
+      }
+
+    }
+
+    if (locator.hasActiveMaster(key)) {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final OperationFuture<CASValue<T>> additionalActiveGet =
+        new OperationFuture<CASValue<T>>(key, latch, operationTimeout, executorService);
+      Operation op = createOperationForReplicaGets(key, additionalActiveGet,
         replicaFuture, latch, tc, 0, false);
       additionalActiveGet.setOperation(op);
       mconn.enqueueOperation(key, op);
@@ -979,6 +1070,70 @@ public class CouchbaseClient extends MemcachedClient
           assert key.equals(k) : "Wrong key returned";
           val = tcService.decode(tc, new CachedData(flags, data,
             tc.getMaxSize()));
+        }
+
+        @Override
+        public void complete() {
+          latch.countDown();
+          if (usedFuture) {
+            replicaFuture.signalComplete();
+          }
+        }
+      });
+    }
+  }
+
+  private <T> Operation createOperationForReplicaGets(final String key,
+    final OperationFuture<CASValue<T>> future, final ReplicaGetFuture<CASValue<T>> replicaFuture,
+    final CountDownLatch latch, final Transcoder<T> tc, final int replicaIndex,
+    final boolean replica) {
+    if (replica) {
+      return opFact.replicaGets(key, replicaIndex,
+        new ReplicaGetsOperation.Callback() {
+          private CASValue<T> val;
+          private boolean usedFuture;
+
+          @Override
+          public void receivedStatus(OperationStatus status) {
+            future.set(val, status);
+            if (!replicaFuture.isDone() && status.isSuccess()) {
+              usedFuture = replicaFuture.setCompletedFuture(future);
+            }
+          }
+
+          @Override
+          public void gotData(String key, int flags, long cas, byte[] data) {
+            assert key.equals(key) : "Wrong key returned";
+            val = new CASValue<T>(cas, tc.decode(new CachedData(flags, data,
+              tc.getMaxSize())));
+          }
+
+          @Override
+          public void complete() {
+            latch.countDown();
+            if (usedFuture) {
+              replicaFuture.signalComplete();
+            }
+          }
+        });
+    } else {
+      return opFact.gets(key, new GetsOperation.Callback() {
+        private CASValue<T> val = null;
+        private boolean usedFuture;
+
+        @Override
+        public void receivedStatus(OperationStatus status) {
+          future.set(val, status);
+          if (!replicaFuture.isDone() && status.isSuccess()) {
+            usedFuture = replicaFuture.setCompletedFuture(future);
+          }
+        }
+
+        @Override
+        public void gotData(String key, int flags, long cas, byte[] data) {
+          assert key.equals(key) : "Wrong key returned";
+          val = new CASValue<T>(cas, tc.decode(new CachedData(flags, data,
+            tc.getMaxSize())));
         }
 
         @Override

@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import net.spy.memcached.internal.AbstractListenableFuture;
 import net.spy.memcached.internal.GenericCompletionListener;
-import net.spy.memcached.internal.GetCompletionListener;
 import net.spy.memcached.internal.GetFuture;
 
 /**
@@ -46,17 +45,17 @@ public class ReplicaGetFuture<T extends Object>
   implements Future<T> {
 
   private final long timeout;
-  private AtomicReference<GetFuture<T>> completedFuture;
-  private final List<GetFuture<T>> monitoredFutures;
+  private AtomicReference<Future<T>> completedFuture;
+  private final List<Future<T>> monitoredFutures;
   private volatile boolean cancelled = false;
 
   public ReplicaGetFuture(long timeout, ExecutorService service) {
     super(service);
     this.timeout = timeout;
-    this.monitoredFutures = Collections.synchronizedList(
-      new ArrayList<GetFuture<T>>()
+    monitoredFutures = Collections.synchronizedList(
+      new ArrayList<Future<T>>()
     );
-    this.completedFuture = new AtomicReference<GetFuture<T>>();
+    completedFuture = new AtomicReference<Future<T>>();
   }
 
   /**
@@ -66,8 +65,8 @@ public class ReplicaGetFuture<T extends Object>
    *
    * @param future the future to monitor.
    */
-  public void addFutureToMonitor(GetFuture<T> future) {
-    this.monitoredFutures.add(future);
+  public void addFutureToMonitor(Future<T> future) {
+    monitoredFutures.add(future);
   }
 
   /**
@@ -79,7 +78,7 @@ public class ReplicaGetFuture<T extends Object>
    * @param future the future to mark as completed.
    * @return true if this future is the one that will be used.
    */
-  public boolean setCompletedFuture(GetFuture<T> future) {
+  public boolean setCompletedFuture(Future<T> future) {
     boolean firstComplete = completedFuture.compareAndSet(null, future);
     if (firstComplete) {
       cancelOtherFutures(completedFuture.get());
@@ -118,11 +117,11 @@ public class ReplicaGetFuture<T extends Object>
    *
    * @param successFuture
    */
-  private void cancelOtherFutures(GetFuture successFuture) {
+  private void cancelOtherFutures(Future successFuture) {
     synchronized (monitoredFutures) {
       Iterator it = monitoredFutures.iterator();
       while (it.hasNext()) {
-        GetFuture future = (GetFuture) it.next();
+        Future future = (Future) it.next();
         if (!future.equals(successFuture)) {
           future.cancel(true);
         }
@@ -137,7 +136,7 @@ public class ReplicaGetFuture<T extends Object>
     synchronized (monitoredFutures) {
       Iterator it = monitoredFutures.iterator();
       while (it.hasNext()) {
-        GetFuture future = (GetFuture) it.next();
+        Future future = (Future) it.next();
         if (!future.cancel(ign)) {
           allCancelled = false;
         }
@@ -161,7 +160,7 @@ public class ReplicaGetFuture<T extends Object>
   @SuppressWarnings("unchecked")
   public ReplicaGetFuture<T> addListener(
     ReplicaGetCompletionListener listener) {
-    super.addToListeners((GenericCompletionListener) listener);
+    addToListeners((GenericCompletionListener) listener);
     return this;
   }
 
@@ -169,7 +168,7 @@ public class ReplicaGetFuture<T extends Object>
   @SuppressWarnings("unchecked")
   public ReplicaGetFuture<T> removeListener(
     ReplicaGetCompletionListener listener) {
-    super.removeFromListeners((GenericCompletionListener) listener);
+    removeFromListeners((GenericCompletionListener) listener);
     return this;
   }
 

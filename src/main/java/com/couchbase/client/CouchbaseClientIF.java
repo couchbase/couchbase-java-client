@@ -1219,6 +1219,21 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
   Object getFromReplica(String key);
 
   /**
+   * Get a document from a replica node including its CAS value.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead of the master node including its CAS value.
+   *
+   * This command only works on couchbase type buckets.
+   *
+   * @param key the key to fetch.
+   * @return the fetched document or null when no document available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  CASValue<Object> getsFromReplica(String key);
+
+  /**
    * Get a document from a replica node.
    *
    * This method allows you to explicitly load a document from a replica
@@ -1233,6 +1248,22 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    *         argument defined.
    */
   <T> T getFromReplica(String key, Transcoder<T> tc);
+
+  /**
+   * Get a document from a replica node including its CAS value.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead of the master node including its CAS value.
+   *
+   * This command only works on couchbase type buckets.
+   *
+   * @param key the key to fetch.
+   * @param tc a custom document transcoder.
+   * @return the fetched document or null when no document available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  <T> CASValue<T> getsFromReplica(String key, Transcoder<T> tc);
 
   /**
    * Get a document from a replica node asynchronously.
@@ -1250,6 +1281,21 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
   ReplicaGetFuture<Object> asyncGetFromReplica(final String key);
 
   /**
+   * Get a document from a replica node asynchronously and load the CAS.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead from the master node. This command only works on couchbase
+   * type buckets.
+   *
+   * @param key the key to fetch.
+   * @return a future containing the fetched document or null when no document
+   *         available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  ReplicaGetFuture<CASValue<Object>> asyncGetsFromReplica(final String key);
+
+  /**
    * Get a document from a replica node asynchronously.
    *
    * This method allows you to explicitly load a document from a replica
@@ -1264,6 +1310,23 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    *         argument defined.
    */
   <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key,
+    final Transcoder<T> tc);
+
+  /**
+   * Get a document from a replica node asynchronously and load the CAS.
+   *
+   * This method allows you to explicitly load a document from a replica
+   * instead from the master node. This command only works on couchbase
+   * type buckets.
+   *
+   * @param key the key to fetch.
+   * @param tc a custom document transcoder.
+   * @return a future containing the fetched document or null when no document
+   *         available.
+   * @throws RuntimeException when less replicas available then in the index
+   *         argument defined.
+   */
+  <T> ReplicaGetFuture<CASValue<T>> asyncGetsFromReplica(final String key,
     final Transcoder<T> tc);
 
   /**
