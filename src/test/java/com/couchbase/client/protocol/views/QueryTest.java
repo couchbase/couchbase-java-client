@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2013 Couchbase, Inc.
+ * Copyright (C) 2009-2014 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,10 @@ package com.couchbase.client.protocol.views;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the various creation/modification ways of the Query class.
