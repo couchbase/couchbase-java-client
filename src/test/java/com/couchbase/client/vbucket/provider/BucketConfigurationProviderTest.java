@@ -25,6 +25,7 @@ package com.couchbase.client.vbucket.provider;
 import com.couchbase.client.CbTestConfig;
 import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseConnectionFactory;
+import com.couchbase.client.CouchbaseProperties;
 import com.couchbase.client.vbucket.ConfigurationException;
 import com.couchbase.client.vbucket.config.Bucket;
 import net.spy.memcached.TestConfig;
@@ -40,6 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
@@ -88,6 +90,12 @@ public class BucketConfigurationProviderTest {
      + ":8091/pools"));
     bucket = "default";
     password = "";
+  }
+
+  @Before
+  public void resetProperties() {
+    System.clearProperty("disableCarrierBootstrap");
+    System.clearProperty("disableHttpBootstrap");
   }
 
   @Test
@@ -195,7 +203,37 @@ public class BucketConfigurationProviderTest {
     provider.bootstrap();
   }
 
+  @Test
+  public void shouldSkipBinaryOnManualDisable() throws Exception {
+    if (!isCCCPAware) {
+      LOGGER.info("Skipping Test because cluster is not CCCP aware.");
+      return;
+    }
+    System.setProperty("cbclient.disableCarrierBootstrap", "true");
 
+    BucketConfigurationProvider provider = new BucketConfigurationProvider(
+      seedNodes,
+      bucket,
+      password,
+      new CouchbaseConnectionFactory(seedNodes, bucket, password)
+    );
+
+    assertFalse(provider.bootstrapBinary());
+  }
+
+  @Test
+  public void shouldSkipHttpOnManualDisable() throws Exception {
+    System.setProperty("cbclient.disableHttpBootstrap", "true");
+
+    BucketConfigurationProvider provider = new BucketConfigurationProvider(
+      seedNodes,
+      bucket,
+      password,
+      new CouchbaseConnectionFactory(seedNodes, bucket, password)
+    );
+
+    assertFalse(provider.bootstrapHttp());
+  }
 
   /**
    * A provider that can fail either one or both of the bootstrap mechanisms.

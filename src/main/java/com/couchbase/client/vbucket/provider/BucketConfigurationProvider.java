@@ -24,6 +24,7 @@ package com.couchbase.client.vbucket.provider;
 
 import com.couchbase.client.CouchbaseConnection;
 import com.couchbase.client.CouchbaseConnectionFactory;
+import com.couchbase.client.CouchbaseProperties;
 import com.couchbase.client.vbucket.ConfigurationException;
 import com.couchbase.client.vbucket.ConfigurationProviderHTTP;
 import com.couchbase.client.vbucket.CouchbaseNodeOrder;
@@ -62,6 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class BucketConfigurationProvider extends SpyObject
   implements ConfigurationProvider, Reconfigurable {
 
+
   private static final int DEFAULT_BINARY_PORT = 11210;
   private static final String ANONYMOUS_BUCKET = "default";
 
@@ -75,6 +77,8 @@ public class BucketConfigurationProvider extends SpyObject
   private final AtomicReference<ConfigurationProviderHTTP> httpProvider;
   private final AtomicBoolean refreshingHttp;
   private final AtomicReference<CouchbaseConnection> binaryConnection;
+  private final boolean disableCarrierBootstrap;
+  private final boolean disableHttpBootstrap;
   private volatile boolean isBinary;
 
   public BucketConfigurationProvider(final List<URI> seedNodes,
@@ -94,6 +98,11 @@ public class BucketConfigurationProvider extends SpyObject
     this.password = password;
     this.connectionFactory = connectionFactory;
     potentiallyRandomizeNodeList(seedNodes);
+
+    disableCarrierBootstrap = Boolean.parseBoolean(
+      CouchbaseProperties.getProperty("disableCarrierBootstrap", "false"));
+    disableHttpBootstrap = Boolean.parseBoolean(
+      CouchbaseProperties.getProperty("disableHttpBootstrap", "false"));
   }
 
   @Override
@@ -124,6 +133,11 @@ public class BucketConfigurationProvider extends SpyObject
    * @return true if the binary bootstrap process was successful.
    */
   boolean bootstrapBinary() {
+    if (disableCarrierBootstrap) {
+      getLogger().info("Carrier bootstrap manually disabled, skipping.");
+      return false;
+    }
+
     isBinary = true;
     List<InetSocketAddress> nodes =
       new ArrayList<InetSocketAddress>(seedNodes.size());
@@ -252,6 +266,11 @@ public class BucketConfigurationProvider extends SpyObject
    * @return true if the http bootstrap process was successful.
    */
   boolean bootstrapHttp() {
+    if (disableHttpBootstrap) {
+      getLogger().info("Http bootstrap manually disabled, skipping.");
+      return false;
+    }
+
     try {
       Bucket config = httpProvider.get().getBucketConfiguration(bucket);
       setConfig(config);
@@ -371,8 +390,7 @@ public class BucketConfigurationProvider extends SpyObject
         bootstrap();
       } else {
         try {
-          List<String> configs = getConfigsFromBinaryConnection(
-            binaryConnection.get());
+          List<String> configs = getConfigsFromBinaryConnection(binaryConnection.get());
           if (configs.isEmpty()) {
             bootstrap();
             return;
