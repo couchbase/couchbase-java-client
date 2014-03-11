@@ -311,6 +311,7 @@ public class BucketConfigurationProvider extends SpyObject
       + "\" (carrier publication: " + isBinary + "): " + config);
 
     this.config.set(config);
+    httpProvider.get().updateBucket(config.getName(), config);
     updateSeedNodes();
     if (config.isNotUpdating()) {
       signalOutdated();
