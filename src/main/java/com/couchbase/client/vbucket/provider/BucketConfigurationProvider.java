@@ -35,6 +35,7 @@ import com.couchbase.client.vbucket.config.ConfigurationParser;
 import com.couchbase.client.vbucket.config.ConfigurationParserJSON;
 import net.spy.memcached.ArrayModNodeLocator;
 import net.spy.memcached.BroadcastOpFactory;
+import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.NodeLocator;
 import net.spy.memcached.auth.AuthThreadMonitor;
@@ -45,6 +46,7 @@ import net.spy.memcached.ops.OperationStatus;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -213,6 +215,24 @@ public class BucketConfigurationProvider extends SpyObject
       configs.get(0));
     Bucket config = configurationParser.parseBucket(appliedConfig);
     setConfig(config);
+    connection.addObserver(new ConnectionObserver() {
+      @Override
+      public void connectionEstablished(SocketAddress sa, int reconnectCount) {
+        getLogger().debug("Carrier Config Connection established to " + sa);
+      }
+
+      @Override
+      public void connectionLost(SocketAddress sa) {
+        getLogger().debug("Carrier Config Connection lost from " + sa);
+        CouchbaseConnection conn = binaryConnection.getAndSet(null);
+        try {
+          conn.shutdown();
+        } catch (IOException e) {
+          getLogger().debug("Could not shut down Carrier Config Connection", e);
+        }
+        signalOutdated();
+      }
+    });
     binaryConnection.set(connection);
     return true;
   }
@@ -307,15 +327,16 @@ public class BucketConfigurationProvider extends SpyObject
 
   @Override
   public void setConfig(final Bucket config) {
+    if (config.isNotUpdating()) {
+      signalOutdated();
+      return;
+    }
     getLogger().debug("Applying new bucket config for bucket \"" + bucket
       + "\" (carrier publication: " + isBinary + "): " + config);
 
     this.config.set(config);
     httpProvider.get().updateBucket(config.getName(), config);
     updateSeedNodes();
-    if (config.isNotUpdating()) {
-      signalOutdated();
-    }
     notifyObservers();
   }
 
@@ -408,7 +429,7 @@ public class BucketConfigurationProvider extends SpyObject
       }
     } else {
       if (refreshingHttp.compareAndSet(false, true)) {
-        Thread refresherThread = new Thread(new HttpProviderRefresher(this));
+        Thread refresherThread = new Thread(new HttpProviderRefresher());
         refresherThread.setName("HttpConfigurationProvider Reloader");
         refresherThread.start();
       } else {
@@ -472,12 +493,6 @@ public class BucketConfigurationProvider extends SpyObject
 
   class HttpProviderRefresher implements Runnable {
 
-    private final BucketConfigurationProvider provider;
-
-    public HttpProviderRefresher(BucketConfigurationProvider provider) {
-      this.provider = provider;
-    }
-
     @Override
     public void run() {
       try {
@@ -498,8 +513,8 @@ public class BucketConfigurationProvider extends SpyObject
             ConfigurationProviderHTTP oldProvider = httpProvider.get();
             ConfigurationProviderHTTP newProvider =
               new ConfigurationProviderHTTP(seedNodes, bucket, password);
-            newProvider.subscribe(bucket, provider);
             httpProvider.set(newProvider);
+            monitorBucket();
             oldProvider.shutdown();
             return;
           } catch(Exception ex) {

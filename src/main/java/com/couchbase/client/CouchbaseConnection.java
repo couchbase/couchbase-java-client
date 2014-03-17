@@ -320,6 +320,23 @@ public class CouchbaseConnection extends MemcachedConnection  implements
   }
 
   /**
+   * Only queue for reconnect if the given node is still part of the cluster.
+   *
+   * @param node the node to check.
+   */
+  @Override
+  protected void queueReconnect(final MemcachedNode node) {
+    if (isShutDown() || !locator.getAll().contains(node)) {
+      getLogger().debug("Preventing reconnect for node " + node + " because it"
+        + "is either not part of the cluster anymore or the connection is "
+        + "shutting down.");
+      return;
+    }
+
+    super.queueReconnect(node);
+  }
+
+  /**
    * Helper method to parse config wildcards into their actual representations.
    *
    * Currently, this method parses the $HOST wildcard and finds the first node
