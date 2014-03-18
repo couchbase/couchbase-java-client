@@ -47,7 +47,7 @@ public class ConfigurationParserMock implements ConfigurationParser {
   private String poolStreamingUri = "/poolsStreaming/default";
   private String bucketName = "Administrator";
   private CouchbaseConfig vbuckets = new CouchbaseConfig(
-    DefaultHashAlgorithm.NATIVE_HASH, 1, 1, 1, new ArrayList<String>(), null, null, null);
+    DefaultHashAlgorithm.NATIVE_HASH, 1, 1, 1, new ArrayList<String>(), null, null, null, false);
   private String bucketsUri = "/pools/default/buckets";
   private String bucketStreamingUri =
       "/pools/default/bucketsStreaming/Administrator";

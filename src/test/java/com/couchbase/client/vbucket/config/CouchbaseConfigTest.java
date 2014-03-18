@@ -64,7 +64,7 @@ public class CouchbaseConfigTest {
 
     CouchbaseConfig config = new CouchbaseConfig(
       hashAlgorithm, 3, 0, numVBuckets, servers, vbuckets, couchServers,
-      endpoints);
+      endpoints, false);
     assertTrue(config.nodeHasActiveVBuckets(new InetSocketAddress("node1", 8092)));
     assertTrue(config.nodeHasActiveVBuckets(new InetSocketAddress("node2", 8092)));
     assertFalse(config.nodeHasActiveVBuckets(new InetSocketAddress("node3", 8092)));

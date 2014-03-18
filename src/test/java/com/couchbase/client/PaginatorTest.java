@@ -429,6 +429,7 @@ public class PaginatorTest {
   public void testNumber() {
     View view = client.getView(DESIGN_DOC, VIEW_NAME_POPULATION_INT);
     Query query = new Query();
+    query.setStale(Stale.FALSE);
     int docsPerPage = 2;
 
     Paginator paginatedQuery = client.paginatedQuery(view, query, docsPerPage);

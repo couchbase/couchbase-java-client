@@ -94,8 +94,8 @@ public class BucketConfigurationProviderTest {
 
   @Before
   public void resetProperties() {
-    System.clearProperty("disableCarrierBootstrap");
-    System.clearProperty("disableHttpBootstrap");
+    System.clearProperty("cbclient.disableHttpBootstrap");
+    System.clearProperty("cbclient.disableCarrierBootstrap");
   }
 
   @Test

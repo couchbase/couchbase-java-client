@@ -65,4 +65,12 @@ public interface Config {
   List<VBucket> getVbuckets();
 
   ConfigType getConfigType();
+
+  /**
+   * If the current config is tainted and will most possibly be replaced soon
+   * with a clean one.
+   *
+   * @return true if it is tainted, false otherwise.
+   */
+  boolean isTainted();
 }

@@ -217,6 +217,8 @@ public class DefaultConfigFactory extends SpyObject implements ConfigFactory {
         + ")");
     }
 
+    final boolean hasForwardMap = vBucketServerMap.has("vBucketMapForward");
+
     final List<String> populatedServers =
       populateServersForCouchbaseBucket(servers);
     final List<VBucket> populatedVBuckets = populateVBuckets(vBuckets, oldConfig);
@@ -226,7 +228,7 @@ public class DefaultConfigFactory extends SpyObject implements ConfigFactory {
 
     return new CouchbaseConfig(hashAlgorithm, serversCount, replicasCount,
       vBucketsCount, populatedServers, populatedVBuckets,
-      populatedViewServers, populatedRestEndpoints);
+      populatedViewServers, populatedRestEndpoints, hasForwardMap);
   }
 
   /**

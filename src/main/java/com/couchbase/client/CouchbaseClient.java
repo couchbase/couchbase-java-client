@@ -89,6 +89,7 @@ import org.apache.http.message.BasicHttpRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -289,6 +290,13 @@ public class CouchbaseClient extends MemcachedClient
     } finally {
       reconfiguring = false;
     }
+  }
+
+  @Override
+  public void connectionLost(SocketAddress sa) {
+    getLogger().debug("Connection lost for node: " + sa);
+    cbConnFactory.configurationProvider.reloadConfig();
+    super.connectionLost(sa);
   }
 
   @Override

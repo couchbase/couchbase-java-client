@@ -158,6 +158,11 @@ public class MemcacheConfig implements Config {
   }
 
   @Override
+  public boolean isTainted() {
+    return false;
+  }
+
+  @Override
   public String toString() {
     return "CacheConfig{" +
       "vbucketsCount=" + vbucketsCount +
