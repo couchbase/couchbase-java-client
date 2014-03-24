@@ -644,6 +644,7 @@
         <exclude name="cbclient.properties.dist" />
 	<exclude name=".git/**" />
 	<exclude name=".idea/**" />
+	<exclude name="pom.xml" />
       </fileset>
     </delete>
   </target>
