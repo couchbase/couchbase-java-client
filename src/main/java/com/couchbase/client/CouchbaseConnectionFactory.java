@@ -134,6 +134,11 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   public static final int DEFAULT_OBS_POLL_MAX = 500;
 
   /**
+   * Default auth wait time.
+   */
+  public static final long DEFAULT_AUTH_WAIT_TIME = 2500;
+
+  /**
    * Default Node ordering to use for streaming connection.
    */
   public static final CouchbaseNodeOrder DEFAULT_STREAMING_NODE_ORDER =
@@ -422,6 +427,11 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     return DEFAULT_OBS_TIMEOUT;
   }
 
+  @Override
+  public long getAuthWaitTime() {
+    return DEFAULT_AUTH_WAIT_TIME;
+  }
+
   /**
    * The number of observe polls to execute before giving up.
    *
@@ -469,7 +479,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("CouchbaseConnectionFactory{");
-    sb.append(", bucket='").append(getBucketName()).append('\'');
+    sb.append("bucket='").append(getBucketName()).append('\'');
     sb.append(", nodes=").append(getStoredBaseList());
     sb.append(", order=").append(getStreamingNodeOrder());
     sb.append(", opTimeout=").append(getOperationTimeout());
@@ -485,6 +495,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
     sb.append(", reconnectInt=").append(getMinReconnectInterval());
     sb.append(", failureMode=").append(getFailureMode());
     sb.append(", hashAlgo=").append(getHashAlg());
+    sb.append(", authWaitTime=").append(getAuthWaitTime());
     sb.append('}');
     return sb.toString();
   }

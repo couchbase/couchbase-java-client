@@ -88,6 +88,17 @@ public class CouchbaseConnectionFactoryBuilderTest {
     instance.buildCouchbaseConnection(uris, "default", "");
   }
 
+  @Test
+  public void testSetAuthWaitTime() throws Exception {
+    CouchbaseConnectionFactoryBuilder instance =
+      new CouchbaseConnectionFactoryBuilder();
+    instance.setAuthWaitTime(5000);
+
+    CouchbaseConnectionFactory factory =
+      instance.buildCouchbaseConnection(uris, "default", "");
+    assertEquals(5000, factory.getAuthWaitTime());
+  }
+
   /**
    * Test setting the time out limits.
    *
@@ -170,6 +181,8 @@ public class CouchbaseConnectionFactoryBuilderTest {
       connFact.getFailureMode());
     assertEquals(CouchbaseConnectionFactory.DEFAULT_HASH,
       connFact.getHashAlg());
+    assertEquals(CouchbaseConnectionFactory.DEFAULT_AUTH_WAIT_TIME,
+      connFact.getAuthWaitTime());
 
     int obsPollMax = new Long(CouchbaseConnectionFactory.DEFAULT_OBS_TIMEOUT
       / CouchbaseConnectionFactory.DEFAULT_OBS_POLL_INTERVAL).intValue();
