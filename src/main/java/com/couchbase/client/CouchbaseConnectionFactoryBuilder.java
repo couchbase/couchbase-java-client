@@ -41,6 +41,7 @@ import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.OperationFactory;
+import net.spy.memcached.auth.AuthDescriptor;
 import net.spy.memcached.metrics.MetricCollector;
 import net.spy.memcached.metrics.MetricType;
 import net.spy.memcached.ops.Operation;
@@ -387,6 +388,10 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
         return executorService == null;
       }
 
+      @Override
+      public AuthDescriptor getAuthDescriptor() {
+        return authDescriptor == null ? super.getAuthDescriptor() : authDescriptor;
+      }
     };
   }
 
@@ -536,6 +541,11 @@ public class CouchbaseConnectionFactoryBuilder extends ConnectionFactoryBuilder 
       @Override
       public boolean isDefaultExecutorService() {
         return executorService == null;
+      }
+
+      @Override
+      public AuthDescriptor getAuthDescriptor() {
+        return authDescriptor == null ? super.getAuthDescriptor() : authDescriptor;
       }
     };
   }
