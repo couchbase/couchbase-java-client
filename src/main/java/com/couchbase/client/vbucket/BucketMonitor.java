@@ -22,6 +22,7 @@
 
 package com.couchbase.client.vbucket;
 
+import com.couchbase.client.CouchbaseProperties;
 import com.couchbase.client.http.HttpUtil;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.ConfigurationParser;
@@ -32,6 +33,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Observable;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +59,8 @@ import org.jboss.netty.handler.codec.http.HttpVersion;
  */
 public class BucketMonitor extends Observable {
 
+  private static final Timer recycleTimer = new Timer("couchbase-bucketMonitor", true);
+  private static final long recycleAfterMillis = Long.parseLong(CouchbaseProperties.getProperty("recycleBucketMonitorAfter", "60000"));
   private final URI cometStreamURI;
   private final String httpUser;
   private final String httpPass;
@@ -220,6 +225,15 @@ public class BucketMonitor extends Observable {
       LOGGER.debug("Invalid client configuration received:\n",
         handler.getLastResponse());
     }
+      
+    // recycle monitor connection every recycleAfterMillis milliseconds
+    // because it can stale.
+    recycleTimer.schedule(new TimerTask() {
+        @Override
+        public void run() {
+            notifyDisconnected();
+        }
+    }, recycleAfterMillis);
   }
 
   protected ChannelFuture createChannel() {
