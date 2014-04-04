@@ -30,6 +30,7 @@ import java.nio.channels.SocketChannel;
 
 import java.util.Collection;
 
+import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.Operation;
 
@@ -172,6 +173,15 @@ public class MemcachedNodeMockImpl implements MemcachedNode {
 
   @Override
   public void completedRead() {
+  }
+
+  @Override
+  public MemcachedConnection getConnection() {
+    return null;
+  }
+
+  @Override
+  public void setConnection(MemcachedConnection connection) {
   }
 
 }
