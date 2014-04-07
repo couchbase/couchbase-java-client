@@ -228,6 +228,10 @@ public class BucketMonitor extends Observable {
 
     // Set up the event pipeline factory.
     bootstrap.setPipelineFactory(new BucketMonitorPipelineFactory());
+      
+    // Enable tcp keep alive. Upstream connection needs
+    // to be pinged periodically to make sure it is alive
+    bootstrap.setOption("keepAlive", true);
 
     // Start the connection attempt.
     return bootstrap.connect(new InetSocketAddress(host, port));
