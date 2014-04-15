@@ -22,6 +22,8 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.clustermanager.BucketType;
+import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedConnection;
@@ -34,6 +36,7 @@ import net.spy.memcached.ops.GetOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.VBucketAware;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -63,17 +66,30 @@ public class CCCPAwarenessTest {
   private static final String SERVER_URI = "http://" + TestConfig.IPV4_ADDR
     + ":8091/pools";
 
-  /**
-   * Set a flag to see if the target cluster is CCCP ready and it makes sense
-   * to run the tests.
-   */
+  private static CouchbaseClient client;
+
   @BeforeClass
-  public static void checkCCCPAwareness() throws Exception {
-    CouchbaseClient client = new CouchbaseClient(
-      Arrays.asList(new URI(SERVER_URI)),
-      "default",
-      ""
-    );
+  public static void beforeTest() throws Exception {
+    final List<URI> uris = Arrays.asList(URI.create("http://"
+      + TestConfig.IPV4_ADDR + ":8091/pools"));
+
+    BucketTool bucketTool = new BucketTool();
+    bucketTool.deleteAllBuckets();
+    bucketTool.createDefaultBucket(BucketType.COUCHBASE, 256, 1, true);
+
+    BucketTool.FunctionCallback callback = new BucketTool.FunctionCallback() {
+      @Override
+      public void callback() throws Exception {
+        client = new CouchbaseClient(new CouchbaseConnectionFactory(uris, "default", ""));
+      }
+
+      @Override
+      public String success(long elapsedTime) {
+        return "Client Initialization took " + elapsedTime + "ms";
+      }
+    };
+    bucketTool.poll(callback);
+    bucketTool.waitForWarmup(client);
 
     ArrayList<String> versions = new ArrayList<String>(
       client.getVersions().values());
@@ -123,7 +139,7 @@ public class CCCPAwarenessTest {
 
     // Observe that new config arrives and gets applied
     assertTrue(latch.await(30, TimeUnit.SECONDS));
-    assertEquals(1, connection.getNewConfigCount());
+    assertTrue(connection.getNewConfigCount() >= 1);
 
     // Run operations to see that it still works and nothing is broken
     for (int i = 0; i < 100; i++) {
