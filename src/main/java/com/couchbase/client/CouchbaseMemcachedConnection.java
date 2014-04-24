@@ -164,14 +164,13 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       return;
     }
 
-    if(!primary.isActive()) {
-      cf.checkConfigUpdate();
-    }
-
+    boolean needsRecheckConfigUpdate = false;
     if (primary.isActive() || failureMode == FailureMode.Retry) {
       placeIn = primary;
+      needsRecheckConfigUpdate = !primary.isActive();
     } else if (failureMode == FailureMode.Cancel) {
       o.cancel();
+      needsRecheckConfigUpdate = true;
     } else {
       // Look for another node in sequence that is ready.
       for (Iterator<MemcachedNode> i = locator.getSequence(key); placeIn == null
@@ -186,10 +185,19 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       // and wait for it to come back online.
       if (placeIn == null) {
         placeIn = primary;
+        needsRecheckConfigUpdate = true;
         this.getLogger().warn(
             "Could not redistribute "
                 + "to another node, retrying primary node for %s.", key);
       }
+    }
+
+    if (needsRecheckConfigUpdate) {
+      getLogger().warn(
+        "Node expected to receive data is inactive. This could be due to "
+          + "a failure within the cluster. Will check for updated "
+          + "configuration. Key without a configured node is: %s.", key);
+      cf.checkConfigUpdate();
     }
 
     assert o.isCancelled() || placeIn != null : "No node found for key " + key;
