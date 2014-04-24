@@ -1,0 +1,118 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+group = 'com.couchbase.client'
+description = 'Official Couchbase Java Client Library'
+
+sourceCompatibility = JavaVersion.VERSION_1_6
+
+buildscript {
+    repositories {
+        maven {
+            name 'Shadow'
+            url 'http://dl.bintray.com/content/gvsmirnov/gradle-plugins'
+        }
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:0.8.1'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+sourceSets {
+    perf
+    integration
+}
+
+configurations {
+    perfCompile.extendsFrom compile, testCompile
+    perfRuntime.extendsFrom runtime, testRuntime
+
+    integrationCompile.extendsFrom compile, testCompile
+    integrationRuntime.extendsFrom runtime, testRuntime
+}
+
+dependencies {
+    compile group: 'com.couchbase.client', name: 'couchbase-jvm-core', version: '0.1-SNAPSHOT', changing: true
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.13'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
+
+    integrationCompile sourceSets.main.output
+
+    perfCompile group: 'org.openjdk.jmh', name: 'jmh-core', version: '0.5.6'
+    perfCompile group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '0.5.6'
+    perfCompile project
+}
+
+idea {
+    module {
+        scopes.PROVIDED.plus  += configurations.perfCompile
+        scopes.PROVIDED.minus += configurations.compile
+    }
+}
+
+eclipse {
+    classpath {
+        plusConfigurations += configurations.perfCompile
+    }
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integration.output.classesDir
+    classpath = sourceSets.integration.runtimeClasspath
+}
+
+task perfJar(type: Jar, dependsOn: perfClasses) {
+    from sourceSets.perf.output + sourceSets.main.output
+}
+
+task benchmarks(dependsOn: perfJar) {
+    apply plugin: 'shadow'
+    shadow {
+        classifier = "benchmarks"
+        includeDependenciesFor = ["runtime", "perfRuntime"]
+
+        transformer(com.github.jengelman.gradle.plugins.shadow.transformers.ManifestResourceTransformer) {
+            mainClass = "org.openjdk.jmh.Main"
+        }
+    }
+    doLast {
+        shadowJar.execute()
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
+}
