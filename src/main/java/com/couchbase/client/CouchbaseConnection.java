@@ -24,10 +24,18 @@ package com.couchbase.client;
 
 import com.couchbase.client.internal.AdaptiveThrottler;
 import com.couchbase.client.internal.ThrottleManager;
-import com.couchbase.client.vbucket.ConfigurationProvider;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
+import net.spy.memcached.ConnectionObserver;
+import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.OperationFactory;
+import net.spy.memcached.ops.KeyedOperation;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.ReplicaGetOperation;
+import net.spy.memcached.ops.VBucketAware;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -42,16 +50,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import net.spy.memcached.ConnectionObserver;
-import net.spy.memcached.FailureMode;
-import net.spy.memcached.MemcachedConnection;
-import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.OperationFactory;
-import net.spy.memcached.ops.KeyedOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.ReplicaGetOperation;
-import net.spy.memcached.ops.VBucketAware;
 
 /**
  * Maintains connections to each node in a cluster of Couchbase Nodes.
@@ -326,10 +324,15 @@ public class CouchbaseConnection extends MemcachedConnection  implements
   /**
    * Only queue for reconnect if the given node is still part of the cluster.
    *
+   * Since a node is queued to reconnect, it indicates a close socket and
+   * therefore an outdated configuration. With some providers, it is important
+   * to force a config reload which is also issued immediately.
+   *
    * @param node the node to check.
    */
   @Override
   protected void queueReconnect(final MemcachedNode node) {
+    cf.getConfigurationProvider().reloadConfig();
     if (isShutDown() || !locator.getAll().contains(node)) {
       getLogger().debug("Preventing reconnect for node " + node + " because it"
         + "is either not part of the cluster anymore or the connection is "
