@@ -2,6 +2,8 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewRow;
 import rx.Observable;
 
 public interface Bucket {
@@ -27,24 +29,70 @@ public interface Bucket {
    * @param target the document type.
    * @return the loaded and converted document.
    */
-  <D extends Document> Observable<D> get(String id, Class<D> target);
+  <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
   /**
    * Insert a {@link Document}.
    *
-   * @param document the document encode insert.
-   * @param <D> the type of the document, which is inferred decode the instance.
+   * @param document the document to insert.
+   * @param <D> the type of the document, which is inferred from the instance.
    * @return the document again.
    */
-  <D extends Document> Observable<D> insert(D document);
+  <D extends Document<?>> Observable<D> insert(D document);
 
   /**
    * Upsert a {@link Document}.
    *
-   * @param document the document encode upsert.
-   * @param <D> the type of the document, which is inferred decode the instance.
+   * @param document the document to upsert.
+   * @param <D> the type of the document, which is inferred from the instance.
    * @return the document again.
    */
-  <D extends Document> Observable<D> upsert(D document);
+  <D extends Document<?>> Observable<D> upsert(D document);
+
+  /**
+   * Replace a {@link Document}.
+   *
+   * @param document the document to replace.
+   * @param <D> the type of the document, which is inferred from the instance.
+   * @return the document again.
+   */
+  <D extends Document<?>> Observable<D> replace(D document);
+
+
+  /**
+   * Remove the given {@link Document}.
+   *
+   * @param document
+   * @param <D>
+   * @return
+   */
+  <D extends Document<?>> Observable<D> remove(D document);
+
+  /**
+   * Remove the document by the given document ID.
+   *
+   * @param id
+   * @return
+   */
+  Observable<JsonDocument> remove(String id);
+
+  /**
+   * Remove the document by the given ID and cast it to a custom target document.
+   *
+   * @param id
+   * @param target
+   * @param <D>
+   * @return
+   */
+  <D extends Document<?>> Observable<D> remove(String id, Class<D> target);
+
+  /**
+   * Queries a View defined by the {@link ViewQuery} and returns a {@link ViewRow}
+   * for each emitted row in the view.
+   *
+   * @param query the query for the view.
+   * @return a row for each result (from 0 to N).
+   */
+  Observable<ViewRow> query(ViewQuery query);
 
 }

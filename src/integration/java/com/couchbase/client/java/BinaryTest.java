@@ -1,6 +1,6 @@
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.document.Document;
+import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.util.TestProperties;
@@ -13,6 +13,7 @@ import rx.observables.BlockingObservable;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class BinaryTest {
 
@@ -34,13 +35,13 @@ public class BinaryTest {
   @Test
   public void shouldInsertAndGet() {
     JsonObject content = JsonObject.empty().put("hello", "world");
-    final JsonDocument doc = new JsonDocument("key", content);
+    final JsonDocument doc = JsonDocument.create("insert", content);
     JsonDocument response = bucket
       .insert(doc)
       .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
         @Override
         public Observable<JsonDocument> call(JsonDocument document) {
-          return bucket.get("key");
+          return bucket.get("insert");
         }
       })
       .toBlockingObservable()
@@ -51,17 +52,46 @@ public class BinaryTest {
   @Test
   public void shouldUpsertAndGet() {
     JsonObject content = JsonObject.empty().put("hello", "world");
-    final JsonDocument doc = new JsonDocument("key", content);
+    final JsonDocument doc = JsonDocument.create("upsert", content);
     JsonDocument response = bucket.upsert(doc)
       .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
         @Override
         public Observable<JsonDocument> call(JsonDocument document) {
-          return bucket.get("key");
+          return bucket.get("upsert");
         }
       })
       .toBlockingObservable()
       .single();
     assertEquals(content.getString("hello"), response.content().getString("hello"));
+    assertEquals(ResponseStatus.SUCCESS, response.status());
+  }
+
+  @Test
+  public void shouldUpsertAndReplace() {
+    JsonObject content = JsonObject.empty().put("hello", "world");
+    final JsonDocument doc = JsonDocument.create("upsert-r", content);
+    JsonDocument response = bucket.upsert(doc)
+      .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
+        @Override
+        public Observable<JsonDocument> call(JsonDocument document) {
+          return bucket.get("upsert-r");
+        }
+      })
+      .toBlockingObservable()
+      .single();
+    assertEquals(content.getString("hello"), response.content().getString("hello"));
+
+    JsonDocument updated = JsonDocument.from(response, JsonObject.empty().put("hello", "replaced"));
+    response = bucket.replace(updated)
+      .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
+        @Override
+        public Observable<JsonDocument> call(JsonDocument document) {
+          return bucket.get("upsert-r");
+        }
+      })
+      .toBlockingObservable()
+      .single();
+    assertEquals("replaced", response.content().getString("hello"));
   }
 
   @Test
@@ -78,8 +108,9 @@ public class BinaryTest {
 
     Iterator<JsonDocument> iterator = observable.getIterator();
     while (iterator.hasNext()) {
-      Document doc = iterator.next();
-      assertEquals(null, doc.content());
+      JsonDocument doc = iterator.next();
+      assertNull(doc.content());
+      assertEquals(ResponseStatus.NOT_EXISTS, doc.status());
     }
   }
 

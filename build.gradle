@@ -27,8 +27,6 @@ apply plugin: 'idea'
 group = 'com.couchbase.client'
 description = 'Official Couchbase Java Client Library'
 
-sourceCompatibility = JavaVersion.VERSION_1_6
-
 buildscript {
     repositories {
         maven {
@@ -63,7 +61,7 @@ configurations {
 }
 
 dependencies {
-    compile group: 'com.couchbase.client', name: 'couchbase-jvm-core', version: '0.1-SNAPSHOT', changing: true
+    compile group: 'com.couchbase.client', name: 'jvm-core', version: '0.1-SNAPSHOT', changing: true
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.13'
@@ -87,6 +85,11 @@ eclipse {
     classpath {
         plusConfigurations += configurations.perfCompile
     }
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = "1.6"
+    targetCompatibility = "1.6"
 }
 
 task integrationTest(type: Test) {

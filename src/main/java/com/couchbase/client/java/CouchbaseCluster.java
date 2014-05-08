@@ -21,12 +21,12 @@ public class CouchbaseCluster implements Cluster {
   }
 
   @Override
-  public Observable<Bucket> openBucket(final String name, String password) {
-    password = password == null ? "" : password;
+  public Observable<Bucket> openBucket(final String name, String pass) {
+    final String password = pass == null ? "" : pass;
     return core.send(new OpenBucketRequest(name, password)).map(new Func1<CouchbaseResponse, Bucket>() {
       @Override
       public Bucket call(CouchbaseResponse response) {
-        return new CouchbaseBucket(core, name);
+        return new CouchbaseBucket(core, name, password);
       }
     });
   }

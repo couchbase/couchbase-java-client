@@ -31,10 +31,10 @@ Bucket bucket = cluster
 JsonDocument doc = bucket.get("document-id").toBlockingObservable().single();
 System.out.println(doc);
 
-// Store a JSON document from a HashMap
-Map<String, String> content = new HashMap<String, String>();
-content.put("hello", "world");
-bucket.upsert(new JsonDocument("id", content));
+
+JsonObject user = JsonObject.empty();
+user.put("firstname", "Michael");
+bucket.upsert(new JsonDocument("id", user));
 ```
 
 ## Contributing
