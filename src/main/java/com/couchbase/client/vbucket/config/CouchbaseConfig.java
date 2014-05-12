@@ -22,14 +22,14 @@
 
 package com.couchbase.client.vbucket.config;
 
+import net.spy.memcached.HashAlgorithm;
+import net.spy.memcached.compat.SpyObject;
+
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import net.spy.memcached.HashAlgorithm;
-import net.spy.memcached.compat.SpyObject;
 
 /**
  * A {@link Config} implementation that represents a "couchbase" bucket config.
@@ -197,6 +197,9 @@ public class CouchbaseConfig extends SpyObject implements Config {
       int vbucketsChanges = 0;
       for (int i = 0; i < this.vbucketsCount; i++) {
         vbucketsChanges += (this.getMaster(i) == config.getMaster(i)) ? 0 : 1;
+        for (int r = 0; r < this.replicasCount; r++) {
+          vbucketsChanges += this.getReplica(i, r) == config.getReplica(i, r) ? 0 : 1;
+        }
       }
       difference.setVbucketsChanges(vbucketsChanges);
     } else {
