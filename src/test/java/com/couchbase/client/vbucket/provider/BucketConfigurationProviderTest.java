@@ -25,8 +25,8 @@ package com.couchbase.client.vbucket.provider;
 import com.couchbase.client.CbTestConfig;
 import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseConnectionFactory;
-import com.couchbase.client.CouchbaseProperties;
 import com.couchbase.client.vbucket.ConfigurationException;
+import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
 import net.spy.memcached.TestConfig;
 import net.spy.memcached.compat.log.Logger;
@@ -34,15 +34,19 @@ import net.spy.memcached.compat.log.LoggerFactory;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.internal.util.MockUtil;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 public class BucketConfigurationProviderTest {
@@ -233,6 +237,79 @@ public class BucketConfigurationProviderTest {
     );
 
     assertFalse(provider.bootstrapHttp());
+  }
+
+  @Test
+  public void shouldIgnoreOutdatedOrCurrentConfig() throws Exception {
+    BucketConfigurationProvider provider = new BucketConfigurationProvider(
+      seedNodes,
+      bucket,
+      password,
+      new CouchbaseConnectionFactory(seedNodes, bucket, password)
+    );
+
+    final AtomicInteger configArrived = new AtomicInteger();
+    provider.subscribe(new Reconfigurable() {
+      @Override
+      public void reconfigure(Bucket bucket) {
+        if (new MockUtil().isMock(bucket)) {
+          configArrived.incrementAndGet();
+        }
+      }
+    });
+
+    Bucket storedBucket = provider.getConfig();
+    assertTrue(storedBucket.getRevision() > 0);
+
+
+    Bucket oldBucket = mock(Bucket.class);
+    when(oldBucket.getName()).thenReturn(bucket);
+    when(oldBucket.getRevision()).thenReturn(storedBucket.getRevision() - 1);
+    Bucket currentBucket = mock(Bucket.class);
+    when(currentBucket.getName()).thenReturn(bucket);
+    when(currentBucket.getRevision()).thenReturn(storedBucket.getRevision());
+    Bucket newBucket = mock(Bucket.class);
+    when(newBucket.getName()).thenReturn(bucket);
+    when(newBucket.getRevision()).thenReturn(storedBucket.getRevision() + 1);
+    when(newBucket.getConfig()).thenReturn(storedBucket.getConfig());
+
+    provider.setConfig(oldBucket);
+    provider.setConfig(currentBucket);
+    provider.setConfig(newBucket);
+
+    assertEquals(1, configArrived.get());
+  }
+
+  @Test
+  public void shouldUseConfigIfRevNotSet() throws Exception {
+    BucketConfigurationProvider provider = new BucketConfigurationProvider(
+      seedNodes,
+      bucket,
+      password,
+      new CouchbaseConnectionFactory(seedNodes, bucket, password)
+    );
+
+    final AtomicInteger configArrived = new AtomicInteger();
+    provider.subscribe(new Reconfigurable() {
+      @Override
+      public void reconfigure(Bucket bucket) {
+        if (new MockUtil().isMock(bucket)) {
+          configArrived.incrementAndGet();
+        }
+      }
+    });
+
+    Bucket storedBucket = provider.getConfig();
+    assertTrue(storedBucket.getRevision() > 0);
+
+    Bucket newBucket = mock(Bucket.class);
+    when(newBucket.getName()).thenReturn(bucket);
+    when(newBucket.getRevision()).thenReturn(-1L);
+    when(newBucket.getConfig()).thenReturn(storedBucket.getConfig());
+
+    provider.setConfig(newBucket);
+
+    assertEquals(1, configArrived.get());
   }
 
   /**

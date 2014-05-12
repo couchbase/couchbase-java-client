@@ -50,7 +50,6 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -84,6 +83,7 @@ public class BucketConfigurationProvider extends SpyObject
   private final boolean disableCarrierBootstrap;
   private final boolean disableHttpBootstrap;
   private volatile boolean isBinary;
+  private volatile long lastRevision;
 
   public BucketConfigurationProvider(final List<URI> seedNodes,
     final String bucket, final String password,
@@ -355,6 +355,14 @@ public class BucketConfigurationProvider extends SpyObject
     if (config.isNotUpdating()) {
       signalOutdated();
       return;
+    }
+    long configRevision = config.getRevision();
+    if (configRevision > 0) {
+      if (configRevision > lastRevision) {
+        lastRevision = configRevision;
+      } else {
+        return;
+      }
     }
     getLogger().debug("Applying new bucket config for bucket \"" + bucket
       + "\" (carrier publication: " + isBinary + "): " + config);

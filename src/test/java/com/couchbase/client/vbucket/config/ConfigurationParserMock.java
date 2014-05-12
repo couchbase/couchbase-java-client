@@ -23,6 +23,8 @@
 package com.couchbase.client.vbucket.config;
 
 
+import net.spy.memcached.DefaultHashAlgorithm;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -31,8 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.spy.memcached.DefaultHashAlgorithm;
 
 /**
  * A ConfigurationParserMock.
@@ -73,7 +73,8 @@ public class ConfigurationParserMock implements ConfigurationParser {
     try {
       parseBucketsCalled = true;
       Bucket bucket =
-          new Bucket(bucketName, vbuckets, new URI(bucketStreamingUri), nodes);
+          new Bucket(bucketName, vbuckets, new URI(bucketStreamingUri), nodes,
+            -1);
       result.put(bucketName, bucket);
     } catch (URISyntaxException e) {
       throw new ParseException(e.getMessage(), 0);
@@ -86,7 +87,7 @@ public class ConfigurationParserMock implements ConfigurationParser {
     try {
       parseBucketsCalled = true;
       return new Bucket(bucketName, vbuckets, new URI(bucketStreamingUri),
-          nodes);
+          nodes, -1);
     } catch (URISyntaxException e) {
       throw new ParseException(e.getMessage(), 0);
     }

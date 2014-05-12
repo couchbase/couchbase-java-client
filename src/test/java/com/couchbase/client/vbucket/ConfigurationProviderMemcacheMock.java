@@ -25,11 +25,12 @@ package com.couchbase.client.vbucket;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.MemcacheConfig;
 import com.couchbase.client.vbucket.config.Node;
+import net.spy.memcached.TestConfig;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.spy.memcached.TestConfig;
 
 /**
  * Implements a stub configuration provider for testing memcache buckets.
@@ -66,7 +67,7 @@ public class ConfigurationProviderMemcacheMock
 
     List<Node> nodes = new ArrayList<Node>();
 
-    return new Bucket(bucket, config, streamingURI, nodes);
+    return new Bucket(bucket, config, streamingURI, nodes, -1);
   }
 
   @Override

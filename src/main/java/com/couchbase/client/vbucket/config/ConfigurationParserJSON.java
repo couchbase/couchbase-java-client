@@ -23,6 +23,11 @@
 package com.couchbase.client.vbucket.config;
 
 import com.couchbase.client.vbucket.ConnectionException;
+import net.spy.memcached.compat.SpyObject;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -30,12 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.spy.memcached.compat.SpyObject;
-
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 
 /**
  * This {@link ConfigurationParser} takes JSON-based configuration information
@@ -184,6 +183,7 @@ public class ConfigurationParserJSON extends SpyObject
     try {
       String bucketName = bucketJson.getString("name");
       URI streamingUri = new URI(bucketJson.getString("streamingUri"));
+      long revision = bucketJson.has("rev") ? bucketJson.getLong("rev") : -1;
       Config currentConfig = null;
       if (current != null) {
         currentConfig = current.getConfig();
@@ -202,7 +202,7 @@ public class ConfigurationParserJSON extends SpyObject
           currentNode.getJSONObject("ports"));
         nodes.add(new Node(status, hostname, ports));
       }
-      return new Bucket(bucketName, config, streamingUri, nodes);
+      return new Bucket(bucketName, config, streamingUri, nodes, revision);
     } catch (JSONException e) {
       throw new ParseException(e.getMessage(), 0);
     } catch (URISyntaxException e) {
