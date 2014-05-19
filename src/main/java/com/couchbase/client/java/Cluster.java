@@ -4,6 +4,9 @@ import rx.Observable;
 
 public interface Cluster {
 
-  Observable<Bucket> openBucket(String name);
-  Observable<Bucket> openBucket(String name, String password);
+    Observable<Bucket> openBucket();
+
+    Observable<Bucket> openBucket(String name);
+
+    Observable<Bucket> openBucket(String name, String password);
 }
