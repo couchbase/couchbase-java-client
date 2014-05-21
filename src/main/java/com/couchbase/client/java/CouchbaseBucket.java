@@ -3,6 +3,8 @@ package com.couchbase.client.java;
 import com.couchbase.client.core.cluster.Cluster;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
+import com.couchbase.client.core.message.query.GenericQueryRequest;
+import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.java.bucket.ViewQueryMapper;
@@ -11,9 +13,13 @@ import com.couchbase.client.java.convert.JacksonJsonConverter;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlRow;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewRow;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -145,4 +151,23 @@ public class CouchbaseBucket implements Bucket {
     );
   }
 
+    @Override
+    public Observable<N1qlRow> query(N1qlQuery query) {
+        final Converter<?, ?> converter = converters.get(JsonDocument.class);
+        GenericQueryRequest request = new GenericQueryRequest(query.export(), bucket, password);
+        return core
+            .<GenericQueryResponse>send(request)
+            .filter(new Func1<GenericQueryResponse, Boolean>() {
+                @Override
+                public Boolean call(GenericQueryResponse response) {
+                    return response.content() != null;
+                }
+            })
+            .map(new Func1<GenericQueryResponse, N1qlRow>() {
+                @Override
+                public N1qlRow call(GenericQueryResponse response) {
+                    return new N1qlRow((JsonObject) converter.decode(Unpooled.copiedBuffer(response.content(), CharsetUtil.UTF_8)));
+                }
+            });
+    }
 }

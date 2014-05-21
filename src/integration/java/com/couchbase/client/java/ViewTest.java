@@ -20,9 +20,6 @@ public class ViewTest {
 
   @BeforeClass
   public static void connect() {
-
-      System.setProperty("com.couchbase.client.core.service.endpoints.view", "15");
-
     CouchbaseCluster cluster = new CouchbaseCluster(seedNode);
     bucket = cluster
       .openBucket(bucketName, password)

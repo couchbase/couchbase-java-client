@@ -9,4 +9,9 @@ public interface Cluster {
     Observable<Bucket> openBucket(String name);
 
     Observable<Bucket> openBucket(String name, String password);
+
+    /**
+     * Disconnects from the {@link Cluster} and closes all open buckets.
+     */
+    Observable<Boolean> disconnect();
 }

@@ -113,4 +113,8 @@ public class JsonObject implements JsonValue {
     return content.size();
   }
 
+    @Override
+    public String toString() {
+        return content.toString();
+    }
 }
