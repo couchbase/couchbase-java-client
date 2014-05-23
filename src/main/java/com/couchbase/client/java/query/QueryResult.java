@@ -5,11 +5,11 @@ import com.couchbase.client.java.document.json.JsonObject;
 /**
  * Created by michael on 21/05/14.
  */
-public class N1qlRow {
+public class QueryResult {
 
     private final JsonObject value;
 
-    public N1qlRow(JsonObject value) {
+    public QueryResult(JsonObject value) {
         this.value = value;
     }
 

@@ -1,6 +1,6 @@
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,6 +27,6 @@ public class QueryTest {
 
     @Test
     public void shouldQueryView() throws Exception {
-        System.out.println(bucket.query(N1qlQuery.create("select * from default limit 5")).toList().toBlockingObservable().single());
+        System.out.println(bucket.query(Query.raw("select * from default limit 5")).toList().toBlockingObservable().single());
     }
 }

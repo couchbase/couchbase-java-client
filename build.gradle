@@ -62,7 +62,7 @@ configurations {
 }
 
 dependencies {
-    compile group: 'com.couchbase.client', name: 'jvm-core', version: '0.1-SNAPSHOT', changing: true
+    compile group: 'com.couchbase.client', name: 'core-io', version: '0.1', changing: true
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.13'

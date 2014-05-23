@@ -13,10 +13,10 @@ import com.couchbase.client.java.convert.JacksonJsonConverter;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.N1qlQuery;
-import com.couchbase.client.java.query.N1qlRow;
-import com.couchbase.client.java.view.ViewQuery;
-import com.couchbase.client.java.view.ViewRow;
+import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.ViewQuery;
+import com.couchbase.client.java.query.ViewResult;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.CharsetUtil;
@@ -135,24 +135,24 @@ public class CouchbaseBucket implements Bucket {
   }
 
   @Override
-  public Observable<ViewRow> query(final ViewQuery query) {
+  public Observable<ViewResult> query(final ViewQuery query) {
     final ViewQueryRequest request = new ViewQueryRequest(query.design(), query.view(), query.development(),
         bucket, password);
 
     return core
         .<ViewQueryResponse>send(request)
         .flatMap(new ViewQueryMapper(converters))
-        .map(new Func1<JsonObject, ViewRow>() {
+        .map(new Func1<JsonObject, ViewResult>() {
             @Override
-            public ViewRow call(JsonObject object) {
-                return new ViewRow(object.getString("id"), object.getString("key"), object.get("value"));
+            public ViewResult call(JsonObject object) {
+                return new ViewResult(object.getString("id"), object.getString("key"), object.get("value"));
             }
         }
     );
   }
 
     @Override
-    public Observable<N1qlRow> query(N1qlQuery query) {
+    public Observable<QueryResult> query(Query query) {
         final Converter<?, ?> converter = converters.get(JsonDocument.class);
         GenericQueryRequest request = new GenericQueryRequest(query.export(), bucket, password);
         return core
@@ -163,10 +163,13 @@ public class CouchbaseBucket implements Bucket {
                     return response.content() != null;
                 }
             })
-            .map(new Func1<GenericQueryResponse, N1qlRow>() {
+            .map(new Func1<GenericQueryResponse, QueryResult>() {
                 @Override
-                public N1qlRow call(GenericQueryResponse response) {
-                    return new N1qlRow((JsonObject) converter.decode(Unpooled.copiedBuffer(response.content(), CharsetUtil.UTF_8)));
+                public QueryResult call(GenericQueryResponse response) {
+                    ByteBuf content = Unpooled.copiedBuffer(response.content(), CharsetUtil.UTF_8);
+                    QueryResult result = new QueryResult((JsonObject) converter.decode(content));
+                    content.release();
+                    return result;
                 }
             });
     }

@@ -1,4 +1,4 @@
-package com.couchbase.client.java.view;
+package com.couchbase.client.java.query;
 
 /**
  * Fluent API for a View Query.
