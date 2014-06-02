@@ -25,12 +25,15 @@ package com.couchbase.client;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
 import com.couchbase.client.vbucket.config.Bucket;
+import net.spy.memcached.BroadcastOpFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.OperationFactory;
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
+import net.spy.memcached.ops.OperationStatus;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -43,6 +46,8 @@ import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Couchbase implementation of CouchbaseConnection.
@@ -58,14 +63,23 @@ import java.util.List;
 public class CouchbaseMemcachedConnection extends MemcachedConnection implements
   Reconfigurable {
 
+  /**
+   * The amount in seconds after which a op broadcast is forced to detect
+   * dead connections.
+   */
+  private static final int ALLOWED_IDLE_TIME = 5;
+
   protected volatile boolean reconfiguring = false;
   private final CouchbaseConnectionFactory cf;
+
+  private volatile long lastWrite;
 
   public CouchbaseMemcachedConnection(int bufSize, CouchbaseConnectionFactory f,
       List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
       FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
     this.cf = f;
+    updateLastWrite();
   }
 
 
@@ -202,6 +216,7 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
 
     assert o.isCancelled() || placeIn != null : "No node found for key " + key;
     if (placeIn != null) {
+      updateLastWrite();
       addOperation(placeIn, o);
     } else {
       assert o.isCancelled() : "No node found for " + key
@@ -263,6 +278,49 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       getLogger().debug("Exception occurred during shutdown", e);
     } else {
       getLogger().warn("Problem handling Couchbase IO", e);
+    }
+  }
+
+  /**
+   * Helper method to centralize updating the last write timestamp.
+   */
+  private void updateLastWrite() {
+    long now = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime());
+    if (lastWrite != now) {
+      lastWrite = now;
+    }
+  }
+
+
+  /**
+   * Make sure that if the selector is woken up manually for an extended period
+   * of time that the sockets are still alive.
+   *
+   * <p>This is done by broadcasting a operation so that disconnected sockets
+   * are discovered even when no load is applied.</p>
+   */
+  @Override
+  protected void handleWokenUpSelector() {
+    long now = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime());
+    long diff = now - lastWrite;
+    if (lastWrite > 0 && diff >= ALLOWED_IDLE_TIME) {
+      updateLastWrite();
+      getLogger().debug("Wakeup counter triggered, broadcasting noops.");
+      final OperationFactory fact = cf.getOperationFactory();
+      broadcastOperation(new BroadcastOpFactory() {
+        @Override
+        public Operation newOp(MemcachedNode n, final CountDownLatch latch) {
+          return fact.noop(new OperationCallback() {
+            @Override
+            public void receivedStatus(OperationStatus status) { }
+
+            @Override
+            public void complete() {
+              latch.countDown();
+            }
+          });
+        }
+      });
     }
   }
 
