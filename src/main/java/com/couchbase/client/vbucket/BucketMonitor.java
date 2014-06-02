@@ -25,17 +25,6 @@ package com.couchbase.client.vbucket;
 import com.couchbase.client.http.HttpUtil;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.ConfigurationParser;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.text.ParseException;
-import java.util.Observable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import net.spy.memcached.compat.log.Logger;
 import net.spy.memcached.compat.log.LoggerFactory;
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -50,11 +39,30 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.text.ParseException;
+import java.util.Observable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 /**
  * The BucketMonitor will open an HTTP comet stream to monitor for changes to
  * the list of nodes. If the list of nodes changes, it will notify observers.
  */
 public class BucketMonitor extends Observable {
+
+  /**
+   * Number of netty worker threads to start.
+   *
+   * <p>Since there is only one streaming connection open per
+   * {@link BucketMonitor}, setting it to a low value prohibits ressource usage
+   * in case of a failure.</p>
+   */
+  private static final int NETTY_WORKER_COUNT = 1;
 
   private final URI cometStreamURI;
   private final String httpUser;
@@ -98,7 +106,7 @@ public class BucketMonitor extends Observable {
     this.host = cometStreamURI.getHost();
     this.port = cometStreamURI.getPort() == -1 ? 80 : cometStreamURI.getPort();
     factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
-      Executors.newCachedThreadPool());
+      Executors.newCachedThreadPool(), NETTY_WORKER_COUNT);
     this.headers = new HttpMessageHeaders();
       this.provider = provider;
   }
