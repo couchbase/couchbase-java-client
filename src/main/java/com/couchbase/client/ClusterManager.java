@@ -471,9 +471,9 @@ public class ClusterManager extends SpyObject {
           new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse result) {
-              latch.countDown();
               success.set(true);
               response.set(result);
+              latch.countDown();
             }
 
             @Override
