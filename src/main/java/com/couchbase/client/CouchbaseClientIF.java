@@ -31,10 +31,6 @@ import com.couchbase.client.protocol.views.Query;
 import com.couchbase.client.protocol.views.SpatialView;
 import com.couchbase.client.protocol.views.View;
 import com.couchbase.client.protocol.views.ViewResponse;
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
-import java.util.concurrent.Future;
-
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedClientIF;
@@ -44,6 +40,10 @@ import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.transcoders.Transcoder;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * This interface is provided as a helper for testing clients of the
@@ -62,7 +62,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
-  Future<CASValue<Object>> asyncGetAndLock(final String key, int exp);
+  Future<CASValue<Object>> asyncGetAndLock(String key, int exp);
 
   /**
    * Gets and locks the given key asynchronously. By default the maximum allowed
@@ -76,8 +76,8 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
-  <T> Future<CASValue<T>> asyncGetAndLock(final String key, int exp,
-      final Transcoder<T> tc);
+  <T> Future<CASValue<T>> asyncGetAndLock(String key, int exp,
+      Transcoder<T> tc);
 
   /**
    * Getl with a single key. By default the maximum allowed timeout is 30
@@ -120,8 +120,8 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
-  <T> OperationFuture<Boolean> asyncUnlock(final String key,
-          long casId, final Transcoder<T> tc);
+  <T> OperationFuture<Boolean> asyncUnlock(String key,
+          long casId, Transcoder<T> tc);
 
   /**
    * Unlock the given key asynchronously from the cache with the default
@@ -133,7 +133,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
-  OperationFuture<Boolean> asyncUnlock(final String key,
+  OperationFuture<Boolean> asyncUnlock(String key,
           long casId);
 
   /**
@@ -147,8 +147,8 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    *           full to accept any more requests
    * @throws java.util.concurrent.CancellationException if operation was canceled
    */
-  <T> Boolean unlock(final String key,
-          long casId, final Transcoder<T> tc);
+  <T> Boolean unlock(String key,
+          long casId, Transcoder<T> tc);
 
   /**
    * Unlock the given key synchronously from the cache with the default
@@ -160,7 +160,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests
    */
-  Boolean unlock(final String key, long casId);
+  Boolean unlock(String key, long casId);
 
   /**
    * Observe a key with a associated CAS.
@@ -176,7 +176,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws IllegalStateException in the rare circumstance where queue is too
    *           full to accept any more requests.
    */
-  Map<MemcachedNode, ObserveResponse> observe(final String key, long cas);
+  Map<MemcachedNode, ObserveResponse> observe(String key, long cas);
 
 
   /**
@@ -1115,7 +1115,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @param doc the design document to store.
    * @return a future containing the result of the creation operation.
    */
-  HttpFuture<Boolean> asyncCreateDesignDoc(final DesignDocument doc)
+  HttpFuture<Boolean> asyncCreateDesignDoc(DesignDocument doc)
     throws UnsupportedEncodingException;
 
   /**
@@ -1134,7 +1134,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @param name the design document to delete.
    * @return a future containing the result of the deletion operation.
    */
-  HttpFuture<Boolean> asyncDeleteDesignDoc(final String name)
+  HttpFuture<Boolean> asyncDeleteDesignDoc(String name)
     throws UnsupportedEncodingException;
 
   /**
@@ -1169,7 +1169,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @return the result of the creation operation.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
-  Boolean createDesignDoc(final DesignDocument doc);
+  Boolean createDesignDoc(DesignDocument doc);
 
   /**
    * Delete a design document in the cluster.
@@ -1178,7 +1178,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @return the result of the deletion operation.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
-  Boolean deleteDesignDoc(final String name);
+  Boolean deleteDesignDoc(String name);
 
   /**
    * Returns a representation of a design document stored in the cluster.
@@ -1191,7 +1191,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
   @Deprecated
-  DesignDocument getDesignDocument(final String designDocumentName);
+  DesignDocument getDesignDocument(String designDocumentName);
 
   /**
    * Returns a representation of a design document stored in the cluster.
@@ -1201,133 +1201,197 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws com.couchbase.client.protocol.views.InvalidViewException if no design document or view was found.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
-  DesignDocument getDesignDoc(final String designDocumentName);
+  DesignDocument getDesignDoc(String designDocumentName);
 
   /**
-   * Get a document from a replica node.
+   * Get a document from the replica (or the active) nodes.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead of the master node.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * This command only works on couchbase type buckets.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
    *
-   * @param key the key to fetch.
-   * @return the fetched document or null when no document available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @return the fetched document or null when no document found.
    */
   Object getFromReplica(String key);
 
   /**
-   * Get a document from a replica node including its CAS value.
+   * Get a document and its CAS from the replica (or the active) nodes.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead of the master node including its CAS value.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * This command only works on couchbase type buckets.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
    *
-   * @param key the key to fetch.
-   * @return the fetched document or null when no document available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @return the fetched document or null when no document found.
    */
   CASValue<Object> getsFromReplica(String key);
 
   /**
-   * Get a document from a replica node.
+   * Get a document from the replica (or the active) nodes and use a custom
+   * transcoder.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead from the master node.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * This command only works on couchbase type buckets.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
    *
-   * @param key the key to fetch.
-   * @param tc a custom document transcoder.
-   * @return the fetched document or null when no document available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @param tc a custom transcoder.
+   * @return the fetched document or null when no document found.
    */
   <T> T getFromReplica(String key, Transcoder<T> tc);
 
   /**
-   * Get a document from a replica node including its CAS value.
+   * Get a document and its CAS from the replica (or the active) nodes and use
+   * a custom transcoder.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead of the master node including its CAS value.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * This command only works on couchbase type buckets.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
    *
-   * @param key the key to fetch.
-   * @param tc a custom document transcoder.
-   * @return the fetched document or null when no document available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @param tc a custom transcoder.
+   * @return the fetched document or null when no document found.
    */
   <T> CASValue<T> getsFromReplica(String key, Transcoder<T> tc);
 
   /**
-   * Get a document from a replica node asynchronously.
+   * Asynchronously get a document from the replica (or the active) nodes.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead from the master node. This command only works on couchbase
-   * type buckets.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * @param key the key to fetch.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
+   *
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
    * @return a future containing the fetched document or null when no document
-   *         available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   *         found.
    */
-  ReplicaGetFuture<Object> asyncGetFromReplica(final String key);
+  ReplicaGetFuture<Object> asyncGetFromReplica(String key);
 
   /**
-   * Get a document from a replica node asynchronously and load the CAS.
+   * Asynchronously get a document and its CAS from the replica (or the active)
+   * nodes.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead from the master node. This command only works on couchbase
-   * type buckets.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * @param key the key to fetch.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
+   *
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
    * @return a future containing the fetched document or null when no document
-   *         available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   *         found.
    */
-  ReplicaGetFuture<CASValue<Object>> asyncGetsFromReplica(final String key);
+  ReplicaGetFuture<CASValue<Object>> asyncGetsFromReplica(String key);
 
   /**
-   * Get a document from a replica node asynchronously.
+   * Asynchronously get a document from the replica (or the active) nodes with
+   * a custom transcoder.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead from the master node. This command only works on couchbase
-   * type buckets.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * @param key the key to fetch.
-   * @param tc a custom document transcoder.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
+   *
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @param tc a custom transcoder.
    * @return a future containing the fetched document or null when no document
-   *         available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   *         found.
    */
-  <T> ReplicaGetFuture<T> asyncGetFromReplica(final String key,
-    final Transcoder<T> tc);
+  <T> ReplicaGetFuture<T> asyncGetFromReplica(String key, Transcoder<T> tc);
 
   /**
-   * Get a document from a replica node asynchronously and load the CAS.
+   * Asynchronously get a document and its CAS from the replica (or the active)
+   * nodes with a custom transcoder.
    *
-   * This method allows you to explicitly load a document from a replica
-   * instead from the master node. This command only works on couchbase
-   * type buckets.
+   * <p>A replica read command "fans out" to all configured replicas and also
+   * the active node and asks them for the document. The response which arrives
+   * first at the client is used and the others are discarded. This means that
+   * the method should only be used as a fallback on failure, since it sends
+   * out potentially more than one request, leading to increased traffic if
+   * used regularly.</p>
    *
-   * @param key the key to fetch.
-   * @param tc a custom document transcoder.
+   * <p>Important: since a response from the replica can arrive first, the code
+   * calling this method must always be prepared to get outdated results, since
+   * the data takes some time to be propagated to the replica. Use it only if
+   * availability is explicitly traded for consistency.</p>
+   *
+   * <p>Replicas are only supported on couchbase buckets.</p>
+   *
+   * @param key the unique key of the document.
+   * @param tc a custom transcoder.
    * @return a future containing the fetched document or null when no document
-   *         available.
-   * @throws RuntimeException when less replicas available then in the index
-   *         argument defined.
+   *         found.
    */
-  <T> ReplicaGetFuture<CASValue<T>> asyncGetsFromReplica(final String key,
-    final Transcoder<T> tc);
+  <T> ReplicaGetFuture<CASValue<T>> asyncGetsFromReplica(String key,
+    Transcoder<T> tc);
 
   /**
    * Gets access to a view contained in a design document from the cluster.
@@ -1353,7 +1417,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    *           flight
    * @throws java.util.concurrent.ExecutionException if an error occurs during execution
    */
-  HttpFuture<View> asyncGetView(String designDocumentName, final String viewName);
+  HttpFuture<View> asyncGetView(String designDocumentName, String viewName);
 
   /**
    * Gets access to a spatial view contained in a design document from the
@@ -1373,7 +1437,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws java.util.concurrent.ExecutionException if an error occurs during execution
    */
   HttpFuture<SpatialView> asyncGetSpatialView(String designDocumentName,
-      final String viewName);
+      String viewName);
 
   HttpFuture<ViewResponse> asyncQuery(AbstractView view, Query query);
 
@@ -1423,7 +1487,7 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws com.couchbase.client.protocol.views.InvalidViewException if no design document or view was found.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
-  View getView(final String designDocumentName, final String viewName);
+  View getView(String designDocumentName, String viewName);
 
 
   /**
@@ -1441,8 +1505,8 @@ public interface CouchbaseClientIF extends MemcachedClientIF {
    * @throws com.couchbase.client.protocol.views.InvalidViewException if no design document or view was found.
    * @throws java.util.concurrent.CancellationException if operation was canceled.
    */
-  SpatialView getSpatialView(final String designDocumentName,
-    final String viewName);
+  SpatialView getSpatialView(String designDocumentName,
+    String viewName);
 
   OperationFuture<Map<String, String>> getKeyStats(String key);
 
