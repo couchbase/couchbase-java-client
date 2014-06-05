@@ -1,5 +1,7 @@
 package com.couchbase.client.java;
 
+import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.DisconnectRequest;
@@ -13,10 +15,10 @@ public class CouchbaseCluster implements Cluster {
 
     private static final String DEFAULT_BUCKET = "default";
 
-    private final com.couchbase.client.core.cluster.Cluster core;
+    private final ClusterFacade core;
 
     public CouchbaseCluster(final String... hostnames) {
-        core = new com.couchbase.client.core.cluster.CouchbaseCluster();
+        core = new CouchbaseCore();
         SeedNodesRequest request = hostnames.length == 0 ? new SeedNodesRequest() : new SeedNodesRequest(hostnames);
         core.send(request).toBlockingObservable().single();
     }

@@ -1,5 +1,6 @@
 package com.couchbase.client.java;
 
+import com.couchbase.client.java.query.Sort;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.BeforeClass;
@@ -27,6 +28,7 @@ public class QueryTest {
 
     @Test
     public void shouldQueryView() throws Exception {
-        System.out.println(bucket.query(Query.raw("select * from default limit 5")).toList().toBlockingObservable().single());
+        bucket.query(Query.select("firstname", "lastname").limit(5).orderBy(Sort.asc("name"), Sort.desc("foo")));
+        System.out.println(bucket.query("select * from default limit 5").toList().toBlockingObservable().single());
     }
 }

@@ -1,6 +1,6 @@
 package com.couchbase.client.java;
 
-import com.couchbase.client.core.cluster.Cluster;
+import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
@@ -30,10 +30,10 @@ public class CouchbaseBucket implements Bucket {
 
   private final String bucket;
   private final String password;
-  private final Cluster core;
+  private final ClusterFacade core;
   private final Map<Class<?>, Converter<?, ?>> converters;
 
-  public CouchbaseBucket(final Cluster core, final String name, final String password) {
+  public CouchbaseBucket(final ClusterFacade core, final String name, final String password) {
     bucket = name;
     this.password = password;
     this.core = core;
@@ -152,9 +152,17 @@ public class CouchbaseBucket implements Bucket {
   }
 
     @Override
-    public Observable<QueryResult> query(Query query) {
+    public Observable<QueryResult> query(final Query query) {
+        if (!query.hasFrom()) {
+            query.from(bucket);
+        }
+        return query(query.toString());
+    }
+
+    @Override
+    public Observable<QueryResult> query(final String query) {
         final Converter<?, ?> converter = converters.get(JsonDocument.class);
-        GenericQueryRequest request = new GenericQueryRequest(query.export(), bucket, password);
+        GenericQueryRequest request = new GenericQueryRequest(query, bucket, password);
         return core
             .<GenericQueryResponse>send(request)
             .filter(new Func1<GenericQueryResponse, Boolean>() {
