@@ -136,8 +136,8 @@ public class CouchbaseBucket implements Bucket {
 
   @Override
   public Observable<ViewResult> query(final ViewQuery query) {
-    final ViewQueryRequest request = new ViewQueryRequest(query.design(), query.view(), query.development(),
-        bucket, password);
+    final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(), query.isDevelopment(),
+        query.toString(), bucket, password);
 
     return core
         .<ViewQueryResponse>send(request)
@@ -153,9 +153,6 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Observable<QueryResult> query(final Query query) {
-        if (!query.hasFrom()) {
-            query.from(bucket);
-        }
         return query(query.toString());
     }
 
