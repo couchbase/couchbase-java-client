@@ -26,6 +26,7 @@ import com.couchbase.client.CouchbaseConnection;
 import com.couchbase.client.CouchbaseConnectionFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.OperationFactory;
 import net.spy.memcached.compat.log.Level;
 import net.spy.memcached.compat.log.Logger;
@@ -53,6 +54,17 @@ public class CouchbaseConfigConnection extends CouchbaseConnection {
     List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
     FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{CouchbaseConfigConnection to");
+    for (MemcachedNode qa : locator.getAll()) {
+      sb.append(" ").append(qa.getSocketAddress());
+    }
+    sb.append("}");
+    return sb.toString();
   }
 
   @Override
