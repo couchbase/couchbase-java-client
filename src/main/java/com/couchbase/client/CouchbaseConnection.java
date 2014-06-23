@@ -236,10 +236,8 @@ public class CouchbaseConnection extends MemcachedConnection  implements
     // If we didn't find an active node, queue it in the primary node
     // and wait for it to come back online.
     if (needsRecheckConfigUpdate) {
-      getLogger().warn(
-        "Node expected to receive data is inactive. This could be due to "
-          + "a failure within the cluster. Will check for updated "
-          + "configuration. Key without a configured node is: %s.", key);
+        getLogger().info("Node for key \"%s\" is not active (yet). Queueing "
+            + "up for retry and checking for stale configuration.", key);
       cf.checkConfigUpdate();
     }
 
