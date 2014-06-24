@@ -174,19 +174,19 @@ public class ViewQueryTest {
         ViewQuery query = ViewQuery.from("design", "view").endKey("key");
         assertEquals("?endkey=%22key%22", query.toString());
 
-        query = ViewQuery.from("design", "view").startKey(1);
+        query = ViewQuery.from("design", "view").endKey(1);
         assertEquals("?endkey=1", query.toString());
 
-        query = ViewQuery.from("design", "view").startKey(true);
+        query = ViewQuery.from("design", "view").endKey(true);
         assertEquals("?endkey=true", query.toString());
 
-        query = ViewQuery.from("design", "view").startKey(3.55);
+        query = ViewQuery.from("design", "view").endKey(3.55);
         assertEquals("?endkey=3.55", query.toString());
 
-        query = ViewQuery.from("design", "view").startKey(JsonArray.from("foo", 3));
+        query = ViewQuery.from("design", "view").endKey(JsonArray.from("foo", 3));
         assertEquals("?endkey=%5B%22foo%22%2C3%5D", query.toString());
 
-        query = ViewQuery.from("design", "view").startKey(JsonObject.empty().put("foo", true));
+        query = ViewQuery.from("design", "view").endKey(JsonObject.empty().put("foo", true));
         assertEquals("?endkey=%7B%22foo%22%3Atrue%7D", query.toString());
     }
 
