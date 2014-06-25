@@ -25,19 +25,19 @@ package com.couchbase.client;
 import com.couchbase.client.clustermanager.BucketType;
 import com.couchbase.client.internal.ReplicaGetCompletionListener;
 import com.couchbase.client.internal.ReplicaGetFuture;
+import net.spy.memcached.CASValue;
+import net.spy.memcached.ConnectionFactory;
+import net.spy.memcached.ReplicateTo;
+import net.spy.memcached.TestConfig;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import net.spy.memcached.CASValue;
-import net.spy.memcached.ConnectionFactory;
-import net.spy.memcached.ReplicateTo;
-import net.spy.memcached.TestConfig;
-
-import org.junit.Before;
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -151,6 +151,16 @@ public class ReplicaReadTest {
 
     assertTrue("Async latch was not counted down",
       latch.await(5, TimeUnit.SECONDS));
+  }
+
+  @Test
+  public void testGetFromReplicaWithNonExistentKey() {
+    assertEquals(null, client.getFromReplica("nonexistentKey"));
+  }
+
+  @Test
+  public void testGetsFromReplicaWithNonExistentKey() {
+      assertEquals(null, client.getsFromReplica("nonexistentKey"));
   }
 
 }
