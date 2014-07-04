@@ -1,8 +1,11 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
+import com.couchbase.client.core.message.config.FlushRequest;
+import com.couchbase.client.core.message.config.FlushResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
@@ -33,64 +36,70 @@ public class CouchbaseBucket implements Bucket {
   private final ClusterFacade core;
   private final Map<Class<?>, Converter<?, ?>> converters;
 
-  public CouchbaseBucket(final ClusterFacade core, final String name, final String password) {
-    bucket = name;
-    this.password = password;
-    this.core = core;
+    public CouchbaseBucket(final ClusterFacade core, final String name, final String password) {
+        bucket = name;
+        this.password = password;
+        this.core = core;
 
-    converters = new HashMap<Class<?>, Converter<?, ?>>();
-    converters.put(JsonDocument.class, new JacksonJsonConverter());
-  }
+        converters = new HashMap<Class<?>, Converter<?, ?>>();
+        converters.put(JsonDocument.class, new JacksonJsonConverter());
+    }
 
-  @Override
-  public Observable<JsonDocument> get(final String id) {
-    return get(id, JsonDocument.class);
-  }
+    @Override
+    public Observable<JsonDocument> get(final String id) {
+        return get(id, JsonDocument.class);
+    }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
-    return core.<GetResponse>send(new GetRequest(id, bucket)).map(new Func1<GetResponse, D>() {
-        @Override
-        public D call(final GetResponse response) {
-          Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
-          Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
-          return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
-        }
-      }
-    );
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> get(D document) {
+        return (Observable<D>) get(document.id(), document.getClass());
+    }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public <D extends Document<?>> Observable<D> insert(final D document) {
-    final Converter<?, Object> converter = (Converter<?, Object>) converters.get(document.getClass());
-    ByteBuf content = converter.encode(document.content());
-    return core
-      .<InsertResponse>send(new InsertRequest(document.id(), content, bucket))
-      .map(new Func1<InsertResponse, D>() {
-        @Override
-        public D call(InsertResponse response) {
-          return (D) converter.newDocument(document.id(), document.content(), response.cas(), document.expiry(),
-              response.status());
-        }
-      });
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
+        return core.<GetResponse>send(new GetRequest(id, bucket)).map(new Func1<GetResponse, D>() {
+            @Override
+            public D call(final GetResponse response) {
+                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+            }
+        });
+    }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public <D extends Document<?>> Observable<D> upsert(final D document) {
-    final Converter<?, Object> converter = (Converter<?, Object>) converters.get(document.getClass());
-    ByteBuf content = converter.encode(document.content());
-    return core.<UpsertResponse>send(new UpsertRequest(document.id(), content, bucket))
-      .map(new Func1<UpsertResponse, D>() {
-        @Override
-        public D call(UpsertResponse response) {
-            return (D) converter.newDocument(document.id(), document.content(), response.cas(), document.expiry(),
-                response.status());
-        }
-      });
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> insert(final D document) {
+        final Converter<?, Object> converter = (Converter<?, Object>) converters.get(document.getClass());
+        ByteBuf content = converter.encode(document.content());
+        return core
+            .<InsertResponse>send(new InsertRequest(document.id(), content, bucket))
+            .map(new Func1<InsertResponse, D>() {
+                @Override
+                public D call(InsertResponse response) {
+                    return (D) converter.newDocument(document.id(), document.content(), response.cas(),
+                        document.expiry(), response.status());
+                }
+            });
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> upsert(final D document) {
+        final Converter<?, Object> converter = (Converter<?, Object>) converters.get(document.getClass());
+        ByteBuf content = converter.encode(document.content());
+        return core
+            .<UpsertResponse>send(new UpsertRequest(document.id(), content, bucket))
+            .map(new Func1<UpsertResponse, D>() {
+                @Override
+                public D call(UpsertResponse response) {
+                    return (D) converter.newDocument(document.id(), document.content(), response.cas(), document.expiry(),
+                        response.status());
+                }
+            });
+    }
 
   @Override
   @SuppressWarnings("unchecked")
@@ -175,6 +184,32 @@ public class CouchbaseBucket implements Bucket {
                     QueryResult result = new QueryResult((JsonObject) converter.decode(content));
                     content.release();
                     return result;
+                }
+            });
+    }
+
+    @Override
+    public Observable<Boolean> flush() {
+        final String markerKey = "__flush_marker";
+        return core
+            .send(new UpsertRequest(markerKey, Unpooled.copiedBuffer(markerKey, CharsetUtil.UTF_8), bucket))
+            .flatMap(new Func1<CouchbaseResponse, Observable<FlushResponse>>() {
+                @Override
+                public Observable<FlushResponse> call(CouchbaseResponse res) {
+                    return core.send(new FlushRequest(bucket, password));
+                }
+            }).flatMap(new Func1<FlushResponse, Observable<? extends Boolean>>() {
+                @Override
+                public Observable<? extends Boolean> call(FlushResponse flushResponse) {
+                    if (flushResponse.isDone()) {
+                        return Observable.just(true);
+                    }
+                    while(true) {
+                        GetResponse res = core.<GetResponse>send(new GetRequest(markerKey, bucket)).toBlocking().single();
+                        if (res.status() == ResponseStatus.NOT_EXISTS) {
+                            return Observable.just(true);
+                        }
+                    }
                 }
             });
     }
