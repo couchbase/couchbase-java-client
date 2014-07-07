@@ -118,7 +118,13 @@ public class JsonArray implements JsonValue {
             if (isString) {
                 sb.append("\"");
             }
-            sb.append(item.toString());
+
+            if (item == null) {
+                sb.append("null");
+            } else {
+                sb.append(item.toString());
+            }
+
             if (isString) {
                 sb.append("\"");
             }

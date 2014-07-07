@@ -6,10 +6,10 @@ package com.couchbase.client.java.query;
 public class ViewResult {
 
     private final String id;
-    private final String key;
+    private final Object key;
     private final Object value;
 
-    public ViewResult(String id, String key, Object value) {
+    public ViewResult(String id, Object key, Object value) {
         this.id = id;
         this.key = key;
         this.value = value;
@@ -19,7 +19,7 @@ public class ViewResult {
         return id;
     }
 
-    public String key() {
+    public Object key() {
         return key;
     }
 
