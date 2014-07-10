@@ -48,6 +48,11 @@ public interface Bucket {
     */
     <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
+
+    Observable<JsonDocument> getReplica(String id, ReplicaMode type);
+    <D extends Document<?>> Observable<D> getReplica(D document, ReplicaMode type);
+    <D extends Document<?>> Observable<D> getReplica(String id, Class<D> target, ReplicaMode type);
+
     /**
     * Insert a {@link Document}.
     *

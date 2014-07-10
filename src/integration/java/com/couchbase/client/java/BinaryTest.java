@@ -6,10 +6,12 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Test;
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.BlockingObservable;
 
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

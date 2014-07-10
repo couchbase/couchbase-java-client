@@ -1,9 +1,12 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
+import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
+import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.config.FlushRequest;
 import com.couchbase.client.core.message.config.FlushResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
@@ -26,7 +29,9 @@ import io.netty.util.CharsetUtil;
 import rx.Observable;
 import rx.functions.Func1;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CouchbaseBucket implements Bucket {
@@ -60,6 +65,63 @@ public class CouchbaseBucket implements Bucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
         return core.<GetResponse>send(new GetRequest(id, bucket)).map(new Func1<GetResponse, D>() {
+            @Override
+            public D call(final GetResponse response) {
+                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+            }
+        });
+    }
+
+    @Override
+    public Observable<JsonDocument> getReplica(final String id, final ReplicaMode type) {
+        return getReplica(id, JsonDocument.class, type);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> getReplica(final D document, final ReplicaMode type) {
+        return (Observable<D>) getReplica(document.id(), document.getClass(), type);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> getReplica(final String id, final Class<D> target,
+        final ReplicaMode type) {
+
+        Observable<GetResponse> incoming;
+        if (type == ReplicaMode.ALL) {
+            incoming = core
+                .<GetClusterConfigResponse>send(new GetClusterConfigRequest())
+                .map(new Func1<GetClusterConfigResponse, Integer>() {
+                    @Override
+                    public Integer call(GetClusterConfigResponse response) {
+                        CouchbaseBucketConfig conf = (CouchbaseBucketConfig) response.config().bucketConfig(bucket);
+                        return conf.numberOfReplicas();
+                    }
+                }).flatMap(new Func1<Integer, Observable<BinaryRequest>>() {
+                    @Override
+                    public Observable<BinaryRequest> call(Integer max) {
+                        List<BinaryRequest> requests = new ArrayList<BinaryRequest>();
+
+                        requests.add(new GetRequest(id, bucket));
+                        for (int i = 0; i < max; i++) {
+                            requests.add(new ReplicaGetRequest(id, bucket, (short)(i+1)));
+                        }
+                        return Observable.from(requests);
+                    }
+                }).flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
+                    @Override
+                    public Observable<GetResponse> call(BinaryRequest req) {
+                        return core.send(req);
+                    }
+                });
+        } else {
+            incoming = core.send(new ReplicaGetRequest(id, bucket, (short) type.ordinal()));
+        }
+
+        return incoming.map(new Func1<GetResponse, D>() {
             @Override
             public D call(final GetResponse response) {
                 Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
