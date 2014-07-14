@@ -22,15 +22,14 @@
 
 package com.couchbase.client.protocol.views;
 
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.logging.Level;
-
 import org.apache.http.HttpRequest;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+
+import java.text.ParseException;
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * Implementation of a view that calls the map
@@ -70,8 +69,7 @@ public class DocsOperationImpl extends ViewOperationImpl {
           }
         }
         if (base.has("debug_info")) {
-          LOGGER.log(Level.INFO, "Debugging View {0}: {1}",
-            new Object[]{getView().getURI(), json});
+          LOGGER.info("Debugging View {0}: {1}", getView().getURI(), json);
         }
         if (base.has("errors")) {
           JSONArray ids = base.getJSONArray("errors");

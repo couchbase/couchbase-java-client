@@ -22,16 +22,16 @@
 
 package com.couchbase.client.protocol.views;
 
-import java.text.ParseException;
-import java.util.logging.Logger;
-
+import net.spy.memcached.compat.log.Logger;
+import net.spy.memcached.compat.log.LoggerFactory;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationErrorType;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
-
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+
+import java.text.ParseException;
 
 /**
  * A ViewOperationImpl.
@@ -42,8 +42,10 @@ public abstract class ViewOperationImpl extends HttpOperationImpl
 
   private final AbstractView view;
 
-  protected static final Logger LOGGER = Logger.getLogger(
-    ViewOperationImpl.class.getName());
+  protected static final Logger LOGGER = LoggerFactory.getLogger(
+    ViewOperationImpl.class);
+
+
 
   public ViewOperationImpl(HttpRequest r, AbstractView view,
     OperationCallback cb) {
@@ -71,8 +73,9 @@ public abstract class ViewOperationImpl extends HttpOperationImpl
       ((ViewCallback) callback).gotData(vr);
       callback.receivedStatus(status);
     } catch (ParseException e) {
+      LOGGER.error("Failed to parse JSON in response: " + response + ": " + json);
       setException(new OperationException(OperationErrorType.GENERAL,
-          "Error parsing JSON"));
+        "Error parsing JSON (" + e.getMessage() + "): " + json));
     }
     callback.complete();
   }
