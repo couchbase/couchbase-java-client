@@ -29,13 +29,14 @@ import com.couchbase.client.vbucket.config.ConfigType;
 import com.couchbase.client.vbucket.config.ConfigurationParser;
 import com.couchbase.client.vbucket.config.ConfigurationParserJSON;
 import com.couchbase.client.vbucket.config.Pool;
+import net.spy.memcached.AddrUtil;
+import net.spy.memcached.compat.SpyObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
@@ -43,14 +44,10 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.compat.SpyObject;
 
 /**
  * A configuration provider.
@@ -71,7 +68,7 @@ public class ConfigurationProviderHTTP extends SpyObject implements
   private volatile List<URI> baseList;
   private final String restUsr;
   private final String restPwd;
-  private URI loadedBaseUri;
+  private volatile URI loadedBaseUri;
 
   private final Map<String, Bucket> buckets =
     new ConcurrentHashMap<String, Bucket>();
@@ -487,4 +484,10 @@ public class ConfigurationProviderHTTP extends SpyObject implements
     }
   }
 
+  /**
+   * Clears all stored bucket references to get back to a pre-bootstrap state.
+   */
+  public void clearBuckets() {
+      this.buckets.clear();
+  }
 }
