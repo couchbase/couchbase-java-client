@@ -2,6 +2,7 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.ViewQuery;
@@ -139,5 +140,8 @@ public interface Bucket {
      * @return
      */
     Observable<Boolean> flush();
+
+
+    Observable<LongDocument> counter(String id, long delta, long initial, int expiry);
 
 }

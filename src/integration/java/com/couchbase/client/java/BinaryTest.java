@@ -2,19 +2,19 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Test;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.BlockingObservable;
 
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class BinaryTest extends ClusterDependentTest {
 
@@ -98,5 +98,35 @@ public class BinaryTest extends ClusterDependentTest {
       assertEquals(ResponseStatus.NOT_EXISTS, doc.status());
     }
   }
+
+    @Test
+    public void shouldIncrementFromCounter() throws Exception {
+        LongDocument doc1 = bucket().counter("incr-key", 10, 0, 0).toBlocking().single();
+        assertEquals(0L, (long) doc1.content());
+
+        LongDocument doc2 = bucket().counter("incr-key", 10, 0, 0).toBlocking().single();
+        assertEquals(10L, (long) doc2.content());
+
+        LongDocument doc3 = bucket().counter("incr-key", 10, 0, 0).toBlocking().single();
+        assertEquals(20L, (long) doc3.content());
+
+        assertTrue(doc1.cas() != doc2.cas());
+        assertTrue(doc2.cas() != doc1.cas());
+    }
+
+    @Test
+    public void shouldDecrementFromCounter() throws Exception {
+        LongDocument doc1 = bucket().counter("decr-key", -10, 100, 0).toBlocking().single();
+        assertEquals(100L, (long) doc1.content());
+
+        LongDocument doc2 = bucket().counter("decr-key", -10, 0, 0).toBlocking().single();
+        assertEquals(90L, (long) doc2.content());
+
+        LongDocument doc3 = bucket().counter("decr-key", -10, 0, 0).toBlocking().single();
+        assertEquals(80L, (long) doc3.content());
+
+        assertTrue(doc1.cas() != doc2.cas());
+        assertTrue(doc2.cas() != doc1.cas());
+    }
 
 }
