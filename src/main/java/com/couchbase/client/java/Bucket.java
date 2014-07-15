@@ -17,42 +17,23 @@ import rx.Observable;
  */
 public interface Bucket {
 
-    /**
-    * Get a {@link Document} by its unique ID.
-    *
-    * The loaded document will be converted using the default converter, which is
-    * JSON if not configured otherwise.
-    *
-    * @param id the ID of the document.
-    * @return the loaded and converted document.
-    */
+
     Observable<JsonDocument> get(String id);
-
-    /**
-     * Get a {@link Document} by the document id stored in the given one.
-     *
-     * @param document
-     * @param <D>
-     * @return
-     */
     <D extends Document<?>> Observable<D> get(D document);
-
-    /**
-    * Get a {@link Document} by its unique ID.
-    *
-    * The loaded document will be converted into the target class, which needs
-    * a custom converter registered with the system.
-    *
-    * @param id the ID of the document.
-    * @param target the document type.
-    * @return the loaded and converted document.
-    */
     <D extends Document<?>> Observable<D> get(String id, Class<D> target);
-
 
     Observable<JsonDocument> getReplica(String id, ReplicaMode type);
     <D extends Document<?>> Observable<D> getReplica(D document, ReplicaMode type);
-    <D extends Document<?>> Observable<D> getReplica(String id, Class<D> target, ReplicaMode type);
+    <D extends Document<?>> Observable<D> getReplica(String id, ReplicaMode type, Class<D> target);
+
+
+    Observable<JsonDocument> getAndLock(String id, int lockTime);
+    <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime);
+    <D extends Document<?>> Observable<D> getAndLock(String id, int lockTime, Class<D> target);
+
+    Observable<JsonDocument> getAndTouch(String id, int expiry);
+    <D extends Document<?>> Observable<D> getAndTouch(D document);
+    <D extends Document<?>> Observable<D> getAndTouch(String id, int expiry, Class<D> target);
 
     /**
     * Insert a {@link Document}.
