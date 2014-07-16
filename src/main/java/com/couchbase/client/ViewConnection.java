@@ -29,17 +29,6 @@ import com.couchbase.client.protocol.views.HttpOperation;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.CouchbaseConfig;
-
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 import net.spy.memcached.compat.SpyObject;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -62,6 +51,16 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
+
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The {@link ViewConnection} is responsible for managing and multiplexing
@@ -216,7 +215,7 @@ public class ViewConnection extends SpyObject implements Reconfigurable {
       HttpHost httpHost = getNextNode();
       HttpRequest request = op.getRequest();
 
-      request.addHeader(HTTP.TARGET_HOST, httpHost.toHostString());
+      request.setHeader(HTTP.TARGET_HOST, httpHost.toHostString());
       requester.execute(
         new BasicAsyncRequestProducer(httpHost, request),
         new BasicAsyncResponseConsumer(),
