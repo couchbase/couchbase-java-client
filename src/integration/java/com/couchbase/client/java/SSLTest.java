@@ -56,9 +56,9 @@ public class SSLTest{
 		File client_cacert_rename = new File(keyStoreFile.concat("_rename"));
 		
 		try{
-			cluster.connect();
-			ssl_test.shouldUpsertAndGet("Unavialble", "client", "cert available");    
-			cluster.disconnect();
+		    cluster.connect();
+		    ssl_test.shouldUpsertAndGet("Unavialble", "client", "cert available");    
+		    cluster.disconnect();
 			
 		    if(client_cacert_rename.exists()){
 		    	throw new java.io.IOException(client_cacert_rename.getName() +" exists");
@@ -72,23 +72,23 @@ public class SSLTest{
 		    System.out.println("Reconnect with the Server");
 		    cluster.connect();
 			
-			ssl_test.shouldUpsertAndGet("Unavailable", "client", "cert unavailable");
+		    ssl_test.shouldUpsertAndGet("Unavailable", "client", "cert unavailable");
 		    fail("Should have thrown an Exception because certificate is not available!");
 		}
 		catch (Exception e){
-			e.printStackTrace();
+		    e.printStackTrace();
 		}
 		finally{
 			if (!client_cacert_rename.renameTo(client_cacert)){
 				System.err.println("Error rename "+ client_cacert.getName()+ " back");
 			}
 			
-		    try{
+		    	try{
 				cluster.disconnect();
-		    }
-		    catch (Exception e){
-		    	 e.printStackTrace();
-		    }
+		    	}
+		    	catch (Exception e){
+		    		 e.printStackTrace();
+		   	 }	
 		}
 	}
 	
@@ -110,30 +110,30 @@ public class SSLTest{
 			cluster.disconnect();
 
 			//make a copy of original cacert
-            String SourceFile = client_cacert.getAbsolutePath();
-            String DestinationFile = client_cacert_copy.getAbsolutePath();            
-            ssl_test.copyCert(SourceFile, DestinationFile);
+            		String SourceFile = client_cacert.getAbsolutePath();
+            		String DestinationFile = client_cacert_copy.getAbsolutePath();            
+            		ssl_test.copyCert(SourceFile, DestinationFile);
            	
-            //delete original cacert
+            		//delete original cacert
 			if(!client_cacert.delete()){
     			System.out.println("Delete" + client_cacert.getName() +" failed.");
-    		}
+    			}
 			
 			//make new cacert with expired date
 			Process p;
-		    p = Runtime.getRuntime().exec("keytool -genkey -noprompt -keypass couchbase -storepass couchbase -keystore " +client_cacert.getAbsolutePath()+ " -alias ssl -validity 1 -dname CN=Unknown -startdate 1970/01/01");
-		    if (p.waitFor() == 0){
-		    	System.out.println("expired cert created") ;
-		    }
-		    else{
+		    	p = Runtime.getRuntime().exec("keytool -genkey -noprompt -keypass couchbase -storepass couchbase -keystore " +client_cacert.getAbsolutePath()+ " -alias ssl -validity 1 -dname CN=Unknown -startdate 1970/01/01");
+		    	if (p.waitFor() == 0){
+		    		System.out.println("expired cert created") ;
+		    	}
+		    	else{
 				System.err.println("generate a expired certificate fail");
-		    }
+		   	 }	
 		    
-		    System.out.println("Reconnect with the Server");
-		    cluster.connect();
+		    	System.out.println("Reconnect with the Server");
+		    	cluster.connect();
 			
 			ssl_test.shouldUpsertAndGet("Expiry", "client", "cert invalid");
-		    fail("Should have thrown an Exception because certificate expired!");
+		    	fail("Should have thrown an Exception because certificate expired!");
 		}	
 		catch (Exception e){
 			e.printStackTrace();
@@ -174,28 +174,28 @@ public class SSLTest{
 					 
 			//make a copy of the original cacert
 			String SourceFile = client_cacert.getAbsolutePath();
-            String DestinationFile = client_cacert_copy.getAbsolutePath();            
-            ssl_test.copyCert(SourceFile, DestinationFile);
+           		String DestinationFile = client_cacert_copy.getAbsolutePath();            
+            		ssl_test.copyCert(SourceFile, DestinationFile);
 		    
-            //delete the original cacert
+           		 //delete the original cacert
 			if(!client_cacert.delete()){
 				System.err.println("Delete" + client_cacert.getName() +" failed.");
 			}			
             
-		    //create a random keystore
-		    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-		    char[] password = "couchbase".toCharArray();
-		    ks.load(null, password);
-		    FileOutputStream fos = new FileOutputStream(client_cacert.getAbsolutePath());
-		    ks.store(fos, password);
-		    fos.close();
-		    System.setProperty("javax.net.ssl.trustStore", client_cacert.getAbsolutePath());
+		    	//create a random keystore
+		    	KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+		    	char[] password = "couchbase".toCharArray();
+		    	ks.load(null, password);
+		    	FileOutputStream fos = new FileOutputStream(client_cacert.getAbsolutePath());
+		    	ks.store(fos, password);
+		    	fos.close();
+		    	System.setProperty("javax.net.ssl.trustStore", client_cacert.getAbsolutePath());
 		    
-		    System.out.println("Reconnect with the Server");
-		    cluster.connect();
+		    	System.out.println("Reconnect with the Server");
+		    	cluster.connect();
 			
 			ssl_test.shouldUpsertAndGet("Refresh", "client", "random cert");
-		    fail("Should have thrown an Exception because certificate is randomly generate!");
+		    	fail("Should have thrown an Exception because certificate is randomly generate!");
 		    
 		}
 		catch (Exception e){
@@ -239,7 +239,7 @@ public class SSLTest{
 			StringBuffer output = new StringBuffer();
 			String line = "";
 			
-	    	cluster.connect();
+	    		cluster.connect();
 			ssl_test.shouldUpsertAndGet("Regenerate", "server", "original cert");    
 			cluster.disconnect();
 			
@@ -250,16 +250,16 @@ public class SSLTest{
 					output.append(line + "\n");
 				}
 				System.out.println("generate new server cert\n"+output.toString());
-		    }
-		    else{
+		   	}	
+		    	else{
 				System.err.println("generate new server certificate fail");
 			}
 
-		    System.out.println("Reconnect with the Server");
-		    cluster.connect();
+		    	System.out.println("Reconnect with the Server");
+		    	cluster.connect();
 			
 			ssl_test.shouldUpsertAndGet("Regenerate", "server", "updated cert");
-		    fail("Should have thrown an Exception because client certificate is outdated!");   
+		    	fail("Should have thrown an Exception because client certificate is outdated!");   
 		}
 		catch (Exception e){
 			e.printStackTrace();
@@ -288,7 +288,7 @@ public class SSLTest{
 		    	keystore.store(out, password);
 		    	out.close();
 	    	
-				cluster.disconnect();
+			cluster.disconnect();
 		    }
 		    catch (Exception e){
 		    	 e.printStackTrace();
