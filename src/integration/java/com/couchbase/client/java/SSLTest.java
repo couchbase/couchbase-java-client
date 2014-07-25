@@ -88,7 +88,7 @@ public class SSLTest{
 		    	}
 		    	catch (Exception e){
 		    		 e.printStackTrace();
-		   	 }	
+		   	}	
 		}
 	}
 	
@@ -127,7 +127,7 @@ public class SSLTest{
 		    	}
 		    	else{
 				System.err.println("generate a expired certificate fail");
-		   	 }	
+		   	}	
 		    
 		    	System.out.println("Reconnect with the Server");
 		    	cluster.connect();
@@ -141,8 +141,8 @@ public class SSLTest{
 		finally{
 			try{				
 				if(!client_cacert.delete()){
-	    			System.err.println("Delete" + client_cacert.getName() +" failed.");
-	    		}
+	    				System.err.println("Delete" + client_cacert.getName() +" failed.");
+	    			}
 				if (!client_cacert_copy.renameTo(client_cacert)){
 					System.err.println("Error rename cacert back");
 				}
@@ -204,8 +204,8 @@ public class SSLTest{
 		finally{
 		    try{
 				if(!client_cacert.delete()){
-	    			System.err.println("Delete" + client_cacert.getName() +" failed.");
-	    		}
+	    				System.err.println("Delete" + client_cacert.getName() +" failed.");
+	    			}	
 				if (!client_cacert_copy.renameTo(client_cacert)){
 					System.err.println("Error rename cacert back");
 				}

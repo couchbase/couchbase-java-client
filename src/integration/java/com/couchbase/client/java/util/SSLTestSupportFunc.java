@@ -31,25 +31,24 @@ public class SSLTestSupportFunc{
 	* perform upsert and get ops
 	*
 	* @param id doccument id 
-    * @param key document key
-    * @param value document value
+    	* @param key document key
+    	* @param value document value
 	*/
 	public void shouldUpsertAndGet(final String id, String key,String value) {
 		
 		ClusterDependentTest cluster = new ClusterDependentTest();
-	    JsonObject content = JsonObject.empty().put(key, value);
-	    final JsonDocument doc = JsonDocument.create(id, content);
-	    JsonDocument response = cluster.bucket().upsert(doc)
-	      .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
-	        @Override
-	        public Observable<JsonDocument> call(JsonDocument document) {
-	          return cluster.bucket().get(id);
+	    	JsonObject content = JsonObject.empty().put(key, value);
+	    	final JsonDocument doc = JsonDocument.create(id, content);
+	    	JsonDocument response = cluster.bucket().upsert(doc)
+	     	 .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
+	        	@Override
+	       	 public Observable<JsonDocument> call(JsonDocument document) {
+	          	return cluster.bucket().get(id);
 	        }
-	      })
-	      .toBlocking()
-	      .single();
-	    assertEquals(content.getString(key), response.content().getString(key));
-	    assertEquals(ResponseStatus.SUCCESS, response.status());
+	      	}).toBlocking().single();
+
+	    	assertEquals(content.getString(key), response.content().getString(key));
+	    	assertEquals(ResponseStatus.SUCCESS, response.status());
 	}
 	
 	
@@ -57,7 +56,7 @@ public class SSLTestSupportFunc{
 	* make a copy of certificate file
 	*
 	* @param SourceFile original file path
-    * @param DestinationFile file copy path
+    	* @param DestinationFile file copy path
 	*/
 	public void copyCert(String SourceFile, String DestinationFile){
         try{
@@ -88,8 +87,8 @@ public class SSLTestSupportFunc{
 	/**
 	* convert certificate file path from string to byteArrayInput stream
 	*
-    * @param fname certificate file path
-    * @return byteArrayInput stream form of the certificate file path
+  	* @param fname certificate file path
+    	* @return byteArrayInput stream form of the certificate file path
 	*/
 	public InputStream fullStream(String fname) throws IOException {
 	    FileInputStream fis = new FileInputStream(fname);
