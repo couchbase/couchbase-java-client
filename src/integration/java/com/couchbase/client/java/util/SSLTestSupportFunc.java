@@ -36,7 +36,7 @@ public class SSLTestSupportFunc{
 	*/
 	public void shouldUpsertAndGet(final String id, String key,String value) {
 		
-		ClusterDependentTest cluster = new ClusterDependentTest();
+		final ClusterDependentTest cluster = new ClusterDependentTest();
 	    	JsonObject content = JsonObject.empty().put(key, value);
 	    	final JsonDocument doc = JsonDocument.create(id, content);
 	    	JsonDocument response = cluster.bucket().upsert(doc)
