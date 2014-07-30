@@ -22,9 +22,9 @@ public interface Bucket {
     <D extends Document<?>> Observable<D> get(D document);
     <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
-    Observable<JsonDocument> getReplica(String id, ReplicaMode type);
-    <D extends Document<?>> Observable<D> getReplica(D document, ReplicaMode type);
-    <D extends Document<?>> Observable<D> getReplica(String id, ReplicaMode type, Class<D> target);
+    Observable<JsonDocument> getFromReplica(String id, ReplicaMode type);
+    <D extends Document<?>> Observable<D> getFromReplica(D document, ReplicaMode type);
+    <D extends Document<?>> Observable<D> getFromReplica(String id, ReplicaMode type, Class<D> target);
 
 
     Observable<JsonDocument> getAndLock(String id, int lockTime);
@@ -44,6 +44,8 @@ public interface Bucket {
     */
     <D extends Document<?>> Observable<D> insert(D document);
 
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
     /**
     * Upsert a {@link Document}.
     *
@@ -53,6 +55,8 @@ public interface Bucket {
     */
     <D extends Document<?>> Observable<D> upsert(D document);
 
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
     /**
     * Replace a {@link Document}.
     *
@@ -61,6 +65,8 @@ public interface Bucket {
     * @return the document again.
     */
     <D extends Document<?>> Observable<D> replace(D document);
+
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
 
     /**
@@ -72,6 +78,8 @@ public interface Bucket {
     */
     <D extends Document<?>> Observable<D> remove(D document);
 
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
     /**
     * Remove the document by the given document ID.
     *
@@ -79,6 +87,9 @@ public interface Bucket {
     * @return
     */
     Observable<JsonDocument> remove(String id);
+
+    Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo);
+
 
     /**
     * Remove the document by the given ID and cast it to a custom target document.
@@ -89,6 +100,8 @@ public interface Bucket {
     * @return
     */
     <D extends Document<?>> Observable<D> remove(String id, Class<D> target);
+
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target);
 
     /**
     * Queries a View defined by the {@link ViewQuery} and returns a {@link ViewResult}
@@ -127,8 +140,6 @@ public interface Bucket {
 
     Observable<Boolean> touch(String id, int expiry);
     <D extends Document<?>> Observable<Boolean> touch(D document);
-
-
 
     Observable<LongDocument> counter(String id, long delta, long initial, int expiry);
 
