@@ -27,7 +27,6 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -90,11 +89,6 @@ public class Query {
    */
   private static final Pattern quotePattern =
     Pattern.compile("^(\".*|\\{.*|\\[.*|true|false|null|-?[\\d,]*([.Ee]\\d+)?)$");
-
-  /**
-   * A pre allocated matcher for the quote pattern match.
-   */
-  private final Matcher quoteMatcher = quotePattern.matcher("");
 
   /**
    * Number format to use to find matching numbers.
@@ -569,7 +563,7 @@ public class Query {
    * @return maybe quoted target string.
    */
   protected String quote(final String source) {
-    if (quoteMatcher.reset(source).matches()) {
+    if (quotePattern.matcher(source).matches()) {
       ParsePosition parsePosition = new ParsePosition(0);
       Number result = numberFormat.parse(source, parsePosition);
       if (parsePosition.getIndex() == source.length()) {
