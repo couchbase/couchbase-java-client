@@ -59,6 +59,8 @@ configurations {
 
     integrationCompile.extendsFrom compile, testCompile
     integrationRuntime.extendsFrom runtime, testRuntime
+
+    markdownDoclet
 }
 
 dependencies {
@@ -73,6 +75,8 @@ dependencies {
     perfCompile group: 'org.openjdk.jmh', name: 'jmh-core', version: '0.5.6'
     perfCompile group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '0.5.6'
     perfCompile project
+
+    markdownDoclet 'ch.raffael.pegdown-doclet:pegdown-doclet:1.1.1'
 }
 
 idea {
@@ -125,6 +129,22 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
+
+javadoc {
+    doLast {
+        copy {
+            from "docs"
+            into "$buildDir/docs/javadoc"
+        }
+    }
+}
+
+javadoc.options {
+    docletpath = configurations.markdownDoclet.files.asType(List)
+    doclet = "ch.raffael.doclets.pegdown.PegdownDoclet"
+    addStringOption("parse-timeout", "10")
+}
+
 
 task javadocJar(type: Jar) {
     classifier = 'javadoc'

@@ -1,39 +1,17 @@
 package com.couchbase.client.java.query;
 
-/**
- * Created by michael on 05/05/14.
- */
-public class ViewResult {
+import com.couchbase.client.java.document.json.JsonObject;
+import rx.Observable;
 
-    private final String id;
-    private final Object key;
-    private final Object value;
+public interface ViewResult {
 
-    public ViewResult(String id, Object key, Object value) {
-        this.id = id;
-        this.key = key;
-        this.value = value;
-    }
+    Observable<ViewRow> rows();
 
-    public String id() {
-        return id;
-    }
+    int totalRows();
 
-    public Object key() {
-        return key;
-    }
+    boolean success();
 
-    public Object value() {
-        return value;
-    }
+    JsonObject error();
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("ViewRow{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", key='").append(key).append('\'');
-        sb.append(", value=").append(value);
-        sb.append('}');
-        return sb.toString();
-    }
+    JsonObject debug();
 }

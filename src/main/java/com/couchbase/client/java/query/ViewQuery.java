@@ -404,7 +404,9 @@ public class ViewQuery {
 
             boolean even = i % 2 == 0;
             if (even) {
-                sb.append(firstParam ? "?" : "&");
+                if (!firstParam) {
+                    sb.append("&");
+                }
             }
             sb.append(params[i]);
             firstParam = false;

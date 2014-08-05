@@ -1,3 +1,24 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
@@ -9,26 +30,24 @@ import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.config.FlushRequest;
 import com.couchbase.client.core.message.config.FlushResponse;
-import com.couchbase.client.core.message.query.GenericQueryRequest;
-import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
-import com.couchbase.client.java.bucket.ViewQueryMapper;
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.convert.Converter;
 import com.couchbase.client.java.convert.JacksonJsonConverter;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryResult;
-import com.couchbase.client.java.query.ViewQuery;
-import com.couchbase.client.java.query.ViewResult;
-import com.couchbase.client.java.util.Observe;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.util.CharsetUtil;
+import com.couchbase.client.java.error.DocumentAlreadyExistsException;
+import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.query.*;
 import rx.Observable;
+import rx.exceptions.OnErrorThrowable;
 import rx.functions.Func1;
 
 import java.util.ArrayList;
@@ -66,14 +85,22 @@ public class CouchbaseBucket implements Bucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
-        return core.<GetResponse>send(new GetRequest(id, bucket)).map(new Func1<GetResponse, D>() {
-            @Override
-            public D call(final GetResponse response) {
-                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
-                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
-                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
-            }
-        });
+        return core
+            .<GetResponse>send(new GetRequest(id, bucket))
+            .filter(new Func1<GetResponse, Boolean>() {
+                @Override
+                public Boolean call(GetResponse getResponse) {
+                    return getResponse.status() == ResponseStatus.SUCCESS;
+                }
+            })
+            .map(new Func1<GetResponse, D>() {
+                @Override
+                public D call(final GetResponse response) {
+                    Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                    Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                    return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+                }
+            });
     }
 
     @Override
@@ -90,14 +117,21 @@ public class CouchbaseBucket implements Bucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndLock(final String id, final int lockTime, final Class<D> target) {
-        return core.<GetResponse>send(new GetRequest(id, bucket, true, false, lockTime)).map(new Func1<GetResponse, D>() {
-            @Override
-            public D call(final GetResponse response) {
-                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
-                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
-                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
-            }
-        });
+        return core.<GetResponse>send(new GetRequest(id, bucket, true, false, lockTime))
+            .filter(new Func1<GetResponse, Boolean>() {
+                @Override
+                public Boolean call(GetResponse getResponse) {
+                    return getResponse.status() == ResponseStatus.SUCCESS;
+                }
+            })
+            .map(new Func1<GetResponse, D>() {
+                @Override
+                public D call(final GetResponse response) {
+                    Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                    Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                    return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+                }
+            });
     }
 
     @Override
@@ -114,14 +148,21 @@ public class CouchbaseBucket implements Bucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndTouch(final String id, final int expiry, final Class<D> target) {
-        return core.<GetResponse>send(new GetRequest(id, bucket, false, true, expiry)).map(new Func1<GetResponse, D>() {
-            @Override
-            public D call(final GetResponse response) {
-                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
-                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
-                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
-            }
-        });
+        return core.<GetResponse>send(new GetRequest(id, bucket, false, true, expiry))
+            .filter(new Func1<GetResponse, Boolean>() {
+                @Override
+                public Boolean call(GetResponse getResponse) {
+                    return getResponse.status() == ResponseStatus.SUCCESS;
+                }
+            })
+            .map(new Func1<GetResponse, D>() {
+                @Override
+                public D call(final GetResponse response) {
+                    Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                    Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                    return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+                }
+            });
     }
 
     @Override
@@ -171,14 +212,21 @@ public class CouchbaseBucket implements Bucket {
             incoming = core.send(new ReplicaGetRequest(id, bucket, (short) type.ordinal()));
         }
 
-        return incoming.map(new Func1<GetResponse, D>() {
-            @Override
-            public D call(final GetResponse response) {
-                Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
-                Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
-                return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
-            }
-        });
+        return incoming
+            .filter(new Func1<GetResponse, Boolean>() {
+                @Override
+                public Boolean call(GetResponse getResponse) {
+                    return getResponse.status() == ResponseStatus.SUCCESS;
+                }
+            })
+            .map(new Func1<GetResponse, D>() {
+                @Override
+                public D call(final GetResponse response) {
+                    Converter<?, Object> converter = (Converter<?, Object>) converters.get(target);
+                    Object content = response.status() == ResponseStatus.SUCCESS ? converter.decode(response.content()) : null;
+                    return (D) converter.newDocument(id, content, response.cas(), 0, response.status());
+                }
+            });
     }
 
     @Override
@@ -188,11 +236,14 @@ public class CouchbaseBucket implements Bucket {
         ByteBuf content = converter.encode(document.content());
         return core
             .<InsertResponse>send(new InsertRequest(document.id(), content, document.expiry(), 0, bucket))
-            .map(new Func1<InsertResponse, D>() {
+            .flatMap(new Func1<InsertResponse, Observable<? extends D>>() {
                 @Override
-                public D call(InsertResponse response) {
-                    return (D) converter.newDocument(document.id(), document.content(), response.cas(),
-                        document.expiry(), response.status());
+                public Observable<? extends D> call(InsertResponse response) {
+                    if (response.status() == ResponseStatus.EXISTS) {
+                        return Observable.error(new DocumentAlreadyExistsException());
+                    }
+                    return Observable.just((D) converter.newDocument(document.id(), document.content(), response.cas(),
+                        document.expiry(), response.status()));
                 }
             });
     }
@@ -205,13 +256,18 @@ public class CouchbaseBucket implements Bucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, document.id(), document.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
                     .map(new Func1<Boolean, D>() {
-                    @Override
-                    public D call(Boolean aBoolean) {
-                        return doc;
-                    }
-                });
+                        @Override
+                        public D call(Boolean aBoolean) {
+                            return doc;
+                        }
+                    }).onErrorFlatMap(new Func1<OnErrorThrowable, Observable<? extends D>>() {
+                        @Override
+                        public Observable<? extends D> call(OnErrorThrowable onErrorThrowable) {
+                            return Observable.error(new DurabilityException("Durability constraint failed.", onErrorThrowable));
+                        }
+                    });
             }
         });
     }
@@ -238,7 +294,7 @@ public class CouchbaseBucket implements Bucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, document.id(), document.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -255,11 +311,14 @@ public class CouchbaseBucket implements Bucket {
     final Converter<?, Object> converter = (Converter<?, Object>) converters.get(document.getClass());
     ByteBuf content = converter.encode(document.content());
     return core.<ReplaceResponse>send(new ReplaceRequest(document.id(), content, document.cas(), document.expiry(), 0, bucket))
-      .map(new Func1<ReplaceResponse, D>() {
+      .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
           @Override
-          public D call(ReplaceResponse response) {
-              return (D) converter.newDocument(document.id(), document.content(), response.cas(), document.expiry(),
-                  response.status());
+          public Observable<D> call(ReplaceResponse response) {
+              if (response.status() == ResponseStatus.NOT_EXISTS) {
+                  return Observable.error(new DocumentDoesNotExistException());
+              }
+              return Observable.just((D) converter.newDocument(document.id(), document.content(), response.cas(),
+                  document.expiry(), response.status()));
           }
       });
   }
@@ -270,7 +329,7 @@ public class CouchbaseBucket implements Bucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, document.id(), document.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -316,12 +375,25 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo) {
-        return null;
+        return remove(id, persistTo, replicateTo, JsonDocument.class);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target) {
-        return null;
+    public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
+        final ReplicateTo replicateTo, Class<D> target) {
+        return remove(id, target).flatMap(new Func1<D, Observable<D>>() {
+            @Override
+            public Observable<D> call(final D doc) {
+                return Observe
+                    .call(core, bucket, doc.id(), doc.cas(), true, persistTo, replicateTo)
+                    .map(new Func1<Boolean, D>() {
+                        @Override
+                        public D call(Boolean aBoolean) {
+                            return doc;
+                        }
+                    });
+            }
+        });
     }
 
     @Override
@@ -329,16 +401,43 @@ public class CouchbaseBucket implements Bucket {
     final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(), query.isDevelopment(),
         query.toString(), bucket, password);
 
-    return core
-        .<ViewQueryResponse>send(request)
-        .flatMap(new ViewQueryMapper(converters))
-        .map(new Func1<JsonObject, ViewResult>() {
-            @Override
-            public ViewResult call(JsonObject object) {
-                return new ViewResult(object.getString("id"), object.get("key"), object.get("value"));
-            }
-        }
-    );
+        final Converter<?, ?> converter = converters.get(JsonDocument.class);
+        return core.<ViewQueryResponse>send(request)
+            .flatMap(new Func1<ViewQueryResponse, Observable<ViewResult>>() {
+                @Override
+                public Observable<ViewResult> call(final ViewQueryResponse response) {
+                    return response.info().map(new Func1<ByteBuf, JsonObject>() {
+                        @Override
+                        public JsonObject call(ByteBuf byteBuf) {
+                            return (JsonObject) converter.decode(byteBuf);
+                        }
+                    }).map(new Func1<JsonObject, ViewResult>() {
+                        @Override
+                        public ViewResult call(JsonObject jsonInfo) {
+                            JsonObject error = null;
+                            JsonObject debug = null;
+                            int totalRows = 0;
+                            boolean success = response.status().isSuccess();
+                            if (success) {
+                                debug = jsonInfo.getObject("debug_info");
+                                totalRows = jsonInfo.getInt("total_rows");
+                            } else {
+                                error = jsonInfo;
+                            }
+
+                            Observable<ViewRow> rows = response.rows().map(new Func1<ByteBuf, ViewRow>() {
+                                @Override
+                                public ViewRow call(final ByteBuf byteBuf) {
+                                    JsonObject doc = (JsonObject) converter.decode(byteBuf);
+                                    String id = doc.getString("id");
+                                    return new DefaultViewRow(CouchbaseBucket.this, id, doc.get("key"), doc.get("value"));
+                                }
+                            });
+                            return new DefaultViewResult(rows, totalRows, success, error, debug);
+                        }
+                    });
+                }
+            });
   }
 
     @Override
@@ -348,7 +447,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Observable<QueryResult> query(final String query) {
-        final Converter<?, ?> converter = converters.get(JsonDocument.class);
+        /*final Converter<?, ?> converter = converters.get(JsonDocument.class);
         GenericQueryRequest request = new GenericQueryRequest(query, bucket, password);
         return core
             .<GenericQueryResponse>send(request)
@@ -366,7 +465,8 @@ public class CouchbaseBucket implements Bucket {
                     content.release();
                     return result;
                 }
-            });
+            });*/
+        return null;
     }
 
     @Override

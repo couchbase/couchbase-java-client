@@ -19,15 +19,29 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java;
+package com.couchbase.client.java.error;
 
-import com.couchbase.client.java.util.ClusterDependentTest;
-import org.junit.Test;
+import com.couchbase.client.core.CouchbaseException;
 
+/**
+ * .
+ *
+ * @author Michael Nitschinger
+ */
+public class DocumentAlreadyExistsException extends CouchbaseException {
 
-public class QueryTest extends ClusterDependentTest {
-    @Test
-    public void shouldQueryView() throws Exception {
-        System.out.println(bucket().query("select * from default limit 5").toList().toBlocking().single());
+    public DocumentAlreadyExistsException() {
+    }
+
+    public DocumentAlreadyExistsException(String message) {
+        super(message);
+    }
+
+    public DocumentAlreadyExistsException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public DocumentAlreadyExistsException(Throwable cause) {
+        super(cause);
     }
 }

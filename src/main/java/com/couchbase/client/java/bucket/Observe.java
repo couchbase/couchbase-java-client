@@ -1,4 +1,4 @@
-package com.couchbase.client.java.util;
+package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
@@ -37,7 +37,9 @@ public class Observe {
             replicaIdentifier = ObserveResponse.ObserveStatus.NOT_FOUND_PERSISTED;
         }
 
-        return sendObserveRequests(core, bucket, id, cas, persistTo)
+        Observable<ObserveResponse> observeResponses = sendObserveRequests(core, bucket, id, cas, persistTo, replicateTo);
+
+        return observeResponses
             .toList()
             .delay(10, TimeUnit.MILLISECONDS)
             .repeat()
@@ -90,7 +92,7 @@ public class Observe {
     }
 
     private static Observable<ObserveResponse> sendObserveRequests(final ClusterFacade core, final String bucket, final String id, final long cas,
-        final PersistTo persistTo) {
+        final PersistTo persistTo, final ReplicateTo replicateTo) {
         return Observable.defer(new Func0<Observable<ObserveResponse>>() {
             @Override
             public Observable<ObserveResponse> call() {
@@ -110,14 +112,17 @@ public class Observe {
                             if (persistTo != PersistTo.NONE) {
                                 obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, true, (short) 0, bucket)));
                             }
-                            if (replicas >= 1) {
-                                obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 1, bucket)));
-                            }
-                            if (replicas >= 2) {
-                                obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 2, bucket)));
-                            }
-                            if (replicas == 3) {
-                                obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 3, bucket)));
+
+                            if (persistTo.touchesReplica() || replicateTo.touchesReplica()) {
+                                if (replicas >= 1) {
+                                    obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 1, bucket)));
+                                }
+                                if (replicas >= 2) {
+                                    obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 2, bucket)));
+                                }
+                                if (replicas == 3) {
+                                    obs.add(core.<ObserveResponse>send(new ObserveRequest(id, cas, false, (short) 3, bucket)));
+                                }
                             }
                             return Observable.merge(obs);
                         }
