@@ -43,7 +43,7 @@ public class ClusterDependentTest {
 
     @BeforeClass
     public static void connect() {
-        cluster = new CouchbaseCluster(seedNode);
+        cluster = CouchbaseCluster.create(seedNode);
         bucket = cluster.openBucket(bucketName, password).toBlocking().single();
         bucket.flush().toBlocking().single();
     }
