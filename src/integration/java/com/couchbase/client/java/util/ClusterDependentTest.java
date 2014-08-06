@@ -46,7 +46,7 @@ public class ClusterDependentTest {
         System.setProperty("com.couchbase.queryEnabled", "true");
         cluster = CouchbaseCluster.create(seedNode);
         bucket = cluster.openBucket(bucketName, password).toBlocking().single();
-        bucket.flush().toBlocking().single();
+        bucket.bucketManager().toBlocking().single().flush().toBlocking().single();
     }
 
     @AfterClass

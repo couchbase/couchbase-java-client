@@ -23,20 +23,17 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
-import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
-import com.couchbase.client.core.message.config.FlushRequest;
-import com.couchbase.client.core.message.config.FlushResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.deps.io.netty.buffer.Unpooled;
-import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.bucket.CouchbaseBucketManager;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.convert.Converter;
 import com.couchbase.client.java.convert.JacksonJsonConverter;
@@ -63,6 +60,7 @@ public class CouchbaseBucket implements Bucket {
   private final String password;
   private final ClusterFacade core;
   private final Map<Class<?>, Converter<?, ?>> converters;
+  private final BucketManager bucketManager;
 
     public CouchbaseBucket(final ClusterFacade core, final String name, final String password) {
         bucket = name;
@@ -71,6 +69,7 @@ public class CouchbaseBucket implements Bucket {
 
         converters = new HashMap<Class<?>, Converter<?, ?>>();
         converters.put(JsonDocument.class, new JacksonJsonConverter());
+        bucketManager = new CouchbaseBucketManager(bucket, password, core);
     }
 
     @Override
@@ -487,32 +486,6 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public Observable<Boolean> flush() {
-        final String markerKey = "__flush_marker";
-        return core
-            .send(new UpsertRequest(markerKey, Unpooled.copiedBuffer(markerKey, CharsetUtil.UTF_8), bucket))
-            .flatMap(new Func1<CouchbaseResponse, Observable<FlushResponse>>() {
-                @Override
-                public Observable<FlushResponse> call(CouchbaseResponse res) {
-                    return core.send(new FlushRequest(bucket, password));
-                }
-            }).flatMap(new Func1<FlushResponse, Observable<? extends Boolean>>() {
-                @Override
-                public Observable<? extends Boolean> call(FlushResponse flushResponse) {
-                    if (flushResponse.isDone()) {
-                        return Observable.just(true);
-                    }
-                    while (true) {
-                        GetResponse res = core.<GetResponse>send(new GetRequest(markerKey, bucket)).toBlocking().single();
-                        if (res.status() == ResponseStatus.NOT_EXISTS) {
-                            return Observable.just(true);
-                        }
-                    }
-                }
-            });
-    }
-
-    @Override
     public Observable<LongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
         return core
             .<CounterResponse>send(new CounterRequest(id, initial, delta, expiry, bucket))
@@ -552,5 +525,10 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public <D extends Document<?>> Observable<Boolean> touch(D document) {
         return touch(document.id(), document.expiry());
+    }
+
+    @Override
+    public Observable<BucketManager> bucketManager() {
+        return Observable.just(bucketManager);
     }
 }
