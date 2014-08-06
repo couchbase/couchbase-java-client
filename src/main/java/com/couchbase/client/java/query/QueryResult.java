@@ -1,24 +1,21 @@
 package com.couchbase.client.java.query;
 
 import com.couchbase.client.java.document.json.JsonObject;
+import rx.Observable;
 
 /**
- * Created by michael on 21/05/14.
+ * .
+ *
+ * @author Michael Nitschinger
  */
-public class QueryResult {
+public interface QueryResult {
 
-    private final JsonObject value;
+    Observable<QueryRow> rows();
 
-    public QueryResult(JsonObject value) {
-        this.value = value;
-    }
+    Observable<JsonObject> info();
 
-    public JsonObject value() {
-        return value;
-    }
+    boolean success();
 
-    @Override
-    public String toString() {
-        return value.toString();
-    }
+    JsonObject error();
+
 }

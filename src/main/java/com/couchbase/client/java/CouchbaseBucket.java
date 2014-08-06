@@ -30,6 +30,8 @@ import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.config.FlushRequest;
 import com.couchbase.client.core.message.config.FlushResponse;
+import com.couchbase.client.core.message.query.GenericQueryRequest;
+import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
@@ -447,26 +449,41 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Observable<QueryResult> query(final String query) {
-        /*final Converter<?, ?> converter = converters.get(JsonDocument.class);
+        final Converter<?, ?> converter = converters.get(JsonDocument.class);
         GenericQueryRequest request = new GenericQueryRequest(query, bucket, password);
         return core
             .<GenericQueryResponse>send(request)
-            .filter(new Func1<GenericQueryResponse, Boolean>() {
+            .flatMap(new Func1<GenericQueryResponse, Observable<QueryResult>>() {
                 @Override
-                public Boolean call(GenericQueryResponse response) {
-                    return response.content() != null;
+                public Observable<QueryResult> call(final GenericQueryResponse response) {
+                    final Observable<QueryRow> rows = response.rows().map(new Func1<ByteBuf, QueryRow>() {
+                        @Override
+                        public QueryRow call(ByteBuf byteBuf) {
+                            JsonObject value = (JsonObject) converter.decode(byteBuf);
+                            return new DefaultQueryRow(value);
+                        }
+                    });
+                    final Observable<JsonObject> info = response.info().map(new Func1<ByteBuf, JsonObject>() {
+                        @Override
+                        public JsonObject call(ByteBuf byteBuf) {
+                            JsonObject value = (JsonObject) converter.decode(byteBuf);
+                            return value;
+                        }
+                    });
+                    if (response.status().isSuccess()) {
+                        return Observable.just((QueryResult) new DefaultQueryResult(rows, info, null,
+                            response.status().isSuccess()));
+                    } else {
+                        return response.info().map(new Func1<ByteBuf, QueryResult>() {
+                            @Override
+                            public QueryResult call(ByteBuf byteBuf) {
+                                JsonObject error = (JsonObject) converter.decode(byteBuf);
+                                return new DefaultQueryResult(rows, info, error, response.status().isSuccess());
+                            }
+                        });
+                    }
                 }
-            })
-            .map(new Func1<GenericQueryResponse, QueryResult>() {
-                @Override
-                public QueryResult call(GenericQueryResponse response) {
-                    ByteBuf content = Unpooled.copiedBuffer(response.content(), CharsetUtil.UTF_8);
-                    QueryResult result = new QueryResult((JsonObject) converter.decode(content));
-                    content.release();
-                    return result;
-                }
-            });*/
-        return null;
+            });
     }
 
     @Override
