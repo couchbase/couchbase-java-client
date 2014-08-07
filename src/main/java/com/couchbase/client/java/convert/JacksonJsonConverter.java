@@ -22,24 +22,15 @@
 package com.couchbase.client.java.convert;
 
 import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonGenerator;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonParseException;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonParser;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonToken;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.Version;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.DeserializationContext;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.JsonDeserializer;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.JsonSerializer;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.SerializerProvider;
+import com.couchbase.client.deps.com.fasterxml.jackson.core.*;
+import com.couchbase.client.deps.com.fasterxml.jackson.databind.*;
 import com.couchbase.client.deps.com.fasterxml.jackson.databind.module.SimpleModule;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
 
 import java.io.IOException;
 
@@ -65,22 +56,28 @@ public class JacksonJsonConverter implements Converter<JsonDocument, JsonObject>
 
   @Override
   public JsonObject decode(ByteBuf buffer) {
-    try {
-      return mapper.readValue(buffer.toString(CharsetUtil.UTF_8),
-        JsonObject.class);
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
-    }
+        return decode(buffer.toString(CharsetUtil.UTF_8));
+  }
+
+  public JsonObject decode(String buffer) {
+      try {
+          return mapper.readValue(buffer, JsonObject.class);
+      } catch (IOException e) {
+          throw new IllegalStateException(e);
+      }
   }
 
   @Override
   public ByteBuf encode(JsonObject content) {
-    try {
-      return Unpooled.copiedBuffer(mapper.writeValueAsString(content),
-        CharsetUtil.UTF_8);
-    } catch (JsonProcessingException e) {
-      throw new IllegalStateException(e);
-    }
+      return Unpooled.copiedBuffer(encodeToString(content), CharsetUtil.UTF_8);
+  }
+
+  public String encodeToString(JsonObject content) {
+      try {
+          return mapper.writeValueAsString(content);
+      } catch (JsonProcessingException e) {
+          throw new IllegalStateException(e);
+      }
   }
 
     @Override
