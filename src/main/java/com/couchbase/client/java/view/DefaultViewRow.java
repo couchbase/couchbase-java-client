@@ -1,4 +1,4 @@
-package com.couchbase.client.java.query;
+package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.Document;

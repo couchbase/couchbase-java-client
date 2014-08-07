@@ -1,7 +1,8 @@
-package com.couchbase.client.java.query;
+package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.Query;
 
 import java.net.URLEncoder;
 
