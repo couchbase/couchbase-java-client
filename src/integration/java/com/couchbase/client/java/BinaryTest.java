@@ -23,6 +23,7 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.LegacyDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -32,6 +33,7 @@ import rx.Observable;
 import rx.functions.Func1;
 import rx.observables.BlockingObservable;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -123,21 +125,21 @@ public class BinaryTest extends ClusterDependentTest {
 
   @Test
   public void shouldLoadMultipleDocuments() throws Exception {
-    BlockingObservable<JsonDocument> observable = Observable
-      .from("doc1", "doc2", "doc3")
-      .flatMap(new Func1<String, Observable<JsonDocument>>() {
-        @Override
-        public Observable<JsonDocument> call(String id) {
-          return bucket().get(id);
-        }
-      }).toBlocking();
+          BlockingObservable<JsonDocument> observable = Observable
+              .from("doc1", "doc2", "doc3")
+              .flatMap(new Func1<String, Observable<JsonDocument>>() {
+                  @Override
+                  public Observable<JsonDocument> call(String id) {
+                      return bucket().get(id);
+                  }
+              }).toBlocking();
 
-    Iterator<JsonDocument> iterator = observable.getIterator();
-    while (iterator.hasNext()) {
-      JsonDocument doc = iterator.next();
-      assertNull(doc.content());
-      assertEquals(ResponseStatus.NOT_EXISTS, doc.status());
-    }
+          Iterator<JsonDocument> iterator = observable.getIterator();
+          while (iterator.hasNext()) {
+              JsonDocument doc = iterator.next();
+              assertNull(doc.content());
+              assertEquals(ResponseStatus.NOT_EXISTS, doc.status());
+          }
   }
 
     @Test
@@ -277,7 +279,32 @@ public class BinaryTest extends ClusterDependentTest {
 
         JsonDocument remove = bucket().remove(key, PersistTo.MASTER, ReplicateTo.NONE).toBlocking().single();
         assertEquals(ResponseStatus.SUCCESS, remove.status());
+    }
 
+    @Test
+    public void shouldUpsertLegacyObjectDocument() {
+        String id = "legacy-upsert";
+        User user = new User("Michael");
+        LegacyDocument doc = LegacyDocument.create(id, user);
+        LegacyDocument stored = bucket().upsert(doc).toBlocking().single();
+        assertTrue(stored.status().isSuccess());
+
+        LegacyDocument found = bucket().get(id, LegacyDocument.class).toBlocking().single();
+        assertEquals(found.content().getClass(), user.getClass());
+        assertEquals("Michael", ((User) found.content()).getFirstname());
+    }
+
+    static class User implements Serializable {
+
+        private final String firstname;
+
+        User(String firstname) {
+            this.firstname = firstname;
+        }
+
+        public String getFirstname() {
+            return firstname;
+        }
     }
 
 }

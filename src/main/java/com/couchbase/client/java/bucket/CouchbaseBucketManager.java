@@ -6,13 +6,17 @@ import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.GetRequest;
 import com.couchbase.client.core.message.binary.GetResponse;
 import com.couchbase.client.core.message.binary.UpsertRequest;
-import com.couchbase.client.core.message.config.*;
+import com.couchbase.client.core.message.config.FlushRequest;
+import com.couchbase.client.core.message.config.FlushResponse;
+import com.couchbase.client.core.message.config.GetDesignDocumentsRequest;
+import com.couchbase.client.core.message.config.GetDesignDocumentsResponse;
 import com.couchbase.client.core.message.view.*;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
-import com.couchbase.client.java.convert.JacksonJsonConverter;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.transcoder.JsonTranscoder;
+import com.couchbase.client.java.transcoder.TranscodingException;
 import com.couchbase.client.java.view.DesignDocument;
 import com.couchbase.client.java.view.DesignDocumentAlreadyExistsException;
 import com.couchbase.client.java.view.DesignDocumentException;
@@ -32,7 +36,7 @@ public class CouchbaseBucketManager implements BucketManager {
     private final ClusterFacade core;
     private final String bucket;
     private final String password;
-    private final JacksonJsonConverter converter = new JacksonJsonConverter();
+    private final JsonTranscoder transcoder = new JsonTranscoder();
 
     public CouchbaseBucketManager(String bucket, String password, ClusterFacade core) {
         this.bucket = bucket;
@@ -77,7 +81,12 @@ public class CouchbaseBucketManager implements BucketManager {
             .flatMap(new Func1<GetDesignDocumentsResponse, Observable<DesignDocument>>() {
                 @Override
                 public Observable<DesignDocument> call(GetDesignDocumentsResponse response) {
-                    JsonObject converted = converter.decode(response.content());
+                    JsonObject converted = null;
+                    try {
+                        converted = transcoder.stringToJsonObject(response.content());
+                    } catch (Exception e) {
+                        throw new TranscodingException("Could not decode design document.", e);
+                    }
                     JsonArray rows = converted.getArray("rows");
                     List<DesignDocument> docs = new ArrayList<DesignDocument>();
                     for (Object doc : rows) {
@@ -114,7 +123,12 @@ public class CouchbaseBucketManager implements BucketManager {
             .map(new Func1<GetDesignDocumentResponse, DesignDocument>() {
                 @Override
                 public DesignDocument call(GetDesignDocumentResponse response) {
-                    JsonObject converted = converter.decode(response.content());
+                    JsonObject converted = null;
+                    try {
+                        converted = transcoder.stringToJsonObject(response.content().toString(CharsetUtil.UTF_8));
+                    } catch (Exception e) {
+                        throw new TranscodingException("Could not decode design document.", e);
+                    }
                     return DesignDocument.from(response.name(), converted);
                 }
             });
@@ -148,7 +162,12 @@ public class CouchbaseBucketManager implements BucketManager {
 
     @Override
     public Observable<DesignDocument> upsertDesignDocument(final DesignDocument designDocument, boolean development) {
-        String body = converter.encodeToString(designDocument.toJsonObject());
+        String body = null;
+        try {
+            body = transcoder.jsonObjectToString(designDocument.toJsonObject());
+        } catch (Exception e) {
+            throw new TranscodingException("Could not encode design document: ", e);
+        }
         UpsertDesignDocumentRequest req = new UpsertDesignDocumentRequest(designDocument.name(),
             body, development, bucket, password);
         return core.<UpsertDesignDocumentResponse>send(req)

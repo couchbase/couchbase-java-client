@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java;
 
+import com.couchbase.client.java.cluster.ClusterManager;
 import rx.Observable;
 
 /**
@@ -51,6 +52,8 @@ public interface Cluster {
      * @return a {@link Observable} containing the {@link Bucket} reference once open.
      */
     Observable<Bucket> openBucket(String name, String password);
+
+    Observable<ClusterManager> clusterManager(String username, String password);
 
     /**
      * Disconnects from the {@link Cluster} and closes all open buckets.

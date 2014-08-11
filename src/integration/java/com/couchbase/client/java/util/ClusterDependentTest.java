@@ -24,6 +24,8 @@ package com.couchbase.client.java.util;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.env.DefaultClusterEnvironment;
+import com.couchbase.client.java.env.DynamicClusterProperties;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -43,7 +45,7 @@ public class ClusterDependentTest {
 
     @BeforeClass
     public static void connect() {
-        cluster = CouchbaseCluster.create(seedNode);
+        cluster = CouchbaseCluster.create(DefaultClusterEnvironment.create(DynamicClusterProperties.builder().binaryServiceEndpoints(1).build()), seedNode);
         bucket = cluster.openBucket(bucketName, password).toBlocking().single();
         bucket.bucketManager().toBlocking().single().flush().toBlocking().single();
     }

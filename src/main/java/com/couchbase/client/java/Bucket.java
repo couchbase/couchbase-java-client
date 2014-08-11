@@ -22,14 +22,15 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.java.bucket.BucketManager;
-import com.couchbase.client.java.convert.Converter;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
-import com.couchbase.client.java.query.*;
+import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
 import rx.Observable;
@@ -75,7 +76,7 @@ public interface Bucket {
      * Retrieves any type of {@link Document} by its unique ID.
      *
      * This method differs from {@link #get(String)} in that if a specific {@link Document} type is passed in, the
-     * appropriate {@link Converter} will be selected (and not JSON conversion).
+     * appropriate {@link Transcoder} will be selected (and not JSON conversion).
      *
      * If the document is found, a {@link Document} is returned. If the document is not found, the
      * {@link Observable} completes without an item emitted.
@@ -139,7 +140,7 @@ public interface Bucket {
      * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
      *
      * This method differs from {@link #getFromReplica(String, ReplicaMode)} in that if a specific {@link Document}
-     * type is passed in, the appropriate {@link Converter} will be selected (and not JSON conversion).
+     * type is passed in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
      *
      * Depending on the {@link ReplicaMode} selected, there can be none to four {@link Document} be returned
      * from the {@link Observable}. If {@link ReplicaMode#FIRST}, {@link ReplicaMode#SECOND} or
@@ -198,7 +199,7 @@ public interface Bucket {
      * Retrieve and lock a {@link Document} by its unique ID.
      *
      * This method differs from {@link #getAndLock(String, int)} in that if a specific {@link Document} type is passed
-     * in, the appropriate {@link Converter} will be selected (and not JSON conversion).
+     * in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
      *
      * If the document is found, a {@link Document} is returned. If the document is not found, the
      * {@link Observable} completes without an item emitted.
@@ -247,7 +248,7 @@ public interface Bucket {
      * Retrieve and touch a {@link Document} by its unique ID.
      *
      * This method differs from {@link #getAndTouch(String, int)} in that if a specific {@link Document} type is passed
-     * in, the appropriate {@link Converter} will be selected (and not JSON conversion).
+     * in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
      *
      * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
      * {@link Observable} completes without an item emitted.

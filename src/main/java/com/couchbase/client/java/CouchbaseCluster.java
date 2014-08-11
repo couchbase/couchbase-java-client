@@ -29,6 +29,8 @@ import com.couchbase.client.core.message.cluster.DisconnectRequest;
 import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
+import com.couchbase.client.java.cluster.ClusterManager;
+import com.couchbase.client.java.cluster.CouchbaseClusterManager;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.java.env.DefaultClusterEnvironment;
 import rx.Observable;
@@ -45,6 +47,8 @@ public class CouchbaseCluster implements Cluster {
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     private final ClusterFacade core;
+    private final ClusterEnvironment environment;
+    private final ConnectionString connectionString;
 
     public static CouchbaseCluster create() {
         return create(DEFAULT_HOST);
@@ -91,6 +95,8 @@ public class CouchbaseCluster implements Cluster {
         }
         SeedNodesRequest request = new SeedNodesRequest(seedNodes);
         core.send(request).toBlocking().single();
+        this.environment = environment;
+        this.connectionString = connectionString;
     }
 
     @Override
@@ -127,5 +133,11 @@ public class CouchbaseCluster implements Cluster {
                      }
                  }
             );
+    }
+
+    @Override
+    public Observable<ClusterManager> clusterManager(final String username, final String password) {
+        return Observable.just((ClusterManager) CouchbaseClusterManager.create(username, password, connectionString,
+            environment, core));
     }
 }
