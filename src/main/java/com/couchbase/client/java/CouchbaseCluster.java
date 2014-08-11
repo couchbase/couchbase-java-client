@@ -140,4 +140,9 @@ public class CouchbaseCluster implements Cluster {
         return Observable.just((ClusterManager) CouchbaseClusterManager.create(username, password, connectionString,
             environment, core));
     }
+
+    @Override
+    public Observable<ClusterFacade> core() {
+        return Observable.just(core);
+    }
 }

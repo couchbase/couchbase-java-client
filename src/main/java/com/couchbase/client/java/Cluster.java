@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java;
 
+import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.cluster.ClusterManager;
 import rx.Observable;
 
@@ -61,4 +62,11 @@ public interface Cluster {
      * @return a {@link Observable} containing true if successful.
      */
     Observable<Boolean> disconnect();
+
+    /**
+     * Returns a reference to the underlying core engine. Use with care!
+     *
+     * @return the core cluster facade.
+     */
+    Observable<ClusterFacade> core();
 }
