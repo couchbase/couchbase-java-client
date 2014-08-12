@@ -58,7 +58,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a empty {@link JsonDocument}.
      */
     public static JsonDocument empty() {
-        return new JsonDocument(null, null, 0, 0, null);
+        return new JsonDocument(null, 0, null, 0, null);
     }
 
     /**
@@ -68,7 +68,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a {@link JsonDocument}.
      */
     public static JsonDocument create(String id) {
-        return new JsonDocument(id, null, 0, 0, null);
+        return new JsonDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -79,7 +79,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a {@link JsonDocument}.
      */
     public static JsonDocument create(String id, JsonObject content) {
-        return new JsonDocument(id, content, 0, 0, null);
+        return new JsonDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -91,7 +91,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a {@link JsonDocument}.
      */
     public static JsonDocument create(String id, JsonObject content, long cas) {
-        return new JsonDocument(id, content, cas, 0, null);
+        return new JsonDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -102,8 +102,8 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @param expiry the expiration time of the document.
      * @return a {@link JsonDocument}.
      */
-    public static JsonDocument create(String id, JsonObject content, int expiry) {
-        return new JsonDocument(id, content, 0, expiry, null);
+    public static JsonDocument create(String id, int expiry, JsonObject content) {
+        return new JsonDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -120,8 +120,8 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @param status the response status as returned by the underlying infrastructure.
      * @return a {@link JsonDocument}.
      */
-    public static JsonDocument create(String id, JsonObject content, long cas, int expiry, ResponseStatus status) {
-        return new JsonDocument(id, content, cas, expiry, status);
+    public static JsonDocument create(String id, int expiry, JsonObject content, long cas, ResponseStatus status) {
+        return new JsonDocument(id, expiry, content, cas, status);
     }
 
     /**
@@ -132,7 +132,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonDocument from(JsonDocument doc, String id) {
-        return JsonDocument.create(id, doc.content(), doc.cas(), doc.expiry(), doc.status());
+        return JsonDocument.create(id, doc.expiry(), doc.content(), doc.cas(), doc.status());
     }
 
     /**
@@ -143,7 +143,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonDocument from(JsonDocument doc, JsonObject content) {
-        return JsonDocument.create(doc.id(), content, doc.cas(), doc.expiry(), doc.status());
+        return JsonDocument.create(doc.id(), doc.expiry(), content, doc.cas(), doc.status());
     }
 
     /**
@@ -155,7 +155,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonDocument from(JsonDocument doc, String id, JsonObject content) {
-        return JsonDocument.create(id, content, doc.cas(), doc.expiry(), doc.status());
+        return JsonDocument.create(id, doc.expiry(), content, doc.cas(), doc.status());
     }
 
     /**
@@ -166,7 +166,7 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonDocument from(JsonDocument doc, long cas) {
-        return JsonDocument.create(doc.id(), doc.content(), cas, doc.expiry(), doc.status());
+        return JsonDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.status());
     }
 
     /**
@@ -178,8 +178,8 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      * @param expiry the expiration time of the document.
      * @param status the response status as returned by the underlying infrastructure.
      */
-    private JsonDocument(String id, JsonObject content, long cas, int expiry, ResponseStatus status) {
-        super(id, content, cas, expiry, status);
+    private JsonDocument(String id, int expiry, JsonObject content, long cas, ResponseStatus status) {
+        super(id, expiry, content, cas, status);
     }
 
 }

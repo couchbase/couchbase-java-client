@@ -41,12 +41,12 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
         throws Exception {
         JsonObject converted = stringToJsonObject(content.toString(CharsetUtil.UTF_8));
         content.release();
-        return newDocument(id, converted, cas, expiry, status);
+        return newDocument(id, expiry, converted, cas, status);
     }
 
     @Override
-    public JsonDocument newDocument(String id, JsonObject content, long cas, int expiry, ResponseStatus status) {
-        return JsonDocument.create(id, content, cas, expiry, status);
+    public JsonDocument newDocument(String id, int expiry, JsonObject content, long cas, ResponseStatus status) {
+        return JsonDocument.create(id, expiry, content, cas, status);
     }
 
     public String jsonObjectToString(JsonObject input) throws Exception {

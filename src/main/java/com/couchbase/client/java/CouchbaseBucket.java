@@ -246,8 +246,8 @@ public class CouchbaseBucket implements Bucket {
                     if (response.status() == ResponseStatus.EXISTS) {
                         return Observable.error(new DocumentAlreadyExistsException());
                     }
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.content(), response.cas(),
-                        document.expiry(), response.status()));
+                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas(),
+                        response.status()));
                 }
             });
     }
@@ -285,7 +285,7 @@ public class CouchbaseBucket implements Bucket {
             .map(new Func1<UpsertResponse, D>() {
                 @Override
                 public D call(UpsertResponse response) {
-                    return (D) transcoder.newDocument(document.id(), document.content(), response.cas(), document.expiry(),
+                    return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas(),
                         response.status());
                 }
             });
@@ -324,8 +324,8 @@ public class CouchbaseBucket implements Bucket {
                 if (response.status() == ResponseStatus.EXISTS) {
                     return Observable.error(new CASMismatchException());
                 }
-                return Observable.just((D) transcoder.newDocument(document.id(), document.content(), response.cas(),
-                    document.expiry(), response.status()));
+                return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas(),
+                    response.status()));
             }
         });
   }
@@ -356,7 +356,7 @@ public class CouchbaseBucket implements Bucket {
         return core.<RemoveResponse>send(request).map(new Func1<RemoveResponse, D>() {
             @Override
             public D call(RemoveResponse response) {
-                return (D) transcoder.newDocument(document.id(), document.content(), document.cas(), document.expiry(),
+                return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(), document.cas(),
                     response.status());
             }
         });
@@ -371,7 +371,7 @@ public class CouchbaseBucket implements Bucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(final String id, final Class<D> target) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(target);
-        return remove((D) transcoder.newDocument(id, null, 0, 0, null));
+        return remove((D) transcoder.newDocument(id, 0, null, 0, null));
     }
 
     @Override
@@ -414,6 +414,9 @@ public class CouchbaseBucket implements Bucket {
                     return response.info().map(new Func1<ByteBuf, JsonObject>() {
                         @Override
                         public JsonObject call(ByteBuf byteBuf) {
+                            if (byteBuf == null || byteBuf.readableBytes() == 0) {
+                                return JsonObject.empty();
+                            }
                             try {
                                 return JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
                             } catch (Exception e) {
@@ -429,7 +432,10 @@ public class CouchbaseBucket implements Bucket {
                             boolean success = response.status().isSuccess();
                             if (success) {
                                 debug = jsonInfo.getObject("debug_info");
-                                totalRows = jsonInfo.getInt("total_rows");
+                                Integer trows = jsonInfo.getInt("total_rows");
+                                if (trows != null) {
+                                    totalRows = trows;
+                                }
                             } else {
                                 error = jsonInfo;
                             }
@@ -517,19 +523,27 @@ public class CouchbaseBucket implements Bucket {
             .map(new Func1<CounterResponse, LongDocument>() {
                 @Override
                 public LongDocument call(CounterResponse response) {
-                    return new LongDocument(id, response.value(), response.cas(), expiry, response.status());
+                    return new LongDocument(id, expiry, response.value(), response.cas(), response.status());
                 }
             });
     }
 
     @Override
     public Observable<Boolean> unlock(String id, long cas) {
-        return core.<UnlockResponse>send(new UnlockRequest(id, cas, bucket)).map(new Func1<UnlockResponse, Boolean>() {
-            @Override
-            public Boolean call(UnlockResponse unlockResponse) {
-                return unlockResponse.status().isSuccess();
-            }
-        });
+        return core
+            .<UnlockResponse>send(new UnlockRequest(id, cas, bucket))
+            .map(new Func1<UnlockResponse, Boolean>() {
+                @Override
+                public Boolean call(UnlockResponse response) {
+                    if (response.status() == ResponseStatus.NOT_EXISTS) {
+                        throw new DocumentDoesNotExistException();
+                    }
+                    if (response.status() == ResponseStatus.FAILURE) {
+                        throw new CASMismatchException();
+                    }
+                    return response.status().isSuccess();
+                }
+            });
     }
 
     @Override
@@ -566,8 +580,8 @@ public class CouchbaseBucket implements Bucket {
                         throw new DocumentDoesNotExistException();
                     }
 
-                    return (D) transcoder.newDocument(document.id(), document.content(), response.cas(),
-                        document.expiry(), response.status());
+                    return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas(),
+                        response.status());
                 }
             });
     }
@@ -586,8 +600,8 @@ public class CouchbaseBucket implements Bucket {
                         throw new DocumentDoesNotExistException();
                     }
 
-                    return (D) transcoder.newDocument(document.id(), document.content(), response.cas(),
-                        document.expiry(), response.status());
+                    return (D) transcoder.newDocument(document.id(),  document.expiry(), document.content(), response.cas(),
+                        response.status());
                 }
             });
     }

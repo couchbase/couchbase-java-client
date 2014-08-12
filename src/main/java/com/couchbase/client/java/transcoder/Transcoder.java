@@ -16,5 +16,5 @@ public interface Transcoder<D extends Document<T>, T> {
 
     Tuple2<ByteBuf, Integer> encode(D document);
 
-    D newDocument(String id, T content, long cas, int expiry, ResponseStatus status);
+    D newDocument(String id, int expiry, T content, long cas, ResponseStatus status);
 }

@@ -69,7 +69,7 @@ public class JsonObject implements JsonValue {
     return this;
   }
 
-  public int getInt(String name) {
+  public Integer getInt(String name) {
     return (Integer) content.get(name);
   }
 
@@ -78,15 +78,8 @@ public class JsonObject implements JsonValue {
     return this;
   }
 
-  public long getLong(String name) {
-    Object found = content.get(name);
-    if (found == null) {
-        throw new NullPointerException();
-    }
-    if (found instanceof Integer) {
-        return (Integer) found;
-    }
-    return (Long) found;
+  public Long getLong(String name) {
+      return (Long) content.get(name);
   }
 
   public JsonObject put(String name, double value) {
@@ -94,7 +87,7 @@ public class JsonObject implements JsonValue {
     return this;
   }
 
-  public double getDouble(String name) {
+  public Double getDouble(String name) {
     return (Double) content.get(name);
   }
 
@@ -103,7 +96,7 @@ public class JsonObject implements JsonValue {
     return this;
   }
 
-  public boolean getBoolean(String name) {
+  public Boolean getBoolean(String name) {
     return (Boolean) content.get(name);
   }
 
@@ -134,7 +127,7 @@ public class JsonObject implements JsonValue {
   }
 
   public Map<String, Object> toMap() {
-    return content;
+    return new HashMap<String, Object>(content);
   }
 
   public boolean containsKey(String name) {

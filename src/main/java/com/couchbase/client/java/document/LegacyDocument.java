@@ -16,7 +16,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a empty {@link LegacyDocument}.
      */
     public static LegacyDocument empty() {
-        return new LegacyDocument(null, null, 0, 0, null);
+        return new LegacyDocument(null, 0, null, 0, null);
     }
 
     /**
@@ -26,7 +26,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id) {
-        return new LegacyDocument(id, null, 0, 0, null);
+        return new LegacyDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -37,7 +37,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, Object content) {
-        return new LegacyDocument(id, content, 0, 0, null);
+        return new LegacyDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -49,19 +49,19 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, Object content, long cas) {
-        return new LegacyDocument(id, content, cas, 0, null);
+        return new LegacyDocument(id, 0, content, cas, null);
     }
 
     /**
      * Creates a {@link LegacyDocument} which the document id, JSON content and the expiration time.
      *
      * @param id the per-bucket unique document id.
-     * @param content the content of the document.
      * @param expiry the expiration time of the document.
+     * @param content the content of the document.
      * @return a {@link LegacyDocument}.
      */
-    public static LegacyDocument create(String id, Object content, int expiry) {
-        return new LegacyDocument(id, content, 0, expiry, null);
+    public static LegacyDocument create(String id, int expiry, Object content) {
+        return new LegacyDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -72,14 +72,14 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * the user level code.
      *
      * @param id the per-bucket unique document id.
+     * @param expiry the expiration time of the document.
      * @param content the content of the document.
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
      * @param status the response status as returned by the underlying infrastructure.
      * @return a {@link LegacyDocument}.
      */
-    public static LegacyDocument create(String id, Object content, long cas, int expiry, ResponseStatus status) {
-        return new LegacyDocument(id, content, cas, expiry, status);
+    public static LegacyDocument create(String id, int expiry, Object content, long cas, ResponseStatus status) {
+        return new LegacyDocument(id, expiry, content, cas, status);
     }
 
     /**
@@ -90,7 +90,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, String id) {
-        return LegacyDocument.create(id, doc.content(), doc.cas(), doc.expiry(), doc.status());
+        return LegacyDocument.create(id, doc.expiry(), doc.content(), doc.cas(), doc.status());
     }
 
     /**
@@ -101,7 +101,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, Object content) {
-        return LegacyDocument.create(doc.id(), content, doc.cas(), doc.expiry(), doc.status());
+        return LegacyDocument.create(doc.id(), doc.expiry(), content, doc.cas(), doc.status());
     }
 
     /**
@@ -113,7 +113,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, String id, Object content) {
-        return LegacyDocument.create(id, content, doc.cas(), doc.expiry(), doc.status());
+        return LegacyDocument.create(id, doc.expiry(), content, doc.cas(), doc.status());
     }
 
     /**
@@ -124,10 +124,10 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, long cas) {
-        return LegacyDocument.create(doc.id(), doc.content(), cas, doc.expiry(), doc.status());
+        return LegacyDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.status());
     }
 
-    private LegacyDocument(String id, Object content, long cas, int expiry, ResponseStatus status) {
-        super(id, content, cas, expiry, status);
+    private LegacyDocument(String id, int expiry, Object content, long cas, ResponseStatus status) {
+        super(id, expiry, content, cas, status);
     }
 }

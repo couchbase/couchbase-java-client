@@ -37,7 +37,7 @@ public abstract class AbstractDocument<T> implements Document<T> {
   private final T content;
   private final ResponseStatus status;
 
-  protected AbstractDocument(String id, T content, long cas, int expiry, ResponseStatus status) {
+  protected AbstractDocument(String id, int expiry, T content, long cas, ResponseStatus status) {
     this.id = id;
     this.cas = cas;
     this.expiry = expiry;

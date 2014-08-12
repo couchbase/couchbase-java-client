@@ -24,6 +24,7 @@ package com.couchbase.client.java.document.json;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class JsonObjectTest {
 
@@ -60,6 +61,12 @@ public class JsonObjectTest {
         JsonObject obj = JsonObject.empty()
             .put("nested", JsonArray.empty().add(true).add(4).add("foo"));
         assertEquals("{\"nested\":[true,4,\"foo\"]}", obj.toString());
+    }
+
+    @Test
+    public void shouldReturnNullWhenNotFound() {
+        JsonObject obj = JsonObject.empty();
+        assertNull(obj.getInt("notfound"));
     }
 
 }
