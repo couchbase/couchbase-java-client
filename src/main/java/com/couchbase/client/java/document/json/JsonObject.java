@@ -79,7 +79,14 @@ public class JsonObject implements JsonValue {
   }
 
   public long getLong(String name) {
-    return (Long) content.get(name);
+    Object found = content.get(name);
+    if (found == null) {
+        throw new NullPointerException();
+    }
+    if (found instanceof Integer) {
+        return (Integer) found;
+    }
+    return (Long) found;
   }
 
   public JsonObject put(String name, double value) {

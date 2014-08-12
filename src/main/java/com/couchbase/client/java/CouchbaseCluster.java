@@ -54,6 +54,10 @@ public class CouchbaseCluster implements Cluster {
         return create(DEFAULT_HOST);
     }
 
+    public static CouchbaseCluster create(final ClusterEnvironment environment) {
+        return create(environment, DEFAULT_HOST);
+    }
+
     public static CouchbaseCluster create(final String... nodes) {
         return create(Arrays.asList(nodes));
     }
@@ -67,21 +71,15 @@ public class CouchbaseCluster implements Cluster {
     }
 
     public static CouchbaseCluster create(final ClusterEnvironment environment, final List<String> nodes) {
-        ConnectionString connectionString;
-        if (nodes.size() == 1 && nodes.get(0).contains("://")) {
-            connectionString = ConnectionString.create(nodes.get(0));
-        } else {
-            connectionString = ConnectionString.fromHostnames(nodes);
-        }
-        return from(environment, connectionString);
+        return new CouchbaseCluster(environment, ConnectionString.fromHostnames(nodes));
     }
 
-    public static CouchbaseCluster from(final ConnectionString connectionString) {
-        return from(DefaultClusterEnvironment.create(), connectionString);
+    public static CouchbaseCluster fromConnectionString(final String connectionString) {
+        return fromConnectionString(DefaultClusterEnvironment.create(), connectionString);
     }
 
-    public static CouchbaseCluster from(final ClusterEnvironment environment, final ConnectionString connectionString) {
-        return new CouchbaseCluster(environment, connectionString);
+    public static CouchbaseCluster fromConnectionString(final ClusterEnvironment environment, final String connectionString) {
+        return new CouchbaseCluster(environment, ConnectionString.create(connectionString));
     }
 
     CouchbaseCluster(final ClusterEnvironment environment, final ConnectionString connectionString) {
