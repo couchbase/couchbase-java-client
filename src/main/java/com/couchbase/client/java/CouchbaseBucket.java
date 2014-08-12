@@ -41,6 +41,7 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.LegacyDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
@@ -319,6 +320,9 @@ public class CouchbaseBucket implements Bucket {
             public Observable<D> call(ReplaceResponse response) {
                 if (response.status() == ResponseStatus.NOT_EXISTS) {
                     return Observable.error(new DocumentDoesNotExistException());
+                }
+                if (response.status() == ResponseStatus.EXISTS) {
+                    return Observable.error(new CASMismatchException());
                 }
                 return Observable.just((D) transcoder.newDocument(document.id(), document.content(), response.cas(),
                     document.expiry(), response.status()));
