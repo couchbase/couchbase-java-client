@@ -26,7 +26,10 @@ import com.couchbase.client.java.cluster.ClusterManager;
 import rx.Observable;
 
 /**
- * Represents a Couchbase Server cluster.
+ * Represents a Couchbase Server {@link Cluster}.
+ *
+ * A {@link Cluster} is able to open many {@link Bucket}s while sharing the underlying resources (like sockets)
+ * very efficiently. In addition, a {@link ClusterManager} is available to perform cluster-wide operations.
  *
  * @author Michael Nitschinger
  * @since 2.0
@@ -36,37 +39,55 @@ public interface Cluster {
     /**
      * Open the default {@link Bucket}.
      *
-     * @return a {@link Observable} containing the {@link Bucket} reference once open.
+     * @return a {@link Observable} containing the {@link Bucket} reference once opened.
      */
     Observable<Bucket> openBucket();
 
     /**
-     * Open the given {@link Bucket} without a password.
+     * Open the given {@link Bucket} without a password (if not set during creation).
      *
-     * @return a {@link Observable} containing the {@link Bucket} reference once open.
+     * @param name the name of the bucket.
+     * @return a {@link Observable} containing the {@link Bucket} reference once opened.
      */
     Observable<Bucket> openBucket(String name);
 
     /**
-     * Open the given {@link Bucket} with a password.
+     * Open the given {@link Bucket} with a password (set during creation).
      *
-     * @return a {@link Observable} containing the {@link Bucket} reference once open.
+     * @param name the name of the bucket.
+     * @param password the password of the bucket, can be an empty string.
+     * @return a {@link Observable} containing the {@link Bucket} reference once opened.
      */
     Observable<Bucket> openBucket(String name, String password);
 
+    /**
+     * Returns a reference to the {@link ClusterManager}.
+     *
+     * The {@link ClusterManager} allows to perform cluster level management operations. It requires administrative
+     * credentials, which have been set during cluster configuration. Bucket level credentials are not enough to perform
+     * cluster-level operations.
+     *
+     * @param username privileged username.
+     * @param password privileged password.
+     * @return a {@link Observable} containing the {@link ClusterManager}.
+     */
     Observable<ClusterManager> clusterManager(String username, String password);
 
     /**
-     * Disconnects from the {@link Cluster} and closes all open buckets.
+     * Disconnects from the {@link Cluster} and closes all open {@link Bucket}s.
      *
-     * @return a {@link Observable} containing true if successful.
+     * @return a {@link Observable} containing true if successful and failing the {@link Observable} otherwise.
      */
     Observable<Boolean> disconnect();
 
     /**
-     * Returns a reference to the underlying core engine. Use with care!
+     * Returns a reference to the underlying core engine.
      *
-     * @return the core cluster facade.
+     * Since the {@link ClusterFacade} provides direct access to low-level semantics, no sanity checks are performed as
+     * with the Java SDK itself. Handle with care and only use it when absolutely needed.
+     *
+     * @return a {@link Observable} containing the core engine.
      */
     Observable<ClusterFacade> core();
+
 }
