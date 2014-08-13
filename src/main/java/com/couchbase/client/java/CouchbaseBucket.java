@@ -516,6 +516,16 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public Observable<LongDocument> counter(String id, long delta) {
+        return counter(id, delta, delta);
+    }
+
+    @Override
+    public Observable<LongDocument> counter(String id, long delta, long initial) {
+        return counter(id, delta, initial, 0);
+    }
+
+    @Override
     public Observable<LongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
         return core
             .<CounterResponse>send(new CounterRequest(id, initial, delta, expiry, bucket))

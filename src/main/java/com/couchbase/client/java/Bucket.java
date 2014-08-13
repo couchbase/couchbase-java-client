@@ -414,6 +414,8 @@ public interface Bucket {
     Observable<Boolean> touch(String id, int expiry);
     <D extends Document<?>> Observable<Boolean> touch(D document);
 
+    Observable<LongDocument> counter(String id, long delta);
+    Observable<LongDocument> counter(String id, long delta, long initial);
     Observable<LongDocument> counter(String id, long delta, long initial, int expiry);
 
     Observable<BucketManager> bucketManager();
