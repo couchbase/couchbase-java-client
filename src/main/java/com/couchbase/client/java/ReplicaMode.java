@@ -22,7 +22,7 @@
 package com.couchbase.client.java;
 
 /**
- * The mode of the replica read to perform.
+ * Represents the different modes to read from replica nodes.
  *
  * @author Michael Nitschinger
  * @since 2.0
@@ -30,22 +30,22 @@ package com.couchbase.client.java;
 public enum ReplicaMode {
 
     /**
-     * Asks all replicas and the active node and returns documents from those that respond.
+     * Get from all replicas and the active node.
      */
     ALL,
 
     /**
-     * Only asks the first replica for its document.
+     * Get only from the first replica configured for the document.
      */
     FIRST,
 
     /**
-     * Only asks the second replica for its document.
+     * Get only from the second replica configured for the document.
      */
     SECOND,
 
     /**
-     * Only asks the third replica for its document.
+     * Get only from the third replica configured for the document.
      */
     THIRD
 }

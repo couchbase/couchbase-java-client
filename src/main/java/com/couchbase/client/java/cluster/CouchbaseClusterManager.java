@@ -1,16 +1,8 @@
 package com.couchbase.client.java.cluster;
 
 import com.couchbase.client.core.ClusterFacade;
-import com.couchbase.client.core.CouchbaseException;
-import com.couchbase.client.core.message.internal.AddServiceRequest;
-import com.couchbase.client.core.message.internal.AddServiceResponse;
-import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.ConnectionString;
 import com.couchbase.client.java.env.ClusterEnvironment;
-import rx.Observable;
-import rx.functions.Func1;
-
-import java.net.InetAddress;
 
 /**
  * .
@@ -39,6 +31,7 @@ public class CouchbaseClusterManager implements ClusterManager {
         return new CouchbaseClusterManager(username, password, connectionString, environment, core);
     }
 
+    /*
     @Override
     public Observable<ClusterBucketSettings> getBuckets() {
         /*return ensureServiceEnabled()
@@ -53,7 +46,7 @@ public class CouchbaseClusterManager implements ClusterManager {
                     return null;
                 }
             });*/
-        return null;
+        /*return null;
     }
 
     @Override
@@ -96,4 +89,5 @@ public class CouchbaseClusterManager implements ClusterManager {
                 }
             });
     }
+    */
 }
