@@ -91,7 +91,7 @@ public class DesignDocumentTest extends ClusterDependentTest {
         assertNull(found.views().get(0).reduce());
 
         views = Arrays.asList(
-            DefaultView.create("v1", "function(d,m){}"),
+            DefaultView.create("v1", "function(d,m){}", "_count"),
             DefaultView.create("v2", "function(d,m){}", "_count")
         );
         designDocument = DesignDocument.create("upsert2", views);
@@ -102,7 +102,7 @@ public class DesignDocumentTest extends ClusterDependentTest {
         assertEquals("upsert2", found.name());
         assertEquals(2, found.views().size());
         assertEquals("function(d,m){}", found.views().get(0).map());
-        assertNull(found.views().get(0).reduce());
+        assertEquals("_count", found.views().get(0).reduce());
         assertEquals("function(d,m){}", found.views().get(1).map());
         assertEquals("_count", found.views().get(1).reduce());
     }
