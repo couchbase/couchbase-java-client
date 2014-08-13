@@ -98,12 +98,12 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
         } else {
             decoded = new String(data, CharsetUtil.UTF_8);
         }
-        return newDocument(id, expiry, decoded, cas, status);
+        return newDocument(id, expiry, decoded, cas);
     }
 
     @Override
-    public LegacyDocument newDocument(String id, int expiry, Object content, long cas, ResponseStatus status) {
-        return LegacyDocument.create(id, expiry, content, cas, status);
+    public LegacyDocument newDocument(String id, int expiry, Object content, long cas) {
+        return LegacyDocument.create(id, expiry, content, cas);
     }
 
     @Override

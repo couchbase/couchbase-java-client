@@ -21,11 +21,9 @@
  */
 package com.couchbase.client.java.document;
 
-import com.couchbase.client.core.message.ResponseStatus;
-
 public class LongDocument extends AbstractDocument<Long> {
 
-    public LongDocument(String id, int expiry, Long content, long cas, ResponseStatus status) {
-        super(id, expiry, content, cas, status);
+    public LongDocument(String id, int expiry, Long content, long cas) {
+        super(id, expiry, content, cas);
     }
 }

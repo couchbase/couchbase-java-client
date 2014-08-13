@@ -21,52 +21,42 @@
  */
 package com.couchbase.client.java.document;
 
-import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.java.Bucket;
 
 /**
- * Represents a Couchbase Server Document which is stored in and retrieved from a Bucket.
- *
- * Implementations need encode provide concrete content behavior, depending on the document type (i.e. JSON,
- * Binary,...).
+ * Represents a Couchbase Server {@link Document} which is stored in and retrieved from a {@link Bucket}.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
 public interface Document<T> {
 
-    /**
-    * The per-bucket unique ID of the document.
+   /**
+    * The per-bucket unique ID of the {@link Document}.
     *
     * @return the document id.
     */
     String id();
 
-    /**
-    * The content of the document.
+   /**
+    * The content of the {@link Document}.
     *
     * @return the content.
     */
     T content();
 
-    /**
-    * The last-known CAS value for the document (0 if not set).
+   /**
+    * The last-known CAS value for the {@link Document} (0 if not set).
     *
     * @return the CAS value if set.
     */
     long cas();
 
-    /**
-    * The optional expiration time for the document (0 if not set).
+   /**
+    * The optional expiration time for the {@link Document} (0 if not set).
     *
     * @return the expiration time.
     */
     int expiry();
-
-    /**
-     * The status of the response if a document has been retrieved or mutated.
-     *
-     * @return the status code.
-     */
-    ResponseStatus status();
 
 }
