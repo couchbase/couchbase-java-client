@@ -309,6 +309,10 @@ public interface Bucket {
      */
     <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo);
+
+    <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo);
+
     /**
      * Insert or replace a {@link Document}.
      *
@@ -350,6 +354,10 @@ public interface Bucket {
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo);
+
+    <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo);
 
     /**
      * Replace a {@link Document} if it does already exist.
@@ -397,12 +405,23 @@ public interface Bucket {
      */
     <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo);
+    <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo);
+
     <D extends Document<?>> Observable<D> remove(D document);
     <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo);
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo);
+    <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo);
+
     Observable<JsonDocument> remove(String id);
     Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo);
+    Observable<JsonDocument> remove(String id, PersistTo persistTo);
+    Observable<JsonDocument> remove(String id, ReplicateTo replicateTo);
+
     <D extends Document<?>> Observable<D> remove(String id, Class<D> target);
     <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target);
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target);
+    <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target);
 
     Observable<ViewResult> query(ViewQuery query);
     Observable<QueryResult> query(Query query);
