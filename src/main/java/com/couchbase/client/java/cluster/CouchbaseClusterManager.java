@@ -2,7 +2,7 @@ package com.couchbase.client.java.cluster;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.ConnectionString;
-import com.couchbase.client.java.env.ClusterEnvironment;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 
 /**
  * .
@@ -14,11 +14,11 @@ public class CouchbaseClusterManager implements ClusterManager {
     private final ClusterFacade core;
     private final String username;
     private final String password;
-    private final ClusterEnvironment environment;
+    private final CouchbaseEnvironment environment;
     private final ConnectionString connectionString;
 
     CouchbaseClusterManager(final String username, final String password, final ConnectionString connectionString,
-        final ClusterEnvironment environment, final ClusterFacade core) {
+        final CouchbaseEnvironment environment, final ClusterFacade core) {
         this.username = username;
         this.password = password;
         this.core = core;
@@ -27,7 +27,7 @@ public class CouchbaseClusterManager implements ClusterManager {
     }
 
     public static CouchbaseClusterManager create(final String username, final String password,
-        final ConnectionString connectionString, final ClusterEnvironment environment, final ClusterFacade core) {
+        final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
         return new CouchbaseClusterManager(username, password, connectionString, environment, core);
     }
 
