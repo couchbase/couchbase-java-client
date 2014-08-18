@@ -22,6 +22,7 @@
 
 package com.couchbase.client;
 
+import com.couchbase.client.http.CustomRequestConnControl;
 import com.couchbase.client.http.HttpResponseCallback;
 import com.couchbase.client.http.HttpUtil;
 import com.couchbase.client.http.ViewPool;
@@ -46,7 +47,6 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.protocol.HttpProcessor;
 import org.apache.http.protocol.HttpProcessorBuilder;
-import org.apache.http.protocol.RequestConnControl;
 import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
@@ -147,7 +147,7 @@ public class ViewConnection extends SpyObject implements Reconfigurable {
     this.user = user;
     this.password = password;
     connectionFactory = cf;
-
+    boolean shouldClose = Boolean.parseBoolean(CouchbaseProperties.getProperty("closeViewConnections", "false"));
     viewNodes = Collections.synchronizedList(new ArrayList<HttpHost>());
     for (InetSocketAddress addr : seedAddrs) {
       viewNodes.add(createHttpHost(addr.getHostName(), addr.getPort()));
@@ -156,7 +156,7 @@ public class ViewConnection extends SpyObject implements Reconfigurable {
     HttpProcessor httpProc = HttpProcessorBuilder.create()
       .add(new RequestContent())
       .add(new RequestTargetHost())
-      .add(new RequestConnControl())
+      .add(new CustomRequestConnControl(shouldClose))
       .add(new RequestUserAgent("JCBC/1.2"))
       .add(new RequestExpectContinue(true)).build();
 
