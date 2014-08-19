@@ -46,7 +46,7 @@ public class JsonObjectTest {
             .put("name", "michael")
             .put("age", 25)
             .put("developer", true);
-        assertEquals("{\"name\":\"michael\",\"developer\":true,\"age\":25}", obj.toString());
+        assertEquals("{\"developer\":true,\"age\":25,\"name\":\"michael\"}", obj.toString());
     }
 
     @Test
