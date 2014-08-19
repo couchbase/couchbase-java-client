@@ -127,7 +127,7 @@ public class BinaryTest extends ClusterDependentTest {
     @Test
     public void shouldLoadMultipleDocuments() throws Exception {
         BlockingObservable<JsonDocument> observable = Observable
-          .from("doc1", "doc2", "doc3")
+          .just("doc1", "doc2", "doc3")
           .flatMap(new Func1<String, Observable<JsonDocument>>() {
               @Override
               public Observable<JsonDocument> call(String id) {

@@ -2,8 +2,8 @@ package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.logging.InternalLogger;
-import com.couchbase.client.core.logging.InternalLoggerFactory;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
@@ -26,7 +26,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
     /**
      * The logger used.
      */
-    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(LegacyTranscoder.class);
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(LegacyTranscoder.class);
 
     public static final int DEFAULT_COMPRESSION_THRESHOLD = 16384;
 
