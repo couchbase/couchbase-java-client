@@ -21,8 +21,6 @@
  */
 package com.couchbase.client.java.document;
 
-import com.couchbase.client.core.message.ResponseStatus;
-
 /**
  * Common parent implementation of a {@link Document}.
  *
@@ -35,14 +33,12 @@ public abstract class AbstractDocument<T> implements Document<T> {
   private final long cas;
   private final int expiry;
   private final T content;
-  private final ResponseStatus status;
 
-  protected AbstractDocument(String id, T content, long cas, int expiry, ResponseStatus status) {
+  protected AbstractDocument(String id, int expiry, T content, long cas) {
     this.id = id;
     this.cas = cas;
     this.expiry = expiry;
     this.content = content;
-    this.status = status;
   }
 
   @Override
@@ -65,18 +61,12 @@ public abstract class AbstractDocument<T> implements Document<T> {
     return content;
   }
 
-  @Override
-  public ResponseStatus status() {
-    return status;
-  }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(this.getClass().getSimpleName() + "{");
         sb.append("id='").append(id).append('\'');
         sb.append(", cas=").append(cas);
         sb.append(", expiry=").append(expiry);
-        sb.append(", status=").append(status);
         sb.append(", content=").append(content);
         sb.append('}');
         return sb.toString();

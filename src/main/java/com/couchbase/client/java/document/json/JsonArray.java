@@ -1,9 +1,31 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
 package com.couchbase.client.java.document.json;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class JsonArray implements JsonValue {
+public class JsonArray implements JsonValue, Iterable<Object> {
 
       private final List<Object> content;
 
@@ -41,8 +63,8 @@ public class JsonArray implements JsonValue {
         return this;
       }
 
-      public long getLong(int index) {
-        return (Long) content.get(index);
+      public Long getLong(int index) {
+          return (Long) content.get(index);
       }
 
       public JsonArray add(int value) {
@@ -50,7 +72,7 @@ public class JsonArray implements JsonValue {
         return this;
       }
 
-      public int getInt(int index) {
+      public Integer getInt(int index) {
         return (Integer) content.get(index);
       }
 
@@ -59,7 +81,7 @@ public class JsonArray implements JsonValue {
         return this;
       }
 
-      public double getDouble(int index) {
+      public Double getDouble(int index) {
         return (Double) content.get(index);
       }
 
@@ -96,7 +118,7 @@ public class JsonArray implements JsonValue {
       }
 
       public List<Object> toList() {
-        return content;
+        return new ArrayList<Object>(content);
       }
 
       public boolean isEmpty() {
@@ -106,6 +128,11 @@ public class JsonArray implements JsonValue {
       public int size() {
         return content.size();
       }
+
+    @Override
+    public Iterator<Object> iterator() {
+        return content.iterator();
+    }
 
     @Override
     public String toString() {

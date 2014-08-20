@@ -1,4 +1,4 @@
-package com.couchbase.client.java.query;
+package com.couchbase.client.java.view;
 
 /**
  * Created by michael on 06/05/14.

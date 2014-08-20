@@ -1,7 +1,8 @@
-package com.couchbase.client.java.query;
+package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.Query;
 
 import java.net.URLEncoder;
 
@@ -404,7 +405,9 @@ public class ViewQuery {
 
             boolean even = i % 2 == 0;
             if (even) {
-                sb.append(firstParam ? "?" : "&");
+                if (!firstParam) {
+                    sb.append("&");
+                }
             }
             sb.append(params[i]);
             firstParam = false;
