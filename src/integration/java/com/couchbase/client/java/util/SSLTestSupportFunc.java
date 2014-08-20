@@ -1,5 +1,4 @@
 package com.couchbase.client.java.util;
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -8,97 +7,105 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.junit.Test;
-
-import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 
 import rx.Observable;
 import rx.functions.Func1;
-import rx.observables.BlockingObservable;
 import static org.junit.Assert.*;
 
 /**
- * class provides functions for SSL integrationTest 
- *
- */
+* class provides functions for SSL integrationTest
+*
+*/
 public class SSLTestSupportFunc{
+	
+    private static final String bucketName = TestProperties.bucket();
+    private static final String password = TestProperties.password();
+
+    private static Cluster cluster;
+    private static Bucket bucket;
+
+    public void connect(CouchbaseEnvironment env) {
+        cluster = CouchbaseCluster.create(env);
+        bucket = cluster.openBucket(bucketName, password).toBlocking().single();
+        bucket.bucketManager().toBlocking().single().flush().toBlocking().single();
+    }
+
+    public void disconnect() throws InterruptedException {
+        cluster.disconnect().toBlocking().single();
+    }	
+    
 	
 	/**
 	* perform upsert and get ops
 	*
-	* @param id doccument id 
-    	* @param key document key
-    	* @param value document value
+	* @param id doccument id
+	* @param key document key
+	* @param value document value
 	*/
 	public void shouldUpsertAndGet(final String id, String key,String value) {
 		
-		final ClusterDependentTest cluster = new ClusterDependentTest();
-	    	JsonObject content = JsonObject.empty().put(key, value);
-	    	final JsonDocument doc = JsonDocument.create(id, content);
-	    	JsonDocument response = cluster.bucket().upsert(doc)
-	     	 .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
-	        	@Override
-	       	 public Observable<JsonDocument> call(JsonDocument document) {
-	          	return cluster.bucket().get(id);
-	        }
-	      	}).toBlocking().single();
-
-	    	assertEquals(content.getString(key), response.content().getString(key));
-	    	assertEquals(ResponseStatus.SUCCESS, response.status());
+		JsonObject content = JsonObject.empty().put(key, value);
+		final JsonDocument doc = JsonDocument.create(id, content);
+		JsonDocument response = bucket.upsert(doc)
+				.flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
+					@Override
+					public Observable<JsonDocument> call(JsonDocument document) {
+						return bucket.get(id);
+					}
+				})
+				.toBlocking()
+				.single();
+		assertEquals(content.getString(key), response.content().getString(key));
 	}
-	
 	
 	/**
 	* make a copy of certificate file
 	*
 	* @param SourceFile original file path
-    	* @param DestinationFile file copy path
+	* @param DestinationFile file copy path
 	*/
 	public void copyCert(String SourceFile, String DestinationFile){
-        try{
-                FileInputStream fin = new FileInputStream(SourceFile);
-                FileOutputStream fout = new FileOutputStream(DestinationFile);
-               
-                byte[] b = new byte[1024];
-                int noOfBytes = 0;
-                              
-                //read bytes from source file and write to destination file
-                while( (noOfBytes = fin.read(b)) != -1 ){
-                        fout.write(b, 0, noOfBytes);
-                }
-                System.out.println("File copied!");
-              
-                fin.close();
-                fout.close();                  
-        }
-        catch(FileNotFoundException fnf){
-                System.out.println("Specified file not found :" + fnf);
-        }
-        catch(IOException ioe){
-                System.out.println("Error while copying file :" + ioe);
-        }
+		try{
+			FileInputStream fin = new FileInputStream(SourceFile);
+			FileOutputStream fout = new FileOutputStream(DestinationFile);
+			byte[] b = new byte[1024];
+			int noOfBytes = 0;
+			//read bytes from source file and write to destination file
+			while( (noOfBytes = fin.read(b)) != -1 ){
+				fout.write(b, 0, noOfBytes);
+			}
+			System.out.println("File copied!");
+			fin.close();
+			fout.close();
+		}
+		catch(FileNotFoundException fnf){
+			System.out.println("Specified file not found :" + fnf);
+		}
+		catch(IOException ioe){
+			System.out.println("Error while copying file :" + ioe);
+		}
 	}
 	
 	
 	/**
 	* convert certificate file path from string to byteArrayInput stream
 	*
-  	* @param fname certificate file path
-    	* @return byteArrayInput stream form of the certificate file path
+	* @param fname certificate file path
+	* @return byteArrayInput stream form of the certificate file path
 	*/
 	public InputStream fullStream(String fname) throws IOException {
-	    FileInputStream fis = new FileInputStream(fname);
-	    DataInputStream dis = new DataInputStream(fis);
-	    byte[] bytes = new byte[dis.available()];
-	    dis.readFully(bytes);
-	    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-	    dis.close();
-	    
-	    return bais;
+		FileInputStream fis = new FileInputStream(fname);
+		DataInputStream dis = new DataInputStream(fis);
+		byte[] bytes = new byte[dis.available()];
+		dis.readFully(bytes);
+		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+		dis.close();
+		return bais;
 	}
-	
 }
