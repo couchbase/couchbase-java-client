@@ -137,20 +137,20 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
-        public Builder binaryServiceEndpoints(final int binaryServiceEndpoints) {
-            super.binaryServiceEndpoints(binaryServiceEndpoints);
+        public Builder binaryEndpoints(final int binaryServiceEndpoints) {
+            super.binaryEndpoints(binaryServiceEndpoints);
             return this;
         }
 
         @Override
-        public Builder viewServiceEndpoints(final int viewServiceEndpoints) {
-            super.viewServiceEndpoints(viewServiceEndpoints);
+        public Builder viewEndpoints(final int viewServiceEndpoints) {
+            super.viewEndpoints(viewServiceEndpoints);
             return this;
         }
 
         @Override
-        public Builder queryServiceEndpoints(final int queryServiceEndpoints) {
-            super.queryServiceEndpoints(queryServiceEndpoints);
+        public Builder queryEndpoints(final int queryServiceEndpoints) {
+            super.queryEndpoints(queryServiceEndpoints);
             return this;
         }
 
