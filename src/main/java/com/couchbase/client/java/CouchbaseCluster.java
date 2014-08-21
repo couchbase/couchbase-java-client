@@ -24,7 +24,6 @@ package com.couchbase.client.java;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.message.CouchbaseResponse;
-import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.DisconnectRequest;
 import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
@@ -50,6 +49,8 @@ public class CouchbaseCluster implements Cluster {
     private final CouchbaseEnvironment environment;
     private final ConnectionString connectionString;
 
+    private final boolean sharedEnvironment;
+
     public static CouchbaseCluster create() {
         return create(DEFAULT_HOST);
     }
@@ -63,7 +64,7 @@ public class CouchbaseCluster implements Cluster {
     }
 
     public static CouchbaseCluster create(final List<String> nodes) {
-        return create(DefaultCouchbaseEnvironment.create(), nodes);
+        return new CouchbaseCluster(DefaultCouchbaseEnvironment.create(), ConnectionString.fromHostnames(nodes), false);
     }
 
     public static CouchbaseCluster create(final CouchbaseEnvironment environment, final String... nodes) {
@@ -71,18 +72,19 @@ public class CouchbaseCluster implements Cluster {
     }
 
     public static CouchbaseCluster create(final CouchbaseEnvironment environment, final List<String> nodes) {
-        return new CouchbaseCluster(environment, ConnectionString.fromHostnames(nodes));
+        return new CouchbaseCluster(environment, ConnectionString.fromHostnames(nodes), true);
     }
 
     public static CouchbaseCluster fromConnectionString(final String connectionString) {
-        return fromConnectionString(DefaultCouchbaseEnvironment.create(), connectionString);
+        return new CouchbaseCluster(DefaultCouchbaseEnvironment.create(), ConnectionString.create(connectionString), false);
     }
 
     public static CouchbaseCluster fromConnectionString(final CouchbaseEnvironment environment, final String connectionString) {
-        return new CouchbaseCluster(environment, ConnectionString.create(connectionString));
+        return new CouchbaseCluster(environment, ConnectionString.create(connectionString), true);
     }
 
-    CouchbaseCluster(final CouchbaseEnvironment environment, final ConnectionString connectionString) {
+    CouchbaseCluster(final CouchbaseEnvironment environment, final ConnectionString connectionString, final boolean sharedEnvironment) {
+        this.sharedEnvironment = sharedEnvironment;
         core = new CouchbaseCore(environment);
         List<String> seedNodes = new ArrayList<String>();
         for (InetSocketAddress node : connectionString.hosts()) {
@@ -124,13 +126,12 @@ public class CouchbaseCluster implements Cluster {
     public Observable<Boolean> disconnect() {
         return core
             .<DisconnectResponse>send(new DisconnectRequest())
-            .map(new Func1<DisconnectResponse, Boolean>() {
-                     @Override
-                     public Boolean call(DisconnectResponse response) {
-                         return response.status() == ResponseStatus.SUCCESS;
-                     }
-                 }
-            );
+            .flatMap(new Func1<DisconnectResponse, Observable<Boolean>>() {
+                @Override
+                public Observable<Boolean> call(DisconnectResponse disconnectResponse) {
+                    return sharedEnvironment ? Observable.just(true) : environment.shutdown();
+                }
+            });
     }
 
     @Override
