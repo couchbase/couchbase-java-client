@@ -1,15 +1,12 @@
 package com.couchbase.client.java.cluster;
 
-/**
- * .
- *
- * @author Michael Nitschinger
- */
+import com.couchbase.client.java.bucket.BucketType;
+
 public interface ClusterBucketSettings {
 
     String name();
 
-    ClusterBucketType type();
+    BucketType type();
 
     int quota();
 
