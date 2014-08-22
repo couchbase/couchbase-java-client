@@ -1,3 +1,24 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
 package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
@@ -7,7 +28,10 @@ import com.couchbase.client.java.query.Query;
 import java.net.URLEncoder;
 
 /**
- * Fluent API for a View Query.
+ * Fluent DSL for a View Query.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
  */
 public class ViewQuery {
 
@@ -43,7 +67,6 @@ public class ViewQuery {
     private final String view;
 
     private boolean development;
-    private boolean withDocs;
 
     private ViewQuery(String design, String view) {
         this.design = design;
@@ -51,6 +74,13 @@ public class ViewQuery {
         params = new String[NUM_PARAMS * 2];
     }
 
+    /**
+     * Creates an new {@link ViewQuery}.
+     *
+     * @param design the name of the design document.
+     * @param view the name of the view.
+     * @return a {@link ViewQuery} DSL.
+     */
     public static ViewQuery from(String design, String view) {
         return new ViewQuery(design, view);
     }
@@ -61,16 +91,6 @@ public class ViewQuery {
 
     public ViewQuery development(boolean development) {
         this.development = true;
-        return this;
-    }
-
-
-    public ViewQuery withDocuments() {
-        return withDocuments(true);
-    }
-
-    public ViewQuery withDocuments(boolean withDocs) {
-        this.withDocs = withDocs;
         return this;
     }
 
@@ -428,10 +448,6 @@ public class ViewQuery {
 
     public boolean isDevelopment() {
     return development;
-    }
-
-    public boolean isWithDocuments() {
-        return withDocs;
     }
 
 }

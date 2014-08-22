@@ -25,115 +25,280 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class JsonArray implements JsonValue, Iterable<Object> {
+/**
+ * Represents a JSON array that can be stored and loaded from Couchbase Server.
+ *
+ * If boxed return values are unboxed, the calling code needs to make sure to handle potential
+ * {@link NullPointerException}s.
+ *
+ * The {@link JsonArray} is backed by a {@link List} and is intended to work similar to it API wise, but to only
+ * allow to store such objects which can be represented by JSON.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
+public class JsonArray extends JsonValue implements Iterable<Object> {
 
-      private final List<Object> content;
+    /**
+     * The backing list of the array.
+     */
+    private final List<Object> content;
 
-      private JsonArray() {
+    /**
+     * Creates a new {@link JsonArray}.
+     */
+    private JsonArray() {
         content = new ArrayList<Object>();
-      }
+    }
 
-      public static JsonArray empty() {
+    /**
+     * Creates a empty {@link JsonArray}.
+     *
+     * @return a empty {@link JsonArray}.
+     */
+    public static JsonArray empty() {
         return new JsonArray();
-      }
+    }
 
+    /**
+     * Creates a empty {@link JsonArray}.
+     *
+     * @return a empty {@link JsonArray}.
+     */
+    public static JsonArray create() {
+        return new JsonArray();
+    }
+
+    /**
+     * Creates a new {@link JsonArray} and populates it with the values supplied.
+     *
+     * If the type is not supported, a {@link IllegalArgumentException} exception is thrown.
+     * @param items the items to be stored in the {@link JsonArray}.
+     * @return a populated {@link JsonArray}.
+     */
     public static JsonArray from(Object... items) {
         JsonArray array = new JsonArray();
         for (Object item : items) {
-            array.add(item);
+            if (checkType(item)) {
+                array.add(item);
+            } else {
+                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
+            }
         }
         return array;
     }
 
-      public Object get(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and does not cast it.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public Object get(int index) {
         return content.get(index);
-      }
+    }
 
-      public JsonArray add(String value) {
+    /**
+     * Append an element to the {@link JsonArray}.
+     *
+     * Note that the type is checked and a {@link IllegalArgumentException} is thrown if not supported.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(Object value) {
+        if (checkType(value)) {
+            content.add(value);
+        } else {
+            throw new IllegalArgumentException("Unsupported type for JsonArray: " + value.getClass());
+        }
+        return this;
+    }
+
+    /**
+     * Append an {@link String} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(String value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public String getString(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link String}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public String getString(int index) {
         return (String) content.get(index);
-      }
+    }
 
-      public JsonArray add(long value) {
+    /**
+     * Append an {@link Long} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(long value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public Long getLong(int index) {
-          return (Long) content.get(index);
-      }
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Long}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public Long getLong(int index) {
+        return (Long) content.get(index);
+    }
 
-      public JsonArray add(int value) {
+    /**
+     * Append an {@link Integer} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(int value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public Integer getInt(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Integer}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public Integer getInt(int index) {
         return (Integer) content.get(index);
-      }
+    }
 
-      public JsonArray add(double value) {
+    /**
+     * Append an {@link Double} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(double value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public Double getDouble(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Double}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public Double getDouble(int index) {
         return (Double) content.get(index);
-      }
+    }
 
-      public JsonArray add(boolean value) {
+    /**
+     * Append an {@link Boolean} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(boolean value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public boolean getBoolean(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Boolean}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public boolean getBoolean(int index) {
         return (Boolean) content.get(index);
-      }
+    }
 
-      public JsonArray add(JsonObject value) {
+    /**
+     * Append an {@link JsonObject} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(JsonObject value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public JsonObject getObject(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link JsonObject}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public JsonObject getObject(int index) {
         return (JsonObject) content.get(index);
-      }
+    }
 
-      public JsonArray add(JsonArray value) {
+    /**
+     * Append an {@link JsonArray} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(JsonArray value) {
         content.add(value);
         return this;
-      }
+    }
 
-      public JsonArray add(Object value) {
-          content.add(value);
-          return this;
-      }
-
-      public JsonArray getArray(int index) {
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link JsonArray}.
+     *
+     * @param index the index of the value.
+     * @return the value if found, or null otherwise.
+     */
+    public JsonArray getArray(int index) {
         return (JsonArray) content.get(index);
-      }
+    }
 
-      public List<Object> toList() {
+    /**
+     * Copies the content of the {@link JsonArray} into a new {@link List} and return it.
+     *
+     * @return the content of the {@link JsonArray} in a new {@link List}.
+     */
+    public List<Object> toList() {
         return new ArrayList<Object>(content);
-      }
+    }
 
-      public boolean isEmpty() {
+    /**
+     * Checks if the {@link JsonArray} is empty or not.
+     *
+     * @return true if it is, false otherwise.
+     */
+    public boolean isEmpty() {
         return content.isEmpty();
-      }
+    }
 
-      public int size() {
+    /**
+     * Returns the size of the {@link JsonArray}.
+     *
+     * @return the size.
+     */
+    public int size() {
         return content.size();
-      }
+    }
 
     @Override
     public Iterator<Object> iterator() {
         return content.iterator();
     }
 
+    /**
+     * Converts the {@link JsonArray} into its JSON string representation.
+     *
+     * @return the JSON string representing this {@link JsonArray}.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

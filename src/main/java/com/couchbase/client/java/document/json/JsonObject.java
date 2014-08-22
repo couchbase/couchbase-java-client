@@ -26,122 +26,292 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Represents a JSON Object, which acts very much like a java Map, but is limited
- * encode the types supported in JSON.
+ * Represents a JSON object that can be stored and loaded from Couchbase Server.
+ *
+ * If boxed return values are unboxed, the calling code needs to make sure to handle potential
+ * {@link NullPointerException}s.
+ *
+ * The {@link JsonObject} is backed by a {@link Map} and is intended to work similar to it API wise, but to only
+ * allow to store such objects which can be represented by JSON.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
  */
-public class JsonObject implements JsonValue {
+public class JsonObject extends JsonValue {
 
-  /**
-   * The map which backs the object itself.
-   */
-  private final Map<String, Object> content;
+    /**
+     * The backing {@link Map} for the object.
+     */
+    private final Map<String, Object> content;
 
-  /**
-   * Creates a new {@link JsonObject}.
-   */
-  private JsonObject() {
-    content = new HashMap<String, Object>();
-  }
+    /**
+     * Private constructor to create the object.
+     */
+    private JsonObject() {
+        content = new HashMap<String, Object>();
+    }
 
-  /**
-   * Factory method encode empty a new and empty {@link JsonObject}.
-   * @return a new {@link JsonObject}.
-   */
-  public static JsonObject empty() {
-    return new JsonObject();
-  }
+    /**
+     * Creates a empty {@link JsonObject}.
+     *
+     * @return a empty {@link JsonObject}.
+     */
+    public static JsonObject empty() {
+        return new JsonObject();
+    }
 
-  public Object get(String name) {
-    return content.get(name);
-  }
+    /**
+     * Creates a empty {@link JsonObject}.
+     *
+     * @return a empty {@link JsonObject}.
+     */
+    public static JsonObject create() {
+        return new JsonObject();
+    }
 
-  public JsonObject put(String name, String value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link Object} value identified by the field name.
+     *
+     * Note that the value is checked and a {@link IllegalArgumentException} is thrown if not supported.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(final String name, final Object value) {
+        if (checkType(value)) {
+            content.put(name, value);
+        } else {
+            throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
+        }
+        return this;
+    }
 
-  public String getString(String name) {
-    return (String) content.get(name);
-  }
+    /**
+     * Retrieves the (potential null) content and not casting its type.
+     *
+     * @param name the key of the field.
+     * @return the value of the field, or null if it does not exist.
+     */
+    public Object get(final String name) {
+        return content.get(name);
+    }
 
-  public JsonObject put(String name, int value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link String} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(final String name, final String value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public Integer getInt(String name) {
-    return (Integer) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link String}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public String getString(String name) {
+        return (String) content.get(name);
+    }
 
-  public JsonObject put(String name, long value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link Integer} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, int value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public Long getLong(String name) {
-      return (Long) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link Integer}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Integer getInt(String name) {
+        return (Integer) content.get(name);
+    }
 
-  public JsonObject put(String name, double value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link Long} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, long value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public Double getDouble(String name) {
-    return (Double) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link Long}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Long getLong(String name) {
+        return (Long) content.get(name);
+    }
 
-  public JsonObject put(String name, boolean value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link Double} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, double value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public Boolean getBoolean(String name) {
-    return (Boolean) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link Double}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Double getDouble(String name) {
+        return (Double) content.get(name);
+    }
 
-  public JsonObject put(String name, JsonObject value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link Boolean} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, boolean value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public JsonObject getObject(String name) {
-    return (JsonObject) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link Boolean}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Boolean getBoolean(String name) {
+        return (Boolean) content.get(name);
+    }
 
-  public JsonObject put(String name, JsonArray value) {
-    content.put(name, value);
-    return this;
-  }
+    /**
+     * Stores a {@link JsonObject} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, JsonObject value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public JsonArray getArray(String name) {
-    return (JsonArray) content.get(name);
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link JsonObject}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public JsonObject getObject(String name) {
+        return (JsonObject) content.get(name);
+    }
 
-  public Set<String> getNames() {
-    return content.keySet();
-  }
+    /**
+     * Stores a {@link JsonArray} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, JsonArray value) {
+        content.put(name, value);
+        return this;
+    }
 
-  public boolean isEmpty() {
-    return content.isEmpty();
-  }
+    /**
+     * Retrieves the value from the field name and casts it to {@link JsonArray}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public JsonArray getArray(String name) {
+        return (JsonArray) content.get(name);
+    }
 
-  public Map<String, Object> toMap() {
-    return new HashMap<String, Object>(content);
-  }
+    /**
+     * Returns a set of field names on the {@link JsonObject}.
+     *
+     * @return the set of names on the object.
+     */
+    public Set<String> getNames() {
+        return content.keySet();
+    }
 
-  public boolean containsKey(String name) {
-     return content.containsKey(name);
-  }
+    /**
+     * Returns true if the {@link JsonObject} is empty, false otherwise.
+     *
+     * @return true if empty, false otherwise.
+     */
+    public boolean isEmpty() {
+        return content.isEmpty();
+    }
 
-  public boolean containsValue(Object value) {
-      return content.containsValue(value);
-  }
+    /**
+     * Creates a copy of the underlying {@link Map} and returns it.
+     *
+     * @return the {@link Map} of the content.
+     */
+    public Map<String, Object> toMap() {
+        return new HashMap<String, Object>(content);
+    }
 
-  public int size() {
-    return content.size();
-  }
+    /**
+     * Checks if the {@link JsonObject} contains the field name.
+     *
+     * @param name the name of the field.
+     * @return true if its contained, false otherwise.
+     */
+    public boolean containsKey(String name) {
+        return content.containsKey(name);
+    }
 
+    /**
+     * Checks if the {@link JsonObject} contains the value.
+     *
+     * @param value the actual value.
+     * @return true if its contained, false otherwise.
+     */
+    public boolean containsValue(Object value) {
+        return content.containsValue(value);
+    }
+
+    /**
+     * The size of the {@link JsonObject}.
+     *
+     * @return the size.
+     */
+    public int size() {
+        return content.size();
+    }
+
+    /**
+     * Converts the {@link JsonObject} into its JSON string representation.
+     *
+     * @return the JSON string representing this {@link JsonObject}.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("{");

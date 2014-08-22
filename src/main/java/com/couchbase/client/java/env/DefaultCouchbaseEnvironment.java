@@ -23,12 +23,20 @@ package com.couchbase.client.java.env;
 
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
+import com.couchbase.client.java.Cluster;
 import rx.Scheduler;
 
 /**
- * .
+ * The default implementation of a {@link CouchbaseEnvironment}.
+ *
+ * This environment is intended to be reused and passed in across {@link Cluster} instances. It is stateful and needs
+ * to be shut down manually if it was passed in by the user. Some threads it manages are non-daemon threads.
+ *
+ * Default settings can be customized through the {@link Builder} or through the setting of system properties. Latter
+ * ones take always precedence and can be used to override builder settings at runtime too.
  *
  * @author Michael Nitschinger
+ * @since 2.0
  */
 public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implements CouchbaseEnvironment {
 
@@ -36,10 +44,20 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
        super(builder);
     }
 
+    /**
+     * Creates a {@link CouchbaseEnvironment} with default settings applied.
+     *
+     * @return a {@link DefaultCouchbaseEnvironment} with default settings.
+     */
     public static DefaultCouchbaseEnvironment create() {
         return builder().build();
     }
 
+    /**
+     * Returns the {@link Builder} to customize environment settings.
+     *
+     * @return the {@link Builder}.
+     */
     public static Builder builder() {
         return new Builder();
     }

@@ -24,25 +24,25 @@ package com.couchbase.client.java.error;
 import com.couchbase.client.core.CouchbaseException;
 
 /**
- * Identifying a CAS mismatch on a replace operation..
+ * Exception identifying that a bucket does not exist.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class CASMismatchException extends CouchbaseException {
+public class BucketDoesNotExistException extends CouchbaseException {
 
-    public CASMismatchException() {
+    public BucketDoesNotExistException() {
     }
 
-    public CASMismatchException(String message) {
+    public BucketDoesNotExistException(String message) {
         super(message);
     }
 
-    public CASMismatchException(String message, Throwable cause) {
+    public BucketDoesNotExistException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public CASMismatchException(Throwable cause) {
+    public BucketDoesNotExistException(Throwable cause) {
         super(cause);
     }
 }

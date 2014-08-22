@@ -25,7 +25,9 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 
+import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.ClusterManager;
+import com.couchbase.client.java.cluster.DefaultBucketSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -49,9 +51,21 @@ public class ClusterDependentTest {
     @BeforeClass
     public static void connect() {
         cluster = CouchbaseCluster.create(seedNode);
+        clusterManager = cluster.clusterManager(adminName, adminPassword).toBlocking().single();
+        boolean exists = clusterManager.hasBucket(bucketName).toBlocking().single();
+        if (!exists) {
+            clusterManager.insertBucket(DefaultBucketSettings
+                .builder()
+                .name("default")
+                .quota(256)
+                .password("")
+                .enableFlush(true)
+                .type(BucketType.COUCHBASE)
+                .build()).toBlocking().single();
+        }
+
         bucket = cluster.openBucket(bucketName, password).toBlocking().single();
         bucket.bucketManager().toBlocking().single().flush().toBlocking().single();
-        clusterManager = cluster.clusterManager(adminName, adminPassword).toBlocking().single();
     }
 
     @AfterClass

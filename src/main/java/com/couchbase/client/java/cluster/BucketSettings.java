@@ -19,30 +19,72 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.error;
+package com.couchbase.client.java.cluster;
 
-import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.java.bucket.BucketType;
 
 /**
- * Identifying a CAS mismatch on a replace operation..
+ * Represents settings for a bucket.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class CASMismatchException extends CouchbaseException {
+public interface BucketSettings {
 
-    public CASMismatchException() {
-    }
+    /**
+     * The name of the bucket.
+     *
+     * @return name of the bucket.
+     */
+    String name();
 
-    public CASMismatchException(String message) {
-        super(message);
-    }
+    /**
+     * The type of the bucket.
+     *
+     * @return type of the bucket.
+     */
+    BucketType type();
 
-    public CASMismatchException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    /**
+     * The bucket quota.
+     *
+     * @return bucket quota.
+     */
+    int quota();
 
-    public CASMismatchException(Throwable cause) {
-        super(cause);
-    }
+    /**
+     * The optional proxy port.
+     *
+     * @return proxy port.
+     */
+    int port();
+
+    /**
+     * The password of the bucket.
+     *
+     * @return password.
+     */
+    String password();
+
+    /**
+     * Number of replicas.
+     *
+     * @return number of replicas.
+     */
+    int replicas();
+
+    /**
+     * If replicas are indexed.
+     *
+     * @return indexing replicas.
+     */
+    boolean indexReplicas();
+
+    /**
+     * If flush is enabled.
+     *
+     * @return flush enabled.
+     */
+    boolean enableFlush();
+
 }

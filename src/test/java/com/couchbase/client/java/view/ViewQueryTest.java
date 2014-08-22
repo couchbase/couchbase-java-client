@@ -43,14 +43,6 @@ public class ViewQueryTest {
         assertEquals("design", query.getDesign());
         assertEquals("view", query.getView());
         assertFalse(query.isDevelopment());
-        assertFalse(query.isWithDocuments());
-        assertTrue(query.toString().isEmpty());
-    }
-
-    @Test
-    public void shouldSetIncludeDocs() {
-        ViewQuery query = ViewQuery.from("design", "view").withDocuments();
-        assertTrue(query.isWithDocuments());
         assertTrue(query.toString().isEmpty());
     }
 

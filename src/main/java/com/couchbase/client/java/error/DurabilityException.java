@@ -24,7 +24,7 @@ package com.couchbase.client.java.error;
 import com.couchbase.client.core.CouchbaseException;
 
 /**
- * .
+ * Raised if the durability requirement could not be met.
  *
  * @author Michael Nitschinger
  */

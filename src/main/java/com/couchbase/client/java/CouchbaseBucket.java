@@ -22,7 +22,6 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
-import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
@@ -31,21 +30,16 @@ import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
-import com.couchbase.client.core.message.config.BucketConfigRequest;
-import com.couchbase.client.core.message.config.BucketConfigResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.java.bucket.BucketInfo;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.CouchbaseBucketManager;
-import com.couchbase.client.java.bucket.DefaultBucketInfo;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.LegacyDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
@@ -56,7 +50,7 @@ import com.couchbase.client.java.query.*;
 import com.couchbase.client.java.transcoder.JsonTranscoder;
 import com.couchbase.client.java.transcoder.LegacyTranscoder;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.transcoder.TranscodingException;
+import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.view.*;
 import rx.Observable;
 import rx.functions.Func1;
@@ -547,7 +541,7 @@ public class CouchbaseBucket implements Bucket {
             .map(new Func1<CounterResponse, LongDocument>() {
                 @Override
                 public LongDocument call(CounterResponse response) {
-                    return new LongDocument(id, expiry, response.value(), response.cas());
+                    return LongDocument.create(id, expiry, response.value(), response.cas());
                 }
             });
     }

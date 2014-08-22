@@ -1,4 +1,4 @@
-package com.couchbase.client.java.view;
+package com.couchbase.client.java.error;
 
 import com.couchbase.client.core.CouchbaseException;
 

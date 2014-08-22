@@ -21,7 +21,6 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.bucket.BucketInfo;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
@@ -310,8 +309,58 @@ public interface Bucket {
      */
     <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
+    /**
+     * Insert a {@link Document} if it does not exist already and watch for durability constraints.
+     *
+     * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original insert has already happened, so the actual
+     * insert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to insert.
+     * @param persistTo the persistence constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo);
 
+    /**
+     * Insert a {@link Document} if it does not exist already and watch for durability constraints.
+     *
+     * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original insert has already happened, so the actual
+     * insert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to insert.
+     * @param replicateTo the replication constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo);
 
     /**
@@ -356,8 +405,56 @@ public interface Bucket {
      */
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
+    /**
+     * Insert or replace a {@link Document} and watch for durability constraints.
+     *
+     * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original upsert has already happened, so the actual
+     * upsert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to upsert.
+     * @param persistTo the persistence constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo);
 
+    /**
+     * Insert or replace a {@link Document} and watch for durability constraints.
+     *
+     * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original upsert has already happened, so the actual
+     * upsert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to upsert.
+     * @param replicateTo the replication constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo);
 
     /**
@@ -406,7 +503,58 @@ public interface Bucket {
      */
     <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
+    /**
+     * Replace a {@link Document} if it does exist and watch for durability constraints.
+     *
+     * This method works exactly like {@link #replace(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The original insert failed because the document is not found: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original replace has already happened, so the actual
+     * replace and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to replace.
+     * @param persistTo the persistence constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo);
+
+    /**
+     * Replace a {@link Document} if it does exist and watch for durability constraints.
+     *
+     * This method works exactly like {@link #replace(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Under the following conditions errors can occur:
+     *
+     * - The original insert failed because the document is not found: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original replace has already happened, so the actual
+     * replace and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to replace.
+     * @param replicateTo the replication constraint to watch.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
     <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo);
 
     <D extends Document<?>> Observable<D> remove(D document);
@@ -443,6 +591,11 @@ public interface Bucket {
     <D extends Document<?>> Observable<D> append(D document);
     <D extends Document<?>> Observable<D> prepend(D document);
 
+    /**
+     * Closes the {@link Bucket}.
+     *
+     * @return an {@link Observable} eventually containing a new {@link Boolean} after close.
+     */
     Observable<Boolean> close();
 
 }

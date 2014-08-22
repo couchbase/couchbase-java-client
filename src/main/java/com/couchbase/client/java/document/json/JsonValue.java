@@ -22,8 +22,45 @@
 package com.couchbase.client.java.document.json;
 
 /**
- * Marker interface for values which can be stored inside a
- * {@link com.couchbase.client.java.document.JsonDocument}.
+ * Represents a JSON value (either a {@link JsonObject} or a {@link JsonArray}.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
  */
-public interface JsonValue {
+public abstract class JsonValue {
+
+    /**
+     * Static factory method to create an empty {@link JsonObject}.
+     *
+     * @return an empty {@link JsonObject}.
+     */
+    public static JsonObject jo() {
+        return JsonObject.create();
+    }
+
+    /**
+     * Static factory method to create an empty {@link JsonArray}.
+     *
+     * @return an empty {@link JsonArray}.
+     */
+    public static JsonArray ja() {
+        return JsonArray.create();
+    }
+
+    /**
+     * Helper method to check if the given item is a supported JSON item.
+     *
+     * @param item the value to check.
+     * @return true if supported, false otherwise.
+     */
+    protected static boolean checkType(Object item) {
+        return item instanceof String
+            || item instanceof Integer
+            || item instanceof Long
+            || item instanceof Double
+            || item instanceof Boolean
+            || item instanceof JsonObject
+            || item instanceof JsonArray;
+    }
+
 }
