@@ -27,6 +27,8 @@ import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
+import com.couchbase.client.core.message.cluster.CloseBucketRequest;
+import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.config.BucketConfigRequest;
@@ -63,6 +65,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class CouchbaseBucket implements Bucket {
 
@@ -695,6 +698,17 @@ public class CouchbaseBucket implements Bucket {
                     } catch (Exception ex) {
                         throw new CouchbaseException("Could not parse bucket info.", ex);
                     }
+                }
+            });
+    }
+
+    @Override
+    public Observable<Boolean> close() {
+        return core.<CloseBucketResponse>send(new CloseBucketRequest(bucket))
+            .map(new Func1<CloseBucketResponse, Boolean>() {
+                @Override
+                public Boolean call(CloseBucketResponse response) {
+                    return response.status().isSuccess();
                 }
             });
     }
