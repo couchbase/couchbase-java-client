@@ -30,8 +30,10 @@ import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.CouchbaseClusterManager;
+import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.transcoder.Transcoder;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -111,13 +113,22 @@ public class CouchbaseCluster implements Cluster {
 
     @Override
     public Observable<Bucket> openBucket(final String name, final String pass) {
+        return openBucket(name, pass, null);
+    }
+
+    @Override
+    public Observable<Bucket> openBucket(final String name, String pass,
+        final List<Transcoder<? extends Document, ?>> transcoders) {
         final String password = pass == null ? "" : pass;
+
+        final List<Transcoder<? extends Document, ?>> trans = transcoders == null
+            ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
         return core
             .send(new OpenBucketRequest(name, password))
             .map(new Func1<CouchbaseResponse, Bucket>() {
                 @Override
                 public Bucket call(CouchbaseResponse response) {
-                    return new CouchbaseBucket(core, name, password);
+                    return new CouchbaseBucket(core, name, password, trans);
                 }
             });
     }

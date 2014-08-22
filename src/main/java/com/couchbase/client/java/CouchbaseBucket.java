@@ -62,28 +62,36 @@ import rx.Observable;
 import rx.functions.Func1;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseBucket implements Bucket {
+
+  private static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
+  private static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
 
   private final String bucket;
   private final String password;
   private final ClusterFacade core;
-  private final Map<Class<?>, Transcoder<?, ?>> transcoders;
+  private final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders;
   private final BucketManager bucketManager;
-  private static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
 
-    public CouchbaseBucket(final ClusterFacade core, final String name, final String password) {
+
+    public CouchbaseBucket(final ClusterFacade core, final String name, final String password,
+        final List<Transcoder<? extends Document, ?>> customTranscoders) {
         bucket = name;
         this.password = password;
         this.core = core;
 
-        transcoders = new HashMap<Class<?>, Transcoder<?, ?>>();
-        transcoders.put(JsonDocument.class, JSON_TRANSCODER);
-        transcoders.put(LegacyDocument.class, new LegacyTranscoder());
+        transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
+        transcoders.put(JSON_TRANSCODER.documentType(), JSON_TRANSCODER);
+        transcoders.put(LEGACY_TRANSCODER.documentType(), LEGACY_TRANSCODER);
+
+        for (Transcoder<? extends Document, ?> custom : customTranscoders) {
+            transcoders.put(custom.documentType(), custom);
+        }
+
         bucketManager = new CouchbaseBucketManager(bucket, password, core);
     }
 
@@ -474,7 +482,6 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Observable<QueryResult> query(final String query) {
-        final Transcoder<?, ?> converter = transcoders.get(JsonDocument.class);
         GenericQueryRequest request = new GenericQueryRequest(query, bucket, password);
         return core
             .<GenericQueryResponse>send(request)

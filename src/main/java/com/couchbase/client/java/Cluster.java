@@ -23,7 +23,12 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.cluster.ClusterManager;
+import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.transcoder.Transcoder;
 import rx.Observable;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a Couchbase Server {@link Cluster}.
@@ -59,6 +64,16 @@ public interface Cluster {
      * @return a {@link Observable} containing the {@link Bucket} reference once opened.
      */
     Observable<Bucket> openBucket(String name, String password);
+
+    /**
+     * Open the given {@link Bucket} with a password and a custom list of transcoders.
+     *
+     * @param name the name of the bucket.
+     * @param password the password of the bucket, can be an empty string.
+     * @param transcoders a list of custom transcoders.
+     * @return a {@link Observable} containing the {@link Bucket} reference once opened.
+     */
+    Observable<Bucket> openBucket(String name, String password, List<Transcoder<? extends Document, ?>> transcoders);
 
     /**
      * Returns a reference to the {@link ClusterManager}.

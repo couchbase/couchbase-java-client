@@ -56,6 +56,11 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
     }
 
     @Override
+    public Class<LegacyDocument> documentType() {
+        return LegacyDocument.class;
+    }
+
+    @Override
     protected LegacyDocument doDecode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status)
         throws Exception {
         byte[] data = content.array();

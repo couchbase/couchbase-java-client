@@ -30,6 +30,11 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
     }
 
     @Override
+    public Class<JsonDocument> documentType() {
+        return JsonDocument.class;
+    }
+
+    @Override
     protected Tuple2<ByteBuf, Integer> doEncode(JsonDocument document) throws Exception {
         String content = jsonObjectToString(document.content());
         int flags = 0;
