@@ -1,11 +1,11 @@
 package com.couchbase.client.java.cluster;
 
-/**
- * .
- *
- * @author Michael Nitschinger
- */
+import rx.Observable;
+
 public interface ClusterManager {
+
+    Observable<ClusterInfo> info();
+
 /*
     Observable<ClusterBucketSettings> getBuckets();
     Observable<ClusterBucketSettings> getBucket(String name);

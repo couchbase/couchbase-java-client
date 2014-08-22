@@ -68,8 +68,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseBucket implements Bucket {
 
-  private static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
-  private static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
+  public static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
+  public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
 
   private final String bucket;
   private final String password;
@@ -691,22 +691,6 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target) {
         return remove(id, PersistTo.NONE, replicateTo, target);
-    }
-
-    @Override
-    public Observable<BucketInfo> info() {
-        return core
-            .<BucketConfigResponse>send(new BucketConfigRequest("/pools/default/buckets/", null, bucket, password))
-            .map(new Func1<BucketConfigResponse, BucketInfo>() {
-                @Override
-                public BucketInfo call(BucketConfigResponse response) {
-                    try {
-                        return DefaultBucketInfo.create(JSON_TRANSCODER.stringToJsonObject(response.config()));
-                    } catch (Exception ex) {
-                        throw new CouchbaseException("Could not parse bucket info.", ex);
-                    }
-                }
-            });
     }
 
     @Override

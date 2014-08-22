@@ -443,8 +443,6 @@ public interface Bucket {
     <D extends Document<?>> Observable<D> append(D document);
     <D extends Document<?>> Observable<D> prepend(D document);
 
-    Observable<BucketInfo> info();
-
     Observable<Boolean> close();
 
 }

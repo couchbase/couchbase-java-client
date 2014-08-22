@@ -1,11 +1,14 @@
 package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.GetRequest;
 import com.couchbase.client.core.message.binary.GetResponse;
 import com.couchbase.client.core.message.binary.UpsertRequest;
+import com.couchbase.client.core.message.config.BucketConfigRequest;
+import com.couchbase.client.core.message.config.BucketConfigResponse;
 import com.couchbase.client.core.message.config.FlushRequest;
 import com.couchbase.client.core.message.config.FlushResponse;
 import com.couchbase.client.core.message.config.GetDesignDocumentsRequest;
@@ -13,6 +16,7 @@ import com.couchbase.client.core.message.config.GetDesignDocumentsResponse;
 import com.couchbase.client.core.message.view.*;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.CouchbaseBucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.transcoder.JsonTranscoder;
@@ -36,13 +40,29 @@ public class CouchbaseBucketManager implements BucketManager {
     private final ClusterFacade core;
     private final String bucket;
     private final String password;
-    private final JsonTranscoder transcoder = new JsonTranscoder();
 
     public CouchbaseBucketManager(String bucket, String password, ClusterFacade core) {
         this.bucket = bucket;
         this.password = password;
         this.core = core;
     }
+
+    @Override
+    public Observable<BucketInfo> info() {
+        return core
+            .<BucketConfigResponse>send(new BucketConfigRequest("/pools/default/buckets/", null, bucket, password))
+            .map(new Func1<BucketConfigResponse, BucketInfo>() {
+                @Override
+                public BucketInfo call(BucketConfigResponse response) {
+                    try {
+                        return DefaultBucketInfo.create(CouchbaseBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
+                    } catch (Exception ex) {
+                        throw new CouchbaseException("Could not parse bucket info.", ex);
+                    }
+                }
+            });
+    }
+
 
     @Override
     public Observable<Boolean> flush() {
@@ -83,7 +103,7 @@ public class CouchbaseBucketManager implements BucketManager {
                 public Observable<DesignDocument> call(GetDesignDocumentsResponse response) {
                     JsonObject converted = null;
                     try {
-                        converted = transcoder.stringToJsonObject(response.content());
+                        converted = CouchbaseBucket.JSON_TRANSCODER.stringToJsonObject(response.content());
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode design document.", e);
                     }
@@ -125,7 +145,7 @@ public class CouchbaseBucketManager implements BucketManager {
                 public DesignDocument call(GetDesignDocumentResponse response) {
                     JsonObject converted = null;
                     try {
-                        converted = transcoder.stringToJsonObject(response.content().toString(CharsetUtil.UTF_8));
+                        converted = CouchbaseBucket.JSON_TRANSCODER.stringToJsonObject(response.content().toString(CharsetUtil.UTF_8));
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode design document.", e);
                     }
@@ -164,7 +184,7 @@ public class CouchbaseBucketManager implements BucketManager {
     public Observable<DesignDocument> upsertDesignDocument(final DesignDocument designDocument, boolean development) {
         String body = null;
         try {
-            body = transcoder.jsonObjectToString(designDocument.toJsonObject());
+            body = CouchbaseBucket.JSON_TRANSCODER.jsonObjectToString(designDocument.toJsonObject());
         } catch (Exception e) {
             throw new TranscodingException("Could not encode design document: ", e);
         }

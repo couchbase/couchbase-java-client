@@ -14,7 +14,7 @@ public class BucketInfoTest extends ClusterDependentTest  {
 
     @Test
     public void shouldLoadBucketInfo() {
-        BucketInfo info = bucket().info().toBlocking().single();
+        BucketInfo info = bucket().bucketManager().toBlocking().single().info().toBlocking().single();
 
         assertEquals(BucketType.COUCHBASE, info.type());
         assertEquals(bucketName(), info.name());

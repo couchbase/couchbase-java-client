@@ -1,14 +1,23 @@
 package com.couchbase.client.java.cluster;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.message.config.ClusterConfigRequest;
+import com.couchbase.client.core.message.config.ClusterConfigResponse;
+import com.couchbase.client.core.message.internal.AddNodeRequest;
+import com.couchbase.client.core.message.internal.AddNodeResponse;
+import com.couchbase.client.core.message.internal.AddServiceRequest;
+import com.couchbase.client.core.message.internal.AddServiceResponse;
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.ConnectionString;
+import com.couchbase.client.java.CouchbaseBucket;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import rx.Observable;
+import rx.functions.Func1;
 
-/**
- * .
- *
- * @author Michael Nitschinger
- */
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class CouchbaseClusterManager implements ClusterManager {
 
     private final ClusterFacade core;
@@ -29,6 +38,28 @@ public class CouchbaseClusterManager implements ClusterManager {
     public static CouchbaseClusterManager create(final String username, final String password,
         final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
         return new CouchbaseClusterManager(username, password, connectionString, environment, core);
+    }
+
+    @Override
+    public Observable<ClusterInfo> info() {
+        return
+            ensureServiceEnabled()
+            .flatMap(new Func1<Boolean, Observable<ClusterConfigResponse>>() {
+                @Override
+                public Observable<ClusterConfigResponse> call(Boolean aBoolean) {
+                    return core.send(new ClusterConfigRequest(username, password));
+                }
+            })
+            .map(new Func1<ClusterConfigResponse, ClusterInfo>() {
+                @Override
+                public ClusterInfo call(ClusterConfigResponse response) {
+                    try {
+                        return new DefaultClusterInfo(CouchbaseBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
+                    } catch (Exception e) {
+                        throw new CouchbaseException("Could not decode cluster info.", e);
+                    }
+                }
+            });
     }
 
     /*
@@ -72,13 +103,37 @@ public class CouchbaseClusterManager implements ClusterManager {
     @Override
     public Observable<ClusterBucketSettings> updateBucket(ClusterBucketSettings bucketSettings) {
         return null;
-    }
+    }*/
 
     private Observable<Boolean> ensureServiceEnabled() {
-        int port = environment.properties().sslEnabled()
-            ? environment.properties().bootstrapHttpSslPort() : environment.properties().bootstrapHttpDirectPort();
-        InetAddress hostname = connectionString.hosts().get(0).getAddress();
-        return core.<AddServiceResponse>send(new AddServiceRequest(ServiceType.CONFIG, username, password, port, hostname))
+        return Observable
+            .just(connectionString.hosts().get(0).getHostName())
+            .map(new Func1<String, InetAddress>() {
+                @Override
+                public InetAddress call(String hostname) {
+                    try {
+                        return InetAddress.getByName(hostname);
+                    } catch(UnknownHostException e) {
+                        throw new CouchbaseException(e);
+                    }
+                }
+            })
+            .flatMap(new Func1<InetAddress, Observable<AddServiceResponse>>() {
+                @Override
+                public Observable<AddServiceResponse> call(final InetAddress hostname) {
+                    return core
+                        .<AddNodeResponse>send(new AddNodeRequest(hostname))
+                        .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
+                            @Override
+                            public Observable<AddServiceResponse> call(AddNodeResponse response) {
+                                int port = environment.sslEnabled()
+                                    ? environment.bootstrapHttpSslPort() : environment.bootstrapHttpDirectPort();
+                                return core.send(new AddServiceRequest(ServiceType.CONFIG, username, password,
+                                    port, hostname));
+                            }
+                        });
+                }
+            })
             .map(new Func1<AddServiceResponse, Boolean>() {
                 @Override
                 public Boolean call(AddServiceResponse addServiceResponse) {
@@ -89,5 +144,5 @@ public class CouchbaseClusterManager implements ClusterManager {
                 }
             });
     }
-    */
+
 }
