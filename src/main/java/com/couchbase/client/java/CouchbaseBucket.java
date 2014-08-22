@@ -22,19 +22,24 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.binary.*;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
+import com.couchbase.client.core.message.config.BucketConfigRequest;
+import com.couchbase.client.core.message.config.BucketConfigResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.java.bucket.BucketInfo;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.CouchbaseBucketManager;
+import com.couchbase.client.java.bucket.DefaultBucketInfo;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
@@ -676,5 +681,21 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target) {
         return remove(id, PersistTo.NONE, replicateTo, target);
+    }
+
+    @Override
+    public Observable<BucketInfo> info() {
+        return core
+            .<BucketConfigResponse>send(new BucketConfigRequest("/pools/default/buckets/", null, bucket, password))
+            .map(new Func1<BucketConfigResponse, BucketInfo>() {
+                @Override
+                public BucketInfo call(BucketConfigResponse response) {
+                    try {
+                        return DefaultBucketInfo.create(JSON_TRANSCODER.stringToJsonObject(response.config()));
+                    } catch (Exception ex) {
+                        throw new CouchbaseException("Could not parse bucket info.", ex);
+                    }
+                }
+            });
     }
 }
