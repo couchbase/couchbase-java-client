@@ -52,7 +52,7 @@ repositories {
 }
 
 ext {
-    coreVersion = '1.0.0-SNAPSHOT'
+    coreVersion = '1.0.0-beta'
 
     slf4jVersion = '1.7.7'
     commonsVersion = '1.1.3'
