@@ -257,6 +257,7 @@ public class CouchbaseClient extends MemcachedClient
     throws IOException {
     super(cf, AddrUtil.getAddresses(cf.getVBucketConfig().getServers()));
     getLogger().info(cf.toString());
+    getLogger().debug(Diagnostics.collectAndFormat());
 
     cbConnFactory = cf;
 
