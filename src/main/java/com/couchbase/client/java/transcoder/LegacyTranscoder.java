@@ -19,6 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
+
 package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.core.lang.Tuple;
@@ -183,7 +184,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
         return Tuple.create(encoded, flags);
     }
 
-    private static byte[] encodeNum(long l, int maxBytes) {
+    public static byte[] encodeNum(long l, int maxBytes) {
         byte[] rv = new byte[maxBytes];
         for (int i = 0; i < rv.length; i++) {
             int pos = rv.length - i - 1;

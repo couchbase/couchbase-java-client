@@ -24,7 +24,7 @@ package com.couchbase.client.java;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.LongDocument;
+import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
@@ -648,12 +648,12 @@ public interface Bucket {
     Boolean touch(String id, int expiry, long timeout, TimeUnit timeUnit);
     <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit);
 
-    LongDocument counter(String id, long delta);
-    LongDocument counter(String id, long delta, long initial);
-    LongDocument counter(String id, long delta, long initial, int expiry);
-    LongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit);
-    LongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit);
-    LongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit);
+    JsonLongDocument counter(String id, long delta);
+    JsonLongDocument counter(String id, long delta, long initial);
+    JsonLongDocument counter(String id, long delta, long initial, int expiry);
+    JsonLongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit);
+    JsonLongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit);
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit);
 
     BucketManager bucketManager();
 

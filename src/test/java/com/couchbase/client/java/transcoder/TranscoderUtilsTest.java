@@ -19,53 +19,44 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.document.json;
+package com.couchbase.client.java.transcoder;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Represents a JSON value (either a {@link JsonObject} or a {@link JsonArray}.
+ * Verifies the functionality of {@link TranscoderUtils}.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
-public abstract class JsonValue {
+public class TranscoderUtilsTest {
 
-    /**
-     * Represents a Json "null".
-     */
-    public static JsonNull NULL = JsonNull.INSTANCE;
-
-    /**
-     * Static factory method to create an empty {@link JsonObject}.
-     *
-     * @return an empty {@link JsonObject}.
-     */
-    public static JsonObject jo() {
-        return JsonObject.create();
+    @Test
+    public void testHasCommonFlags() {
+        assertFalse(TranscoderUtils.hasCommonFlags(4));
+        assertTrue(TranscoderUtils.hasCommonFlags(4 << 24));
     }
 
-    /**
-     * Static factory method to create an empty {@link JsonArray}.
-     *
-     * @return an empty {@link JsonArray}.
-     */
-    public static JsonArray ja() {
-        return JsonArray.create();
+    @Test
+    public void testExtractCommonFlags() {
+        assertEquals(4, TranscoderUtils.extractCommonFlags(4 << 24));
     }
 
-    /**
-     * Helper method to check if the given item is a supported JSON item.
-     *
-     * @param item the value to check.
-     * @return true if supported, false otherwise.
-     */
-    protected static boolean checkType(Object item) {
-        return item instanceof String
-            || item instanceof Integer
-            || item instanceof Long
-            || item instanceof Double
-            || item instanceof Boolean
-            || item instanceof JsonObject
-            || item instanceof JsonArray;
+    @Test
+    public void testCreateCommonFlags() {
+        assertEquals(2 << 24, TranscoderUtils.createCommonFlags(2));
+    }
+
+    @Test
+    public void testHasJsonFlags() {
+        assertTrue(TranscoderUtils.hasJsonFlags(0));
+        assertTrue(TranscoderUtils.hasJsonFlags(2 << 24));
+        assertFalse(TranscoderUtils.hasJsonFlags(1));
+        assertFalse(TranscoderUtils.hasJsonFlags(4 << 24));
     }
 
 }

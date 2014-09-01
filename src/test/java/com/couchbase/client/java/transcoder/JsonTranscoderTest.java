@@ -21,192 +21,180 @@
  */
 package com.couchbase.client.java.transcoder;
 
+import com.couchbase.client.core.lang.Tuple2;
+import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.TranscodingException;
 import org.junit.Before;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests which verify the functionality for the {@link JsonTranscoder}.
  */
 public class JsonTranscoderTest {
 
-  private JsonTranscoder converter;
+    private static final ObjectMapper CONTROL_MAPPER = new ObjectMapper();
+    private JsonTranscoder converter;
 
-  @Before
-  public void setup() {
-    converter = new JsonTranscoder();
-  }
-/*
-  @Test
-  public void shouldEncodeEmptyJsonObject() {
-    JsonObject object = JsonObject.empty();
-    ByteBuf buf = converter.encode(object);
-    assertEquals("{}", buf.toString(CharsetUtil.UTF_8));
-  }
+    private static Map<String, Object> readJsonIntoMap(final ByteBuf raw) throws Exception {
+        return CONTROL_MAPPER.readValue(
+            raw.toString(CharsetUtil.UTF_8),
+            CONTROL_MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class)
+        );
+    }
 
-  @Test
-  public void shouldDecodeEmptyJsonObject() {
-    ByteBuf buf = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
-    assertTrue(object.isEmpty());
-  }
+    @Before
+    public void setup() {
+        converter = new JsonTranscoder();
+    }
 
-  @Test
-  public void shouldEncodeEmptyJsonArray() {
-    JsonObject object = JsonObject.empty();
-    object.put("array", JsonArray.empty());
-    ByteBuf buf = converter.encode(object);
-    assertEquals("{\"array\":[]}", buf.toString(CharsetUtil.UTF_8));
-  }
+    @Test
+    public void shouldEncodeEmptyJsonObject() {
+        JsonObject object = JsonObject.empty();
 
-  @Test
-  public void shouldDecodeEmptyJsonArray() {
-    ByteBuf buf = Unpooled.copiedBuffer("{\"array\":[]}", CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
-    assertFalse(object.isEmpty());
-    assertTrue(object.getArray("array") instanceof JsonArray);
-    assertTrue(object.getArray("array").isEmpty());
-  }
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(JsonDocument.create("id", object));
+        assertEquals("{}", encoded.value1().toString(CharsetUtil.UTF_8));
+        assertEquals(TranscoderUtils.JSON_COMPAT_FLAGS, (long) encoded.value2());
+    }
 
-  @Test
-  public void shouldEncodeSimpleJsonObject() {
-    JsonObject object = JsonObject.empty();
-    object.put("string", "Hello World");
-    object.put("integer", 1);
-    object.put("long", Long.MAX_VALUE);
-    object.put("double", 11.3322);
-    object.put("boolean", true);
+    @Test
+    public void shouldDecodeEmptyJsonObject() {
+        ByteBuf content = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
+        assertTrue(decoded.content().isEmpty());
+    }
 
-    ByteBuf buf = converter.encode(object);
-    String expected = "{\"integer\":1,\"string\":\"Hello World\",\"boolean\":" +
-      "true,\"double\":11.3322,\"long\":9223372036854775807}";
-    assertEquals(expected, buf.toString(CharsetUtil.UTF_8));
-  }
+    @Test(expected = TranscodingException.class)
+    public void shouldFailToDecodeWithWrongOldFlags() {
+        ByteBuf content = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
+        int wrongFlags = 1234;
+        converter.decode("id", content, 0, 0, wrongFlags, ResponseStatus.SUCCESS);
+    }
 
-  @Test
-  public void shouldDecodeSimpleJsonObject() {
-    String input = "{\"integer\":1,\"string\":\"Hello World\",\"boolean\":" +
-      "true,\"double\":11.3322,\"long\":9223372036854775807}";
-    ByteBuf buf = Unpooled.copiedBuffer(input, CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
+    @Test(expected = TranscodingException.class)
+    public void shouldFailToDecodeWithWrongCommonFlags() {
+        ByteBuf content = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
+        int wrongFlags = TranscoderUtils.BINARY_COMMON_FLAGS;
+        converter.decode("id", content, 0, 0, wrongFlags, ResponseStatus.SUCCESS);
+    }
 
-    assertEquals(1, object.getInt("integer"));
-    assertEquals("Hello World", object.getString("string"));
-    assertEquals(Long.MAX_VALUE, object.getLong("long"));
-    assertEquals(11.3322, object.getDouble("double"), 0);
-    assertTrue(object.getBoolean("boolean"));
-  }
+    @Test
+    public void shouldEncodeObjectWithEmptyArray() {
+        JsonObject object = JsonObject.create();
+        object.put("array", JsonArray.create());
 
-  @Test
-  public void shouldEncodeSimpleJsonArray() {
-    JsonArray array = JsonArray.empty();
-    array.add("Hello World");
-    array.add(1);
-    array.add(Long.MAX_VALUE);
-    array.add(11.3322);
-    array.add(false);
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(JsonDocument.create("id", object));
+        assertEquals("{\"array\":[]}", encoded.value1().toString(CharsetUtil.UTF_8));
+        assertEquals(TranscoderUtils.JSON_COMPAT_FLAGS, (long) encoded.value2());
+    }
 
-    ByteBuf buf = converter.encode(JsonObject.empty().put("array", array));
-    String expected = "{\"array\":[\"Hello World\",1,9223372036854775807," +
-      "11.3322,false]}";
-    assertEquals(expected, buf.toString(CharsetUtil.UTF_8));
-  }
 
-  @Test
-  public void shouldDecodeSimpleJsonArray() {
-    String input = "{\"array\":[\"Hello World\",1,9223372036854775807," +
-      "11.3322,false]}";
-    ByteBuf buf = Unpooled.copiedBuffer(input, CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
+    @Test
+    public void shouldDecodeObjectWithEmptyArray() {
+        ByteBuf content = Unpooled.copiedBuffer("{\"array\":[]}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
 
-    JsonArray array = object.getArray("array");
-    assertEquals("Hello World", array.getString(0));
-    assertEquals(1, array.getInt(1));
-    assertEquals(Long.MAX_VALUE, array.getLong(2));
-    assertEquals(11.3322, array.getDouble(3), 0);
-    assertFalse(array.getBoolean(4));
-  }
+        assertFalse(decoded.content().isEmpty());
+        assertEquals(1, decoded.content().size());
+        assertTrue(decoded.content().getArray("array").isEmpty());
+    }
 
-  @Test
-  public void shouldEncodeNestedJsonObjects() {
-    JsonObject inner = JsonObject.empty().put("foo", "bar");
-    JsonObject object = JsonObject
-      .empty()
-      .put("object", JsonObject.empty().put("inner", inner));
+    @Test
+    public void shouldEncodeMixedJsonValues() throws Exception {
+        JsonObject object = JsonObject.create();
+        object.put("string", "Hello World");
+        object.put("integer", 1);
+        object.put("long", Long.MAX_VALUE);
+        object.put("double", 11.3322);
+        object.put("boolean", true);
 
-    ByteBuf buf = converter.encode(object);
-    String expected = "{\"object\":{\"inner\":{\"foo\":\"bar\"}}}";
-    assertEquals(expected, buf.toString(CharsetUtil.UTF_8));
-  }
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(JsonDocument.create("id", object));
+        Map<String, Object> control = readJsonIntoMap(encoded.value1());
 
-  @Test
-  public void shouldDecodeNestedJsonObjects() {
-    String input = "{\"object\":{\"inner\":{\"foo\":\"bar\"}}}";
-    ByteBuf buf = Unpooled.copiedBuffer(input, CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
+        assertEquals(5, control.size());
+        assertEquals("Hello World", control.get("string"));
+        assertEquals(1, control.get("integer"));
+        assertEquals(Long.MAX_VALUE, control.get("long"));
+        assertEquals(11.3322, control.get("double"));
+        assertEquals(true, control.get("boolean"));
+        assertEquals(TranscoderUtils.JSON_COMPAT_FLAGS, (long) encoded.value2());
+    }
 
-    assertEquals(1, object.size());
-    assertEquals(1, object.getObject("object").size());
-    assertEquals("bar", object.getObject("object").getObject("inner")
-      .get("foo"));
-  }
+    @Test
+    public void shouldDecodeMixedJsonValues() throws Exception {
+        ByteBuf content = Unpooled.copiedBuffer("{\"boolean\":true,\"integer\":1,\"string\":\"Hello World\"," +
+            "\"double\":11.3322,\"long\":9223372036854775807}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
+        JsonObject found = decoded.content();
 
-  @Test
-  public void shouldEncodeNestedJsonArrays() {
-    ByteBuf buf = converter.encode(JsonObject.empty().put("inner", JsonArray
-      .empty().add(JsonArray.empty())));
-    String expected = "{\"inner\":[[]]}";
-    assertEquals(expected, buf.toString(CharsetUtil.UTF_8));
-  }
+        assertFalse(found.isEmpty());
+        assertEquals(5, found.size());
+        assertEquals(true, found.getBoolean("boolean"));
+        assertEquals(1, (int) found.getInt("integer"));
+        assertEquals("Hello World", found.getString("string"));
+        assertEquals(11.3322, found.getDouble("double"), 0);
+        assertEquals(Long.MAX_VALUE, (long) found.getLong("long"));
+    }
 
-  @Test
-  public void shouldDecodeNestedJsonArray() {
-    String input = "{\"inner\":[[]]}";
-    ByteBuf buf = Unpooled.copiedBuffer(input, CharsetUtil.UTF_8);
-    JsonObject object = converter.decode(buf);
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldEncodeNestedObjects() throws Exception {
+        JsonObject object = JsonObject.create();
+        object.put("empty", JsonObject.create());
+        object.put("nested", JsonObject.create().put("item", JsonArray.from("foo", "bar", 1)));
 
-    assertEquals(1, object.size());
-    assertEquals(1, object.getArray("inner").size());
-    assertTrue(object.getArray("inner").getArray(0).isEmpty());
-  }
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(JsonDocument.create("id", object));
+        Map<String, Object> control = readJsonIntoMap(encoded.value1());
 
-  @Test
-  public void shouldEncodeMixedNestedJsonValues() {
-    JsonArray children = JsonArray.empty()
-      .add(JsonObject.empty().put("name", "Jane Doe").put("age", 25))
-      .add(JsonObject.empty().put("name", "Tom Doe").put("age", 13));
+        assertEquals(2, control.size());
+        assertTrue(((Map) control.get("empty")).isEmpty());
 
-    JsonObject user = JsonObject.empty()
-      .put("firstname", "John")
-      .put("lastname", "Doe")
-      .put("colors", JsonArray.empty().add("red").add("blue"))
-      .put("children", children)
-      .put("active", true);
+        Map<String, Object> nested = (Map<String, Object>) control.get("nested");
+        assertFalse(nested.isEmpty());
+        assertEquals(1, nested.size());
+        assertEquals(3, ((List) nested.get("item")).size());
+        assertEquals(TranscoderUtils.JSON_COMPAT_FLAGS, (long) encoded.value2());
+    }
 
-    String expected = "{\"colors\":[\"red\",\"blue\"],\"active\":true," +
-      "\"children\":[{\"age\":25,\"name\":\"Jane Doe\"},{\"age\":13,\"name\":" +
-      "\"Tom Doe\"}],\"lastname\":\"Doe\",\"firstname\":\"John\"}";
-    ByteBuf buf = converter.encode(user);
-    assertEquals(expected, buf.toString(CharsetUtil.UTF_8));
-  }
+    @Test
+    public void shouldDecodeNestedObjects() {
+        ByteBuf content = Unpooled.copiedBuffer("{\"nested\":{\"item\":[\"foo\",\"bar\",1]},\"empty\":{}}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
 
-  @Test
-  public void shouldDecodeMixedNestedJsonValues() {
-    String input = "{\"colors\":[\"red\",\"blue\"],\"active\":true," +
-      "\"children\":[{\"age\":25,\"name\":\"Jane Doe\"},{\"age\":13,\"name\":" +
-      "\"Tom Doe\"}],\"lastname\":\"Doe\",\"firstname\":\"John\"}";
-    ByteBuf buf = Unpooled.copiedBuffer(input, CharsetUtil.UTF_8);
-    JsonObject user = converter.decode(buf);
+        assertFalse(decoded.content().isEmpty());
+        assertFalse(decoded.content().getObject("nested").isEmpty());
+        assertEquals(3, decoded.content().getObject("nested").getArray("item").size());
+    }
 
-    assertEquals("John", user.getString("firstname"));
-    assertEquals("Doe", user.getString("lastname"));
-    assertEquals(2, user.getArray("colors").size());
-    assertEquals("red", user.getArray("colors").get(0));
-    assertEquals("blue", user.getArray("colors").get(1));
-    assertEquals(true, user.getBoolean("active"));
+    @Test
+    public void shouldEncodeNestedArrays() throws Exception {
+        JsonObject object = JsonObject.empty();
+        object.put("1", JsonArray.create().add(JsonArray.create().add(JsonArray.create().add("Hello World"))));
 
-    JsonObject child0 = user.getArray("children").getObject(0);
-    JsonObject child1 = user.getArray("children").getObject(1);
-    assertEquals("Jane Doe", child0.getString("name"));
-    assertEquals("Tom Doe", child1.getString("name"));
-  }*/
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(JsonDocument.create("id", object));
+        assertEquals("{\"1\":[[[\"Hello World\"]]]}", encoded.value1().toString(CharsetUtil.UTF_8));
+        assertEquals(TranscoderUtils.JSON_COMPAT_FLAGS, (long) encoded.value2());
+    }
 
+    @Test
+    public void shouldDecodeNestedArray() {
+        ByteBuf content = Unpooled.copiedBuffer("{\"1\":[[[\"Hello World\"]]]}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
+
+        assertFalse(decoded.content().isEmpty());
+        assertFalse(decoded.content().getArray("1").isEmpty());
+        assertEquals("Hello World", decoded.content().getArray("1").getArray(0).getArray(0).getString(0));
+    }
 }

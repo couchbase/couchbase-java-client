@@ -6,7 +6,7 @@ import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.DefaultBucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.LongDocument;
+import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.DefaultQueryResult;
@@ -680,22 +680,22 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public LongDocument counter(String id, long delta) {
+    public JsonLongDocument counter(String id, long delta) {
         return counter(id, delta, binaryTimeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public LongDocument counter(String id, long delta, long initial) {
+    public JsonLongDocument counter(String id, long delta, long initial) {
         return counter(id, delta, initial, binaryTimeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public LongDocument counter(String id, long delta, long initial, int expiry) {
+    public JsonLongDocument counter(String id, long delta, long initial, int expiry) {
         return counter(id, delta, initial, expiry, binaryTimeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public LongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit) {
+    public JsonLongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit) {
         return asyncBucket
             .counter(id, delta)
             .timeout(timeout, timeUnit)
@@ -704,7 +704,7 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public LongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit) {
+    public JsonLongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit) {
         return asyncBucket
             .counter(id, delta, initial)
             .timeout(timeout, timeUnit)
@@ -713,7 +713,7 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public LongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit) {
+    public JsonLongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit) {
         return asyncBucket
             .counter(id, delta, initial, expiry)
             .timeout(timeout, timeUnit)

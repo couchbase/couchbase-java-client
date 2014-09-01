@@ -40,17 +40,14 @@ import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.LongDocument;
+import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.error.CASMismatchException;
-import com.couchbase.client.java.error.DocumentAlreadyExistsException;
-import com.couchbase.client.java.error.DocumentDoesNotExistException;
-import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.*;
+import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
 import com.couchbase.client.java.transcoder.JsonTranscoder;
 import com.couchbase.client.java.transcoder.LegacyTranscoder;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.view.*;
 import rx.Observable;
 import rx.functions.Func1;
@@ -62,7 +59,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
-  public static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
+  public static final JsonTranscoder JSON_OBJECT_TRANSCODER = new JsonTranscoder();
+  public static final JsonArrayTranscoder JSON_ARRAY_TRANSCODER = new JsonArrayTranscoder();
+
   public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
 
   private final String bucket;
@@ -79,7 +78,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         this.core = core;
 
         transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
-        transcoders.put(JSON_TRANSCODER.documentType(), JSON_TRANSCODER);
+        transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);
         transcoders.put(LEGACY_TRANSCODER.documentType(), LEGACY_TRANSCODER);
 
         for (Transcoder<? extends Document, ?> custom : customTranscoders) {
@@ -432,7 +431,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 return JsonObject.empty();
                             }
                             try {
-                                return JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
                             } catch (Exception e) {
                                 throw new TranscodingException("Could not decode View Info.", e);
                             }
@@ -459,7 +458,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 public AsyncViewRow call(final ByteBuf byteBuf) {
                                     JsonObject doc;
                                     try {
-                                        doc = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                        doc = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
                                     } catch (Exception e) {
                                         throw new TranscodingException("Could not decode View Info.", e);
                                     }
@@ -491,7 +490,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public AsyncQueryRow call(ByteBuf byteBuf) {
                             try {
-                                JsonObject value = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
                                 return new DefaultAsyncQueryRow(value);
                             } catch (Exception e) {
                                 throw new TranscodingException("Could not decode View Info.", e);
@@ -502,7 +501,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public JsonObject call(ByteBuf byteBuf) {
                             try {
-                                return JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
                             } catch (Exception e) {
                                 throw new TranscodingException("Could not decode View Info.", e);
                             }
@@ -516,7 +515,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                             @Override
                             public AsyncQueryResult call(ByteBuf byteBuf) {
                                 try {
-                                    JsonObject error = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                    JsonObject error = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
                                     return new DefaultAsyncQueryResult(rows, info, error, response.status().isSuccess());
                                 } catch (Exception e) {
                                     throw new TranscodingException("Could not decode View Info.", e);
@@ -530,23 +529,23 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<LongDocument> counter(String id, long delta) {
+    public Observable<JsonLongDocument> counter(String id, long delta) {
         return counter(id, delta, delta);
     }
 
     @Override
-    public Observable<LongDocument> counter(String id, long delta, long initial) {
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial) {
         return counter(id, delta, initial, 0);
     }
 
     @Override
-    public Observable<LongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
+    public Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
         return core
             .<CounterResponse>send(new CounterRequest(id, initial, delta, expiry, bucket))
-            .map(new Func1<CounterResponse, LongDocument>() {
+            .map(new Func1<CounterResponse, JsonLongDocument>() {
                 @Override
-                public LongDocument call(CounterResponse response) {
-                    return LongDocument.create(id, expiry, response.value(), response.cas());
+                public JsonLongDocument call(CounterResponse response) {
+                    return JsonLongDocument.create(id, expiry, response.value(), response.cas());
                 }
             });
     }

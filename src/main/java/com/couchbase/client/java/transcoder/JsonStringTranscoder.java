@@ -27,61 +27,48 @@ import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.document.JsonStringDocument;
 import com.couchbase.client.java.error.TranscodingException;
 
 /**
- * A transcoder to encode and decode {@link JsonDocument}s.
+ * A transcoder to encode and decode {@link JsonStringDocument}s.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject> {
+public class JsonStringTranscoder extends AbstractTranscoder<JsonStringDocument, String> {
 
-    public JsonTranscoder() {
+    @Override
+    protected JsonStringDocument doDecode(String id, ByteBuf content, long cas, int expiry, int flags,
+        ResponseStatus status) throws Exception {
+        String decoded = content.toString(CharsetUtil.UTF_8);
+        if (TranscoderUtils.hasCommonFlags(flags) && flags == TranscoderUtils.JSON_COMMON_FLAGS) {
+            decoded = decoded.substring(1, decoded.length() - 1);
+        } else if (flags == 0) {
+            if (decoded.startsWith("\"") && decoded.endsWith("\"")) {
+                decoded = decoded.substring(1, decoded.length() - 1);
+            }
+        } else {
+            throw new TranscodingException("Flags (0x" + Integer.toHexString(flags) + ") indicate non " +
+                "JsonStringDocument id " + id + ", could not decode.");
+        }
+
+        return newDocument(id, expiry, decoded, cas);
     }
 
     @Override
-    public Class<JsonDocument> documentType() {
-        return JsonDocument.class;
-    }
-
-    @Override
-    protected Tuple2<ByteBuf, Integer> doEncode(final JsonDocument document) throws Exception {
-        String content = jsonObjectToString(document.content());
+    protected Tuple2<ByteBuf, Integer> doEncode(JsonStringDocument document) throws Exception {
+        String content = "\"" + document.content() + "\"";
         return Tuple.create(Unpooled.copiedBuffer(content, CharsetUtil.UTF_8), TranscoderUtils.JSON_COMPAT_FLAGS);
     }
 
     @Override
-    protected JsonDocument doDecode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status)
-        throws Exception {
-        if (!TranscoderUtils.hasJsonFlags(flags)) {
-            throw new TranscodingException("Flags (0x" + Integer.toHexString(flags) + ") indicate non-JSON document for "
-                + "id " + id + ", could not decode.");
-        }
-
-        JsonObject converted = stringToJsonObject(content.toString(CharsetUtil.UTF_8));
-        content.release();
-        return newDocument(id, expiry, converted, cas);
+    public JsonStringDocument newDocument(String id, int expiry, String content, long cas) {
+        return JsonStringDocument.create(id, expiry, content, cas);
     }
 
     @Override
-    public JsonDocument newDocument(String id, int expiry, JsonObject content, long cas) {
-        return JsonDocument.create(id, expiry, content, cas);
+    public Class<JsonStringDocument> documentType() {
+        return JsonStringDocument.class;
     }
-
-    public String jsonObjectToString(JsonObject input) throws Exception {
-        return JacksonTransformers.MAPPER.writeValueAsString(input);
-    }
-
-    public JsonObject stringToJsonObject(String input) throws Exception {
-        return JacksonTransformers.MAPPER.readValue(input, JsonObject.class);
-    }
-
-    public JsonObject byteBufToJsonObject(ByteBuf input) throws Exception {
-        return stringToJsonObject(input.toString(CharsetUtil.UTF_8));
-    }
-
-
 }

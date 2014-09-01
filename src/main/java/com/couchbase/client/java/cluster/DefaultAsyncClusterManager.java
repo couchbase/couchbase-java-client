@@ -83,7 +83,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                 @Override
                 public ClusterInfo call(ClusterConfigResponse response) {
                     try {
-                        return new DefaultClusterInfo(CouchbaseAsyncBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
+                        return new DefaultClusterInfo(CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.config()));
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode cluster info.", e);
                     }
@@ -104,7 +104,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                 @Override
                 public Observable<BucketSettings> call(BucketsConfigResponse response) {
                     try {
-                        JsonArray decoded = CouchbaseAsyncBucket.JSON_TRANSCODER.stringTojsonArray(response.config());
+                        JsonArray decoded = CouchbaseAsyncBucket.JSON_ARRAY_TRANSCODER.stringToJsonArray(response.config());
                         List<BucketSettings> settings = new ArrayList<BucketSettings>();
                         for (Object item : decoded) {
                             JsonObject bucket = (JsonObject) item;

@@ -76,7 +76,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                 @Override
                 public BucketInfo call(BucketConfigResponse response) {
                     try {
-                        return DefaultBucketInfo.create(CouchbaseAsyncBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
+                        return DefaultBucketInfo.create(CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.config()));
                     } catch (Exception ex) {
                         throw new TranscodingException("Could not decode bucket info.", ex);
                     }
@@ -132,7 +132,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                 public Observable<DesignDocument> call(GetDesignDocumentsResponse response) {
                     JsonObject converted = null;
                     try {
-                        converted = CouchbaseAsyncBucket.JSON_TRANSCODER.stringToJsonObject(response.content());
+                        converted = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.content());
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode design document.", e);
                     }
@@ -174,7 +174,8 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                 public DesignDocument call(GetDesignDocumentResponse response) {
                     JsonObject converted;
                     try {
-                        converted = CouchbaseAsyncBucket.JSON_TRANSCODER.stringToJsonObject(response.content().toString(CharsetUtil.UTF_8));
+                        converted = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(
+                            response.content().toString(CharsetUtil.UTF_8));
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode design document.", e);
                     }
@@ -213,7 +214,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     public Observable<DesignDocument> upsertDesignDocument(final DesignDocument designDocument, boolean development) {
         String body = null;
         try {
-            body = CouchbaseAsyncBucket.JSON_TRANSCODER.jsonObjectToString(designDocument.toJsonObject());
+            body = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.jsonObjectToString(designDocument.toJsonObject());
         } catch (Exception e) {
             throw new TranscodingException("Could not encode design document: ", e);
         }

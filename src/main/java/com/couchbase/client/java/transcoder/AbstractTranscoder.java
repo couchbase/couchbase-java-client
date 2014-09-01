@@ -28,9 +28,10 @@ import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.error.TranscodingException;
 
 /**
- * .
+ * Base {@link Transcoder} which should be extended for compatibility.
  *
  * @author Michael Nitschinger
+ * @since 2.0
  */
 public abstract class AbstractTranscoder<D extends Document<T>, T> implements Transcoder<D, T> {
 
@@ -39,7 +40,11 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
         try {
             return doDecode(id, content, cas, expiry, flags, status);
         } catch(Exception ex) {
-            throw new TranscodingException("Could not decode document with ID " + id, ex);
+            if (ex instanceof TranscodingException) {
+                throw (TranscodingException) ex;
+            } else {
+                throw new TranscodingException("Could not decode document with ID " + id, ex);
+            }
         }
     }
 
@@ -48,12 +53,38 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
         try {
             return doEncode(document);
         } catch(Exception ex) {
-            throw new TranscodingException("Could not encode document with ID " + document.id(), ex);
+            if (ex instanceof TranscodingException) {
+                throw (TranscodingException) ex;
+            } else {
+                throw new TranscodingException("Could not encode document with ID " + document.id(), ex);
+            }
         }
     }
 
+    /**
+     * Perform the decoding of the received response.
+     *
+     * @param id the id of the document.
+     * @param content the encoded content of the document.
+     * @param cas the cas value of the document.
+     * @param expiry the expiration time of the document.
+     * @param flags the flags set on the document.
+     * @param status the response status.
+     *
+     * @return the decoded document.
+     * @throws Exception if something goes wrong during the decode process.
+     */
     protected abstract D doDecode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status)
         throws Exception;
+
+    /**
+     * Perform the encoding of the request document.
+     *
+     * @param document the document to encode.
+     * @return A tuple consisting of the encoded content and the flags to set.
+     * @throws Exception if something goes wrong during the encode process.
+     */
     protected abstract Tuple2<ByteBuf, Integer> doEncode(D document)
         throws Exception;
+
 }
