@@ -1,8 +1,8 @@
 package com.couchbase.client.java;
 
+import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterInfo;
-import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.Before;
@@ -18,11 +18,11 @@ import static org.junit.Assert.*;
 
 public class ClusterManagerTest {
 
-    private static ClusterManager clusterManager;
+    private static AsyncClusterManager clusterManager;
 
     @BeforeClass
     public static void setup() {
-        clusterManager = CouchbaseCluster
+        clusterManager = CouchbaseAsyncCluster
             .create(TestProperties.seedNode())
             .clusterManager(TestProperties.adminName(), TestProperties.adminPassword())
             .toBlocking()

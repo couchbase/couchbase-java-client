@@ -1,700 +1,779 @@
-/**
- * Copyright (C) 2014 Couchbase, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
- * IN THE SOFTWARE.
- */
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
-import com.couchbase.client.core.config.CouchbaseBucketConfig;
-import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.core.message.binary.*;
-import com.couchbase.client.core.message.cluster.CloseBucketRequest;
-import com.couchbase.client.core.message.cluster.CloseBucketResponse;
-import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
-import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
-import com.couchbase.client.core.message.query.GenericQueryRequest;
-import com.couchbase.client.core.message.query.GenericQueryResponse;
-import com.couchbase.client.core.message.view.ViewQueryRequest;
-import com.couchbase.client.core.message.view.ViewQueryResponse;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.BucketManager;
-import com.couchbase.client.java.bucket.CouchbaseBucketManager;
-import com.couchbase.client.java.bucket.Observe;
+import com.couchbase.client.java.bucket.DefaultBucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.LongDocument;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.error.CASMismatchException;
-import com.couchbase.client.java.error.DocumentAlreadyExistsException;
-import com.couchbase.client.java.error.DocumentDoesNotExistException;
-import com.couchbase.client.java.error.DurabilityException;
-import com.couchbase.client.java.query.*;
-import com.couchbase.client.java.transcoder.JsonTranscoder;
-import com.couchbase.client.java.transcoder.LegacyTranscoder;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.query.AsyncQueryResult;
+import com.couchbase.client.java.query.DefaultQueryResult;
+import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.error.TranscodingException;
-import com.couchbase.client.java.view.*;
-import rx.Observable;
+import com.couchbase.client.java.view.AsyncViewResult;
+import com.couchbase.client.java.view.DefaultViewResult;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
 import rx.functions.Func1;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class CouchbaseBucket implements Bucket {
 
-  public static final JsonTranscoder JSON_TRANSCODER = new JsonTranscoder();
-  public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
+    private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
+    private final AsyncBucket asyncBucket;
+    private final CouchbaseEnvironment environment;
+    private final long binaryTimeout;
+    private final String name;
+    private final String password;
+    private final ClusterFacade core;
 
-  private final String bucket;
-  private final String password;
-  private final ClusterFacade core;
-  private final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders;
-  private final BucketManager bucketManager;
-
-
-    public CouchbaseBucket(final ClusterFacade core, final String name, final String password,
+    public CouchbaseBucket(final CouchbaseEnvironment env, final ClusterFacade core, final String name, final String password,
         final List<Transcoder<? extends Document, ?>> customTranscoders) {
-        bucket = name;
+        asyncBucket = new CouchbaseAsyncBucket(core, name, password, customTranscoders);
+        this.environment = env;
+        this.binaryTimeout = env.binaryTimeout();
+        this.name = name;
         this.password = password;
         this.core = core;
-
-        transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
-        transcoders.put(JSON_TRANSCODER.documentType(), JSON_TRANSCODER);
-        transcoders.put(LEGACY_TRANSCODER.documentType(), LEGACY_TRANSCODER);
-
-        for (Transcoder<? extends Document, ?> custom : customTranscoders) {
-            transcoders.put(custom.documentType(), custom);
-        }
-
-        bucketManager = new CouchbaseBucketManager(bucket, password, core);
     }
 
     @Override
-    public Observable<JsonDocument> get(final String id) {
-        return get(id, JsonDocument.class);
+    public AsyncBucket async() {
+        return asyncBucket;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> get(D document) {
-        return (Observable<D>) get(document.id(), document.getClass());
+    public String name() {
+        return asyncBucket.name();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
-        return core
-            .<GetResponse>send(new GetRequest(id, bucket))
-            .filter(new Func1<GetResponse, Boolean>() {
+    public JsonDocument get(String id) {
+        return get(id, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument get(String id, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .get(id)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D get(D document) {
+        return get(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D get(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .get(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D get(String id, Class<D> target) {
+        return get(id, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D get(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .get(id, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public List<JsonDocument> getFromReplica(String id, ReplicaMode type) {
+        return getFromReplica(id, type, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public List<JsonDocument> getFromReplica(String id, ReplicaMode type, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getFromReplica(id, type)
+            .toList()
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type) {
+        return getFromReplica(document, type, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getFromReplica(document, type)
+            .toList()
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target) {
+        return getFromReplica(id, type, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getFromReplica(id, type, target)
+            .toList()
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public JsonDocument getAndLock(String id, int lockTime) {
+        return getAndLock(id, lockTime, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument getAndLock(String id, int lockTime, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndLock(id, lockTime)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndLock(D document, int lockTime) {
+        return getAndLock(document, lockTime, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndLock(D document, int lockTime, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndLock(document, lockTime)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target) {
+        return getAndLock(id, lockTime, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndLock(id, lockTime, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public JsonDocument getAndTouch(String id, int expiry) {
+        return getAndTouch(id, expiry, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument getAndTouch(String id, int expiry, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndTouch(id, expiry)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndTouch(D document) {
+        return getAndTouch(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndTouch(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndTouch(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target) {
+        return getAndTouch(id, expiry, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .getAndTouch(id, expiry, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document) {
+        return insert(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .insert(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return insert(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .insert(document, persistTo, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, PersistTo persistTo) {
+        return insert(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .insert(document, persistTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, ReplicateTo replicateTo) {
+        return insert(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D insert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .insert(document, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document) {
+        return upsert(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .upsert(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return upsert(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .upsert(document, persistTo, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, PersistTo persistTo) {
+        return upsert(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .upsert(document, persistTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo) {
+        return upsert(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .upsert(document, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document) {
+        return replace(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .replace(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return replace(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .replace(document, persistTo, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, PersistTo persistTo) {
+        return replace(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .replace(document, persistTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, ReplicateTo replicateTo) {
+        return replace(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D replace(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .replace(document, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document) {
+        return remove(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return remove(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, PersistTo persistTo) {
+        return remove(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, ReplicateTo replicateTo) {
+        return remove(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(document, persistTo, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(document, persistTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(document, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public JsonDocument remove(String id) {
+        return remove(id, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo) {
+        return remove(id, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument remove(String id, PersistTo persistTo) {
+        return remove(id, persistTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument remove(String id, ReplicateTo replicateTo) {
+        return remove(id, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonDocument remove(String id, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, persistTo, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public JsonDocument remove(String id, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, persistTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public JsonDocument remove(String id, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, replicateTo)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, Class<D> target) {
+        return remove(id, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target) {
+        return remove(id, persistTo, replicateTo, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target) {
+        return remove(id, persistTo, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target) {
+        return remove(id, replicateTo, target, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, persistTo, replicateTo, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, persistTo, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .remove(id, replicateTo, target)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .singleOrDefault(null);
+    }
+
+    @Override
+    public ViewResult query(ViewQuery query) {
+        return query(query, environment.viewTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public QueryResult query(Query query) {
+        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public QueryResult query(String query) {
+        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .query(query)
+            .map(new Func1<AsyncViewResult, ViewResult>() {
                 @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public ViewResult call(AsyncViewResult asyncViewResult) {
+                    return new DefaultViewResult(environment, CouchbaseBucket.this,
+                        asyncViewResult.rows(), asyncViewResult.totalRows(), asyncViewResult.success(),
+                        asyncViewResult.error(), asyncViewResult.debug());
                 }
             })
-            .map(new Func1<GetResponse, D>() {
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public QueryResult query(Query query, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .query(query)
+            .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(), response.status());
-                }
-            });
-    }
-
-    @Override
-    public Observable<JsonDocument> getAndLock(String id, int lockTime) {
-        return getAndLock(id, lockTime, JsonDocument.class);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime) {
-        return (Observable<D>) getAndLock(document.id(), lockTime, document.getClass());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getAndLock(final String id, final int lockTime, final Class<D> target) {
-        return core.<GetResponse>send(new GetRequest(id, bucket, true, false, lockTime))
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public QueryResult call(AsyncQueryResult asyncQueryResult) {
+                    return new DefaultQueryResult(environment, asyncQueryResult.rows(),
+                        asyncQueryResult.info(), asyncQueryResult.error(), asyncQueryResult.success());
                 }
             })
-            .map(new Func1<GetResponse, D>() {
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public QueryResult query(String query, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .query(query)
+            .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(), response.status());
-                }
-            });
-    }
-
-    @Override
-    public Observable<JsonDocument> getAndTouch(String id, int expiry) {
-        return getAndTouch(id, expiry, JsonDocument.class);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getAndTouch(D document) {
-        return (Observable<D>) getAndTouch(document.id(), document.expiry(), document.getClass());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getAndTouch(final String id, final int expiry, final Class<D> target) {
-        return core.<GetResponse>send(new GetRequest(id, bucket, false, true, expiry))
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public QueryResult call(AsyncQueryResult asyncQueryResult) {
+                    return new DefaultQueryResult(environment, asyncQueryResult.rows(),
+                        asyncQueryResult.info(), asyncQueryResult.error(), asyncQueryResult.success());
                 }
             })
-            .map(new Func1<GetResponse, D>() {
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public Boolean unlock(String id, long cas) {
+        return unlock(id, cas, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> Boolean unlock(D document) {
+        return unlock(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public Boolean unlock(String id, long cas, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .unlock(id, cas)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> Boolean unlock(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .unlock(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public Boolean touch(String id, int expiry) {
+        return touch(id, expiry, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public <D extends Document<?>> Boolean touch(D document) {
+        return touch(document, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public Boolean touch(String id, int expiry, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .touch(id, expiry)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .touch(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta) {
+        return counter(id, delta, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta, long initial) {
+        return counter(id, delta, initial, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta, long initial, int expiry) {
+        return counter(id, delta, initial, expiry, binaryTimeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .counter(id, delta)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .counter(id, delta, initial)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public LongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .counter(id, delta, initial, expiry)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
+    }
+
+    @Override
+    public BucketManager bucketManager() {
+        return asyncBucket
+            .bucketManager()
+            .map(new Func1<AsyncBucketManager, BucketManager>() {
                 @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(), response.status());
-                }
-            });
-    }
-
-    @Override
-    public Observable<JsonDocument> getFromReplica(final String id, final ReplicaMode type) {
-        return getFromReplica(id, type, JsonDocument.class);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getFromReplica(final D document, final ReplicaMode type) {
-        return (Observable<D>) getFromReplica(document.id(), type, document.getClass());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> getFromReplica(final String id, final ReplicaMode type,
-        final Class<D> target) {
-
-        Observable<GetResponse> incoming;
-        if (type == ReplicaMode.ALL) {
-            incoming = core
-                .<GetClusterConfigResponse>send(new GetClusterConfigRequest())
-                .map(new Func1<GetClusterConfigResponse, Integer>() {
-                    @Override
-                    public Integer call(GetClusterConfigResponse response) {
-                        CouchbaseBucketConfig conf = (CouchbaseBucketConfig) response.config().bucketConfig(bucket);
-                        return conf.numberOfReplicas();
-                    }
-                }).flatMap(new Func1<Integer, Observable<BinaryRequest>>() {
-                    @Override
-                    public Observable<BinaryRequest> call(Integer max) {
-                        List<BinaryRequest> requests = new ArrayList<BinaryRequest>();
-
-                        requests.add(new GetRequest(id, bucket));
-                        for (int i = 0; i < max; i++) {
-                            requests.add(new ReplicaGetRequest(id, bucket, (short)(i+1)));
-                        }
-                        return Observable.from(requests);
-                    }
-                }).flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
-                    @Override
-                    public Observable<GetResponse> call(BinaryRequest req) {
-                        return core.send(req);
-                    }
-                });
-        } else {
-            incoming = core.send(new ReplicaGetRequest(id, bucket, (short) type.ordinal()));
-        }
-
-        return incoming
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public BucketManager call(AsyncBucketManager asyncBucketManager) {
+                    return DefaultBucketManager.create(environment, name, password, core);
                 }
             })
-            .map(new Func1<GetResponse, D>() {
-                @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(), response.status());
-                }
-            });
+            .toBlocking()
+            .single();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> insert(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-        return core
-            .<InsertResponse>send(new InsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket))
-            .flatMap(new Func1<InsertResponse, Observable<? extends D>>() {
-                @Override
-                public Observable<? extends D> call(InsertResponse response) {
-                    if (response.status() == ResponseStatus.EXISTS) {
-                        return Observable.error(new DocumentAlreadyExistsException());
-                    }
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas()));
-                }
-            });
+    public <D extends Document<?>> D append(D document) {
+        return append(document, binaryTimeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> insert(final D document, final PersistTo persistTo,
-        final ReplicateTo replicateTo) {
-        return insert(document).flatMap(new Func1<D, Observable<D>>() {
-            @Override
-            public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException("Durability constraint failed.", throwable));
-                        }
-                    });
-            }
-        });
+    public <D extends Document<?>> D prepend(D document) {
+        return prepend(document, binaryTimeout, TIMEOUT_UNIT);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> upsert(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-        return core
-            .<UpsertResponse>send(new UpsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket))
-            .flatMap(new Func1<UpsertResponse, Observable<D>>() {
-                @Override
-                public Observable<D> call(UpsertResponse response) {
-                    if (response.status() == ResponseStatus.EXISTS) {
-                        return Observable.error(new CASMismatchException());
-                    }
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas()));
-                }
-            });
+    public <D extends Document<?>> D append(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .append(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> upsert(final D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        return upsert(document).flatMap(new Func1<D, Observable<D>>() {
-            @Override
-            public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    });
-            }
-        });
+    public <D extends Document<?>> D prepend(D document, long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .prepend(document)
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
     }
 
     @Override
-  @SuppressWarnings("unchecked")
-  public <D extends Document<?>> Observable<D> replace(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-    return core.<ReplaceResponse>send(new ReplaceRequest(document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(), bucket))
-
-        .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
-            @Override
-            public Observable<D> call(ReplaceResponse response) {
-                if (response.status() == ResponseStatus.NOT_EXISTS) {
-                    return Observable.error(new DocumentDoesNotExistException());
-                }
-                if (response.status() == ResponseStatus.EXISTS) {
-                    return Observable.error(new CASMismatchException());
-                }
-                return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas()));
-            }
-        });
-  }
-
-    @Override
-    public <D extends Document<?>> Observable<D> replace(final D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        return replace(document).flatMap(new Func1<D, Observable<D>>() {
-            @Override
-            public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    });
-            }
-        });
+    public Boolean close() {
+        return close(environment.managementTimeout(), TIMEOUT_UNIT);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        RemoveRequest request = new RemoveRequest(document.id(), document.cas(),
-            bucket);
-        return core.<RemoveResponse>send(request).map(new Func1<RemoveResponse, D>() {
-            @Override
-            public D call(RemoveResponse response) {
-                return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(), document.cas());
-            }
-        });
-    }
-
-    @Override
-    public Observable<JsonDocument> remove(final String id) {
-        return remove(id, JsonDocument.class);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(final String id, final Class<D> target) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(target);
-        return remove((D) transcoder.newDocument(id, 0, null, 0));
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return (Observable<D>) remove(document.id(), persistTo, replicateTo, document.getClass());
-    }
-
-    @Override
-    public Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo) {
-        return remove(id, persistTo, replicateTo, JsonDocument.class);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
-        final ReplicateTo replicateTo, Class<D> target) {
-        return remove(id, target).flatMap(new Func1<D, Observable<D>>() {
-            @Override
-            public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), true, persistTo, replicateTo)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    });
-            }
-        });
-    }
-
-    @Override
-  public Observable<ViewResult> query(final ViewQuery query) {
-    final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(), query.isDevelopment(),
-        query.toString(), bucket, password);
-        return core.<ViewQueryResponse>send(request)
-            .flatMap(new Func1<ViewQueryResponse, Observable<ViewResult>>() {
-                @Override
-                public Observable<ViewResult> call(final ViewQueryResponse response) {
-                    return response.info().map(new Func1<ByteBuf, JsonObject>() {
-                        @Override
-                        public JsonObject call(ByteBuf byteBuf) {
-                            if (byteBuf == null || byteBuf.readableBytes() == 0) {
-                                return JsonObject.empty();
-                            }
-                            try {
-                                return JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
-                            } catch (Exception e) {
-                                throw new TranscodingException("Could not decode View Info.", e);
-                            }
-                        }
-                    }).map(new Func1<JsonObject, ViewResult>() {
-                        @Override
-                        public ViewResult call(JsonObject jsonInfo) {
-                            JsonObject error = null;
-                            JsonObject debug = null;
-                            int totalRows = 0;
-                            boolean success = response.status().isSuccess();
-                            if (success) {
-                                debug = jsonInfo.getObject("debug_info");
-                                Integer trows = jsonInfo.getInt("total_rows");
-                                if (trows != null) {
-                                    totalRows = trows;
-                                }
-                            } else {
-                                error = jsonInfo;
-                            }
-
-                            Observable<ViewRow> rows = response.rows().map(new Func1<ByteBuf, ViewRow>() {
-                                @Override
-                                public ViewRow call(final ByteBuf byteBuf) {
-                                    JsonObject doc;
-                                    try {
-                                        doc = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                    } catch (Exception e) {
-                                        throw new TranscodingException("Could not decode View Info.", e);
-                                    }
-                                    String id = doc.getString("id");
-                                    return new DefaultViewRow(CouchbaseBucket.this, id, doc.get("key"), doc.get("value"));
-                                }
-                            });
-                            return new DefaultViewResult(rows, totalRows, success, error, debug);
-                        }
-                    });
-                }
-            });
-  }
-
-    @Override
-    public Observable<QueryResult> query(final Query query) {
-        return query(query.toString());
-    }
-
-    @Override
-    public Observable<QueryResult> query(final String query) {
-        GenericQueryRequest request = new GenericQueryRequest(query, bucket, password);
-        return core
-            .<GenericQueryResponse>send(request)
-            .flatMap(new Func1<GenericQueryResponse, Observable<QueryResult>>() {
-                @Override
-                public Observable<QueryResult> call(final GenericQueryResponse response) {
-                    final Observable<QueryRow> rows = response.rows().map(new Func1<ByteBuf, QueryRow>() {
-                        @Override
-                        public QueryRow call(ByteBuf byteBuf) {
-                            try {
-                                JsonObject value = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                return new DefaultQueryRow(value);
-                            } catch (Exception e) {
-                                throw new TranscodingException("Could not decode View Info.", e);
-                            }
-                        }
-                    });
-                    final Observable<JsonObject> info = response.info().map(new Func1<ByteBuf, JsonObject>() {
-                        @Override
-                        public JsonObject call(ByteBuf byteBuf) {
-                            try {
-                                return JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
-                            } catch (Exception e) {
-                                throw new TranscodingException("Could not decode View Info.", e);
-                            }
-                        }
-                    });
-                    if (response.status().isSuccess()) {
-                        return Observable.just((QueryResult) new DefaultQueryResult(rows, info, null,
-                            response.status().isSuccess()));
-                    } else {
-                        return response.info().map(new Func1<ByteBuf, QueryResult>() {
-                            @Override
-                            public QueryResult call(ByteBuf byteBuf) {
-                                try {
-                                    JsonObject error = JSON_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                    return new DefaultQueryResult(rows, info, error, response.status().isSuccess());
-                                } catch (Exception e) {
-                                    throw new TranscodingException("Could not decode View Info.", e);
-                                }
-
-                            }
-                        });
-                    }
-                }
-            });
-    }
-
-    @Override
-    public Observable<LongDocument> counter(String id, long delta) {
-        return counter(id, delta, delta);
-    }
-
-    @Override
-    public Observable<LongDocument> counter(String id, long delta, long initial) {
-        return counter(id, delta, initial, 0);
-    }
-
-    @Override
-    public Observable<LongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
-        return core
-            .<CounterResponse>send(new CounterRequest(id, initial, delta, expiry, bucket))
-            .map(new Func1<CounterResponse, LongDocument>() {
-                @Override
-                public LongDocument call(CounterResponse response) {
-                    return LongDocument.create(id, expiry, response.value(), response.cas());
-                }
-            });
-    }
-
-    @Override
-    public Observable<Boolean> unlock(String id, long cas) {
-        return core
-            .<UnlockResponse>send(new UnlockRequest(id, cas, bucket))
-            .map(new Func1<UnlockResponse, Boolean>() {
-                @Override
-                public Boolean call(UnlockResponse response) {
-                    if (response.status() == ResponseStatus.NOT_EXISTS) {
-                        throw new DocumentDoesNotExistException();
-                    }
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new CASMismatchException();
-                    }
-                    return response.status().isSuccess();
-                }
-            });
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<Boolean> unlock(D document) {
-        return unlock(document.id(), document.cas());
-    }
-
-    @Override
-    public Observable<Boolean> touch(String id, int expiry) {
-        return core.<TouchResponse>send(new TouchRequest(id, expiry, bucket)).map(new Func1<TouchResponse, Boolean>() {
-            @Override
-            public Boolean call(TouchResponse touchResponse) {
-                return touchResponse.status().isSuccess();
-            }
-        });
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<Boolean> touch(D document) {
-        return touch(document.id(), document.expiry());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> append(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-        return core
-            .<AppendResponse>send(new AppendRequest(document.id(), document.cas(), encoded.value1(), bucket))
-            .map(new Func1<AppendResponse, D>() {
-                @Override
-                public D call(final AppendResponse response) {
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new DocumentDoesNotExistException();
-                    }
-
-                    return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas());
-                }
-            });
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> prepend(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-        return core
-            .<PrependResponse>send(new PrependRequest(document.id(), document.cas(), encoded.value1(), bucket))
-            .map(new Func1<PrependResponse, D>() {
-                @Override
-                public D call(final PrependResponse response) {
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new DocumentDoesNotExistException();
-                    }
-
-                    return (D) transcoder.newDocument(document.id(),  document.expiry(), document.content(), response.cas());
-                }
-            });
-    }
-
-    @Override
-    public Observable<BucketManager> bucketManager() {
-        return Observable.just(bucketManager);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo) {
-        return insert(document, persistTo, ReplicateTo.NONE);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo) {
-        return insert(document, PersistTo.NONE, replicateTo);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo) {
-        return upsert(document, persistTo, ReplicateTo.NONE);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo) {
-        return upsert(document, PersistTo.NONE, replicateTo);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo) {
-        return replace(document, persistTo, ReplicateTo.NONE);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo) {
-        return replace(document, PersistTo.NONE, replicateTo);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo) {
-        return remove(document, persistTo, ReplicateTo.NONE);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo) {
-        return remove(document, PersistTo.NONE, replicateTo);
-    }
-
-    @Override
-    public Observable<JsonDocument> remove(String id, PersistTo persistTo) {
-        return remove(id, persistTo, ReplicateTo.NONE);
-    }
-
-    @Override
-    public Observable<JsonDocument> remove(String id, ReplicateTo replicateTo) {
-        return remove(id, PersistTo.NONE, replicateTo);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target) {
-        return remove(id, persistTo, ReplicateTo.NONE, target);
-    }
-
-    @Override
-    public <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target) {
-        return remove(id, PersistTo.NONE, replicateTo, target);
-    }
-
-    @Override
-    public Observable<Boolean> close() {
-        return core.<CloseBucketResponse>send(new CloseBucketRequest(bucket))
-            .map(new Func1<CloseBucketResponse, Boolean>() {
-                @Override
-                public Boolean call(CloseBucketResponse response) {
-                    return response.status().isSuccess();
-                }
-            });
+    public Boolean close(long timeout, TimeUnit timeUnit) {
+        return asyncBucket
+            .close()
+            .timeout(timeout, timeUnit)
+            .toBlocking()
+            .single();
     }
 }

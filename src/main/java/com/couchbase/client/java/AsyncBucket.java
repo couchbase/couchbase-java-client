@@ -21,22 +21,19 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.LongDocument;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
+import com.couchbase.client.java.view.AsyncViewResult;
 import com.couchbase.client.java.view.ViewQuery;
-import com.couchbase.client.java.view.ViewResult;
 import rx.Observable;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Defines operations that can be executed against a Couchbase Server bucket.
@@ -48,9 +45,7 @@ import java.util.concurrent.TimeUnit;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public interface Bucket {
-
-    AsyncBucket async();
+public interface AsyncBucket {
 
     String name();
 
@@ -63,9 +58,7 @@ public interface Bucket {
      * @param id the unique ID of the document.
      * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
      */
-    JsonDocument get(String id);
-
-    JsonDocument get(String id, long timeout, TimeUnit timeUnit);
+    Observable<JsonDocument> get(String id);
 
     /**
      * Retrieves any type of {@link Document} by its unique ID.
@@ -79,10 +72,7 @@ public interface Bucket {
      * @param document the source document from which the ID is taken and the type is inferred.
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D get(D document);
-
-    <D extends Document<?>> D get(D document, long timeout, TimeUnit timeUnit);
-
+    <D extends Document<?>> Observable<D> get(D document);
 
     /**
      * Retrieves any type of {@link Document} by its unique ID.
@@ -97,9 +87,7 @@ public interface Bucket {
      * @param target the target document type to use.
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D get(String id, Class<D> target);
-
-    <D extends Document<?>> D get(String id, Class<D> target, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
     /**
      * Retrieves one or more, possibly stale, representations of a {@link JsonDocument} by its unique ID.
@@ -122,9 +110,7 @@ public interface Bucket {
      * @param type the {@link ReplicaMode} to select.
      * @return an {@link Observable} eventually containing zero to N {@link JsonDocument}s.
      */
-    List<JsonDocument> getFromReplica(String id, ReplicaMode type);
-
-    List<JsonDocument> getFromReplica(String id, ReplicaMode type, long timeout, TimeUnit timeUnit);
+    Observable<JsonDocument> getFromReplica(String id, ReplicaMode type);
 
     /**
      * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
@@ -150,9 +136,7 @@ public interface Bucket {
      * @param type the {@link ReplicaMode} to select.
      * @return an {@link Observable} eventually containing zero to N {@link Document}s.
      */
-    <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type);
-
-    <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> getFromReplica(D document, ReplicaMode type);
 
     /**
      * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
@@ -179,9 +163,8 @@ public interface Bucket {
      * @param target the target document type to use.
      * @return an {@link Observable} eventually containing zero to N {@link Document}s.
      */
-    <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target);
+    <D extends Document<?>> Observable<D> getFromReplica(String id, ReplicaMode type, Class<D> target);
 
-    <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target, long timeout, TimeUnit timeUnit);
     /**
      * Retrieve and lock a {@link JsonDocument} by its unique ID.
      *
@@ -196,9 +179,7 @@ public interface Bucket {
      * @param lockTime the time to write lock the document (max. 30 seconds).
      * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
      */
-    JsonDocument getAndLock(String id, int lockTime);
-
-    JsonDocument getAndLock(String id, int lockTime, long timeout, TimeUnit timeUnit);
+    Observable<JsonDocument> getAndLock(String id, int lockTime);
 
     /**
      * Retrieve and lock a {@link Document} by its unique ID.
@@ -214,9 +195,7 @@ public interface Bucket {
      * @param lockTime the time to write lock the document (max. 30 seconds).
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D getAndLock(D document, int lockTime);
-
-    <D extends Document<?>> D getAndLock(D document, int lockTime, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime);
 
     /**
      * Retrieve and lock a {@link Document} by its unique ID.
@@ -236,9 +215,7 @@ public interface Bucket {
      * @param target the target document type to use.
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target);
-
-    <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> getAndLock(String id, int lockTime, Class<D> target);
 
     /**
      * Retrieve and touch a {@link JsonDocument} by its unique ID.
@@ -253,9 +230,7 @@ public interface Bucket {
      * @param expiry the new expiration time for the document.
      * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
      */
-    JsonDocument getAndTouch(String id, int expiry);
-
-    JsonDocument getAndTouch(String id, int expiry, long timeout, TimeUnit timeUnit);
+    Observable<JsonDocument> getAndTouch(String id, int expiry);
 
     /**
      * Retrieve and touch a {@link Document} by its unique ID.
@@ -269,9 +244,7 @@ public interface Bucket {
      * @param document the source document from which the ID and expiry is taken and the type is inferred.
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D getAndTouch(D document);
-
-    <D extends Document<?>> D getAndTouch(D document, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> getAndTouch(D document);
 
     /**
      * Retrieve and touch a {@link Document} by its unique ID.
@@ -290,9 +263,7 @@ public interface Bucket {
      * @param target the target document type to use.
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
-    <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target);
-
-    <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> getAndTouch(String id, int expiry, Class<D> target);
 
     /**
      * Insert a {@link Document} if it does not exist already.
@@ -310,9 +281,7 @@ public interface Bucket {
      * @param document the {@link Document} to insert.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D insert(D document);
-
-    <D extends Document<?>> D insert(D document, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> insert(D document);
 
     /**
      * Insert a {@link Document} if it does not exist already and watch for durability constraints.
@@ -340,9 +309,7 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo);
-
-    <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
      * Insert a {@link Document} if it does not exist already and watch for durability constraints.
@@ -369,9 +336,7 @@ public interface Bucket {
      * @param persistTo the persistence constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D insert(D document, PersistTo persistTo);
-
-    <D extends Document<?>> D insert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo);
 
     /**
      * Insert a {@link Document} if it does not exist already and watch for durability constraints.
@@ -398,8 +363,7 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D insert(D document, ReplicateTo replicateTo);
-    <D extends Document<?>> D insert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo);
 
     /**
      * Insert or replace a {@link Document}.
@@ -414,8 +378,7 @@ public interface Bucket {
      * @param document the {@link Document} to upsert.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D upsert(D document);
-    <D extends Document<?>> D upsert(D document, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> upsert(D document);
 
     /**
      * Insert or replace a {@link Document} and watch for durability constraints.
@@ -442,8 +405,7 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
-    <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
      * Insert or replace a {@link Document} and watch for durability constraints.
@@ -469,9 +431,7 @@ public interface Bucket {
      * @param persistTo the persistence constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D upsert(D document, PersistTo persistTo);
-    <D extends Document<?>> D upsert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
-
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo);
 
     /**
      * Insert or replace a {@link Document} and watch for durability constraints.
@@ -497,8 +457,7 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo);
-    <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo);
 
     /**
      * Replace a {@link Document} if it does already exist.
@@ -516,8 +475,7 @@ public interface Bucket {
      * @param document the {@link Document} to replace.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D replace(D document);
-    <D extends Document<?>> D replace(D document, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> replace(D document);
 
     /**
      * Replace a {@link Document} if it does exist and watch for durability constraints.
@@ -545,8 +503,7 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo);
-    <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
      * Replace a {@link Document} if it does exist and watch for durability constraints.
@@ -573,8 +530,7 @@ public interface Bucket {
      * @param persistTo the persistence constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D replace(D document, PersistTo persistTo);
-    <D extends Document<?>> D replace(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo);
 
     /**
      * Replace a {@link Document} if it does exist and watch for durability constraints.
@@ -601,74 +557,47 @@ public interface Bucket {
      * @param replicateTo the replication constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
-    <D extends Document<?>> D replace(D document, ReplicateTo replicateTo);
-    <D extends Document<?>> D replace(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo);
 
-    <D extends Document<?>> D remove(D document);
-    <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo);
-    <D extends Document<?>> D remove(D document, PersistTo persistTo);
-    <D extends Document<?>> D remove(D document, ReplicateTo replicateTo);
-    <D extends Document<?>> D remove(D document, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> remove(D document);
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo);
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo);
+    <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo);
 
-    JsonDocument remove(String id);
-    JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo);
-    JsonDocument remove(String id, PersistTo persistTo);
-    JsonDocument remove(String id, ReplicateTo replicateTo);
-    JsonDocument remove(String id, long timeout, TimeUnit timeUnit);
-    JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
-    JsonDocument remove(String id, PersistTo persistTo, long timeout, TimeUnit timeUnit);
-    JsonDocument remove(String id, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+    Observable<JsonDocument> remove(String id);
+    Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo);
+    Observable<JsonDocument> remove(String id, PersistTo persistTo);
+    Observable<JsonDocument> remove(String id, ReplicateTo replicateTo);
 
-    <D extends Document<?>> D remove(String id, Class<D> target);
-    <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target);
-    <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target);
-    <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target);
-    <D extends Document<?>> D remove(String id, Class<D> target, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> remove(String id, Class<D> target);
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target);
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target);
+    <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target);
 
-    ViewResult query(ViewQuery query);
-    QueryResult query(Query query);
-    QueryResult query(String query);
-    ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit);
-    QueryResult query(Query query, long timeout, TimeUnit timeUnit);
-    QueryResult query(String query, long timeout, TimeUnit timeUnit);
+    Observable<AsyncViewResult> query(ViewQuery query);
+    Observable<AsyncQueryResult> query(Query query);
+    Observable<AsyncQueryResult> query(String query);
 
-    Boolean unlock(String id, long cas);
-    <D extends Document<?>> Boolean unlock(D document);
-    Boolean unlock(String id, long cas, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> Boolean unlock(D document, long timeout, TimeUnit timeUnit);
+    Observable<Boolean> unlock(String id, long cas);
+    <D extends Document<?>> Observable<Boolean> unlock(D document);
 
-    Boolean touch(String id, int expiry);
-    <D extends Document<?>> Boolean touch(D document);
-    Boolean touch(String id, int expiry, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit);
+    Observable<Boolean> touch(String id, int expiry);
+    <D extends Document<?>> Observable<Boolean> touch(D document);
 
-    LongDocument counter(String id, long delta);
-    LongDocument counter(String id, long delta, long initial);
-    LongDocument counter(String id, long delta, long initial, int expiry);
-    LongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit);
-    LongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit);
-    LongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit);
+    Observable<LongDocument> counter(String id, long delta);
+    Observable<LongDocument> counter(String id, long delta, long initial);
+    Observable<LongDocument> counter(String id, long delta, long initial, int expiry);
 
-    BucketManager bucketManager();
+    Observable<AsyncBucketManager> bucketManager();
 
-    <D extends Document<?>> D append(D document);
-    <D extends Document<?>> D prepend(D document);
-
-    <D extends Document<?>> D append(D document, long timeout, TimeUnit timeUnit);
-    <D extends Document<?>> D prepend(D document, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> append(D document);
+    <D extends Document<?>> Observable<D> prepend(D document);
 
     /**
-     * Closes the {@link Bucket}.
+     * Closes the {@link AsyncBucket}.
      *
      * @return an {@link Observable} eventually containing a new {@link Boolean} after close.
      */
-    Boolean close();
-    Boolean close(long timeout, TimeUnit timeUnit);
+    Observable<Boolean> close();
 
 }

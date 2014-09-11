@@ -27,18 +27,20 @@ import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-
-import java.util.concurrent.TimeUnit;
+import rx.Observable;
 
 /**
- * Represents a {@link ViewRow} fetched from the View.
+ * Represents a row fetched from the {@link View}.
+ *
+ * The row itself contains fixed properties returned, but is also able to - on demand - load the full document if
+ * instructed through the {@link #document()} methods.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface ViewRow {
+public interface AsyncViewRow {
 
     /**
      * The id of the document, if not reduced.
@@ -66,65 +68,30 @@ public interface ViewRow {
     Object value();
 
     /**
-     * Load the underlying document, if not reduced with the default view timeout.
+     * Load the underlying document, if not reduced.
      *
-     * This method throws:
+     * The {@link Observable} can error under the following conditions:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
      *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
      *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
      *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
      *
-     * @return the loaded document, null if not found.
+     * @return a {@link Observable} containing the document once loaded.
      */
-    JsonDocument document();
+    Observable<JsonDocument> document();
 
     /**
-     * Load the underlying document, if not reduced with a custom timeout.
+     * Load the underlying document, if not reduced.
      *
-     * This method throws:
+     * The {@link Observable} can error under the following conditions:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
      *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
      *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
      *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
      *
-     * @param timeout the custom timeout.
-     * @param timeUnit the time unit for the custom timeout.
-     * @return the loaded document, null if not found.
+     * @param target the target class to decode into.
+     * @return a {@link Observable} containing the document once loaded.
      */
-    JsonDocument document(long timeout, TimeUnit timeUnit);
-
-    /**
-     * Load the underlying document, if not reduced with the default view timeout.
-     *
-     * This method throws:
-     *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
-     *
-     * @param target the custom target document type.
-     * @return the loaded document, null if not found.
-     */
-    <D extends Document<?>> D document(final Class<D> target);
-
-    /**
-     * Load the underlying document, if not reduced with a custom timeout.
-     *
-     * This method throws:
-     *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
-     *
-     * @param target the custom target document type.
-     * @param timeout the custom timeout.
-     * @param timeUnit the time unit for the custom timeout.
-     * @return the loaded document, null if not found.
-     */
-    <D extends Document<?>> D document(final Class<D> target, long timeout, TimeUnit timeUnit);
+    <D extends Document<?>> Observable<D> document(final Class<D> target);
 
 }

@@ -19,29 +19,29 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.transcoder;
+package com.couchbase.client.java.error;
 
-import com.couchbase.client.core.annotations.InterfaceAudience;
-import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.java.document.Document;
+import com.couchbase.client.core.CouchbaseException;
 
 /**
+ * .
  *
- * @param <D>
- * @param <T>
+ * @author Michael Nitschinger
  */
-@InterfaceStability.Committed
-@InterfaceAudience.Public
-public interface Transcoder<D extends Document<T>, T> {
+public class FlushDisabledException extends CouchbaseException {
 
-    D decode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status);
+    public FlushDisabledException() {
+    }
 
-    Tuple2<ByteBuf, Integer> encode(D document);
+    public FlushDisabledException(String message) {
+        super(message);
+    }
 
-    D newDocument(String id, int expiry, T content, long cas);
+    public FlushDisabledException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    Class<D> documentType();
+    public FlushDisabledException(Throwable cause) {
+        super(cause);
+    }
 }

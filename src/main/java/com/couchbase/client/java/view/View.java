@@ -21,12 +21,17 @@
  */
 package com.couchbase.client.java.view;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+
 /**
  * Represents a View definition to store and load.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public interface View {
 
     /**

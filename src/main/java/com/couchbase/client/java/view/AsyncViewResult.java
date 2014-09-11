@@ -19,29 +19,55 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.transcoder;
+package com.couchbase.client.java.view;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.document.json.JsonObject;
+import rx.Observable;
 
 /**
+ * Represents the result from a {@link ViewQuery}.
  *
- * @param <D>
- * @param <T>
+ * @author Michael Nitschinger
+ * @since 2.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface Transcoder<D extends Document<T>, T> {
+public interface AsyncViewResult {
 
-    D decode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status);
+    /**
+     * Emits one {@link AsyncViewRow} for each row received from the view.
+     *
+     * @return a (potentially empty) {@link Observable} containing view rows.
+     */
+    Observable<AsyncViewRow> rows();
 
-    Tuple2<ByteBuf, Integer> encode(D document);
+    /**
+     * The total number of rows.
+     *
+     * @return number of rows.
+     */
+    int totalRows();
 
-    D newDocument(String id, int expiry, T content, long cas);
+    /**
+     * If the query was successful.
+     *
+     * @return true if it was, false otherwise.
+     */
+    boolean success();
 
-    Class<D> documentType();
+    /**
+     * If it was not successful, an error is contained here.
+     *
+     * @return the potential error.
+     */
+    JsonObject error();
+
+    /**
+     * If debug was enabled on the query, it is contained here.
+     *
+     * @return the debug info.
+     */
+    JsonObject debug();
 }

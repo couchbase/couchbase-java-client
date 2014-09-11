@@ -30,13 +30,14 @@ import com.couchbase.client.core.message.internal.AddServiceRequest;
 import com.couchbase.client.core.message.internal.AddServiceResponse;
 import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.ConnectionString;
-import com.couchbase.client.java.CouchbaseBucket;
+import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.BucketAlreadyExistsException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.TranscodingException;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -46,7 +47,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CouchbaseClusterManager implements ClusterManager {
+public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
     private final ClusterFacade core;
     private final String username;
@@ -54,8 +55,8 @@ public class CouchbaseClusterManager implements ClusterManager {
     private final CouchbaseEnvironment environment;
     private final ConnectionString connectionString;
 
-    CouchbaseClusterManager(final String username, final String password, final ConnectionString connectionString,
-        final CouchbaseEnvironment environment, final ClusterFacade core) {
+    DefaultAsyncClusterManager(final String username, final String password, final ConnectionString connectionString,
+                               final CouchbaseEnvironment environment, final ClusterFacade core) {
         this.username = username;
         this.password = password;
         this.core = core;
@@ -63,9 +64,9 @@ public class CouchbaseClusterManager implements ClusterManager {
         this.connectionString = connectionString;
     }
 
-    public static CouchbaseClusterManager create(final String username, final String password,
+    public static DefaultAsyncClusterManager create(final String username, final String password,
         final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
-        return new CouchbaseClusterManager(username, password, connectionString, environment, core);
+        return new DefaultAsyncClusterManager(username, password, connectionString, environment, core);
     }
 
     @Override
@@ -82,9 +83,9 @@ public class CouchbaseClusterManager implements ClusterManager {
                 @Override
                 public ClusterInfo call(ClusterConfigResponse response) {
                     try {
-                        return new DefaultClusterInfo(CouchbaseBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
+                        return new DefaultClusterInfo(CouchbaseAsyncBucket.JSON_TRANSCODER.stringToJsonObject(response.config()));
                     } catch (Exception e) {
-                        throw new CouchbaseException("Could not decode cluster info.", e);
+                        throw new TranscodingException("Could not decode cluster info.", e);
                     }
                 }
             });
@@ -103,7 +104,7 @@ public class CouchbaseClusterManager implements ClusterManager {
                 @Override
                 public Observable<BucketSettings> call(BucketsConfigResponse response) {
                     try {
-                        JsonArray decoded = CouchbaseBucket.JSON_TRANSCODER.stringTojsonArray(response.config());
+                        JsonArray decoded = CouchbaseAsyncBucket.JSON_TRANSCODER.stringTojsonArray(response.config());
                         List<BucketSettings> settings = new ArrayList<BucketSettings>();
                         for (Object item : decoded) {
                             JsonObject bucket = (JsonObject) item;
@@ -121,7 +122,7 @@ public class CouchbaseClusterManager implements ClusterManager {
                         }
                         return Observable.from(settings);
                     } catch (Exception e) {
-                        throw new CouchbaseException("Could not decode cluster info.", e);
+                        throw new TranscodingException("Could not decode cluster info.", e);
                     }
                 }
             });

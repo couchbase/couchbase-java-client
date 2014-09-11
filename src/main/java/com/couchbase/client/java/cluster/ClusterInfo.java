@@ -21,14 +21,23 @@
  */
 package com.couchbase.client.java.cluster;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.document.json.JsonObject;
 
 /**
- * Represents essential information about the whole cluster.
+ * Provides information about a {@link Cluster}.
+ *
+ * Selected bucket properties are available through explicit getters, the full (raw JSON) response from the server
+ * is accessible through the {@link #raw()} method. Note that the response is subject to change across server
+ * versions and therefore should be properly checked before being used.
  *
  * @author Michael Nitschinger
  * @since 2.0
  */
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public interface ClusterInfo {
 
     /**

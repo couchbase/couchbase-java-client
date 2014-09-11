@@ -1,7 +1,10 @@
 package com.couchbase.client.java.query;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import rx.Observable;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * .
@@ -10,9 +13,17 @@ import rx.Observable;
  */
 public interface QueryResult {
 
-    Observable<QueryRow> rows();
+    List<QueryRow> allRows();
 
-    Observable<JsonObject> info();
+    List<QueryRow> allRows(long timeout, TimeUnit timeUnit);
+
+    Iterator<QueryRow> rows();
+
+    Iterator<QueryRow> rows(long timeout, TimeUnit timeUnit);
+
+    JsonObject info();
+
+    JsonObject info(long timeout, TimeUnit timeUnit);
 
     boolean success();
 

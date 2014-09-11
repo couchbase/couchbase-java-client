@@ -23,13 +23,15 @@ package com.couchbase.client.java.env;
 
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
-import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.AsyncCluster;
 import rx.Scheduler;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * The default implementation of a {@link CouchbaseEnvironment}.
  *
- * This environment is intended to be reused and passed in across {@link Cluster} instances. It is stateful and needs
+ * This environment is intended to be reused and passed in across {@link AsyncCluster} instances. It is stateful and needs
  * to be shut down manually if it was passed in by the user. Some threads it manages are non-daemon threads.
  *
  * Default settings can be customized through the {@link Builder} or through the setting of system properties. Latter
@@ -40,8 +42,39 @@ import rx.Scheduler;
  */
 public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implements CouchbaseEnvironment {
 
+    private static final String NAMESPACE = "com.couchbase.";
+
+    private static final long MANAGEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
+    private static final long QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
+    private static final long VIEW_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
+    private static final long BINARY_TIMEOUT = 2500;
+    private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private static final long DISCONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+
+    private final long managementTimeout;
+    private final long queryTimeout;
+    private final long viewTimeout;
+    private final long binaryTimeout;
+    private final long connectTimeout;
+    private final long disconnectTimeout;
+
     private DefaultCouchbaseEnvironment(final Builder builder) {
        super(builder);
+
+        managementTimeout = longPropertyOr("managementTimeout", builder.managementTimeout());
+        queryTimeout = longPropertyOr("queryTimeout", builder.queryTimeout());
+        viewTimeout = longPropertyOr("viewTimeout", builder.viewTimeout());
+        binaryTimeout = longPropertyOr("binaryTimeout", builder.binaryTimeout());
+        connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout());
+        disconnectTimeout = longPropertyOr("disconnectTimeout", builder.disconnectTimeout());
+    }
+
+    private static long longPropertyOr(String path, long def) {
+        String found = System.getProperty(NAMESPACE + path);
+        if (found == null) {
+            return def;
+        }
+        return Integer.parseInt(found);
     }
 
     /**
@@ -62,7 +95,74 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         return new Builder();
     }
 
-    public static class Builder extends DefaultCoreEnvironment.Builder {
+    public static class Builder extends DefaultCoreEnvironment.Builder implements CouchbaseEnvironment {
+
+        private long managementTimeout = MANAGEMENT_TIMEOUT;
+        private long queryTimeout = QUERY_TIMEOUT;
+        private long viewTimeout = VIEW_TIMEOUT;
+        private long binaryTimeout = BINARY_TIMEOUT;
+        private long connectTimeout = CONNECT_TIMEOUT;
+        private long disconnectTimeout = DISCONNECT_TIMEOUT;
+
+        @Override
+        public long managementTimeout() {
+            return managementTimeout;
+        }
+
+        public Builder managementTimeout(long managementTimeout) {
+            this.managementTimeout = managementTimeout;
+            return this;
+        }
+
+        @Override
+        public long queryTimeout() {
+            return queryTimeout;
+        }
+
+        public Builder queryTimeout(long queryTimeout) {
+            this.queryTimeout = queryTimeout;
+            return this;
+        }
+
+        @Override
+        public long viewTimeout() {
+            return viewTimeout;
+        }
+
+        public Builder viewTimeout(long viewTimeout) {
+            this.viewTimeout = viewTimeout;
+            return this;
+        }
+
+        @Override
+        public long binaryTimeout() {
+            return binaryTimeout;
+        }
+
+        public Builder binaryTimeout(long binaryTimeout) {
+            this.binaryTimeout = binaryTimeout;
+            return this;
+        }
+
+        @Override
+        public long connectTimeout() {
+            return connectTimeout;
+        }
+
+        public Builder connectTimeout(long connectTimeout) {
+            this.connectTimeout = connectTimeout;
+            return this;
+        }
+
+        @Override
+        public long disconnectTimeout() {
+            return disconnectTimeout;
+        }
+
+        public Builder disconnectTimeout(long disconnectTimeout) {
+            this.disconnectTimeout = disconnectTimeout;
+            return this;
+        }
 
         @Override
         public Builder sslEnabled(final boolean sslEnabled) {
@@ -188,5 +288,35 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         public DefaultCouchbaseEnvironment build() {
             return new DefaultCouchbaseEnvironment(this);
         }
+    }
+
+    @Override
+    public long managementTimeout() {
+        return managementTimeout;
+    }
+
+    @Override
+    public long queryTimeout() {
+        return queryTimeout;
+    }
+
+    @Override
+    public long viewTimeout() {
+        return viewTimeout;
+    }
+
+    @Override
+    public long binaryTimeout() {
+        return binaryTimeout;
+    }
+
+    @Override
+    public long connectTimeout() {
+        return connectTimeout;
+    }
+
+    @Override
+    public long disconnectTimeout() {
+        return disconnectTimeout;
     }
 }
