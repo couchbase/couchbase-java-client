@@ -25,11 +25,11 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.core.message.kv.*;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
+import com.couchbase.client.core.message.kv.*;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
@@ -40,22 +40,11 @@ import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.JsonDoubleDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.*;
-import com.couchbase.client.java.transcoder.BinaryTranscoder;
-import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
-import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
-import com.couchbase.client.java.transcoder.JsonDoubleTranscoder;
-import com.couchbase.client.java.transcoder.JsonLongTranscoder;
-import com.couchbase.client.java.transcoder.JsonStringTranscoder;
-import com.couchbase.client.java.transcoder.JsonTranscoder;
-import com.couchbase.client.java.transcoder.LegacyTranscoder;
-import com.couchbase.client.java.transcoder.SerializableTranscoder;
-import com.couchbase.client.java.transcoder.StringTranscoder;
-import com.couchbase.client.java.transcoder.Transcoder;
+import com.couchbase.client.java.transcoder.*;
 import com.couchbase.client.java.view.*;
 import rx.Observable;
 import rx.functions.Func1;
@@ -472,6 +461,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 if (trows != null) {
                                     totalRows = trows;
                                 }
+                            } else if (response.status() == ResponseStatus.NOT_EXISTS) {
+                                throw new ViewDoesNotExistException("View " + query.getDesign() + "/"
+                                    + query.getView() + " does not exist.");
                             } else {
                                 error = jsonInfo;
                             }

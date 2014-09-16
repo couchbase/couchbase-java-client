@@ -24,9 +24,8 @@ package com.couchbase.client.java.error;
 import com.couchbase.client.core.CouchbaseException;
 
 /**
- * .
- *
  * @author Michael Nitschinger
+ * @since 2.0
  */
 public class DesignDocumentException extends CouchbaseException {
 
