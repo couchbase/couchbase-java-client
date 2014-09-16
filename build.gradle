@@ -51,6 +51,19 @@ repositories {
     jcenter()
 }
 
+def getVersionName() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--always', '--dirty'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    } catch (e) {
+        return "unknown"
+    }
+}
+
 ext {
     coreVersion = '1.0.0-SNAPSHOT'
 
@@ -60,6 +73,8 @@ ext {
 
     junitVersion = '4.11'
     mockitoVersion = '1.9.5'
+
+    gitVersion = getVersionName()
 }
 
 sourceSets {
@@ -263,3 +278,12 @@ def customizePom(def pom) {
         }
     }
 }
+
+jar.manifest.mainAttributes(
+        'Implementation-Title': 'Couchbase Java Client',
+        'Implementation-Version': ext.gitVersion,
+        'Implementation-Vendor': 'Couchbase, Inc.',
+        'Specification-Title': 'com.couchbase.client.java',
+        'Specification-Version': version,
+        'Specification-Vendor': 'Couchbase, Inc.'
+)

@@ -21,9 +21,14 @@
  */
 package com.couchbase.client.java.env;
 
+import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
 import com.couchbase.client.java.AsyncCluster;
+import com.couchbase.client.java.CouchbaseCluster;
 import rx.Scheduler;
 
 import java.util.concurrent.TimeUnit;
@@ -42,6 +47,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implements CouchbaseEnvironment {
 
+    /**
+     * The logger used.
+     */
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseEnvironment.class);
+
     private static final String NAMESPACE = "com.couchbase.";
 
     private static final long MANAGEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
@@ -58,6 +68,39 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long connectTimeout;
     private final long disconnectTimeout;
 
+    public static String PACKAGE_NAME_AND_VERSION = "couchbase-java-client";
+
+    /**
+     * Sets up the package version and user agent.
+     *
+     * Note that because the class loader loads classes on demand, one class from the package
+     * is loaded upfront.
+     */
+    static {
+        try {
+            Class<CouchbaseCluster> facadeClass = CouchbaseCluster.class;
+            if (facadeClass == null) {
+                throw new IllegalStateException("Could not locate ClusterFacade");
+            }
+
+            Package pkg = Package.getPackage("com.couchbase.client.java");
+            String version = pkg.getSpecificationVersion();
+            String gitVersion = pkg.getImplementationVersion();
+            PACKAGE_NAME_AND_VERSION = String.format("couchbase-java-client/%s (git: %s)",
+                version == null ? "unknown" : version, gitVersion == null ? "unknown" : gitVersion);
+
+            USER_AGENT = String.format("%s (%s/%s %s; %s %s)",
+                PACKAGE_NAME_AND_VERSION,
+                System.getProperty("os.name"),
+                System.getProperty("os.version"),
+                System.getProperty("os.arch"),
+                System.getProperty("java.vm.name"),
+                System.getProperty("java.runtime.version")
+            );
+        } catch (Exception ex) {
+            LOGGER.info("Could not set up user agent and packages, defaulting.", ex);
+        }
+    }
     private DefaultCouchbaseEnvironment(final Builder builder) {
        super(builder);
 
@@ -67,14 +110,6 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         binaryTimeout = longPropertyOr("binaryTimeout", builder.binaryTimeout());
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout());
         disconnectTimeout = longPropertyOr("disconnectTimeout", builder.disconnectTimeout());
-    }
-
-    private static long longPropertyOr(String path, long def) {
-        String found = System.getProperty(NAMESPACE + path);
-        if (found == null) {
-            return def;
-        }
-        return Integer.parseInt(found);
     }
 
     /**
@@ -103,6 +138,9 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long binaryTimeout = BINARY_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private long disconnectTimeout = DISCONNECT_TIMEOUT;
+
+        private String userAgent = USER_AGENT;
+        private String packageNameAndVersion = PACKAGE_NAME_AND_VERSION;
 
         @Override
         public long managementTimeout() {
@@ -282,6 +320,28 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         public Builder scheduler(final Scheduler scheduler) {
             super.scheduler(scheduler);
             return this;
+        }
+
+        @Override
+        public Builder packageNameAndVersion(final String packageNameAndVersion) {
+            super.packageNameAndVersion(packageNameAndVersion);
+            return this;
+        }
+
+        @Override
+        public String packageNameAndVersion() {
+            return packageNameAndVersion;
+        }
+
+        @Override
+        public Builder userAgent(final String userAgent) {
+            super.userAgent(userAgent);
+            return this;
+        }
+
+        @Override
+        public String userAgent() {
+            return userAgent;
         }
 
         @Override
