@@ -27,20 +27,20 @@ import com.couchbase.client.core.CouchbaseException;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class TranscodingException extends CouchbaseException {
+public class ViewDoesNotExistException extends CouchbaseException {
 
-    public TranscodingException() {
+    public ViewDoesNotExistException() {
     }
 
-    public TranscodingException(String message) {
+    public ViewDoesNotExistException(String message) {
         super(message);
     }
 
-    public TranscodingException(String message, Throwable cause) {
+    public ViewDoesNotExistException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public TranscodingException(Throwable cause) {
+    public ViewDoesNotExistException(Throwable cause) {
         super(cause);
     }
 }

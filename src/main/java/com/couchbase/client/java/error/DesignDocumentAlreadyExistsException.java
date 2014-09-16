@@ -22,9 +22,8 @@
 package com.couchbase.client.java.error;
 
 /**
- * .
- *
  * @author Michael Nitschinger
+ * @since 2.0
  */
 public class DesignDocumentAlreadyExistsException extends DesignDocumentException {
 
