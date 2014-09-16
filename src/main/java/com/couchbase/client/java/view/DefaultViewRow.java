@@ -15,7 +15,7 @@ public class DefaultViewRow implements ViewRow {
 
     public DefaultViewRow(CouchbaseEnvironment env, Bucket bucket, String id, Object key, Object value) {
         this.asyncViewRow = new DefaultAsyncViewRow(bucket.async(), id, key, value);
-        this.timeout = env.binaryTimeout();
+        this.timeout = env.kvTimeout();
     }
 
     @Override

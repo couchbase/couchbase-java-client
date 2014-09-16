@@ -25,7 +25,7 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.core.message.binary.*;
+import com.couchbase.client.core.message.kv.*;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;

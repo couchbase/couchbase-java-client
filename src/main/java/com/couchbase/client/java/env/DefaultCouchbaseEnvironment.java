@@ -57,14 +57,14 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long MANAGEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long VIEW_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
-    private static final long BINARY_TIMEOUT = 2500;
+    private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     private static final long DISCONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
 
     private final long managementTimeout;
     private final long queryTimeout;
     private final long viewTimeout;
-    private final long binaryTimeout;
+    private final long kvTimeout;
     private final long connectTimeout;
     private final long disconnectTimeout;
 
@@ -107,7 +107,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         managementTimeout = longPropertyOr("managementTimeout", builder.managementTimeout());
         queryTimeout = longPropertyOr("queryTimeout", builder.queryTimeout());
         viewTimeout = longPropertyOr("viewTimeout", builder.viewTimeout());
-        binaryTimeout = longPropertyOr("binaryTimeout", builder.binaryTimeout());
+        kvTimeout = longPropertyOr("kvTimeout", builder.kvTimeout());
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout());
         disconnectTimeout = longPropertyOr("disconnectTimeout", builder.disconnectTimeout());
     }
@@ -135,7 +135,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long managementTimeout = MANAGEMENT_TIMEOUT;
         private long queryTimeout = QUERY_TIMEOUT;
         private long viewTimeout = VIEW_TIMEOUT;
-        private long binaryTimeout = BINARY_TIMEOUT;
+        private long kvTimeout = KV_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private long disconnectTimeout = DISCONNECT_TIMEOUT;
 
@@ -173,12 +173,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
-        public long binaryTimeout() {
-            return binaryTimeout;
+        public long kvTimeout() {
+            return kvTimeout;
         }
 
-        public Builder binaryTimeout(long binaryTimeout) {
-            this.binaryTimeout = binaryTimeout;
+        public Builder kvTimeout(long kvTimeout) {
+            this.kvTimeout = kvTimeout;
             return this;
         }
 
@@ -293,8 +293,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
-        public Builder binaryEndpoints(final int binaryServiceEndpoints) {
-            super.binaryEndpoints(binaryServiceEndpoints);
+        public Builder kvEndpoints(final int kvEndpoints) {
+            super.kvEndpoints(kvEndpoints);
             return this;
         }
 
@@ -366,8 +366,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     }
 
     @Override
-    public long binaryTimeout() {
-        return binaryTimeout;
+    public long kvTimeout() {
+        return kvTimeout;
     }
 
     @Override

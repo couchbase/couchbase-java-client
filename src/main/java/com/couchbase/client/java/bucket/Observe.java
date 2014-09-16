@@ -23,8 +23,8 @@ package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
-import com.couchbase.client.core.message.binary.ObserveRequest;
-import com.couchbase.client.core.message.binary.ObserveResponse;
+import com.couchbase.client.core.message.kv.ObserveRequest;
+import com.couchbase.client.core.message.kv.ObserveResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.java.PersistTo;

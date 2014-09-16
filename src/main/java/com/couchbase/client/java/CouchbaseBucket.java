@@ -27,7 +27,7 @@ public class CouchbaseBucket implements Bucket {
     private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
     private final AsyncBucket asyncBucket;
     private final CouchbaseEnvironment environment;
-    private final long binaryTimeout;
+    private final long kvTimeout;
     private final String name;
     private final String password;
     private final ClusterFacade core;
@@ -36,7 +36,7 @@ public class CouchbaseBucket implements Bucket {
         final List<Transcoder<? extends Document, ?>> customTranscoders) {
         asyncBucket = new CouchbaseAsyncBucket(core, name, password, customTranscoders);
         this.environment = env;
-        this.binaryTimeout = env.binaryTimeout();
+        this.kvTimeout = env.kvTimeout();
         this.name = name;
         this.password = password;
         this.core = core;
@@ -54,7 +54,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument get(String id) {
-        return get(id, binaryTimeout, TIMEOUT_UNIT);
+        return get(id, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D get(D document) {
-        return get(document, binaryTimeout, TIMEOUT_UNIT);
+        return get(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D get(String id, Class<D> target) {
-        return get(id, target, binaryTimeout, TIMEOUT_UNIT);
+        return get(id, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public List<JsonDocument> getFromReplica(String id, ReplicaMode type) {
-        return getFromReplica(id, type, binaryTimeout, TIMEOUT_UNIT);
+        return getFromReplica(id, type, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -111,7 +111,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type) {
-        return getFromReplica(document, type, binaryTimeout, TIMEOUT_UNIT);
+        return getFromReplica(document, type, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target) {
-        return getFromReplica(id, type, target, binaryTimeout, TIMEOUT_UNIT);
+        return getFromReplica(id, type, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -141,7 +141,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument getAndLock(String id, int lockTime) {
-        return getAndLock(id, lockTime, binaryTimeout, TIMEOUT_UNIT);
+        return getAndLock(id, lockTime, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndLock(D document, int lockTime) {
-        return getAndLock(document, lockTime, binaryTimeout, TIMEOUT_UNIT);
+        return getAndLock(document, lockTime, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target) {
-        return getAndLock(id, lockTime, target, binaryTimeout, TIMEOUT_UNIT);
+        return getAndLock(id, lockTime, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -183,7 +183,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument getAndTouch(String id, int expiry) {
-        return getAndTouch(id, expiry, binaryTimeout, TIMEOUT_UNIT);
+        return getAndTouch(id, expiry, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -197,7 +197,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndTouch(D document) {
-        return getAndTouch(document, binaryTimeout, TIMEOUT_UNIT);
+        return getAndTouch(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -211,7 +211,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target) {
-        return getAndTouch(id, expiry, target, binaryTimeout, TIMEOUT_UNIT);
+        return getAndTouch(id, expiry, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document) {
-        return insert(document, binaryTimeout, TIMEOUT_UNIT);
+        return insert(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -239,7 +239,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return insert(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return insert(document, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -253,7 +253,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, PersistTo persistTo) {
-        return insert(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+        return insert(document, persistTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -267,7 +267,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, ReplicateTo replicateTo) {
-        return insert(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return insert(document, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -281,7 +281,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document) {
-        return upsert(document, binaryTimeout, TIMEOUT_UNIT);
+        return upsert(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -295,7 +295,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return upsert(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return upsert(document, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -309,7 +309,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, PersistTo persistTo) {
-        return upsert(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+        return upsert(document, persistTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -323,7 +323,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo) {
-        return upsert(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return upsert(document, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -337,7 +337,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document) {
-        return replace(document, binaryTimeout, TIMEOUT_UNIT);
+        return replace(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -351,7 +351,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return replace(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return replace(document, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -365,7 +365,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, PersistTo persistTo) {
-        return replace(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+        return replace(document, persistTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -379,7 +379,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, ReplicateTo replicateTo) {
-        return replace(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return replace(document, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -393,22 +393,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D remove(D document) {
-        return remove(document, binaryTimeout, TIMEOUT_UNIT);
+        return remove(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return remove(document, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(document, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, PersistTo persistTo) {
-        return remove(document, persistTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(document, persistTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, ReplicateTo replicateTo) {
-        return remove(document, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(document, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -449,22 +449,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument remove(String id) {
-        return remove(id, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo) {
-        return remove(id, persistTo, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public JsonDocument remove(String id, PersistTo persistTo) {
-        return remove(id, persistTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, persistTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public JsonDocument remove(String id, ReplicateTo replicateTo) {
-        return remove(id, replicateTo, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, replicateTo, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -505,22 +505,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D remove(String id, Class<D> target) {
-        return remove(id, target, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target) {
-        return remove(id, persistTo, replicateTo, target, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, persistTo, replicateTo, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target) {
-        return remove(id, persistTo, target, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, persistTo, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target) {
-        return remove(id, replicateTo, target, binaryTimeout, TIMEOUT_UNIT);
+        return remove(id, replicateTo, target, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -625,12 +625,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Boolean unlock(String id, long cas) {
-        return unlock(id, cas, binaryTimeout, TIMEOUT_UNIT);
+        return unlock(id, cas, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> Boolean unlock(D document) {
-        return unlock(document, binaryTimeout, TIMEOUT_UNIT);
+        return unlock(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -653,12 +653,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Boolean touch(String id, int expiry) {
-        return touch(id, expiry, binaryTimeout, TIMEOUT_UNIT);
+        return touch(id, expiry, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> Boolean touch(D document) {
-        return touch(document, binaryTimeout, TIMEOUT_UNIT);
+        return touch(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -681,17 +681,17 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonLongDocument counter(String id, long delta) {
-        return counter(id, delta, binaryTimeout, TIMEOUT_UNIT);
+        return counter(id, delta, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial) {
-        return counter(id, delta, initial, binaryTimeout, TIMEOUT_UNIT);
+        return counter(id, delta, initial, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial, int expiry) {
-        return counter(id, delta, initial, expiry, binaryTimeout, TIMEOUT_UNIT);
+        return counter(id, delta, initial, expiry, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
@@ -737,12 +737,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D append(D document) {
-        return append(document, binaryTimeout, TIMEOUT_UNIT);
+        return append(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
     public <D extends Document<?>> D prepend(D document) {
-        return prepend(document, binaryTimeout, TIMEOUT_UNIT);
+        return prepend(document, kvTimeout, TIMEOUT_UNIT);
     }
 
     @Override
