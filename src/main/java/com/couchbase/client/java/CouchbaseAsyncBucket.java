@@ -40,13 +40,21 @@ import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.JsonDoubleDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.*;
+import com.couchbase.client.java.transcoder.BinaryTranscoder;
 import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
+import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
+import com.couchbase.client.java.transcoder.JsonDoubleTranscoder;
+import com.couchbase.client.java.transcoder.JsonLongTranscoder;
+import com.couchbase.client.java.transcoder.JsonStringTranscoder;
 import com.couchbase.client.java.transcoder.JsonTranscoder;
 import com.couchbase.client.java.transcoder.LegacyTranscoder;
+import com.couchbase.client.java.transcoder.SerializableTranscoder;
+import com.couchbase.client.java.transcoder.StringTranscoder;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.view.*;
 import rx.Observable;
@@ -59,16 +67,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
-  public static final JsonTranscoder JSON_OBJECT_TRANSCODER = new JsonTranscoder();
-  public static final JsonArrayTranscoder JSON_ARRAY_TRANSCODER = new JsonArrayTranscoder();
+    public static final JsonTranscoder JSON_OBJECT_TRANSCODER = new JsonTranscoder();
+    public static final JsonArrayTranscoder JSON_ARRAY_TRANSCODER = new JsonArrayTranscoder();
+    public static final JsonBooleanTranscoder JSON_BOOLEAN_TRANSCODER = new JsonBooleanTranscoder();
+    public static final JsonDoubleTranscoder JSON_DOUBLE_TRANSCODER = new JsonDoubleTranscoder();
+    public static final JsonLongTranscoder JSON_LONG_TRANSCODER = new JsonLongTranscoder();
+    public static final JsonStringTranscoder JSON_STRING_TRANSCODER = new JsonStringTranscoder();
 
-  public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
+    public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
+    public static final BinaryTranscoder BINARY_TRANSCODER = new BinaryTranscoder();
+    public static final StringTranscoder STRING_TRANSCODER = new StringTranscoder();
+    public static final SerializableTranscoder SERIALIZABLE_TRANSCODER = new SerializableTranscoder();
 
-  private final String bucket;
-  private final String password;
-  private final ClusterFacade core;
-  private final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders;
-  private final AsyncBucketManager bucketManager;
+    private final String bucket;
+    private final String password;
+    private final ClusterFacade core;
+    private final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders;
+    private final AsyncBucketManager bucketManager;
 
 
     public CouchbaseAsyncBucket(final ClusterFacade core, final String name, final String password,
@@ -79,7 +94,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
         transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
         transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);
+        transcoders.put(JSON_ARRAY_TRANSCODER.documentType(), JSON_ARRAY_TRANSCODER);
+        transcoders.put(JSON_BOOLEAN_TRANSCODER.documentType(), JSON_BOOLEAN_TRANSCODER);
+        transcoders.put(JSON_DOUBLE_TRANSCODER.documentType(), JSON_DOUBLE_TRANSCODER);
+        transcoders.put(JSON_LONG_TRANSCODER.documentType(), JSON_LONG_TRANSCODER);
+        transcoders.put(JSON_STRING_TRANSCODER.documentType(), JSON_STRING_TRANSCODER);
         transcoders.put(LEGACY_TRANSCODER.documentType(), LEGACY_TRANSCODER);
+        transcoders.put(BINARY_TRANSCODER.documentType(), BINARY_TRANSCODER);
+        transcoders.put(STRING_TRANSCODER.documentType(), STRING_TRANSCODER);
+        transcoders.put(SERIALIZABLE_TRANSCODER.documentType(), SERIALIZABLE_TRANSCODER);
 
         for (Transcoder<? extends Document, ?> custom : customTranscoders) {
             transcoders.put(custom.documentType(), custom);
