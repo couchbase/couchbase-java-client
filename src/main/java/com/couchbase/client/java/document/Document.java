@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.AsyncBucket;
 
 /**
@@ -29,6 +31,8 @@ import com.couchbase.client.java.AsyncBucket;
  * @author Michael Nitschinger
  * @since 2.0
  */
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public interface Document<T> {
 
    /**

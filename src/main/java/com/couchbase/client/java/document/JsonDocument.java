@@ -33,6 +33,8 @@ import com.couchbase.client.java.document.json.JsonObject;
  * nicely with this immutable value object. It is possible to construct empty/fresh ones, but also copies will be
  * created from passed in documents, allowing you to override specific parts during the copy process.
  *
+ * This document is interoperable with other SDKs.
+ *
  * It can always be the case that some or all fields of a {@link JsonDocument} are not set, depending on the operation
  * performed. Here are the accessible fields and their default values:
  *

@@ -23,8 +23,17 @@ package com.couchbase.client.java.document;
 
 import java.io.Serializable;
 
+/**
+ * Handles content which implements {@link Serializable}.
+ *
+ * This document is not interoperable with other SDKs, since java object serialization is not convertible
+ * into other programming languages. It is compatible with the legacy object serialization from the 1.*
+ * SDK series.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
 public class SerializableDocument extends AbstractDocument<Serializable> {
-
 
     /**
      * Creates a empty {@link SerializableDocument}.

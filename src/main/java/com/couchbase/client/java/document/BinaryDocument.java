@@ -23,6 +23,12 @@ package com.couchbase.client.java.document;
 
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 
+/**
+ * Represents raw {@link ByteBuf} content in a document.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
 public class BinaryDocument extends AbstractDocument<ByteBuf> {
 
     /**

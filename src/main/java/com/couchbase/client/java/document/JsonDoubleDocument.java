@@ -21,6 +21,15 @@
  */
 package com.couchbase.client.java.document;
 
+/**
+ * Stores a properly encoded JSON scalar double or float as the toplevel type.
+ *
+ * This document works exactly like {@link JsonDocument}, but it accepts a different toplevel type. This document
+ * is interoperable with other SDKs.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
 public class JsonDoubleDocument extends AbstractDocument<Double> {
 
     /**
