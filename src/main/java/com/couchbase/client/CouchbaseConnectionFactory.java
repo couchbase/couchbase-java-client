@@ -390,9 +390,9 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
 
     if (currentTime - thresholdLastCheck >= TimeUnit.SECONDS.toNanos(10)) {
       configThresholdCount.set(0);
+      thresholdLastCheck = currentTime;
     }
 
-    thresholdLastCheck = currentTime;
     if (configThresholdCount.incrementAndGet() >= maxConfigCheck) {
       return true;
     }
