@@ -81,7 +81,7 @@ public class BucketConfigurationProvider extends SpyObject
   private final AtomicReference<CouchbaseConnection> binaryConnection;
   private final boolean disableCarrierBootstrap;
   private final boolean disableHttpBootstrap;
-  private volatile BootstrapProviderType bootstrapProvider;
+  private volatile BootstrapProviderType bootstrapProvider = BootstrapProviderType.NONE;
   private volatile long lastRevision;
   private volatile boolean shutdown;
 
