@@ -58,7 +58,7 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
     long viewTimeout();
 
     /**
-     * The default timeout for binary (key/value) operations, set to {@link DefaultCouchbaseEnvironment#BINARY_TIMEOUT}.
+     * The default timeout for binary (key/value) operations, set to {@link DefaultCouchbaseEnvironment#KV_TIMEOUT}.
      *
      * @return the default binary timeout.
      */
