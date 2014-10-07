@@ -21,52 +21,49 @@
  */
 package com.couchbase.client.java.transcoder;
 
+import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
-import com.couchbase.client.java.document.StringDocument;
-import org.junit.Before;
-import org.junit.Test;
+import com.couchbase.client.java.document.RawJsonDocument;
+import com.couchbase.client.java.error.TranscodingException;
 
-import static org.junit.Assert.assertEquals;
+/**
+ * A transcoder to encode and decode a {@link RawJsonDocument}s.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
+public class RawJsonTranscoder extends AbstractTranscoder<RawJsonDocument, String> {
 
-public class StringTranscoderTest {
-
-
-    private StringTranscoder converter;
-
-    @Before
-    public void setup() {
-        converter = new StringTranscoder();
+    @Override
+    protected Tuple2<ByteBuf, Integer> doEncode(RawJsonDocument document) throws Exception {
+        return Tuple.create(Unpooled.copiedBuffer(document.content(), CharsetUtil.UTF_8),
+            TranscoderUtils.JSON_COMPAT_FLAGS);
     }
 
-    @Test
-    public void shouldEncodeString() {
-        StringDocument document = StringDocument.create("id", "value");
-        Tuple2<ByteBuf, Integer> encoded = converter.encode(document);
+    @Override
+    protected RawJsonDocument doDecode(String id, ByteBuf content, long cas, int expiry, int flags,
+        ResponseStatus status) throws Exception {
+        if (!TranscoderUtils.hasJsonFlags(flags)) {
+            throw new TranscodingException("Flags (0x" + Integer.toHexString(flags) + ") indicate non-JSON document for "
+                + "id " + id + ", could not decode.");
+        }
 
-        assertEquals("value", encoded.value1().toString(CharsetUtil.UTF_8));
-        assertEquals(TranscoderUtils.STRING_COMPAT_FLAGS, (long) encoded.value2());
+        String converted = content.toString(CharsetUtil.UTF_8);
+        content.release();
+        return newDocument(id, expiry, converted, cas);
     }
 
-    @Test
-    public void shouldDecodeCommonString() {
-        ByteBuf content = Unpooled.copiedBuffer("value", CharsetUtil.UTF_8);
-        StringDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.STRING_COMMON_FLAGS,
-            ResponseStatus.SUCCESS);
-
-        assertEquals("value", decoded.content());
+    @Override
+    public RawJsonDocument newDocument(String id, int expiry, String content, long cas) {
+        return RawJsonDocument.create(id, expiry, content, cas);
     }
 
-    @Test
-    public void shouldDecodeLegacyString() {
-        ByteBuf content = Unpooled.copiedBuffer("value", CharsetUtil.UTF_8);
-        StringDocument decoded = converter.decode("id", content, 0, 0, 0,
-            ResponseStatus.SUCCESS);
-
-        assertEquals("value", decoded.content());
+    @Override
+    public Class<RawJsonDocument> documentType() {
+        return RawJsonDocument.class;
     }
-
 }

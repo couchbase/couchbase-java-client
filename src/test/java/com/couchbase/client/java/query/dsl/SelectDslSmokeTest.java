@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class SelectDslSomokeTest {
+public class SelectDslSmokeTest {
 
     @Test
     public void test1() {
