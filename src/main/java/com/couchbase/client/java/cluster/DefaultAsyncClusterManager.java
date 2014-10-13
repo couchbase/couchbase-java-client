@@ -114,7 +114,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                 .type(bucket.getString("bucketType").equals("membase")
                                     ? BucketType.COUCHBASE : BucketType.MEMCACHED)
                                 .replicas(bucket.getInt("replicaNumber"))
-                                .quota(bucket.getObject("quota").getInt("ram"))
+                                .quota((int) (bucket.getObject("quota").getLong("ram") / 1024 / 1024))
                                 .indexReplicas(bucket.getBoolean("replicaIndex"))
                                 .port(bucket.getInt("proxyPort"))
                                 .password(bucket.getString("saslPassword"))
