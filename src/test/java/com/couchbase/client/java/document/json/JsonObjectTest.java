@@ -24,8 +24,15 @@ package com.couchbase.client.java.document.json;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
+/**
+ * Verifies the functionality provided by a {@link JsonObject}.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
+ */
 public class JsonObjectTest {
 
     @Test
@@ -58,6 +65,21 @@ public class JsonObjectTest {
     public void shouldReturnNullWhenNotFound() {
         JsonObject obj = JsonObject.empty();
         assertNull(obj.getInt("notfound"));
+    }
+
+    @Test
+    public void shouldEqualBasedOnItsProperties() {
+        JsonObject obj1 = JsonObject.create().put("foo", "bar");
+        JsonObject obj2 = JsonObject.create().put("foo", "bar");
+        assertEquals(obj1, obj2);
+
+        obj1 = JsonObject.create().put("foo", "baz");
+        obj2 = JsonObject.create().put("foo", "bar");
+        assertNotEquals(obj1, obj2);
+
+        obj1 = JsonObject.create().put("foo", "bar").put("bar", "baz");
+        obj2 = JsonObject.create().put("foo", "bar");
+        assertNotEquals(obj1, obj2);
     }
 
 }
