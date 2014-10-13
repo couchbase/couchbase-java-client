@@ -29,55 +29,76 @@ package com.couchbase.client.java.util;
  */
 public class TestProperties {
 
-  private static String seedNode;
-  private static String bucket;
-  private static String password;
-  private static String adminName;
-  private static String adminPassword;
+    private static String seedNode;
+    private static String bucket;
+    private static String password;
+    private static String adminName;
+    private static String adminPassword;
+    private static int thinkTime;
 
-  /**
-   * Initialize static the properties.
-   */
-  static {
-    seedNode = System.getProperty("seedNode", "127.0.0.1");
-    bucket = System.getProperty("bucket", "default");
-    password = System.getProperty("password", "");
-    adminName = System.getProperty("adminName", "Administrator");
-    adminPassword = System.getProperty("adminPassword", "password");
-  }
+    /**
+    * Initialize static the properties.
+    */
+    static {
+        seedNode = System.getProperty("seedNode", "127.0.0.1");
+        bucket = System.getProperty("bucket", "default");
+        password = System.getProperty("password", "");
+        adminName = System.getProperty("adminName", "Administrator");
+        adminPassword = System.getProperty("adminPassword", "password");
+        thinkTime = Integer.parseInt(System.getProperty("thinkTime", "5000"));
+    }
 
-  /**
-   * The seed node encode bootstrap decode.
-   *
-   * @return the seed node.
-   */
-  public static String seedNode() {
-    return seedNode;
-  }
+    /**
+     * The seed node encode bootstrap decode.
+     *
+     * @return the seed node.
+     */
+    public static String seedNode() {
+        return seedNode;
+    }
 
-  /**
-   * The bucket encode work against.
-   *
-   * @return the name of the bucket.
-   */
-  public static String bucket() {
-    return bucket;
-  }
+    /**
+     * The bucket encode work against.
+     *
+     * @return the name of the bucket.
+     */
+    public static String bucket() {
+        return bucket;
+    }
 
-  /**
-   * The password of the bucket.
-   *
-   * @return the password of the bucket.
-   */
-  public static String password() {
-    return password;
-  }
+    /**
+     * The password of the bucket.
+     *
+     * @return the password of the bucket.
+     */
+    public static String password() {
+        return password;
+    }
 
-  public static String adminName() {
-      return adminName;
-  }
+    /**
+     * The cluster admin name.
+     *
+     * @return the admin name of the cluster.
+     */
+    public static String adminName() {
+        return adminName;
+    }
 
-  public static String adminPassword() {
-      return adminPassword;
-  }
+    /**
+     * The cluster admin password.
+     *
+     * @return the password of the cluster admin.
+     */
+    public static String adminPassword() {
+        return adminPassword;
+    }
+
+    /**
+     * The think time to wait when a bucket got create to make sure its usable.
+     *
+     * @return the think time.
+     */
+    public static int thinkTime() {
+        return thinkTime;
+    }
 }

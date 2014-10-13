@@ -38,8 +38,6 @@ import org.junit.BeforeClass;
 public class ClusterDependentTest {
 
     private static final String seedNode = TestProperties.seedNode();
-    private static final String bucketName = TestProperties.bucket();
-    private static final String password = TestProperties.password();
     private static final String adminName = TestProperties.adminName();
     private static final String adminPassword = TestProperties.adminPassword();
 
@@ -48,23 +46,25 @@ public class ClusterDependentTest {
     private static ClusterManager clusterManager;
 
     @BeforeClass
-    public static void connect() {
+    public static void connect() throws Exception {
         cluster = CouchbaseCluster.create(seedNode);
         clusterManager = cluster.clusterManager(adminName, adminPassword);
-        boolean exists = clusterManager.hasBucket(bucketName);
+        boolean exists = clusterManager.hasBucket(bucketName());
 
         if (!exists) {
             clusterManager.insertBucket(DefaultBucketSettings
                 .builder()
-                .name("default")
+                .name(bucketName())
                 .quota(256)
                 .password("")
                 .enableFlush(true)
                 .type(BucketType.COUCHBASE)
                 .build());
+
+            Thread.sleep(TestProperties.thinkTime());
         }
 
-        bucket = cluster.openBucket(bucketName, password);
+        bucket = cluster.openBucket(bucketName(), password());
         bucket.bucketManager().flush();
     }
 
@@ -74,7 +74,7 @@ public class ClusterDependentTest {
     }
 
     public static String password() {
-        return password;
+        return  TestProperties.password();
     }
 
     public static Cluster cluster() {
@@ -86,7 +86,7 @@ public class ClusterDependentTest {
     }
 
     public static String bucketName() {
-        return bucketName;
+        return TestProperties.bucket();
     }
 
     public static ClusterManager clusterManager() {

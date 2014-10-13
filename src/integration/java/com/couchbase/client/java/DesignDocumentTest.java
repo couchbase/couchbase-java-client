@@ -28,6 +28,11 @@ public class DesignDocumentTest extends ClusterDependentTest {
     @Before
     public void setup() {
         manager = bucket().bucketManager();
+
+        List<DesignDocument> designDocuments = manager.getDesignDocuments();
+        for (DesignDocument ddoc : designDocuments) {
+            manager.removeDesignDocument(ddoc.name());
+        }
     }
 
     @Test
