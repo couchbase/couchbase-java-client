@@ -24,6 +24,7 @@ package com.couchbase.client.java;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.config.ConfigurationException;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.DisconnectRequest;
@@ -35,6 +36,8 @@ import com.couchbase.client.java.cluster.DefaultAsyncClusterManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.transcoder.Transcoder;
 import rx.Observable;
 import rx.functions.Func1;
@@ -143,11 +146,23 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             }).onErrorResumeNext(new Func1<Throwable, Observable<AsyncBucket>>() {
                 @Override
                 public Observable<AsyncBucket> call(final Throwable throwable) {
-                    if (throwable instanceof CouchbaseException) {
+                    if (throwable instanceof ConfigurationException) {
+                        if (throwable.getCause() instanceof IllegalStateException
+                            && throwable.getCause().getMessage().contains("NOT_EXISTS")) {
+                            return Observable.error(new BucketDoesNotExistException("Bucket \"" + name
+                                + "\" does not exist."));
+                        } else if (throwable.getCause() instanceof IllegalStateException
+                            && throwable.getCause().getMessage().contains("Unauthorized")) {
+                            return Observable.error(new InvalidPasswordException("Passwords for bucket \"" + name
+                                +"\" do not match."));
+                        } else {
+                            return Observable.error(throwable);
+                        }
+                    } else if (throwable instanceof CouchbaseException) {
                         return Observable.error(throwable);
+                    } else {
+                        return Observable.error(new CouchbaseException(throwable));
                     }
-
-                    return Observable.error(new CouchbaseException(throwable));
                 }
             });
     }

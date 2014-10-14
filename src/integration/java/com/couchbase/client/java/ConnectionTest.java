@@ -21,7 +21,8 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.core.config.ConfigurationException;
+import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.Test;
 
@@ -45,13 +46,13 @@ public class ConnectionTest {
         cluster.openBucket("");
     }
 
-    @Test(expected = ConfigurationException.class)
+    @Test(expected = BucketDoesNotExistException.class)
     public void shouldThrowConfigurationExceptionForWrongBucketName() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
         cluster.openBucket("someWrongBucketName");
     }
 
-    @Test(expected = ConfigurationException.class)
+    @Test(expected = InvalidPasswordException.class)
     public void shouldThrowConfigurationExceptionForWrongBucketPassword() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
         cluster.openBucket(TestProperties.bucket(), "completelyWrongPassword");
