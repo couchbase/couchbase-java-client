@@ -46,6 +46,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
@@ -108,13 +109,21 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                         List<BucketSettings> settings = new ArrayList<BucketSettings>();
                         for (Object item : decoded) {
                             JsonObject bucket = (JsonObject) item;
+
+                            int ramQuota = 0;
+                            if (bucket.getObject("quota").get("ram") instanceof Long) {
+                                ramQuota = (int) (bucket.getObject("quota").getLong("ram") / 1024 / 1024);
+                            } else {
+                                ramQuota = bucket.getObject("quota").getInt("ram") / 1024 / 1024;
+                            }
+
                             settings.add(DefaultBucketSettings.builder()
                                 .name(bucket.getString("name"))
                                 .enableFlush(bucket.getObject("controllers").getString("flush") != null)
                                 .type(bucket.getString("bucketType").equals("membase")
                                     ? BucketType.COUCHBASE : BucketType.MEMCACHED)
                                 .replicas(bucket.getInt("replicaNumber"))
-                                .quota((int) (bucket.getObject("quota").getLong("ram") / 1024 / 1024))
+                                .quota(ramQuota)
                                 .indexReplicas(bucket.getBoolean("replicaIndex"))
                                 .port(bucket.getInt("proxyPort"))
                                 .password(bucket.getString("saslPassword"))
@@ -179,7 +188,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
         sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
 
-        return hasBucket(settings.name())
+        return ensureBucketIsHealthy(hasBucket(settings.name())
             .doOnNext(new Action1<Boolean>() {
                 @Override
                 public void call(Boolean exists) {
@@ -201,7 +210,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     }
                     return settings;
                 }
-            });
+            }));
     }
 
     @Override
@@ -215,7 +224,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
         sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
 
-        return hasBucket(settings.name())
+        return ensureBucketIsHealthy(hasBucket(settings.name())
             .doOnNext(new Action1<Boolean>() {
                 @Override
                 public void call(Boolean exists) {
@@ -236,7 +245,47 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     }
                     return settings;
                 }
-            });
+            }));
+    }
+
+    /**
+     * Helper method to ensure that the state of a bucket on all nodes is healthy.
+     *
+     * This polling logic is in place as a workaround because the bucket could still be warming up or completing
+     * its creation process before any actual operation can be performed.
+     *
+     * @return the original input stream once done.
+     */
+    private Observable<BucketSettings> ensureBucketIsHealthy(final Observable<BucketSettings> input) {
+        return input.flatMap(new Func1<BucketSettings, Observable<BucketSettings>>() {
+            @Override
+            public Observable<BucketSettings> call(final BucketSettings bucketSettings) {
+                return info()
+                    .delay(100, TimeUnit.MILLISECONDS)
+                    .filter(new Func1<ClusterInfo, Boolean>() {
+                        @Override
+                        public Boolean call(ClusterInfo clusterInfo) {
+                            boolean allHealthy = true;
+                            for (Object n : clusterInfo.raw().getArray("nodes")) {
+                                JsonObject node = (JsonObject) n;
+                                if (!node.getString("status").equals("healthy")) {
+                                    allHealthy = false;
+                                    break;
+                                }
+                            }
+                            return allHealthy;
+                        }
+                    })
+                    .repeat()
+                    .take(1)
+                    .flatMap(new Func1<ClusterInfo, Observable<BucketSettings>>() {
+                        @Override
+                        public Observable<BucketSettings> call(ClusterInfo clusterInfo) {
+                            return Observable.just(bucketSettings);
+                        }
+                    });
+            }
+        });
     }
 
     private Observable<Boolean> ensureServiceEnabled() {

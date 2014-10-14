@@ -60,8 +60,6 @@ public class ClusterDependentTest {
                 .enableFlush(true)
                 .type(BucketType.COUCHBASE)
                 .build());
-
-            Thread.sleep(TestProperties.thinkTime());
         }
 
         bucket = cluster.openBucket(bucketName(), password());
