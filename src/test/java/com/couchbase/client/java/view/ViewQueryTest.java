@@ -206,13 +206,13 @@ public class ViewQueryTest {
     @Test
     public void shouldHandleStartKeyDocID() {
         ViewQuery query = ViewQuery.from("design", "view").startKeyDocId("mykey");
-        assertEquals("startkey_docid=%22mykey%22", query.toString());
+        assertEquals("startkey_docid=mykey", query.toString());
     }
 
     @Test
     public void shouldHandleEndKeyDocID() {
         ViewQuery query = ViewQuery.from("design", "view").endKeyDocId("mykey");
-        assertEquals("endkey_docid=%22mykey%22", query.toString());
+        assertEquals("endkey_docid=mykey", query.toString());
     }
 
     @Test

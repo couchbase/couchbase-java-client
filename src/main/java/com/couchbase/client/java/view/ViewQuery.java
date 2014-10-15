@@ -300,13 +300,13 @@ public class ViewQuery {
 
     public ViewQuery startKeyDocId(String id) {
         params[PARAM_STARTKEYDOCID_OFFSET] = "startkey_docid";
-        params[PARAM_STARTKEYDOCID_OFFSET+1] = encode("\"" + id + "\"");
+        params[PARAM_STARTKEYDOCID_OFFSET+1] = encode(id);
         return this;
     }
 
     public ViewQuery endKeyDocId(String id) {
         params[PARAM_ENDKEYDOCID_OFFSET] = "endkey_docid";
-        params[PARAM_ENDKEYDOCID_OFFSET+1] = encode("\"" + id + "\"");
+        params[PARAM_ENDKEYDOCID_OFFSET+1] = encode(id);
         return this;
     }
 
