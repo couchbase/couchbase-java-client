@@ -62,6 +62,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public static final JsonDoubleTranscoder JSON_DOUBLE_TRANSCODER = new JsonDoubleTranscoder();
     public static final JsonLongTranscoder JSON_LONG_TRANSCODER = new JsonLongTranscoder();
     public static final JsonStringTranscoder JSON_STRING_TRANSCODER = new JsonStringTranscoder();
+    public static final RawJsonTranscoder RAW_JSON_TRANSCODER = new RawJsonTranscoder();
 
     public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
     public static final BinaryTranscoder BINARY_TRANSCODER = new BinaryTranscoder();
@@ -88,6 +89,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         transcoders.put(JSON_DOUBLE_TRANSCODER.documentType(), JSON_DOUBLE_TRANSCODER);
         transcoders.put(JSON_LONG_TRANSCODER.documentType(), JSON_LONG_TRANSCODER);
         transcoders.put(JSON_STRING_TRANSCODER.documentType(), JSON_STRING_TRANSCODER);
+        transcoders.put(RAW_JSON_TRANSCODER.documentType(), RAW_JSON_TRANSCODER);
         transcoders.put(LEGACY_TRANSCODER.documentType(), LEGACY_TRANSCODER);
         transcoders.put(BINARY_TRANSCODER.documentType(), BINARY_TRANSCODER);
         transcoders.put(STRING_TRANSCODER.documentType(), STRING_TRANSCODER);

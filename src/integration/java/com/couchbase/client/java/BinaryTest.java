@@ -24,6 +24,7 @@ package com.couchbase.client.java;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.LegacyDocument;
+import com.couchbase.client.java.document.RawJsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -261,6 +262,20 @@ public class BinaryTest extends ClusterDependentTest {
     public void shouldFailOnNonExistingAppend() {
         LegacyDocument doc = LegacyDocument.create("appendfail", "fail");
         bucket().append(doc);
+    }
+
+    @Test
+    public void shouldStoreAndLoadRawJsonDocument() {
+        String id = "jsonRaw";
+        String content = "{\"foo\": 1234}";
+
+        bucket().insert(RawJsonDocument.create(id, content));
+
+        RawJsonDocument foundRaw = bucket().get(id, RawJsonDocument.class);
+        assertEquals(content, foundRaw.content());
+
+        JsonDocument foundParsed = bucket().get(id);
+        assertEquals(1234, (int) foundParsed.content().getInt("foo"));
     }
 
     static class User implements Serializable {
