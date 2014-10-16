@@ -21,19 +21,21 @@
  */
 package com.couchbase.client.java.util;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 /**
  * Base test class for tests that need a working cluster reference.
  *
  * @author Michael Nitschinger
+ * @author Simon Baslé
  */
 public class ClusterDependentTest {
 
@@ -56,7 +58,7 @@ public class ClusterDependentTest {
                 .builder()
                 .name(bucketName())
                 .quota(256)
-                .password("")
+                .password(password())
                 .enableFlush(true)
                 .type(BucketType.COUCHBASE)
                 .build());
