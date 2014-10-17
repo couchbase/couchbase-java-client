@@ -26,7 +26,6 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.BinaryDocument;
-import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,15 +50,37 @@ public class BinaryTranscoderTest {
     }
 
     @Test
-    @Ignore
     public void shouldDecodeCommonBinary() {
+        final String id = "id";
+        final String value = "value";
+        // encode document
+        BinaryDocument document = BinaryDocument.create(id, Unpooled.copiedBuffer(value, CharsetUtil.UTF_8));
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(document);
 
+        // decode document
+        BinaryDocument decodedDocument = converter.decode(id, encoded.value1(), 0, 0, TranscoderUtils.BINARY_COMMON_FLAGS, null);
+        ByteBuf content = decodedDocument.content();
+        byte[] bytes = new byte[content.readableBytes()];
+        content.readBytes(bytes);
+
+        assertEquals(value, new String(bytes, CharsetUtil.UTF_8));
     }
 
     @Test
-    @Ignore
     public void shouldDecodeLegacyBinary() {
+        String id = "id";
+        String value = "value";
+        // encode document
+        BinaryDocument document = BinaryDocument.create(id, Unpooled.copiedBuffer(value, CharsetUtil.UTF_8));
+        Tuple2<ByteBuf, Integer> encoded = converter.encode(document);
 
+        // decode document
+        BinaryDocument decodedDocument = converter.decode(id, encoded.value1(), 0, 0, TranscoderUtils.BINARY_COMPAT_FLAGS, null);
+        ByteBuf content = decodedDocument.content();
+        byte[] bytes = new byte[content.readableBytes()];
+        content.readBytes(bytes);
+
+        assertEquals(value, new String(bytes, CharsetUtil.UTF_8));
     }
 
 }
