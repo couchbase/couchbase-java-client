@@ -99,7 +99,8 @@ public class BinaryTest extends ClusterDependentTest {
         assertEquals(20L, (long) doc3.content());
 
         assertTrue(doc1.cas() != doc2.cas());
-        assertTrue(doc2.cas() != doc1.cas());
+        assertTrue(doc1.cas() != doc3.cas());
+        assertTrue(doc2.cas() != doc3.cas());
     }
 
     @Test
@@ -114,14 +115,15 @@ public class BinaryTest extends ClusterDependentTest {
         assertEquals(80L, (long) doc3.content());
 
         assertTrue(doc1.cas() != doc2.cas());
-        assertTrue(doc2.cas() != doc1.cas());
+        assertTrue(doc1.cas() != doc3.cas());
+        assertTrue(doc2.cas() != doc3.cas());
     }
 
     @Test
     public void shouldGetAndTouch() throws Exception {
         String id = "get-and-touch";
 
-        JsonDocument upsert = bucket().upsert(JsonDocument.create(id, JsonObject.empty().put("k", "v"), 3));
+        JsonDocument upsert = bucket().upsert(JsonDocument.create(id, 3, JsonObject.empty().put("k", "v")));
         assertNotNull(upsert);
         assertEquals(id, upsert.id());
 
@@ -187,7 +189,7 @@ public class BinaryTest extends ClusterDependentTest {
     public void shouldTouch() throws Exception {
         String key = "touch";
 
-        JsonDocument upsert = bucket().upsert(JsonDocument.create(key, JsonObject.empty().put("k", "v"), 3));
+        JsonDocument upsert = bucket().upsert(JsonDocument.create(key, 3, JsonObject.empty().put("k", "v")));
 
         Thread.sleep(2000);
 
