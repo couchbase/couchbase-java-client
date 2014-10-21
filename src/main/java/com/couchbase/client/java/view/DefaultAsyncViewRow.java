@@ -64,7 +64,7 @@ public class DefaultAsyncViewRow implements AsyncViewRow {
     @Override
     public Observable<JsonDocument> document() {
         if (id == null) {
-            Observable.error(new IllegalStateException("ID is null."));
+            return Observable.error(new UnsupportedOperationException("Document cannot be loaded, id is null."));
         }
         return bucket.get(id);
     }
@@ -72,7 +72,7 @@ public class DefaultAsyncViewRow implements AsyncViewRow {
     @Override
     public <D extends Document<?>> Observable<D> document(Class<D> target) {
         if (id == null) {
-            Observable.error(new IllegalStateException("ID is null."));
+            return Observable.error(new UnsupportedOperationException("Document cannot be loaded, id is null."));
         }
         return bucket.get(id, target);
     }
