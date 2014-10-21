@@ -23,6 +23,7 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.util.ClusterDependentTest;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ import org.junit.Test;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class ConnectionTest {
+public class ConnectionTest extends ClusterDependentTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfBucketIsNull() {
