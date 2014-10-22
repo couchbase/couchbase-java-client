@@ -1391,6 +1391,7 @@ public interface Bucket {
      * - The operation takes longer than the specified timeout: {@link TimeoutException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @return the document containing the ID.
@@ -1408,6 +1409,7 @@ public interface Bucket {
      * - The operation takes longer than the specified timeout: {@link TimeoutException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param timeout the custom timeout.
@@ -1429,6 +1431,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -1450,6 +1453,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -1473,6 +1477,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -1493,6 +1498,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -1515,6 +1521,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param replicateTo the replication constraint to watch.
@@ -1535,6 +1542,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      *
      * @param document the document to remove, with the ID extracted.
      * @param replicateTo the replication constraint to watch.
