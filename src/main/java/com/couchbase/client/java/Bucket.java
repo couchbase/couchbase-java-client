@@ -1383,8 +1383,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1400,8 +1400,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1419,8 +1419,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1440,8 +1440,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1463,8 +1463,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1483,8 +1483,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1505,8 +1505,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1525,8 +1525,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1547,8 +1547,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server identified by its ID with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1564,8 +1564,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server identified by its ID with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1584,8 +1584,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1605,8 +1605,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1629,8 +1629,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1649,8 +1649,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1672,8 +1672,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1692,8 +1692,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1714,8 +1714,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server identified by its ID with the default key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1732,8 +1732,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server identified by its ID with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1753,8 +1753,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1775,8 +1775,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1801,8 +1801,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1822,8 +1822,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1846,8 +1846,8 @@ public interface Bucket {
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with the default
      * key/value timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
@@ -1867,8 +1867,8 @@ public interface Bucket {
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement with a custom timeout.
      *
-     * The {@link Document} returned just has the document ID set, since the value and all other associated properties
-     * have been removed from the server.
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
      *
      * This method throws under the following conditions:
      *
