@@ -20,6 +20,8 @@
  * IN THE SOFTWARE.
  */
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -60,7 +62,9 @@ def getVersionName() {
         }
         return stdout.toString().trim()
     } catch (e) {
-        return "unknown"
+        //in case git command is not accessible...
+        //put the date in there to have at least a reference point
+        return "unknown" + new Date().format("yyyyMMdd");
     }
 }
 
@@ -287,3 +291,11 @@ jar.manifest.mainAttributes(
         'Specification-Version': version,
         'Specification-Vendor': 'Couchbase, Inc.'
 )
+
+afterEvaluate {
+    //resources in src/main/resources will have @tokens@ replaced
+    configure(processResources) {
+        filter(ReplaceTokens,
+                tokens: [specVersion: version, implVersion: getVersionName()])
+    }
+}
