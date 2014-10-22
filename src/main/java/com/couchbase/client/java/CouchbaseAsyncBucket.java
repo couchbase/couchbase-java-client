@@ -34,10 +34,10 @@ import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
+import com.couchbase.client.core.message.observe.Observe;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
-import com.couchbase.client.java.bucket.Observe;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
@@ -286,7 +286,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -326,7 +326,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -364,7 +364,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -426,7 +426,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), true, persistTo, replicateTo)
+                    .call(core, bucket, doc.id(), doc.cas(), true, persistTo.value(), replicateTo.value())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
