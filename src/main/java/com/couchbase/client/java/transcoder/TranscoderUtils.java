@@ -123,7 +123,9 @@ public class TranscoderUtils {
      * @return true if binary, false otherwise.
      */
     public static boolean hasBinaryFlags(final int flags) {
-        return hasCommonFlags(flags) ? flags == BINARY_COMMON_FLAGS : flags == (8 << 8);
+        return hasCommonFlags(flags) ?
+                ((flags & BINARY_COMPAT_FLAGS) == BINARY_COMPAT_FLAGS) || ((flags & BINARY_COMMON_FLAGS) == BINARY_COMMON_FLAGS)
+                : flags == (8 << 8);
     }
 
     /**
