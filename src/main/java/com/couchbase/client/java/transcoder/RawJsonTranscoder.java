@@ -53,7 +53,6 @@ public class RawJsonTranscoder extends AbstractTranscoder<RawJsonDocument, Strin
         }
 
         String converted = content.toString(CharsetUtil.UTF_8);
-        content.release();
         return newDocument(id, expiry, converted, cas);
     }
 

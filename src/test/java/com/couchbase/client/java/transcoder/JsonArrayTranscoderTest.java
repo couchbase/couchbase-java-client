@@ -151,4 +151,24 @@ public class JsonArrayTranscoderTest {
         assertEquals(Long.MAX_VALUE, (long) found.getLong(2));
     }
 
+
+    @Test
+    public void shouldReleaseBufferWhenDecoded() {
+        ByteBuf content = Unpooled.copiedBuffer("[]", CharsetUtil.UTF_8);
+        JsonArrayDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS,
+            ResponseStatus.SUCCESS);
+        assertEquals(0, content.refCnt());
+    }
+
+    @Test(expected = TranscodingException.class)
+    public void shouldReleaseBufferWhenError() {
+        ByteBuf content = Unpooled.copiedBuffer("[]", CharsetUtil.UTF_8);
+        int wrongFlags = 1234;
+        try {
+            converter.decode("id", content, 0, 0, wrongFlags,
+                ResponseStatus.SUCCESS);
+        } finally {
+            assertEquals(0, content.refCnt());
+        }
+    }
 }

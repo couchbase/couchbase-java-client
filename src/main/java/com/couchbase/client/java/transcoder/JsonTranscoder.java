@@ -62,7 +62,6 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
         }
 
         JsonObject converted = stringToJsonObject(content.toString(CharsetUtil.UTF_8));
-        content.release();
         return newDocument(id, expiry, converted, cas);
     }
 
@@ -79,6 +78,13 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
         return JacksonTransformers.MAPPER.readValue(input, JsonObject.class);
     }
 
+    /**
+     * Converts a {@link ByteBuf} to a {@link JsonObject}, <b>without releasing the buffer</b>
+     *
+     * @param input the buffer to convert. It won't be cleared (contrary to {@link #doDecode(String, ByteBuf, long, int, int, ResponseStatus) classical decode})
+     * @return a JsonObject decoded from the buffer
+     * @throws Exception
+     */
     public JsonObject byteBufToJsonObject(ByteBuf input) throws Exception {
         return stringToJsonObject(input.toString(CharsetUtil.UTF_8));
     }

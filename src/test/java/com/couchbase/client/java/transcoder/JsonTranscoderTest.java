@@ -21,24 +21,30 @@
  */
 package com.couchbase.client.java.transcoder;
 
-import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.deps.io.netty.buffer.Unpooled;
-import com.couchbase.client.deps.io.netty.util.CharsetUtil;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.error.TranscodingException;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.couchbase.client.core.lang.Tuple2;
+import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonParseException;
+import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.TranscodingException;
 
 /**
  * Tests which verify the functionality for the {@link JsonTranscoder}.
@@ -196,5 +202,46 @@ public class JsonTranscoderTest {
         assertFalse(decoded.content().isEmpty());
         assertFalse(decoded.content().getArray("1").isEmpty());
         assertEquals("Hello World", decoded.content().getArray("1").getArray(0).getArray(0).getString(0));
+    }
+
+    @Test
+    public void shouldReleaseBufferWhenDecoded() {
+        ByteBuf content = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
+        JsonDocument decoded = converter.decode("id", content, 0, 0, TranscoderUtils.JSON_COMMON_FLAGS, ResponseStatus.SUCCESS);
+
+        assertEquals(0, content.refCnt());
+    }
+
+    @Test(expected = TranscodingException.class)
+    public void shouldReleaseBufferWhenError() {
+        ByteBuf content = Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8);
+        int wrongFlags = 1234;
+        try {
+            converter.decode("id", content, 0, 0, wrongFlags,
+                ResponseStatus.SUCCESS);
+        } finally {
+            assertEquals(0, content.refCnt());
+        }
+    }
+
+    @Test
+    public void shouldNotReleaseBufferWhenBufToJson() throws Exception {
+        ByteBuf content = ReferenceCountUtil.releaseLater(
+            Unpooled.copiedBuffer("{}", CharsetUtil.UTF_8));
+        JsonObject decoded = converter.byteBufToJsonObject(content);
+        assertEquals(1, content.refCnt());
+
+        content = ReferenceCountUtil.releaseLater(
+            Unpooled.copiedBuffer("thisIsNotJson", CharsetUtil.UTF_8));
+        try {
+            decoded = converter.byteBufToJsonObject(content);
+            fail();
+        } catch (JsonParseException e) {
+            //NO-OP, exception expected
+        } catch (Exception e) {
+            fail(e.toString());
+        } finally {
+            assertEquals(1, content.refCnt());
+        }
     }
 }

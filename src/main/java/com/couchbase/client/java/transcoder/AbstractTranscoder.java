@@ -31,6 +31,7 @@ import com.couchbase.client.java.error.TranscodingException;
  * Base {@link Transcoder} which should be extended for compatibility.
  *
  * @author Michael Nitschinger
+ * @author Simon Baslé
  * @since 2.0
  */
 public abstract class AbstractTranscoder<D extends Document<T>, T> implements Transcoder<D, T> {
@@ -38,8 +39,16 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
     @Override
     public D decode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status) {
         try {
-            return doDecode(id, content, cas, expiry, flags, status);
+            D result = doDecode(id, content, cas, expiry, flags, status);
+            if (content != null && shouldAutoReleaseOnDecode()) {
+                content.release();
+            }
+            return result;
         } catch(Exception ex) {
+            if (content != null && shouldAutoReleaseOnError()) {
+                content.release();
+            }
+
             if (ex instanceof TranscodingException) {
                 throw (TranscodingException) ex;
             } else {
@@ -87,4 +96,25 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
     protected abstract Tuple2<ByteBuf, Integer> doEncode(D document)
         throws Exception;
 
+    /**
+     * Flag method to auto release decoded buffers. Override to change default behaviour (true).
+     *
+     * @return true if the {@link ByteBuf} passed to
+     * {@link #decode(String, ByteBuf, long, int, int, ResponseStatus) decode}
+     * method is to be released automatically on success (default behaviour)
+     */
+    protected boolean shouldAutoReleaseOnDecode() {
+        return true;
+    }
+
+    /**
+     * Flag method to auto release buffers on decoding error. Override to change default behaviour (true).
+     *
+     * @return true if the {@link ByteBuf} passed to
+     * {@link #decode(String, ByteBuf, long, int, int, ResponseStatus) decode}
+     * method is to be released automatically in case of error (default behaviour)
+     */
+    protected boolean shouldAutoReleaseOnError() {
+        return true;
+    }
 }

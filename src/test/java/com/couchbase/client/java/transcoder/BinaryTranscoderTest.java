@@ -22,10 +22,14 @@
 package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.core.lang.Tuple2;
+import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 import com.couchbase.client.java.document.BinaryDocument;
+import com.couchbase.client.java.error.TranscodingException;
+
 import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +64,26 @@ public class BinaryTranscoderTest {
     @Ignore
     public void shouldDecodeLegacyBinary() {
 
+    }
+
+    @Test
+    public void shouldNotReleaseBufferWhenDecoded() {
+        ByteBuf content = ReferenceCountUtil.releaseLater(Unpooled.copiedBuffer("value", CharsetUtil.UTF_8));
+        converter.decode("id", content, 0, 0, TranscoderUtils.BINARY_COMMON_FLAGS,
+            ResponseStatus.SUCCESS);
+        assertEquals(1, content.refCnt());
+    }
+
+    @Test(expected = TranscodingException.class)
+    public void shouldReleaseBufferWhenError() {
+        ByteBuf content = Unpooled.copiedBuffer("value", CharsetUtil.UTF_8);
+        int wrongFlags = 1234;
+        try {
+            converter.decode("id", content, 0, 0, wrongFlags,
+                ResponseStatus.SUCCESS);
+        } finally {
+            assertEquals(0, content.refCnt());
+        }
     }
 
 }
