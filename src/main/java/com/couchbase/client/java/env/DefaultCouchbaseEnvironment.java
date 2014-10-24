@@ -21,9 +21,6 @@
  */
 package com.couchbase.client.java.env;
 
-import com.couchbase.client.core.ClusterFacade;
-import com.couchbase.client.core.CouchbaseCore;
-import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
@@ -70,7 +67,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long connectTimeout;
     private final long disconnectTimeout;
 
-    public static String PACKAGE_NAME_AND_VERSION = "couchbase-java-client";
+    public static String SDK_PACKAGE_NAME_AND_VERSION = "couchbase-java-client";
 
     private static final String VERSION_PROPERTIES = "com.couchbase.client.java.properties";
 
@@ -98,11 +95,13 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
             } catch (Exception e) {
                 LOGGER.info("Could not retrieve version properties, defaulting.", e);
             }
-            PACKAGE_NAME_AND_VERSION = String.format("couchbase-java-client/%s (git: %s)",
+            SDK_PACKAGE_NAME_AND_VERSION = String.format("couchbase-java-client/%s (git: %s)",
                 version == null ? "unknown" : version, gitVersion == null ? "unknown" : gitVersion);
 
+            //this will overwrite the USER_AGENT in Core
+            // making core send user_agent with java client version information
             USER_AGENT = String.format("%s (%s/%s %s; %s %s)",
-                PACKAGE_NAME_AND_VERSION,
+                SDK_PACKAGE_NAME_AND_VERSION,
                 System.getProperty("os.name"),
                 System.getProperty("os.version"),
                 System.getProperty("os.arch"),
@@ -151,8 +150,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long connectTimeout = CONNECT_TIMEOUT;
         private long disconnectTimeout = DISCONNECT_TIMEOUT;
 
-        private String userAgent = USER_AGENT;
-        private String packageNameAndVersion = PACKAGE_NAME_AND_VERSION;
+        private String userAgent = USER_AGENT; //this is from Core
+        private String packageNameAndVersion = SDK_PACKAGE_NAME_AND_VERSION;
 
         @Override
         public long managementTimeout() {
