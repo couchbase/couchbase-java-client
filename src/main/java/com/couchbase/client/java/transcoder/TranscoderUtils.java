@@ -34,6 +34,12 @@ import java.io.*;
  */
 public class TranscoderUtils {
 
+    /**
+     * 32bit flag is composed of 4 compression bits, 4 common flag bits, 24 legacy/reserved bits.<br/>
+     * This mask just looks at the 4 common flag bits (15 == "00001111").
+     */
+    public static final int COMMON_FLAGS_MASK = 15 << 24;
+
     public static final int PRIVATE_COMMON_FLAGS = createCommonFlags(CommonFlags.PRIVATE.ordinal());
     public static final int JSON_COMMON_FLAGS = createCommonFlags(CommonFlags.JSON.ordinal());
     public static final int BINARY_COMMON_FLAGS = createCommonFlags(CommonFlags.BINARY.ordinal());
@@ -123,7 +129,7 @@ public class TranscoderUtils {
      * @return true if binary, false otherwise.
      */
     public static boolean hasBinaryFlags(final int flags) {
-        return hasCommonFlags(flags) ? flags == BINARY_COMMON_FLAGS : flags == (8 << 8);
+        return hasCommonFlags(flags) ? (flags & COMMON_FLAGS_MASK) == BINARY_COMMON_FLAGS : flags == (8 << 8);
     }
 
     /**

@@ -30,7 +30,6 @@ import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 import com.couchbase.client.java.document.BinaryDocument;
 import com.couchbase.client.java.error.TranscodingException;
 
-import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,15 +54,19 @@ public class BinaryTranscoderTest {
     }
 
     @Test
-    @Ignore
     public void shouldDecodeCommonBinary() {
-
+        BinaryDocument document = converter.decode("id",
+                Unpooled.copiedBuffer("value", CharsetUtil.UTF_8), 0, 0,
+                TranscoderUtils.BINARY_COMMON_FLAGS, ResponseStatus.SUCCESS);
+        assertEquals("value", document.content().toString(CharsetUtil.UTF_8));
     }
 
     @Test
-    @Ignore
     public void shouldDecodeLegacyBinary() {
-
+        BinaryDocument document = converter.decode("id",
+                Unpooled.copiedBuffer("value", CharsetUtil.UTF_8), 0, 0,
+                TranscoderUtils.BINARY_COMPAT_FLAGS, ResponseStatus.SUCCESS);
+        assertEquals("value", document.content().toString(CharsetUtil.UTF_8));
     }
 
     @Test

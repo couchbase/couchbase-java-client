@@ -59,4 +59,14 @@ public class TranscoderUtilsTest {
         assertFalse(TranscoderUtils.hasJsonFlags(4 << 24));
     }
 
+    @Test
+    public void testHasBinaryFlags() {
+        //new flag only
+        assertTrue(TranscoderUtils.hasBinaryFlags(TranscoderUtils.BINARY_COMMON_FLAGS));
+        //new flag + legacy flag (what a client should write)
+        assertTrue(TranscoderUtils.hasBinaryFlags(TranscoderUtils.BINARY_COMPAT_FLAGS));
+        //legacy flag only
+        assertTrue(TranscoderUtils.hasBinaryFlags((8 << 8)));
+    }
+
 }
