@@ -30,28 +30,49 @@ import java.io.*;
  * Helper methods and flags for the shipped {@link Transcoder}s.
  *
  * @author Michael Nitschinger
+ * @author Simon Baslé
  * @since 2.0
  */
 public class TranscoderUtils {
 
     /**
-     * 32bit flag is composed of 4 compression bits, 4 common flag bits, 24 legacy/reserved bits.<br/>
-     * This mask just looks at the 4 common flag bits (15 == "00001111").
+     * 32bit flag is composed of:
+     *  - 3 compression bits
+     *  - 1 bit reserved for future use
+     *  - 4 format flags bits. those 8 upper bits make up the common flags
+     *  - 8 bits reserved for future use
+     *  - 16 bits for legacy flags
+     *
+     * This mask allows to compare a 32 bits flags with the 4 common flag format bits
+     * ("00001111 00000000 00000000 00000000").
+     *
+     * @see #extractCommonFlags(int)
+     * @see #hasCommonFlags(int)
+     * @see #hasCompressionFlags(int)
      */
-    public static final int COMMON_FLAGS_MASK = 15 << 24;
+    public static final int COMMON_FORMAT_MASK = 0x0F000000;
 
     public static final int PRIVATE_COMMON_FLAGS = createCommonFlags(CommonFlags.PRIVATE.ordinal());
     public static final int JSON_COMMON_FLAGS = createCommonFlags(CommonFlags.JSON.ordinal());
     public static final int BINARY_COMMON_FLAGS = createCommonFlags(CommonFlags.BINARY.ordinal());
     public static final int STRING_COMMON_FLAGS = createCommonFlags(CommonFlags.STRING.ordinal());
 
-    public static final int SERIALIZED_COMPAT_FLAGS = PRIVATE_COMMON_FLAGS | 1;
-    public static final int JSON_COMPAT_FLAGS = JSON_COMMON_FLAGS;
-    public static final int BINARY_COMPAT_FLAGS = BINARY_COMMON_FLAGS | (8 << 8);
-    public static final int BOOLEAN_COMPAT_FLAGS = JSON_COMMON_FLAGS;
-    public static final int LONG_COMPAT_FLAGS = JSON_COMMON_FLAGS;
-    public static final int DOUBLE_COMPAT_FLAGS = JSON_COMPAT_FLAGS;
-    public static final int STRING_COMPAT_FLAGS = STRING_COMMON_FLAGS;
+    public static final int SERIALIZED_LEGACY_FLAGS = 1;
+    public static final int BINARY_LEGACY_FLAGS = (8 << 8);
+    public static final int STRING_LEGACY_FLAGS = 0;
+    public static final int JSON_LEGACY_FLAGS = STRING_LEGACY_FLAGS;
+    public static final int BOOLEAN_LEGACY_FLAGS = STRING_LEGACY_FLAGS;
+    public static final int LONG_LEGACY_FLAGS = STRING_LEGACY_FLAGS;
+    public static final int DOUBLE_LEGACY_FLAGS = STRING_LEGACY_FLAGS;
+
+
+    public static final int SERIALIZED_COMPAT_FLAGS = PRIVATE_COMMON_FLAGS  | SERIALIZED_LEGACY_FLAGS;
+    public static final int JSON_COMPAT_FLAGS       = JSON_COMMON_FLAGS     | JSON_LEGACY_FLAGS;
+    public static final int BINARY_COMPAT_FLAGS     = BINARY_COMMON_FLAGS   | BINARY_LEGACY_FLAGS;
+    public static final int BOOLEAN_COMPAT_FLAGS    = JSON_COMMON_FLAGS     | BOOLEAN_LEGACY_FLAGS;
+    public static final int LONG_COMPAT_FLAGS       = JSON_COMMON_FLAGS     | LONG_LEGACY_FLAGS;
+    public static final int DOUBLE_COMPAT_FLAGS     = JSON_COMMON_FLAGS     | DOUBLE_LEGACY_FLAGS;
+    public static final int STRING_COMPAT_FLAGS     = STRING_COMMON_FLAGS   | STRING_LEGACY_FLAGS;
 
     /**
      * Checks whether the upper 8 bits are set, indicating common flags presence.
@@ -67,10 +88,35 @@ public class TranscoderUtils {
     }
 
     /**
+     * Checks whether the upper 3 bits are set, indicating compression presence.
+     *
+     * It does this by shifting bits to the right until only the most significant
+     * bits are remaining and then checks if one of them is set.
+     *
+     * @param flags the flags to check.
+     * @return true if compression set, false otherwise.
+     */
+    public static boolean hasCompressionFlags(final int flags) {
+        return (flags >> 29) > 0;
+    }
+
+    /**
+     * Checks that flags has common flags bits set and that they correspond to expected common flags format.
+     *
+     * @param flags the 32 bits flags to check
+     * @param expectedCommonFlag the expected common flags format bits
+     * @return true if common flags bits are set and correspond to expectedCommonFlag format
+     */
+    public static boolean hasCommonFormat(final int flags,
+        final int expectedCommonFlag) {
+        return hasCommonFlags(flags) && (flags & COMMON_FORMAT_MASK) == expectedCommonFlag;
+    }
+
+    /**
      * Returns only the common flags from the full flags.
      *
      * @param flags the flags to check.
-     * @return only the common flags.
+     * @return only the common flags simple representation (8 bits).
      */
     public static int extractCommonFlags(final int flags) {
         return flags >> 24;
@@ -87,6 +133,21 @@ public class TranscoderUtils {
     }
 
     /**
+     * Utility method to correctly check a flag has a certain type, by checking
+     * that either the corresponding flags are set in the common flags bits or
+     * the flag is a legacy flag of the correct type.
+     *
+     * @param flags the flags to be checked.
+     * @param expectedCommonFlags the common flags for the expected type
+     * @param expectedLegacyFlag the legacy flags for the expected type
+     * @return true if flags conform to the correct common flags or legacy flags
+     */
+    private static boolean hasFlags(final int flags, final int expectedCommonFlags,
+        final int expectedLegacyFlag) {
+        return hasCommonFormat(flags, expectedCommonFlags) || flags == expectedLegacyFlag;
+    }
+
+    /**
      * Checks if the flags identify a JSON document.
      *
      * This method is strict if it finds common flags set, and if not falls back
@@ -96,7 +157,7 @@ public class TranscoderUtils {
      * @return true if JSON, false otherwise.
      */
     public static boolean hasJsonFlags(final int flags) {
-        return hasCommonFlags(flags) ? flags == JSON_COMMON_FLAGS : flags == 0;
+        return hasFlags(flags, JSON_COMMON_FLAGS, JSON_LEGACY_FLAGS);
     }
 
     /**
@@ -109,7 +170,7 @@ public class TranscoderUtils {
      * @return true if String, false otherwise.
      */
     public static boolean hasStringFlags(final int flags) {
-        return hasCommonFlags(flags) ? flags == STRING_COMMON_FLAGS : flags == 0;
+        return hasFlags(flags, STRING_COMMON_FLAGS, STRING_LEGACY_FLAGS);
     }
 
     /**
@@ -119,7 +180,7 @@ public class TranscoderUtils {
      * @return true if serializable, false otherwise.
      */
     public static boolean hasSerializableFlags(final int flags) {
-        return hasCommonFlags(flags) ? flags == PRIVATE_COMMON_FLAGS : flags == 1;
+        return hasFlags(flags, PRIVATE_COMMON_FLAGS, SERIALIZED_LEGACY_FLAGS);
     }
 
     /**
@@ -129,7 +190,7 @@ public class TranscoderUtils {
      * @return true if binary, false otherwise.
      */
     public static boolean hasBinaryFlags(final int flags) {
-        return hasCommonFlags(flags) ? (flags & COMMON_FLAGS_MASK) == BINARY_COMMON_FLAGS : flags == (8 << 8);
+        return hasFlags(flags, BINARY_COMMON_FLAGS, BINARY_LEGACY_FLAGS);
     }
 
     /**
