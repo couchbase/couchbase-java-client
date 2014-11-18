@@ -70,4 +70,11 @@ public class JsonArrayTest {
         assertEquals(new Integer(maxValue), arr.getInt(0));
     }
 
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void shouldNotNullPointerOnGetNumber() {
+        JsonArray obj = JsonArray.empty();
+        obj.get(0);
+    }
+
 }
