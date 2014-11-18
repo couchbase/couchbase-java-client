@@ -150,11 +150,20 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     /**
      * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Long}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param index the index of the value.
      * @return the value if found, or null otherwise.
      */
     public Long getLong(int index) {
-        return (Long) content.get(index);
+        Number n = (Number) content.get(index);
+        if (n == null) {
+            return null;
+        } else if (n instanceof Long) {
+            return (Long) n;
+        } else {
+            return n.longValue(); //autoboxing to Long
+        }
     }
 
     /**
@@ -171,11 +180,20 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     /**
      * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Integer}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param index the index of the value.
      * @return the value if found, or null otherwise.
      */
     public Integer getInt(int index) {
-        return (Integer) content.get(index);
+        Number n = (Number) content.get(index);
+        if (n == null) {
+            return null;
+        } else if (n instanceof Integer) {
+            return (Integer) n;
+        } else {
+            return n.intValue(); //autoboxing to Integer
+        }
     }
 
     /**
@@ -192,11 +210,20 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     /**
      * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Double}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param index the index of the value.
      * @return the value if found, or null otherwise.
      */
     public Double getDouble(int index) {
-        return (Double) content.get(index);
+        Number n = (Number) content.get(index);
+        if (n == null) {
+            return null;
+        } else if (n instanceof Double) {
+            return (Double) n;
+        } else {
+            return n.doubleValue(); //autoboxing to Double
+        }
     }
 
     /**

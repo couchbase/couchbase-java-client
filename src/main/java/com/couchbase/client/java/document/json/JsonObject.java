@@ -134,11 +134,21 @@ public class JsonObject extends JsonValue {
     /**
      * Retrieves the value from the field name and casts it to {@link Integer}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param name the name of the field.
      * @return the result or null if it does not exist.
      */
     public Integer getInt(String name) {
-        return (Integer) content.get(name);
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) content.get(name);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Integer) {
+            return (Integer) number;
+        } else {
+            return number.intValue(); //autoboxing to Integer
+        }
     }
 
     /**
@@ -156,11 +166,21 @@ public class JsonObject extends JsonValue {
     /**
      * Retrieves the value from the field name and casts it to {@link Long}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param name the name of the field.
      * @return the result or null if it does not exist.
      */
     public Long getLong(String name) {
-        return (Long) content.get(name);
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) content.get(name);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Long) {
+            return (Long) number;
+        } else {
+            return number.longValue(); //autoboxing to Long
+        }
     }
 
     /**
@@ -178,11 +198,21 @@ public class JsonObject extends JsonValue {
     /**
      * Retrieves the value from the field name and casts it to {@link Double}.
      *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
      * @param name the name of the field.
      * @return the result or null if it does not exist.
      */
     public Double getDouble(String name) {
-        return (Double) content.get(name);
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) content.get(name);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Double) {
+            return (Double) number;
+        } else {
+            return number.doubleValue(); //autoboxing to Double
+        }
     }
 
     /**
