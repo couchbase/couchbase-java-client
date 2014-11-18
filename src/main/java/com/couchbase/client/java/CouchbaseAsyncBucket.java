@@ -678,4 +678,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
             });
     }
+
+    @Override
+    public String toString() {
+        return "AsyncBucket[" + name() + "]";
+    }
 }
