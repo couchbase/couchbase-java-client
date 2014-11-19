@@ -22,6 +22,7 @@
 package com.couchbase.client.java.document.json;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ import java.util.Set;
  * allow to store such objects which can be represented by JSON.
  *
  * @author Michael Nitschinger
+ * @author Simon Baslé
  * @since 2.0
  */
 public class JsonObject extends JsonValue {
@@ -67,6 +69,71 @@ public class JsonObject extends JsonValue {
      */
     public static JsonObject create() {
         return new JsonObject();
+    }
+
+    /**
+     * Constructs a {@link JsonObject} from a {@link Map Map&lt;String, ?&gt;}.
+     *
+     * This is only possible if the given Map is well formed, that is it contains non null
+     * keys, and all values are of a supported type.
+     *
+     * A null input Map or null key will lead to a {@link NullPointerException} being thrown.
+     * If any unsupported value is present in the Map, an {@link IllegalArgumentException}
+     * will be thrown.
+     *
+     * *Sub Maps and Lists*
+     * If possible, Maps and Lists contained in mapData will be converted to JsonObject and
+     * JsonArray respectively. However, same restrictions apply. Any non-convertible collection
+     * will raise a {@link ClassCastException}. If the sub-conversion raises an exception (like an
+     * IllegalArgumentException) then it is put as cause for the ClassCastException.
+     *
+     * @param mapData the Map to convert to a JsonObject
+     * @return the resulting JsonObject
+     * @throws IllegalArgumentException in case one or more unsupported values are present
+     * @throws NullPointerException in case a null map is provided or if it contains a null key
+     * @throws ClassCastException if map contains a sub-Map or sub-List not supported (see above)
+     */
+    public static JsonObject from(Map<String, ?> mapData) {
+        if (mapData == null) {
+            throw new NullPointerException("Null input Map unsupported");
+        } else if (mapData.isEmpty()) {
+            return JsonObject.empty();
+        }
+
+        JsonObject result = new JsonObject();
+        for (Map.Entry<String, ?> entry : mapData.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (key == null) {
+                throw new NullPointerException("The key is not allowed to be null");
+            } else if (value instanceof Map) {
+                try {
+                    JsonObject sub = JsonObject.from((Map<String, ?>) value);
+                    result.put(key, sub);
+                } catch (ClassCastException e) {
+                    throw e;
+                } catch (Exception e) {
+                    ClassCastException c = new ClassCastException("Couldn't convert sub-Map " + key + " to JsonObject");
+                    c.initCause(e);
+                    throw c;
+                }
+            } else if (value instanceof List) {
+                try {
+                    JsonArray sub = JsonArray.from((List<?>) value);
+                    result.put(key, sub);
+                } catch (Exception e) {
+                    //no risk of a direct ClassCastException here
+                    ClassCastException c = new ClassCastException("Couldn't convert sub-List " + key + " to JsonArray");
+                    c.initCause(e);
+                    throw c;
+                }
+            } else if (!checkType(value)) {
+                throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
+            } else {
+                result.put(key, value);
+            }
+        }
+        return result;
     }
 
     /**

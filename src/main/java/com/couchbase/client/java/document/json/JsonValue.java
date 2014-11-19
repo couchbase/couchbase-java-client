@@ -59,7 +59,8 @@ public abstract class JsonValue {
      * @return true if supported, false otherwise.
      */
     protected static boolean checkType(Object item) {
-        return item instanceof String
+        return item == null
+            || item instanceof String
             || item instanceof Integer
             || item instanceof Long
             || item instanceof Double

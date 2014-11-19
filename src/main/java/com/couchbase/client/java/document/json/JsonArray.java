@@ -24,6 +24,8 @@ package com.couchbase.client.java.document.json;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 /**
  * Represents a JSON array that can be stored and loaded from Couchbase Server.
@@ -35,6 +37,7 @@ import java.util.List;
  * allow to store such objects which can be represented by JSON.
  *
  * @author Michael Nitschinger
+ * @author Simon Baslé
  * @since 2.0
  */
 public class JsonArray extends JsonValue implements Iterable<Object> {
@@ -80,6 +83,67 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
         JsonArray array = new JsonArray();
         for (Object item : items) {
             if (checkType(item)) {
+                array.add(item);
+            } else {
+                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
+            }
+        }
+        return array;
+    }
+
+    /**
+     * Creates a new {@link JsonArray} and populates it with the values in the supplied {@link List}.
+     *
+     * If the type of an item is not supported, an {@link IllegalArgumentException} is thrown.
+     * If the list is null, a {@link NullPointerException} is thrown, but null items are supported.
+     *
+     * *Sub Maps and Lists*
+     * If possible, Maps and Lists contained in items will be converted to JsonObject and
+     * JsonArray respectively. However, same restrictions apply. Any non-convertible collection
+     * will raise a {@link ClassCastException}. If the sub-conversion raises an exception (like an
+     * IllegalArgumentException) then it is put as cause for the ClassCastException.
+     *
+     * @param items the list of items to be stored in the {@link JsonArray}.
+     * @return a populated {@link JsonArray}.
+     * @throws IllegalArgumentException if at least one item is of unsupported type.
+     * @throws NullPointerException if the list of items is null.
+     */
+    public static JsonArray from(List<?> items) {
+        if (items == null) {
+            throw new NullPointerException("Null list unsupported");
+        } else if (items.isEmpty()) {
+            return JsonArray.empty();
+        }
+
+        JsonArray array = new JsonArray();
+        ListIterator<?> iter = items.listIterator();
+        while (iter.hasNext()) {
+            int i = iter.nextIndex();
+            Object item = iter.next();
+
+            if (item instanceof Map) {
+                try {
+                    JsonObject sub = JsonObject.from((Map<String, ?>) item);
+                    array.add(sub);
+                } catch (ClassCastException e) {
+                    throw e;
+                } catch (Exception e) {
+                    ClassCastException c = new ClassCastException("Couldn't convert sub-Map at " + i + " to JsonObject");
+                    c.initCause(e);
+                    throw c;
+                }
+            } else if (item instanceof List) {
+                try {
+                    JsonArray sub = JsonArray.from((List<?>) item);
+                    array.add(sub);
+                } catch (Exception e) {
+                    //no risk of a direct ClassCastException here
+                    ClassCastException c = new ClassCastException(
+                            "Couldn't convert sub-List at " + i + " to JsonArray");
+                    c.initCause(e);
+                    throw c;
+                }
+            } else if (checkType(item)) {
                 array.add(item);
             } else {
                 throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
