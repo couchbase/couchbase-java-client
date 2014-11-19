@@ -80,7 +80,9 @@ public class ViewQueryResponseMapper {
             }
 
             try {
-                return TRANSCODER.byteBufToJsonObject(byteBuf);
+                JsonObject decoded = TRANSCODER.byteBufToJsonObject(byteBuf);
+                byteBuf.release();
+                return decoded;
             } catch (Exception e) {
                 throw new TranscodingException("Could not decode View JSON.", e);
             }
