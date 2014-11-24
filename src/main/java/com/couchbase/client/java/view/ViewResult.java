@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface ViewResult {
+public interface ViewResult extends Iterable<ViewRow> {
 
     /**
      * Collects all rows received from the view with the default view timeout.
