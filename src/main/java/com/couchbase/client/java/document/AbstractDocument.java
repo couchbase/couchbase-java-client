@@ -24,8 +24,12 @@ package com.couchbase.client.java.document;
 /**
  * Common parent implementation of a {@link Document}.
  *
+ * It is recommended that all {@link Document} implementations extend from this class so that parameter checks
+ * are consistently applied. It also ensures that equals and hashcode are applied on the contents and therefore
+ * comparisons work as expected.
+ *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.0.0
  */
 public abstract class AbstractDocument<T> implements Document<T> {
 
@@ -35,6 +39,13 @@ public abstract class AbstractDocument<T> implements Document<T> {
     private final T content;
 
     protected AbstractDocument(String id, int expiry, T content, long cas) {
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("The Document ID must not be null or empty.");
+        }
+        if (expiry < 0) {
+            throw new IllegalArgumentException("The Document expiry must not be negative.");
+        }
+
         this.id = id;
         this.cas = cas;
         this.expiry = expiry;
