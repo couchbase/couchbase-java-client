@@ -104,6 +104,11 @@ public class JsonObject extends JsonValue {
         for (Map.Entry<String, ?> entry : mapData.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
+
+            if (value == JsonValue.NULL) {
+                value = null;
+            }
+
             if (key == null) {
                 throw new NullPointerException("The key is not allowed to be null");
             } else if (value instanceof Map) {
@@ -146,7 +151,9 @@ public class JsonObject extends JsonValue {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(final String name, final Object value) {
-        if (checkType(value)) {
+        if (value == JsonValue.NULL) {
+            putNull(name);
+        } else if (checkType(value)) {
             content.put(name, value);
         } else {
             throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
@@ -335,6 +342,20 @@ public class JsonObject extends JsonValue {
      */
     public JsonObject put(String name, JsonArray value) {
         content.put(name, value);
+        return this;
+    }
+
+    /**
+     * Store a null value identified by the field's name.
+     *
+     * This method is equivalent to calling {@link #put(String, Object)} with either
+     * {@link JsonValue#NULL JsonValue.NULL} or a null value explicitly cast to Object.
+     *
+     * @param name The null field's name.
+     * @return the {@link JsonObject}
+     */
+    public JsonObject putNull(String name) {
+        content.put(name, null);
         return this;
     }
 

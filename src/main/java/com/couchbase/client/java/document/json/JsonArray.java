@@ -121,6 +121,10 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
             int i = iter.nextIndex();
             Object item = iter.next();
 
+            if (item == JsonValue.NULL) {
+                item = null;
+            }
+
             if (item instanceof Map) {
                 try {
                     JsonObject sub = JsonObject.from((Map<String, ?>) item);
@@ -172,11 +176,25 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
      * @return the {@link JsonArray}.
      */
     public JsonArray add(Object value) {
-        if (checkType(value)) {
+        if (value == JsonValue.NULL) {
+            addNull();
+        } else if (checkType(value)) {
             content.add(value);
         } else {
             throw new IllegalArgumentException("Unsupported type for JsonArray: " + value.getClass());
         }
+        return this;
+    }
+
+    /**
+     * Append a null element to the {@link JsonArray}.
+     *
+     * This is equivalent to calling {@link JsonArray#add(Object)} with null or {@link JsonValue#NULL}.
+     *
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray addNull() {
+        content.add(null);
         return this;
     }
 
