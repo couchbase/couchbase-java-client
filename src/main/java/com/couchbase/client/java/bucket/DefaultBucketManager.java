@@ -23,6 +23,7 @@ package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.util.Blocking;
 import com.couchbase.client.java.view.DesignDocument;
 
 import java.util.List;
@@ -122,138 +123,100 @@ public class DefaultBucketManager implements BucketManager {
 
     @Override
     public BucketInfo info(final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .info()
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(asyncBucketManager.info().single(), timeout, timeUnit);
     }
 
     @Override
     public Boolean flush(final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .flush()
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(asyncBucketManager.flush().single(), timeout, timeUnit);
     }
 
     @Override
     public List<DesignDocument> getDesignDocuments(final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .getDesignDocuments()
-            .timeout(timeout, timeUnit)
-            .toList()
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(asyncBucketManager.getDesignDocuments().toList(), timeout, timeUnit);
     }
 
     @Override
     public List<DesignDocument> getDesignDocuments(final boolean development, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .getDesignDocuments(development)
-            .timeout(timeout, timeUnit)
-            .toList()
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(asyncBucketManager.getDesignDocuments(development).toList(), timeout, timeUnit);
     }
 
     @Override
     public DesignDocument getDesignDocument(final String name, final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .getDesignDocument(name)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .singleOrDefault(null);
+        return Blocking.blockForSingle(
+            asyncBucketManager.getDesignDocument(name).singleOrDefault(null), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument getDesignDocument(final String name, final boolean development, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .getDesignDocument(name, development)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .singleOrDefault(null);
+        return Blocking.blockForSingle(
+            asyncBucketManager.getDesignDocument(name, development).singleOrDefault(null), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument insertDesignDocument(final DesignDocument designDocument, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .insertDesignDocument(designDocument)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.insertDesignDocument(designDocument).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument insertDesignDocument(final DesignDocument designDocument, final boolean development,
         final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .insertDesignDocument(designDocument, development)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.insertDesignDocument(designDocument, development).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument upsertDesignDocument(final DesignDocument designDocument, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .upsertDesignDocument(designDocument)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.upsertDesignDocument(designDocument).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument upsertDesignDocument(final DesignDocument designDocument, final boolean development,
         final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .upsertDesignDocument(designDocument, development)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.upsertDesignDocument(designDocument, development).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public Boolean removeDesignDocument(final String name, final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .removeDesignDocument(name)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.removeDesignDocument(name).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public Boolean removeDesignDocument(final String name, final boolean development, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .removeDesignDocument(name, development)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.removeDesignDocument(name, development).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument publishDesignDocument(final String name, final long timeout, final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .publishDesignDocument(name)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.publishDesignDocument(name).single(), timeout, timeUnit
+        );
     }
 
     @Override
     public DesignDocument publishDesignDocument(final String name, final boolean overwrite, final long timeout,
         final TimeUnit timeUnit) {
-        return asyncBucketManager
-            .publishDesignDocument(name, overwrite)
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(
+            asyncBucketManager.publishDesignDocument(name, overwrite).single(), timeout, timeUnit
+        );
     }
 
 }

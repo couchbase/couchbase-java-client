@@ -3,6 +3,7 @@ package com.couchbase.client.java.view;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.util.Blocking;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -32,7 +33,7 @@ public class DefaultViewResult implements ViewResult {
 
     @Override
     public List<ViewRow> allRows(long timeout, TimeUnit timeUnit) {
-        return asyncViewResult
+        return Blocking.blockForSingle(asyncViewResult
             .rows()
             .map(new Func1<AsyncViewRow, ViewRow>() {
                 @Override
@@ -40,10 +41,7 @@ public class DefaultViewResult implements ViewResult {
                     return new DefaultViewRow(env, bucket, asyncViewRow.id(), asyncViewRow.key(), asyncViewRow.value());
                 }
             })
-            .toList()
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+            .toList(), timeout, timeUnit);
     }
 
     @Override

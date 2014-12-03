@@ -2,6 +2,7 @@ package com.couchbase.client.java.query;
 
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.util.Blocking;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -28,7 +29,7 @@ public class DefaultQueryResult implements QueryResult {
 
     @Override
     public List<QueryRow> allRows(long timeout, TimeUnit timeUnit) {
-        return asyncQueryResult
+        return Blocking.blockForSingle(asyncQueryResult
             .rows()
             .map(new Func1<AsyncQueryRow, QueryRow>() {
                 @Override
@@ -36,10 +37,7 @@ public class DefaultQueryResult implements QueryResult {
                     return new DefaultQueryRow(asyncQueryRow.value());
                 }
             })
-            .toList()
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+            .toList(), timeout, timeUnit);
     }
 
     @Override
@@ -69,11 +67,7 @@ public class DefaultQueryResult implements QueryResult {
 
     @Override
     public JsonObject info(long timeout, TimeUnit timeUnit) {
-        return asyncQueryResult
-            .info()
-            .timeout(timeout, timeUnit)
-            .toBlocking()
-            .single();
+        return Blocking.blockForSingle(asyncQueryResult.info().single(), timeout, timeUnit);
     }
 
     @Override
