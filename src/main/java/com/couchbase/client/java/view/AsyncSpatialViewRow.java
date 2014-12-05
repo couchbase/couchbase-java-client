@@ -32,17 +32,17 @@ import com.couchbase.client.java.error.TranscodingException;
 import rx.Observable;
 
 /**
- * Represents a row fetched from the {@link View}.
+ * Represents a row fetched from the Spatial {@link View}.
  *
  * The row itself contains fixed properties returned, but is also able to - on demand - load the full document if
  * instructed through the {@link #document()} methods.
  *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.1.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface AsyncViewRow {
+public interface AsyncSpatialViewRow {
 
     /**
      * The id of the document, if not reduced.
@@ -52,25 +52,32 @@ public interface AsyncViewRow {
     String id();
 
     /**
-     * The key of the row index.
-     *
-     * The object can be any valid JSON object, including {@link JsonArray} or {@link JsonObject}.
+     * The key of the row.
      *
      * @return the key.
      */
-    Object key();
+    JsonArray key();
 
     /**
-     * The value of the row index.
+     * The value of the row.
      *
      * The object can be any valid JSON object, including {@link JsonArray} or {@link JsonObject}.
      *
-     * @return the value.
+     * @return the value if set.
      */
     Object value();
 
     /**
-     * Load the underlying document, if not reduced.
+     * The geometry of the row, if emitted.
+     *
+     * Note that the geometry is only set if GeoJSON is emitted by the spatial view.
+     *
+     * @return the GeoJSON geometry if set.
+     */
+    JsonObject geometry();
+
+    /**
+     * Load the underlying document.
      *
      * The {@link Observable} can error under the following conditions:
      *
@@ -83,7 +90,7 @@ public interface AsyncViewRow {
     Observable<JsonDocument> document();
 
     /**
-     * Load the underlying document, if not reduced.
+     * Load the underlying document.
      *
      * The {@link Observable} can error under the following conditions:
      *

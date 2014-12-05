@@ -34,11 +34,11 @@ import java.util.concurrent.TimeoutException;
  * Represents the result from a {@link ViewQuery}.
  *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.1.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface ViewResult extends Iterable<ViewRow> {
+public interface SpatialViewResult extends Iterable<SpatialViewRow> {
 
     /**
      * Collects all rows received from the view with the default view timeout.
@@ -49,7 +49,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
-    List<ViewRow> allRows();
+    List<SpatialViewRow> allRows();
 
     /**
      * Collects all rows received from the view with the default view timeout.
@@ -60,7 +60,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
-    List<ViewRow> allRows(long timeout, TimeUnit timeUnit);
+    List<SpatialViewRow> allRows(long timeout, TimeUnit timeUnit);
 
     /**
      * Emits one {@link ViewRow} for each row received from the view with the default view timeout.
@@ -71,7 +71,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * @return a (potentially empty) {@link Iterator} containing view rows.
      */
-    Iterator<ViewRow> rows();
+    Iterator<SpatialViewRow> rows();
 
     /**
      * Emits one {@link ViewRow} for each row received from the view with a custom timeout.
@@ -84,14 +84,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      * @param timeUnit the time unit for the custom timeout.
      * @return a (potentially empty) {@link Iterator} containing view rows.
      */
-    Iterator<ViewRow> rows(long timeout, TimeUnit timeUnit);
-
-    /**
-     * The total number of rows.
-     *
-     * @return number of rows.
-     */
-    int totalRows();
+    Iterator<SpatialViewRow> rows(long timeout, TimeUnit timeUnit);
 
     /**
      * If the query was successful.

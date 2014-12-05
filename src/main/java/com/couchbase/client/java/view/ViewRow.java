@@ -21,14 +21,17 @@
  */
 package com.couchbase.client.java.view;
 
+import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.TranscodingException;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Represents a {@link ViewRow} fetched from the View.
@@ -70,10 +73,10 @@ public interface ViewRow {
      *
      * This method throws:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
      *
      * @return the loaded document, null if not found.
      */
@@ -84,10 +87,10 @@ public interface ViewRow {
      *
      * This method throws:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
      *
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
@@ -100,10 +103,10 @@ public interface ViewRow {
      *
      * This method throws:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
      *
      * @param target the custom target document type.
      * @return the loaded document, null if not found.
@@ -115,10 +118,10 @@ public interface ViewRow {
      *
      * This method throws:
      *
-     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
-     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
-     *  - java.lang.IllegalStateException: If the view is reduced and the ID is null.
-     *  - com.couchbase.client.java.error.TranscodingException: If the response document could not be decoded.
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
      *
      * @param target the custom target document type.
      * @param timeout the custom timeout.

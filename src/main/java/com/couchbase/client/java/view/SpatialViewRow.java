@@ -29,20 +29,19 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
-import rx.Observable;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * Represents a row fetched from the {@link View}.
- *
- * The row itself contains fixed properties returned, but is also able to - on demand - load the full document if
- * instructed through the {@link #document()} methods.
+ * Represents a {@link SpatialViewRow} fetched from the View.
  *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.1.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface AsyncViewRow {
+public interface SpatialViewRow {
 
     /**
      * The id of the document, if not reduced.
@@ -58,7 +57,7 @@ public interface AsyncViewRow {
      *
      * @return the key.
      */
-    Object key();
+    JsonArray key();
 
     /**
      * The value of the row index.
@@ -69,31 +68,69 @@ public interface AsyncViewRow {
      */
     Object value();
 
-    /**
-     * Load the underlying document, if not reduced.
-     *
-     * The {@link Observable} can error under the following conditions:
-     *
-     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
-     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
-     *  - {@link TranscodingException}: If the response document could not be decoded.
-     *
-     * @return a {@link Observable} containing the document once loaded.
-     */
-    Observable<JsonDocument> document();
+
+    JsonObject geometry();
 
     /**
-     * Load the underlying document, if not reduced.
+     * Load the underlying document, if not reduced with the default view timeout.
      *
-     * The {@link Observable} can error under the following conditions:
+     * This method throws:
      *
+     *  - {@link TimeoutException}: If the timeout is exceeded.
      *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
      *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
      *  - {@link TranscodingException}: If the response document could not be decoded.
      *
-     * @param target the target class to decode into.
-     * @return a {@link Observable} containing the document once loaded.
+     * @return the loaded document, null if not found.
      */
-    <D extends Document<?>> Observable<D> document(final Class<D> target);
+    JsonDocument document();
+
+    /**
+     * Load the underlying document, if not reduced with a custom timeout.
+     *
+     * This method throws:
+     *
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
+     *
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return the loaded document, null if not found.
+     */
+    JsonDocument document(long timeout, TimeUnit timeUnit);
+
+    /**
+     * Load the underlying document, if not reduced with the default view timeout.
+     *
+     * This method throws:
+     *
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
+     *
+     * @param target the custom target document type.
+     * @return the loaded document, null if not found.
+     */
+    <D extends Document<?>> D document(final Class<D> target);
+
+    /**
+     * Load the underlying document, if not reduced with a custom timeout.
+     *
+     * This method throws:
+     *
+     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
+     *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
+     *  - {@link TranscodingException}: If the response document could not be decoded.
+     *
+     * @param target the custom target document type.
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return the loaded document, null if not found.
+     */
+    <D extends Document<?>> D document(final Class<D> target, long timeout, TimeUnit timeUnit);
 
 }

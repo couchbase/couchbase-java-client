@@ -236,4 +236,24 @@ public class ViewQueryTest {
         assertEquals("reduce=false&group=true&debug=true&descending=true&startkey=%5B%22foo%22%2Ctrue%5D",
             query.toString());
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldDisallowNegativeLimit() {
+        ViewQuery.from("design", "view").limit(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldDisallowNegativeSkip() {
+        ViewQuery.from("design", "view").skip(-1);
+    }
+
+    @Test
+    public void shouldToggleDevelopment() {
+        ViewQuery query = ViewQuery.from("design", "view").development(true);
+        assertTrue(query.isDevelopment());
+
+        query = ViewQuery.from("design", "view").development(false);
+        assertFalse(query.isDevelopment());
+    }
+
 }

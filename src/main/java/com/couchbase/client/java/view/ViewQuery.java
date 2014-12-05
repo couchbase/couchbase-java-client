@@ -117,6 +117,9 @@ public class ViewQuery {
      * @return the {@link Query} object for proper chaining.
      */
     public ViewQuery limit(final int limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("Limit must be >= 0.");
+        }
         params[PARAM_LIMIT_OFFSET] = "limit";
         params[PARAM_LIMIT_OFFSET+1] = Integer.toString(limit);
         return this;
@@ -183,6 +186,9 @@ public class ViewQuery {
      * @return the {@link Query} object for proper chaining.
      */
     public ViewQuery skip(final int skip) {
+        if (skip < 0) {
+            throw new IllegalArgumentException("Skip must be >= 0.");
+        }
         params[PARAM_SKIP_OFFSET] = "skip";
         params[PARAM_SKIP_OFFSET+1] = Integer.toString(skip);
         return this;

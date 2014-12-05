@@ -66,6 +66,14 @@ public class DesignDocument {
                views.add(DefaultView.create(viewName, map, reduce));
             }
         }
+        JsonObject spatialViews = raw.getObject("spatial");
+        if (spatialViews != null) {
+            for(Map.Entry<String, Object> entry : spatialViews.toMap().entrySet()) {
+                String viewName = entry.getKey();
+                String map = (String) entry.getValue();
+                views.add(SpatialView.create(viewName, map));
+            }
+        }
         return new DesignDocument(name, views);
     }
 
@@ -86,17 +94,23 @@ public class DesignDocument {
     public JsonObject toJsonObject() {
         JsonObject converted = JsonObject.empty();
         JsonObject views = JsonObject.empty();
+        JsonObject spatialViews = JsonObject.empty();
 
         for (View view : this.views) {
-            JsonObject content = JsonObject.empty();
-            content.put("map", view.map());
-            if (view.hasReduce()) {
-                content.put("reduce", view.reduce());
+            if (view instanceof SpatialView) {
+                spatialViews.put(view.name(), view.map());
+            } else {
+                JsonObject content = JsonObject.empty();
+                content.put("map", view.map());
+                if (view.hasReduce()) {
+                    content.put("reduce", view.reduce());
+                }
+                views.put(view.name(), content);
             }
-            views.put(view.name(), content);
         }
 
         converted.put("views", views);
+        converted.put("spatial", spatialViews);
         return converted;
     }
 

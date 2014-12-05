@@ -24,74 +24,24 @@ package com.couchbase.client.java.view;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import rx.Observable;
 
 /**
- * Represents the result from a {@link ViewQuery}.
+ * Contains the result of a {@link SpatialViewQuery}.
  *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.1.0
  */
 @InterfaceStability.Committed
 @InterfaceAudience.Public
-public interface ViewResult extends Iterable<ViewRow> {
+public interface AsyncSpatialViewResult {
 
     /**
-     * Collects all rows received from the view with the default view timeout.
+     * Emits one {@link AsyncViewRow} for each row received from the view.
      *
-     * This method throws:
-     *
-     * - {@link TimeoutException}: If the timeout is exceeded.
-     *
-     * @return a (potentially empty) {@link List} containing view rows.
+     * @return a (potentially empty) {@link Observable} containing view rows.
      */
-    List<ViewRow> allRows();
-
-    /**
-     * Collects all rows received from the view with the default view timeout.
-     *
-     * This method throws:
-     *
-     * - {@link TimeoutException}: If the timeout is exceeded.
-     *
-     * @return a (potentially empty) {@link List} containing view rows.
-     */
-    List<ViewRow> allRows(long timeout, TimeUnit timeUnit);
-
-    /**
-     * Emits one {@link ViewRow} for each row received from the view with the default view timeout.
-     *
-     * This method throws:
-     *
-     * - {@link TimeoutException}: If the timeout is exceeded.
-     *
-     * @return a (potentially empty) {@link Iterator} containing view rows.
-     */
-    Iterator<ViewRow> rows();
-
-    /**
-     * Emits one {@link ViewRow} for each row received from the view with a custom timeout.
-     *
-     * This method throws:
-     *
-     * - {@link TimeoutException}: If the timeout is exceeded.
-     *
-     * @param timeout the custom timeout.
-     * @param timeUnit the time unit for the custom timeout.
-     * @return a (potentially empty) {@link Iterator} containing view rows.
-     */
-    Iterator<ViewRow> rows(long timeout, TimeUnit timeUnit);
-
-    /**
-     * The total number of rows.
-     *
-     * @return number of rows.
-     */
-    int totalRows();
+    Observable<AsyncSpatialViewRow> rows();
 
     /**
      * If the query was successful.

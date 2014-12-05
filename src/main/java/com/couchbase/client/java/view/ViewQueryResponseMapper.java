@@ -69,6 +69,23 @@ public class ViewQueryResponseMapper {
     }
 
     /**
+     * Maps a raw {@link ViewQueryResponse} into a {@link AsyncSpatialViewResult}.
+     *
+     * @param bucket reference to the bucket.
+     * @param query the original query object.
+     * @param response the response from the server.
+     * @return a converted {@link AsyncSpatialViewResult}.
+     */
+    public static Observable<AsyncSpatialViewResult> mapToSpatialViewResult(final AsyncBucket bucket,
+        final SpatialViewQuery query, final ViewQueryResponse response) {
+
+        return response
+            .info()
+            .map(new ByteBufToJsonObject())
+            .map(new BuildSpatialViewResult(bucket, query, response));
+    }
+
+    /**
      * Function which takes a {@link ByteBuf} and converts it into a {@link JsonObject}.
      */
     static class ByteBufToJsonObject implements Func1<ByteBuf, JsonObject> {
@@ -86,6 +103,52 @@ public class ViewQueryResponseMapper {
             } catch (Exception e) {
                 throw new TranscodingException("Could not decode View JSON.", e);
             }
+        }
+
+    }
+
+    /**
+     * Function which converts the {@link JsonObject} info into a {@link AsyncSpatialViewResult}.
+     */
+    static class BuildSpatialViewResult implements Func1<JsonObject, AsyncSpatialViewResult> {
+
+        private final AsyncBucket bucket;
+        private final SpatialViewQuery query;
+        private final ViewQueryResponse response;
+
+        BuildSpatialViewResult(AsyncBucket bucket, SpatialViewQuery query, ViewQueryResponse response) {
+            this.bucket = bucket;
+            this.query = query;
+            this.response = response;
+        }
+
+        @Override
+        public AsyncSpatialViewResult call(JsonObject jsonInfo) {
+            JsonObject error = null;
+            JsonObject debug = null;
+            boolean success = response.status().isSuccess();
+
+            if (success) {
+                debug = jsonInfo.getObject("debug_info");
+            } else if (response.status() == ResponseStatus.NOT_EXISTS) {
+                throw new ViewDoesNotExistException("View " + query.getDesign() + "/"
+                    + query.getView() + " does not exist.");
+            } else {
+                error = jsonInfo;
+            }
+
+            Observable<AsyncSpatialViewRow> rows = response
+                .rows()
+                .map(new ByteBufToJsonObject())
+                .map(new Func1<JsonObject, AsyncSpatialViewRow>() {
+                    @Override
+                    public AsyncSpatialViewRow call(JsonObject row) {
+                        return new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
+                            row.get("value"), row.getObject("geometry"));
+                    }
+                });
+
+            return new DefaultAsyncSpatialViewResult(rows, success, error, debug);
         }
 
     }

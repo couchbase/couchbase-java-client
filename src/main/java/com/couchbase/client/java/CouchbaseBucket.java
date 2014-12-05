@@ -1,3 +1,24 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
@@ -14,8 +35,12 @@ import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
+import com.couchbase.client.java.view.AsyncSpatialViewResult;
 import com.couchbase.client.java.view.AsyncViewResult;
+import com.couchbase.client.java.view.DefaultSpatialViewResult;
 import com.couchbase.client.java.view.DefaultViewResult;
+import com.couchbase.client.java.view.SpatialViewQuery;
+import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
 import rx.functions.Func1;
@@ -455,6 +480,11 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public SpatialViewResult query(SpatialViewQuery query) {
+        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
     public ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .query(query)
@@ -463,7 +493,25 @@ public class CouchbaseBucket implements Bucket {
                 public ViewResult call(AsyncViewResult asyncViewResult) {
                     return new DefaultViewResult(environment, CouchbaseBucket.this,
                         asyncViewResult.rows(), asyncViewResult.totalRows(), asyncViewResult.success(),
-                        asyncViewResult.error(), asyncViewResult.debug());
+                        asyncViewResult.error(), asyncViewResult.debug()
+                    );
+                }
+            })
+            .single(), timeout, timeUnit);
+    }
+
+
+    @Override
+    public SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucket
+            .query(query)
+            .map(new Func1<AsyncSpatialViewResult, SpatialViewResult>() {
+                @Override
+                public SpatialViewResult call(AsyncSpatialViewResult asyncSpatialViewResult) {
+                    return new DefaultSpatialViewResult(environment, CouchbaseBucket.this,
+                        asyncSpatialViewResult.rows(), asyncSpatialViewResult.success(),
+                        asyncSpatialViewResult.error(), asyncSpatialViewResult.debug()
+                    );
                 }
             })
             .single(), timeout, timeUnit);

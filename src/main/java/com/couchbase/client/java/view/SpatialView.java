@@ -22,28 +22,23 @@
 package com.couchbase.client.java.view;
 
 /**
- * Implementation of a regular, non spatial view.
+ * Implementation of a spatial view.
  *
  * @author Michael Nitschinger
- * @since 2.0.0
+ * @since 2.1.0
  */
-public class DefaultView implements View {
+public class SpatialView implements View {
 
     private final String name;
     private final String map;
-    private final String reduce;
 
-    protected DefaultView(String name, String map, String reduce) {
+    protected SpatialView(String name, String map) {
         this.name = name;
         this.map = map;
-        this.reduce = reduce;
-    }
-    public static View create(String name, String map, String reduce) {
-        return new DefaultView(name, map, reduce);
     }
 
     public static View create(String name, String map) {
-        return new DefaultView(name, map, null);
+        return new SpatialView(name, map);
     }
 
     @Override
@@ -58,20 +53,19 @@ public class DefaultView implements View {
 
     @Override
     public String reduce() {
-        return reduce;
+        return null;
     }
 
     @Override
     public boolean hasReduce() {
-        return reduce != null && !reduce.isEmpty();
+        return false;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DefaultView{");
+        final StringBuilder sb = new StringBuilder("SpatialView{");
         sb.append("name='").append(name).append('\'');
         sb.append(", map='").append(map).append('\'');
-        sb.append(", reduce='").append(reduce).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -81,11 +75,10 @@ public class DefaultView implements View {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        DefaultView that = (DefaultView) o;
+        SpatialView that = (SpatialView) o;
 
         if (map != null ? !map.equals(that.map) : that.map != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (reduce != null ? !reduce.equals(that.reduce) : that.reduce != null) return false;
 
         return true;
     }
@@ -94,7 +87,6 @@ public class DefaultView implements View {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (map != null ? map.hashCode() : 0);
-        result = 31 * result + (reduce != null ? reduce.hashCode() : 0);
         return result;
     }
 }

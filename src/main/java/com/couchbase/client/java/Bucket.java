@@ -32,9 +32,7 @@ import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.view.View;
-import com.couchbase.client.java.view.ViewQuery;
-import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.*;
 import rx.Observable;
 
 import java.util.List;
@@ -1911,6 +1909,21 @@ public interface Bucket {
     ViewResult query(ViewQuery query);
 
     /**
+     * Queries a Couchbase Server Spatial {@link View} with the default view timeout.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - If the design document or view is not found: {@link ViewDoesNotExistException}
+     *
+     * @param query the query to perform.
+     * @return a result containing all the found rows and additional information.
+     */
+    SpatialViewResult query(SpatialViewQuery query);
+
+    /**
      * Queries a Couchbase Server {@link View} with a custom timeout.
      *
      * This method throws under the following conditions:
@@ -1926,6 +1939,23 @@ public interface Bucket {
      * @return a result containing all the found rows and additional information.
      */
     ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Queries a Couchbase Server Spatial {@link View} with a custom timeout.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - If the design document or view is not found: {@link ViewDoesNotExistException}
+     *
+     * @param query the query to perform.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a result containing all the found rows and additional information.
+     */
+    SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit);
 
     /**
      * Experimental: Queries a N1QL secondary index with the default query timeout.
