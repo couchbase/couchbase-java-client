@@ -1657,8 +1657,9 @@ public class CouchbaseClient extends MemcachedClient
     }
 
     if (toReplica) {
-      for (int i = 0; i < cfg.getReplicasCount(); i++) {
-        MemcachedNode replica = locator.getReplica(key, i);
+      List<Integer> replicaIndexes = locator.getReplicaIndexes(key);
+      for (int index : replicaIndexes) {
+        MemcachedNode replica = locator.getReplica(key, index);
         if (replica != null) {
           bcastNodes.add(replica);
         }
