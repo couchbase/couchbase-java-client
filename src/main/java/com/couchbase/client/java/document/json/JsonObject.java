@@ -324,6 +324,18 @@ public class JsonObject extends JsonValue {
     }
 
     /**
+     * Attempt to convert a {@link Map} to a {@link JsonObject} value and store it, identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     * @see #from(Map)
+     */
+    public JsonObject put(String name, Map<String, ?> value) {
+        return put(name, JsonObject.from(value));
+    }
+
+    /**
      * Retrieves the value from the field name and casts it to {@link JsonObject}.
      *
      * @param name the name of the field.
@@ -346,6 +358,27 @@ public class JsonObject extends JsonValue {
     }
 
     /**
+     * Stores a {@link JsonArray} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, List<?> value) {
+        return put(name, JsonArray.from(value));
+    }
+
+    /**
+     * Retrieves the value from the field name and casts it to {@link JsonArray}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public JsonArray getArray(String name) {
+        return (JsonArray) content.get(name);
+    }
+
+    /**
      * Store a null value identified by the field's name.
      *
      * This method is equivalent to calling {@link #put(String, Object)} with either
@@ -357,16 +390,6 @@ public class JsonObject extends JsonValue {
     public JsonObject putNull(String name) {
         content.put(name, null);
         return this;
-    }
-
-    /**
-     * Retrieves the value from the field name and casts it to {@link JsonArray}.
-     *
-     * @param name the name of the field.
-     * @return the result or null if it does not exist.
-     */
-    public JsonArray getArray(String name) {
-        return (JsonArray) content.get(name);
     }
 
     /**

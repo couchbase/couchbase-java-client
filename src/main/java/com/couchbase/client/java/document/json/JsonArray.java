@@ -347,6 +347,17 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     }
 
     /**
+     * Append an {@link JsonObject} element, converted from a {@link List}, to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     * @see JsonObject#from(Map)
+     */
+    public JsonArray add(Map<String, ?> value) {
+        return add(JsonObject.from(value));
+    }
+
+    /**
      * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link JsonObject}.
      *
      * @param index the index of the value.
@@ -366,6 +377,17 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     public JsonArray add(JsonArray value) {
         content.add(value);
         return this;
+    }
+
+    /**
+     * Append an {@link JsonArray} element, converted from a {@link List}, to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     * @see #from(List)
+     */
+    public JsonArray add(List<?> value) {
+        return add(JsonArray.from(value));
     }
 
     /**
