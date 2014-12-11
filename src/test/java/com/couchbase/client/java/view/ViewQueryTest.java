@@ -216,6 +216,15 @@ public class ViewQueryTest {
     }
 
     @Test
+    public void shouldRespectDevelopmentParam() {
+        ViewQuery query = ViewQuery.from("design", "view").development(true);
+        assertTrue(query.isDevelopment());
+
+        query = ViewQuery.from("design", "view").development(false);
+        assertFalse(query.isDevelopment());
+    }
+
+    @Test
     public void shouldConcatMoreParams() {
         ViewQuery query = ViewQuery.from("design", "view")
             .descending()

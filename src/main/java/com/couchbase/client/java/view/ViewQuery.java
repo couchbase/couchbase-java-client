@@ -51,12 +51,11 @@ public class ViewQuery {
     private static final int PARAM_ENDKEYDOCID_OFFSET = 26;
     private static final int PARAM_KEYS_OFFSET = 28;
     private static final int PARAM_KEY_OFFSET = 30;
-    private static final int PARAM_BBOX_OFFSET = 32;
 
     /**
      * Number of supported possible params for a query.
      */
-    private static final int NUM_PARAMS = 17;
+    private static final int NUM_PARAMS = 16;
 
     /**
      * Contains all stored params.
@@ -90,7 +89,7 @@ public class ViewQuery {
     }
 
     public ViewQuery development(boolean development) {
-        this.development = true;
+        this.development = development;
         return this;
     }
 
