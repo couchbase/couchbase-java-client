@@ -250,7 +250,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .filter(new Func1<GetResponse, Boolean>() {
                 @Override
                 public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                    if (getResponse.status() == ResponseStatus.SUCCESS) {
+                        return true;
+                    } else {
+                        if (getResponse.content() != null) {
+                            getResponse.content().release();
+                        }
+                        return false;
+                    }
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -272,6 +279,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<InsertResponse, Observable<? extends D>>() {
                 @Override
                 public Observable<? extends D> call(InsertResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.EXISTS) {
                         return Observable.error(new DocumentAlreadyExistsException());
                     }
@@ -313,6 +323,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<UpsertResponse, Observable<D>>() {
                 @Override
                 public Observable<D> call(UpsertResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.EXISTS) {
                         return Observable.error(new CASMismatchException());
                     }
@@ -348,6 +361,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
             @Override
             public Observable<D> call(ReplaceResponse response) {
+                if (response.content() != null) {
+                    response.content().release();
+                }
                 if (response.status() == ResponseStatus.NOT_EXISTS) {
                     return Observable.error(new DocumentDoesNotExistException());
                 }
@@ -389,6 +405,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<RemoveResponse, D>() {
                 @Override
                 public D call(final RemoveResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.EXISTS) {
                         throw new CASMismatchException();
                     }
@@ -536,6 +555,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<CounterResponse, JsonLongDocument>() {
                 @Override
                 public JsonLongDocument call(CounterResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     return JsonLongDocument.create(id, expiry, response.value(), response.cas());
                 }
             });
@@ -548,6 +570,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<UnlockResponse, Boolean>() {
                 @Override
                 public Boolean call(UnlockResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.NOT_EXISTS) {
                         throw new DocumentDoesNotExistException();
                     }
@@ -568,8 +593,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public Observable<Boolean> touch(String id, int expiry) {
         return core.<TouchResponse>send(new TouchRequest(id, expiry, bucket)).map(new Func1<TouchResponse, Boolean>() {
             @Override
-            public Boolean call(TouchResponse touchResponse) {
-                return touchResponse.status().isSuccess();
+            public Boolean call(TouchResponse response) {
+                if (response.content() != null) {
+                    response.content().release();
+                }
+                return response.status().isSuccess();
             }
         });
     }
@@ -589,10 +617,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<AppendResponse, D>() {
                 @Override
                 public D call(final AppendResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.FAILURE) {
                         throw new DocumentDoesNotExistException();
                     }
-
                     return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
                 }
             });
@@ -608,10 +638,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<PrependResponse, D>() {
                 @Override
                 public D call(final PrependResponse response) {
+                    if (response.content() != null) {
+                        response.content().release();
+                    }
                     if (response.status() == ResponseStatus.FAILURE) {
                         throw new DocumentDoesNotExistException();
                     }
-
                     return (D) transcoder.newDocument(document.id(),  0, null, response.cas());
                 }
             });
