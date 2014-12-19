@@ -28,6 +28,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Represents the result from a {@link ViewQuery}.
@@ -44,7 +45,7 @@ public interface ViewResult {
      *
      * This method throws:
      *
-     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
@@ -55,7 +56,7 @@ public interface ViewResult {
      *
      * This method throws:
      *
-     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
@@ -66,7 +67,7 @@ public interface ViewResult {
      *
      * This method throws:
      *
-     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link Iterator} containing view rows.
      */
@@ -77,7 +78,7 @@ public interface ViewResult {
      *
      * This method throws:
      *
-     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
