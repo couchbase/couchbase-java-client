@@ -141,7 +141,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                         throw new CouchbaseException("Could not open bucket.");
                     }
 
-                    return new CouchbaseAsyncBucket(core, name, password, trans);
+                    return new CouchbaseAsyncBucket(core, environment, name, password, trans);
                 }
             }).onErrorResumeNext(new Func1<Throwable, Observable<AsyncBucket>>() {
                 @Override

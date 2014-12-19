@@ -62,7 +62,7 @@ public class CouchbaseBucket implements Bucket {
 
     public CouchbaseBucket(final CouchbaseEnvironment env, final ClusterFacade core, final String name, final String password,
         final List<Transcoder<? extends Document, ?>> customTranscoders) {
-        asyncBucket = new CouchbaseAsyncBucket(core, name, password, customTranscoders);
+        asyncBucket = new CouchbaseAsyncBucket(core, env, name, password, customTranscoders);
         this.environment = env;
         this.kvTimeout = env.kvTimeout();
         this.name = name;
