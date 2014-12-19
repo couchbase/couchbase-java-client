@@ -76,7 +76,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -92,7 +92,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -114,7 +114,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -134,7 +134,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -156,7 +156,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -177,7 +177,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -209,7 +209,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -239,7 +239,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -271,7 +271,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -301,7 +301,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -333,7 +333,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -363,7 +363,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -388,7 +388,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -410,7 +410,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -434,7 +434,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -456,7 +456,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -483,7 +483,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -509,7 +509,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -533,7 +533,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -554,7 +554,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -577,7 +577,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -597,7 +597,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -622,7 +622,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -647,7 +647,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -675,7 +675,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -699,7 +699,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -720,7 +720,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -751,7 +751,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -785,7 +785,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -815,7 +815,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -848,7 +848,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -878,7 +878,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
@@ -913,7 +913,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -934,7 +934,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -954,7 +954,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -984,7 +984,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1016,7 +1016,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1045,7 +1045,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1076,7 +1076,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1105,7 +1105,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1142,7 +1142,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1168,7 +1168,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1191,7 +1191,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1223,7 +1223,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1258,7 +1258,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1289,7 +1289,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1323,7 +1323,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1354,7 +1354,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
@@ -1386,7 +1386,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
@@ -1404,7 +1404,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
@@ -1424,7 +1424,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1446,7 +1446,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1470,7 +1470,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1491,7 +1491,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1514,7 +1514,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1535,7 +1535,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1558,7 +1558,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1575,7 +1575,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1595,7 +1595,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1616,7 +1616,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1640,7 +1640,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1660,7 +1660,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1683,7 +1683,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1703,7 +1703,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1725,7 +1725,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1743,7 +1743,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1764,7 +1764,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1786,7 +1786,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1812,7 +1812,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1833,7 +1833,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1857,7 +1857,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1878,7 +1878,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -1898,7 +1898,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
@@ -1913,7 +1913,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
@@ -1928,7 +1928,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
@@ -1945,7 +1945,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
@@ -1962,7 +1962,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1976,7 +1976,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -1992,7 +1992,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2006,7 +2006,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2022,7 +2022,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
@@ -2039,7 +2039,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
@@ -2058,7 +2058,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
@@ -2074,7 +2074,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
@@ -2095,7 +2095,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2113,7 +2113,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2133,7 +2133,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2150,7 +2150,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2169,7 +2169,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2186,7 +2186,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2206,7 +2206,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2224,7 +2224,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2245,7 +2245,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2264,7 +2264,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
@@ -2295,7 +2295,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
@@ -2324,7 +2324,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
@@ -2355,7 +2355,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
@@ -2384,7 +2384,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}

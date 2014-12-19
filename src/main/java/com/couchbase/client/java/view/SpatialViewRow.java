@@ -76,7 +76,7 @@ public interface SpatialViewRow {
      *
      * This method throws:
      *
-     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
      *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
      *  - {@link TranscodingException}: If the response document could not be decoded.
@@ -90,7 +90,7 @@ public interface SpatialViewRow {
      *
      * This method throws:
      *
-     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
      *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
      *  - {@link TranscodingException}: If the response document could not be decoded.
@@ -106,7 +106,7 @@ public interface SpatialViewRow {
      *
      * This method throws:
      *
-     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
      *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
      *  - {@link TranscodingException}: If the response document could not be decoded.
@@ -121,7 +121,7 @@ public interface SpatialViewRow {
      *
      * This method throws:
      *
-     *  - {@link TimeoutException}: If the timeout is exceeded.
+     *  - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *  - {@link BackpressureException}: If the incoming request rate is too high to be processed.
      *  - {@link IllegalStateException}: If the view is reduced and the ID is null.
      *  - {@link TranscodingException}: If the response document could not be decoded.

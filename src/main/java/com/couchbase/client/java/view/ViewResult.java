@@ -45,7 +45,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * This method throws:
      *
-     * - {@link TimeoutException}: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
@@ -56,7 +56,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * This method throws:
      *
-     * - {@link TimeoutException}: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link List} containing view rows.
      */
@@ -67,7 +67,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * This method throws:
      *
-     * - {@link TimeoutException}: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @return a (potentially empty) {@link Iterator} containing view rows.
      */
@@ -78,7 +78,7 @@ public interface ViewResult extends Iterable<ViewRow> {
      *
      * This method throws:
      *
-     * - {@link TimeoutException}: If the timeout is exceeded.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: If the timeout is exceeded.
      *
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
