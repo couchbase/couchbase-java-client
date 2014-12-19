@@ -21,10 +21,14 @@
  */
 package com.couchbase.client.java.cluster;
 
+import java.util.List;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.util.features.CouchbaseFeature;
+import com.couchbase.client.java.util.features.Version;
 
 /**
  * Provides information about a {@link Cluster}.
@@ -47,4 +51,31 @@ public interface ClusterInfo {
      */
     JsonObject raw();
 
+    /**
+     * Checks the availability of a specified {@link CouchbaseFeature} on the associated {@link Cluster}.
+     *
+     * Note that this relies on {@link #getMinVersion()}. If said method returns {@link Version#NO_VERSION} then the
+     * feature will be deemed unavailable (this method will return false).
+     *
+     * @param feature the feature to check for.
+     * @return true if minimum node server version is compatible with the feature, false otherwise.
+     * @see #getMinVersion()
+     */
+    public boolean checkAvailable(CouchbaseFeature feature);
+
+    /**
+     * Returns the smallest node version (thus oldest version) in the cluster from which this {@link ClusterInfo} was
+     * taken. If list of version cannot be obtained then this returns {@link Version#NO_VERSION}.
+     *
+     * @return the smallest (oldest) server version in the cluster.
+     */
+    public Version getMinVersion();
+
+    /**
+     * Returns the list of {@link Version} obtained from the cluster from which this {@link ClusterInfo} was obtained.
+     * In case the versions cannot be obtained, an empty list is returned.
+     *
+     * @return the list of nodes versions, or an empty list in case of errors.
+     */
+    public List<Version> getAllVersions();
 }

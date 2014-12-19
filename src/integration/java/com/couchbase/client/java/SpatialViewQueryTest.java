@@ -21,23 +21,30 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.util.ClusterDependentTest;
-import com.couchbase.client.java.view.*;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import rx.Observable;
-import rx.functions.Func1;
-
-import java.util.Arrays;
-import java.util.List;
-
+import static com.couchbase.client.java.util.features.CouchbaseFeature.SPATIAL_VIEW;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
+
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.features.Version;
+import com.couchbase.client.java.view.DesignDocument;
+import com.couchbase.client.java.view.SpatialView;
+import com.couchbase.client.java.view.SpatialViewQuery;
+import com.couchbase.client.java.view.SpatialViewResult;
+import com.couchbase.client.java.view.SpatialViewRow;
+import com.couchbase.client.java.view.Stale;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import rx.Observable;
+import rx.functions.Func1;
 
 /**
  * Verifies the functionality of {@link SpatialViewQuery}.
@@ -63,6 +70,8 @@ public class SpatialViewQueryTest extends ClusterDependentTest {
      */
     @BeforeClass
     public static void setupSpatialViews() {
+        ignoreIfClusterUnder(new Version(3,0,2));
+
         Observable
             .from(FIXTURES)
             .flatMap(new Func1<JsonObject, Observable<JsonDocument>>() {
