@@ -32,6 +32,7 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.DefaultQueryResult;
 import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
@@ -470,13 +471,18 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public QueryResult query(Statement statement) {
+        return query(statement, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
     public QueryResult query(Query query) {
         return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
     }
 
     @Override
-    public QueryResult query(String query) {
-        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+    public QueryResult queryRaw(String query) {
+        return queryRaw(query, environment.queryTimeout(), TIMEOUT_UNIT);
     }
 
     @Override
@@ -518,6 +524,20 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public QueryResult query(Statement statement, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucket
+            .query(statement)
+            .map(new Func1<AsyncQueryResult, QueryResult>() {
+                @Override
+                public QueryResult call(AsyncQueryResult asyncQueryResult) {
+                    return new DefaultQueryResult(environment, asyncQueryResult.rows(),
+                        asyncQueryResult.info(), asyncQueryResult.error(), asyncQueryResult.success());
+                }
+            })
+            .single(), timeout, timeUnit);
+    }
+
+    @Override
     public QueryResult query(Query query, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .query(query)
@@ -532,9 +552,9 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryResult query(String query, long timeout, TimeUnit timeUnit) {
+    public QueryResult queryRaw(String query, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
-            .query(query)
+            .queryRaw(query)
             .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
                 public QueryResult call(AsyncQueryResult asyncQueryResult) {

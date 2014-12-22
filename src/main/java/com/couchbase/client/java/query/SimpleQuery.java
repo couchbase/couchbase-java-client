@@ -21,27 +21,35 @@
  */
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.java.document.json.JsonObject;
+
 /**
- * Interface to describe N1QL queries. Queries are formed of a mandatory {@link Statement}
- * and optionally can have other components, as described in each implementation of this.
+ * The simplest form of N1QL {@link Query} with a plain un-parametrized {@link Statement}.
  *
  * @author Simon Baslé
  * @since 2.1
  */
-public interface Query {
+public class SimpleQuery implements Query {
+
+    private final Statement statement;
 
     /**
-     * Returns the {@link Statement} from this query. Note that this is the only mandatory
-     * part of a N1QL query.
-     *
-     * @return the statement that forms the base of this query
+     * Create a new {@link Query} with a plain un-parametrized {@link Statement}.
+     * @param statement the {@link Statement} to execute
      */
-    public Statement statement();
+    public SimpleQuery(Statement statement) {
+        this.statement = statement;
+    }
 
-    /**
-     * Convert this query to a full N1QL query in Json form.
-     *
-     * @return the json representation of this query (including all relevant parameters)
-     */
-    public String toN1QL();
+    @Override
+    public Statement statement() {
+        return this.statement;
+    }
+
+    @Override
+    public String toN1QL() {
+        return JsonObject.create()
+            .put("statement", this.statement.toString())
+            .toString();
+    }
 }

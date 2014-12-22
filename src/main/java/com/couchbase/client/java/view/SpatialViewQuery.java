@@ -22,7 +22,6 @@
 package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.query.Query;
 
 import java.net.URLEncoder;
 
@@ -87,7 +86,7 @@ public class SpatialViewQuery {
      * Limit the number of the returned documents to the specified number.
      *
      * @param limit the number of documents to return.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link SpatialViewQuery} object for proper chaining.
      */
     public SpatialViewQuery limit(final int limit) {
         if (limit < 0) {
@@ -102,7 +101,7 @@ public class SpatialViewQuery {
      * Skip this number of records before starting to return the results.
      *
      * @param skip The number of records to skip.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link SpatialViewQuery} object for proper chaining.
      */
     public SpatialViewQuery skip(final int skip) {
         if (skip < 0) {
@@ -120,7 +119,7 @@ public class SpatialViewQuery {
      * default setting is "update_after"!
      *
      * @param stale Which stale mode should be used.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link SpatialViewQuery} object for proper chaining.
      */
     public SpatialViewQuery stale(final Stale stale) {
         params[PARAM_STALE_OFFSET] = "stale";
@@ -131,7 +130,7 @@ public class SpatialViewQuery {
     /**
      * Enabled debugging on view queries.
      *
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link SpatialViewQuery} object for proper chaining.
      */
     public SpatialViewQuery debug() {
         return debug(true);
@@ -167,7 +166,7 @@ public class SpatialViewQuery {
      * See the "OnError" enum for more details on the available options.
      *
      * @param onError The appropriate error handling type.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link SpatialViewQuery} object for proper chaining.
      */
     public SpatialViewQuery onError(final OnError onError) {
         params[PARAM_ONERROR_OFFSET] = "on_error";
