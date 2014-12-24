@@ -178,7 +178,9 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
      * @return the {@link JsonArray}.
      */
     public JsonArray add(Object value) {
-        if (value == JsonValue.NULL) {
+        if (value == this) {
+            throw new IllegalArgumentException("Cannot add self");
+        } else if (value == JsonValue.NULL) {
             addNull();
         } else if (checkType(value)) {
             content.add(value);
@@ -377,6 +379,9 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
      * @return the {@link JsonArray}.
      */
     public JsonArray add(JsonArray value) {
+        if (value == this) {
+            throw new IllegalArgumentException("Cannot add self");
+        }
         content.add(value);
         return this;
     }
@@ -404,12 +409,24 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
     }
 
     /**
-     * Copies the content of the {@link JsonArray} into a new {@link List} and return it.
+     * Copies the content of the {@link JsonArray} into a new {@link List} and returns it.
+     * Note that if the array contains sub-{@link JsonObject} or {@link JsonArray}, they
+     * will recursively be converted to {@link Map} and {@link List}, respectively.
      *
      * @return the content of the {@link JsonArray} in a new {@link List}.
      */
     public List<Object> toList() {
-        return new ArrayList<Object>(content);
+        List<Object> copy = new ArrayList<Object>(content.size());
+        for (Object o : content) {
+            if (o instanceof JsonObject) {
+                copy.add(((JsonObject) o).toMap());
+            } else if (o instanceof JsonArray) {
+                copy.add(((JsonArray) o).toList());
+            } else {
+                copy.add(o);
+            }
+        }
+        return copy;
     }
 
     /**
