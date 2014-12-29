@@ -36,15 +36,6 @@ import java.io.Serializable;
 public class SerializableDocument extends AbstractDocument<Serializable> {
 
     /**
-     * Creates a empty {@link SerializableDocument}.
-     *
-     * @return a empty {@link SerializableDocument}.
-     */
-    public static SerializableDocument empty() {
-        return new SerializableDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link SerializableDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

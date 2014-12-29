@@ -34,15 +34,6 @@ package com.couchbase.client.java.document;
 public class LegacyDocument extends AbstractDocument<Object> {
 
     /**
-     * Creates a empty {@link LegacyDocument}.
-     *
-     * @return a empty {@link LegacyDocument}.
-     */
-    public static LegacyDocument empty() {
-        return new LegacyDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link LegacyDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

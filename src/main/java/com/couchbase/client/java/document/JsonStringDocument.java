@@ -33,15 +33,6 @@ package com.couchbase.client.java.document;
 public class JsonStringDocument extends AbstractDocument<String> {
 
     /**
-     * Creates a empty {@link JsonStringDocument}.
-     *
-     * @return a empty {@link JsonStringDocument}.
-     */
-    public static JsonStringDocument empty() {
-        return new JsonStringDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link JsonStringDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

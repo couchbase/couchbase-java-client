@@ -33,15 +33,6 @@ package com.couchbase.client.java.document;
 public class JsonLongDocument extends AbstractDocument<Long> {
 
     /**
-     * Creates a empty {@link JsonLongDocument}.
-     *
-     * @return a empty {@link JsonLongDocument}.
-     */
-    public static JsonLongDocument empty() {
-        return new JsonLongDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link JsonLongDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
