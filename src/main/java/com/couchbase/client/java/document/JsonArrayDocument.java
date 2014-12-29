@@ -35,15 +35,6 @@ import com.couchbase.client.java.document.json.JsonArray;
 public class JsonArrayDocument extends AbstractDocument<JsonArray> {
 
     /**
-     * Creates a empty {@link JsonDocument}.
-     *
-     * @return a empty {@link JsonDocument}.
-     */
-    public static JsonArrayDocument empty() {
-        return new JsonArrayDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link JsonDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

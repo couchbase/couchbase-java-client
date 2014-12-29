@@ -54,15 +54,6 @@ import com.couchbase.client.java.document.json.JsonObject;
 public class JsonDocument extends AbstractDocument<JsonObject> {
 
     /**
-     * Creates a empty {@link JsonDocument}.
-     *
-     * @return a empty {@link JsonDocument}.
-     */
-    public static JsonDocument empty() {
-        return new JsonDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link JsonDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

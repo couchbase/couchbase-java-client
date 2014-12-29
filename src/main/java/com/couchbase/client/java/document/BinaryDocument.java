@@ -32,15 +32,6 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 public class BinaryDocument extends AbstractDocument<ByteBuf> {
 
     /**
-     * Creates a empty {@link BinaryDocument}.
-     *
-     * @return a empty {@link BinaryDocument}.
-     */
-    public static BinaryDocument empty() {
-        return new BinaryDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link BinaryDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

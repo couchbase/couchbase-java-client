@@ -34,15 +34,6 @@ package com.couchbase.client.java.document;
 public class RawJsonDocument extends AbstractDocument<String> {
 
     /**
-     * Creates a empty {@link RawJsonDocument}.
-     *
-     * @return a empty {@link RawJsonDocument}.
-     */
-    public static RawJsonDocument empty() {
-        return new RawJsonDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link RawJsonDocument} which the document id.
      *
      * @param id the per-bucket unique document id.

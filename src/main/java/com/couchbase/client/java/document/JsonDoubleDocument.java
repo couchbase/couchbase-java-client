@@ -33,15 +33,6 @@ package com.couchbase.client.java.document;
 public class JsonDoubleDocument extends AbstractDocument<Double> {
 
     /**
-     * Creates a empty {@link JsonDoubleDocument}.
-     *
-     * @return a empty {@link JsonDoubleDocument}.
-     */
-    public static JsonDoubleDocument empty() {
-        return new JsonDoubleDocument(null, 0, null, 0);
-    }
-
-    /**
      * Creates a {@link JsonDoubleDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
