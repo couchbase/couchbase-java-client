@@ -67,6 +67,7 @@ public class ViewRetryHandlerTest {
 
         subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
         subscriber.assertNoErrors();
+        assertEquals(1, subscriber.getOnNextEvents().size());
         assertEquals(1, subscriberCount.get());
     }
 
@@ -95,6 +96,7 @@ public class ViewRetryHandlerTest {
 
         subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
         subscriber.assertNoErrors();
+        assertEquals(1, subscriber.getOnNextEvents().size());
         assertEquals(5, subscriberCount.get());
     }
 
@@ -149,5 +151,6 @@ public class ViewRetryHandlerTest {
         subscriber.assertNoErrors();
         assertEquals(404, subscriber.getOnNextEvents().get(0).responseCode());
         assertEquals(1, subscriberCount.get());
+        assertEquals(1, subscriber.getOnNextEvents().size());
     }
 }
