@@ -22,6 +22,7 @@
 package com.couchbase.client.java.view;
 
 import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
@@ -73,7 +74,8 @@ public class ViewRetryHandler {
                         .flatMap(new Func1<Throwable, Observable<?>>() {
                             @Override
                             public Observable<?> call(Throwable throwable) {
-                                if (throwable instanceof ShouldRetryViewRequestException) {
+                                if (throwable instanceof ShouldRetryViewRequestException
+                                    || throwable instanceof RequestCancelledException) {
                                     return Observable.timer(10, TimeUnit.MILLISECONDS);
                                 } else {
                                     return Observable.error(throwable);
