@@ -74,7 +74,7 @@ public class ViewRetryHandler {
                             @Override
                             public Observable<?> call(Throwable throwable) {
                                 if (throwable instanceof ShouldRetryViewRequestException) {
-                                    return Observable.interval(10, TimeUnit.MILLISECONDS);
+                                    return Observable.timer(10, TimeUnit.MILLISECONDS);
                                 } else {
                                     return Observable.error(throwable);
                                 }
