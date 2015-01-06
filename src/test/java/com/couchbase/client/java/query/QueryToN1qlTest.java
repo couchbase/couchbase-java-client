@@ -25,10 +25,10 @@ package com.couchbase.client.java.query;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.dsl.Expression.s;
 import static com.couchbase.client.java.query.dsl.Expression.x;
+import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -44,7 +44,7 @@ public class QueryToN1qlTest {
         SimpleQuery query = new SimpleQuery(select("*").from("tutorial").where(x("fname").eq(s("ian"))));
 
         //notice ian is between escaped quotes since inside json
-        Assert.assertEquals("{\"statement\":\"SELECT * FROM tutorial WHERE fname = \\\"ian\\\"\"}", query.toN1QL());
+        assertEquals("{\"statement\":\"SELECT * FROM tutorial WHERE fname = \\\"ian\\\"\"}", query.toN1QL());
     }
 
     @Test
@@ -55,18 +55,41 @@ public class QueryToN1qlTest {
             .put("statement", "SELECT *")
             .put("args", JsonArray.from("aString", 123, true));
 
-        Assert.assertEquals(expected.toString(), query.toN1QL());
+        assertEquals(expected.toString(), query.toN1QL());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldRefuseToPrepareQueryPlan() {
+        QueryPlan fakePlan = new QueryPlan(JsonObject.empty());
+        PrepareStatement.prepare(fakePlan);
+    }
+
+    @Test
+    public void shouldNotWrapAPrepareStatement() {
+        PrepareStatement statement = PrepareStatement.prepare(select("*"));
+        assertEquals(statement, PrepareStatement.prepare(statement));
+    }
+
+    @Test
+    public void shouldPrependStatementWithPrepare() {
+        Statement toPrepare = select("*").from("default");
+        PrepareStatement prepare = PrepareStatement.prepare(toPrepare);
+
+        assertEquals("PREPARE SELECT * FROM default", prepare.toString());
     }
 
     @Test
     public void preparedQueryWithArrayShouldProducePreparedAndArgs() {
-        PreparedQuery query = new PreparedQuery(select("*"), JsonArray.from("aString", 123, true));
+        JsonObject rawPlan = JsonObject.create().put("fake", "select *");
+        QueryPlan fakePlan = new QueryPlan(rawPlan);
+        JsonArray params =JsonArray.from("aString", 123, true);
+        PreparedQuery query = new PreparedQuery(fakePlan, params);
 
         JsonObject expected = JsonObject.create()
-            .put("prepared", "SELECT *")
+            .put("prepared", rawPlan)
             .put("args", JsonArray.from("aString", 123, true));
 
-        Assert.assertEquals(expected.toString(), query.toN1QL());
+        assertEquals(expected.toString(), query.toN1QL());
     }
 
     @Test
@@ -83,24 +106,26 @@ public class QueryToN1qlTest {
             .put("$someInt", 123)
             .put("$fullN1qlParam", true);
 
-        Assert.assertEquals(expected.toString(), query.toN1QL());
+        assertEquals(expected.toString(), query.toN1QL());
     }
 
     @Test
     public void preparedQueryWithObjectShouldProducePreparedAndNamedParameters() {
+        JsonObject rawPlan = JsonObject.create().put("fake", "select *");
+        QueryPlan fakePlan = new QueryPlan(rawPlan);
         JsonObject args = JsonObject.create()
             .put("myParamString", "aString")
             .put("someInt", 123)
             .put("$fullN1qlParam", true);
-        PreparedQuery query = new PreparedQuery(select("*"), args);
+        PreparedQuery query = new PreparedQuery(fakePlan, args);
 
         JsonObject expected = JsonObject.create()
-            .put("prepared", "SELECT *")
+            .put("prepared", rawPlan)
             .put("$myParamString", "aString")
             .put("$someInt", 123)
             .put("$fullN1qlParam", true);
 
-        Assert.assertEquals(expected.toString(), query.toN1QL());
+        assertEquals(expected.toString(), query.toN1QL());
     }
 
 }

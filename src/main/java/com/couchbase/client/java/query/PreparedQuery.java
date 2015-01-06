@@ -25,7 +25,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 /**
- * Represent a N1QL query, with a parametrized prepared statement (for which the
+ * Represent a N1QL query, with a parametrized prepared statement plan (for which the
  * values must be passed according to the type and number of placeholders).
  *
  * Positional placeholders (in the form of either "$1" "$2" or just simple "?") are filled
@@ -45,11 +45,11 @@ public class PreparedQuery extends ParametrizedQuery {
      * should not be mutated until {@link #toN1QL()} is called since it backs the
      * creation of the query string.
      *
-     * @param statement the prepared {@link Statement} to execute (containing positional placeholders)
-     * @param positionalParams the values for the positional placeholders in statement
+     * @param plan the prepared {@link QueryPlan} to execute (containing positional placeholders).
+     * @param positionalParams the values for the positional placeholders in statement.
      */
-    public PreparedQuery(Statement statement, JsonArray positionalParams) {
-        super(statement, positionalParams);
+    public PreparedQuery(QueryPlan plan, JsonArray positionalParams) {
+        super(plan, positionalParams);
     }
 
     /**
@@ -57,15 +57,35 @@ public class PreparedQuery extends ParametrizedQuery {
      * should not be mutated until {@link #toN1QL()} is called since it backs the
      * creation of the query string.
      *
-     * @param statement the prepared {@link Statement} to execute (containing named placeholders)
-     * @param namedParams the values for the named placeholders in statement
+     * @param plan the prepared {@link QueryPlan} to execute (containing named placeholders).
+     * @param namedParams the values for the named placeholders in statement.
      */
-    public PreparedQuery(Statement statement, JsonObject namedParams) {
-       super(statement, namedParams);
+    public PreparedQuery(QueryPlan plan, JsonObject namedParams) {
+       super(plan, namedParams);
+    }
+
+    /**
+     * Create a new prepared query without parameters (the original statement shouldn't contain
+     * parameter placeholders).
+     *
+     * @param plan the prepared {@link QueryPlan} to execute (containing no placeholders).
+     */
+    public PreparedQuery(QueryPlan plan) {
+        super(plan, (JsonArray) null);
     }
 
     @Override
     protected String statementType() {
         return "prepared";
+    }
+
+    @Override
+    protected Object statementValue() {
+        return statement().plan();
+    }
+
+    @Override
+    public QueryPlan statement() {
+        return (QueryPlan) super.statement();
     }
 }

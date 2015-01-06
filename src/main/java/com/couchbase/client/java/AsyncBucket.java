@@ -29,7 +29,10 @@ import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.document.*;
 import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.AsyncQueryResult;
+import com.couchbase.client.java.query.PrepareStatement;
+import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.view.AsyncSpatialViewResult;
@@ -970,6 +973,21 @@ public interface AsyncBucket {
      * @return a result containing all found rows and additional information.
      */
     Observable<AsyncQueryResult> queryRaw(String query);
+
+    /**
+     * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
+     * {@link PrepareStatement}.
+     * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     *
+     * @param statement the {@link PrepareStatement} wrapping the statement to prepare a plan for.
+     * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
+     */
+    Observable<QueryPlan> queryPrepare(PrepareStatement statement);
 
     /**
      * Unlocks a write-locked {@link Document}.

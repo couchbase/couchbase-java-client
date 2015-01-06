@@ -31,7 +31,9 @@ import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.DefaultQueryResult;
+import com.couchbase.client.java.query.PrepareStatement;
 import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
@@ -486,6 +488,11 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public QueryPlan queryPrepare(PrepareStatement prepare) {
+        return queryPrepare(prepare, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
     public SpatialViewResult query(SpatialViewQuery query) {
         return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
     }
@@ -563,6 +570,13 @@ public class CouchbaseBucket implements Bucket {
                 }
             })
             .single(), timeout, timeUnit);
+    }
+
+    @Override
+    public QueryPlan queryPrepare(PrepareStatement prepare, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucket
+                .queryPrepare(prepare)
+                .single(), timeout, timeUnit);
     }
 
     @Override

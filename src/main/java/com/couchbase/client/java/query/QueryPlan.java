@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 Couchbase, Inc.
+ * Copyright (C) 2015 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,43 +21,31 @@
  */
 package com.couchbase.client.java.query;
 
-import com.couchbase.client.java.document.json.JsonValue;
+import com.couchbase.client.java.document.json.JsonObject;
 
 /**
- * The simplest form of N1QL {@link Query} with a plain un-parametrized {@link Statement}.
+ * Represents the execution plan of a prepared statement, as returned by the server after a "PREPARE ..." query.
  *
  * @author Simon Baslé
  * @since 2.1
  */
-public class SimpleQuery extends AbstractQuery {
+public class QueryPlan implements Statement {
 
-    private final Statement statement;
+    private final JsonObject jsonPlan;
+
+    public QueryPlan(JsonObject jsonPlan) {
+        this .jsonPlan = jsonPlan;
+    }
 
     /**
-     * Create a new {@link Query} with a plain un-parametrized {@link Statement}.
-     * @param statement the {@link Statement} to execute
+     * @return a String representation of the JSON for the execution plan.
      */
-    public SimpleQuery(Statement statement) {
-        this.statement = statement;
+    @Override
+    public String toString() {
+        return jsonPlan.toString();
     }
 
-    @Override
-    public Statement statement() {
-        return this.statement;
-    }
-
-    @Override
-    protected String statementType() {
-        return "statement";
-    }
-
-    @Override
-    protected Object statementValue() {
-        return this.statement.toString();
-    }
-
-    @Override
-    protected JsonValue statementParameters() {
-        return null;
+    public JsonObject plan() {
+        return jsonPlan;
     }
 }
