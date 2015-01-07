@@ -177,6 +177,7 @@ artifacts {
 }
 
 def pomConfig = {
+    name 'Couchbase Java SDK'
     url 'http://couchbase.com'
     organization {
         name 'Couchbase, Inc.'
@@ -204,6 +205,16 @@ def pomConfig = {
             name 'Michael Nitschinger'
             email 'michael.nitschinger@couchbase.com'
         }
+        developer {
+            id 'simonbasle'
+            name 'Simon Baslé'
+            email 'simon@couchbase.com'
+        }
+        developer {
+            id 'avsej'
+            name 'Sergey Avseyev'
+            email 'sergey@couchbase.com'
+        }
     }
 }
 
@@ -228,6 +239,8 @@ publishing  {
                         it.appendNode('optional', 'true')
                     }
                 }
+                // For some weird reason description does not work in pomConfig, so doing it manually here.
+                root.appendNode('description', 'The official Couchbase Java SDK');
                 root.children().last() + pomConfig
             }
         }
@@ -256,40 +269,6 @@ def customizePom(def pom) {
         // sort to make pom dependencies order consistent to ease comparison of older poms
         generatedPom.dependencies = generatedPom.dependencies.sort { dep ->
             "$dep.scope:$dep.groupId:$dep.artifactId"
-        }
-
-        // add all items necessary for maven central publication
-        generatedPom.project {
-            name = rootProject.name
-            description = rootProject.description
-            url = 'http://couchbase.com'
-            organization {
-                name = 'Couchbase, Inc.'
-                url = 'http://couchbase.com'
-            }
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
-            scm {
-                url = 'https://github.com/couchbase/couchbase-java-client'
-                connection = 'scm:git:git://github.com/couchbase/couchbase-java-client'
-                developerConnection = 'scm:git:git://github.com/couchbase/couchbase-java-client'
-            }
-            developers {
-                developer {
-                    id = 'daschl'
-                    name = 'Michael Nitschinger'
-                    email = 'michael.nitschinger@couchbase.com'
-                }
-            }
-            issueManagement {
-                system = "Couchbase JIRA"
-                url = "http://www.couchbase.com/issues/browse/JCBC"
-            }
         }
     }
 }
