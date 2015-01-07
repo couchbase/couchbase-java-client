@@ -172,16 +172,21 @@ public class ViewRetryHandler {
     /**
      * Analyses the content of a 404 response to see if it is legible for retry.
      *
+     * If the content contains ""reason":"missing"", it is a clear indication that the responding node
+     * is unprovisioned and therefore it should be retried. All other cases indicate a provisioned node,
+     * but the design document/view is not found, which should not be retried.
+     *
      * @param content the parsed error content.
      * @return true if it needs to be retried, false otherwise.
      */
     private static boolean analyse404Response(final JsonObject content) {
         String stringified = content.toString();
-        if (stringified.contains("not_found") && (stringified.contains("missing") || stringified.contains("deleted"))) {
-            LOGGER.debug("Design document not found, error is {}", stringified);
-            return false;
+        if (stringified.contains("\"reason\":\"missing\"")) {
+            return true;
         }
-        return true;
+
+        LOGGER.debug("Design document not found, error is {}", stringified);
+        return false;
     }
 
     /**
