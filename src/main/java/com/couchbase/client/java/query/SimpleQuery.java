@@ -31,19 +31,16 @@ import com.couchbase.client.java.document.json.JsonValue;
  */
 public class SimpleQuery extends AbstractQuery {
 
-    private final Statement statement;
-
     /**
      * Create a new {@link Query} with a plain un-parametrized {@link Statement}.
      * @param statement the {@link Statement} to execute
      */
     public SimpleQuery(Statement statement) {
-        this.statement = statement;
+        super(statement, null);
     }
 
-    @Override
-    public Statement statement() {
-        return this.statement;
+    public SimpleQuery(Statement statement, QueryParams params) {
+        super(statement, params);
     }
 
     @Override
@@ -53,7 +50,7 @@ public class SimpleQuery extends AbstractQuery {
 
     @Override
     protected Object statementValue() {
-        return this.statement.toString();
+        return statement().toString();
     }
 
     @Override

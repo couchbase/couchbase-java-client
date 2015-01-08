@@ -42,26 +42,27 @@ public class PreparedQuery extends ParametrizedQuery {
 
     /**
      * Create a new prepared query with positionalParameters. Note that the {@link JsonArray}
-     * should not be mutated until {@link #toN1QL()} is called since it backs the
+     * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
      *
      * @param plan the prepared {@link QueryPlan} to execute (containing positional placeholders).
      * @param positionalParams the values for the positional placeholders in statement.
+     * @param params the {@link QueryParams query parameters}.
      */
-    public PreparedQuery(QueryPlan plan, JsonArray positionalParams) {
-        super(plan, positionalParams);
+    public PreparedQuery(QueryPlan plan, JsonArray positionalParams, QueryParams params) {
+        super(plan, positionalParams, params);
     }
 
     /**
      * Create a new prepared query with named parameters. Note that the {@link JsonObject}
-     * should not be mutated until {@link #toN1QL()} is called since it backs the
+     * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
-     *
-     * @param plan the prepared {@link QueryPlan} to execute (containing named placeholders).
+     *  @param plan the prepared {@link QueryPlan} to execute (containing named placeholders).
      * @param namedParams the values for the named placeholders in statement.
+     * @param params the {@link QueryParams query parameters}.
      */
-    public PreparedQuery(QueryPlan plan, JsonObject namedParams) {
-       super(plan, namedParams);
+    public PreparedQuery(QueryPlan plan, JsonObject namedParams, QueryParams params) {
+       super(plan, namedParams, params);
     }
 
     /**
@@ -69,9 +70,10 @@ public class PreparedQuery extends ParametrizedQuery {
      * parameter placeholders).
      *
      * @param plan the prepared {@link QueryPlan} to execute (containing no placeholders).
+     * @param params the {@link QueryParams query parameters}.
      */
-    public PreparedQuery(QueryPlan plan) {
-        super(plan, (JsonArray) null);
+    public PreparedQuery(QueryPlan plan, QueryParams params) {
+        super(plan, (JsonArray) null, params);
     }
 
     @Override

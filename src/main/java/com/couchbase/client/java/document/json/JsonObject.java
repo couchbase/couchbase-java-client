@@ -401,6 +401,17 @@ public class JsonObject extends JsonValue {
     }
 
     /**
+     * Removes an entry from the {@link JsonObject}.
+     *
+     * @param name the name of the field to remove
+     * @return the {@link JsonObject}
+     */
+    public JsonObject removeKey(String name) {
+        content.remove(name);
+        return this;
+    }
+
+    /**
      * Returns a set of field names on the {@link JsonObject}.
      *
      * @return the set of names on the object.
