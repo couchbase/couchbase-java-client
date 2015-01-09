@@ -70,7 +70,7 @@ public class QueryTest extends ClusterDependentTest {
         assertFalse(plan.plan().getObject("operator").isEmpty());
 
         QueryResult response = bucket().query(Query.prepared(plan, JsonArray.from(123)));
-        assertTrue(response.success());
+        assertTrue(response.finalSuccess());
         List<QueryRow> rows = response.allRows();
         assertEquals(1, rows.size());
         assertTrue(rows.get(0).value().toString().contains("123"));

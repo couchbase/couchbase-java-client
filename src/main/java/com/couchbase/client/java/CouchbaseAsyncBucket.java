@@ -566,30 +566,28 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                             }
                         }
                     });
-                    if (response.status().isSuccess()) {
-                        response.errors().subscribe(Buffers.BYTE_BUF_RELEASER);
-                        return Observable.just((AsyncQueryResult) new DefaultAsyncQueryResult(rows, info, null,
-                                response.status().isSuccess()));
-                    } else {
-                        return response.errors().map(new Func1<ByteBuf, JsonObject>() {
-                            @Override
-                            public JsonObject call(ByteBuf byteBuf) {
-                                try {
-                                    return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                } catch (Exception e) {
-                                    throw new TranscodingException("Could not decode View Info.", e);
-                                } finally {
-                                    byteBuf.release();
-                                }
+                    final Observable<Boolean> finalSuccess = response.queryStatus().map(new Func1<String, Boolean>() {
+                        @Override
+                        public Boolean call(String s) {
+                            return "success".equalsIgnoreCase(s) || "completed".equalsIgnoreCase(s);
+                        }
+                    });
+                    final Observable<JsonObject> errors = response.errors().map(new Func1<ByteBuf, JsonObject>() {
+                        @Override
+                        public JsonObject call(ByteBuf byteBuf) {
+                            try {
+                                return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
+                            } catch (Exception e) {
+                                throw new TranscodingException("Could not decode View Info.", e);
+                            } finally {
+                                byteBuf.release();
                             }
-                        }).last().map(new Func1<JsonObject, AsyncQueryResult>() {
-                            @Override
-                            public AsyncQueryResult call(JsonObject error) {
-                                //TODO rework DefaultAsyncQueryResult
-                                return new DefaultAsyncQueryResult(rows, info, error, response.status().isSuccess());
-                            }
-                        });
-                    }
+                        }
+                    });
+                    boolean parseSuccess = response.status().isSuccess();
+
+                    AsyncQueryResult r = new DefaultAsyncQueryResult(rows, info, errors, finalSuccess, parseSuccess);
+                    return Observable.just(r);
                 }
             });
     }

@@ -25,8 +25,10 @@ public interface QueryResult {
 
     JsonObject info(long timeout, TimeUnit timeUnit);
 
-    boolean success();
+    boolean parseSuccess();
 
-    JsonObject error();
+    boolean finalSuccess();
+
+    List<JsonObject> errors();
 
 }

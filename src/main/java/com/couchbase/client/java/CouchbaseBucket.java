@@ -498,17 +498,17 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
-            .query(query)
-            .map(new Func1<AsyncViewResult, ViewResult>() {
-                @Override
-                public ViewResult call(AsyncViewResult asyncViewResult) {
-                    return new DefaultViewResult(environment, CouchbaseBucket.this,
-                        asyncViewResult.rows(), asyncViewResult.totalRows(), asyncViewResult.success(),
-                        asyncViewResult.error(), asyncViewResult.debug()
-                    );
-                }
-            })
-            .single(), timeout, timeUnit);
+                .query(query)
+                .map(new Func1<AsyncViewResult, ViewResult>() {
+                    @Override
+                    public ViewResult call(AsyncViewResult asyncViewResult) {
+                        return new DefaultViewResult(environment, CouchbaseBucket.this,
+                                asyncViewResult.rows(), asyncViewResult.totalRows(), asyncViewResult.success(),
+                                asyncViewResult.error(), asyncViewResult.debug()
+                        );
+                    }
+                })
+                .single(), timeout, timeUnit);
     }
 
 
@@ -535,8 +535,8 @@ public class CouchbaseBucket implements Bucket {
             .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
                 public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(environment, asyncQueryResult.rows(),
-                        asyncQueryResult.info(), asyncQueryResult.error(), asyncQueryResult.success());
+                    return new DefaultQueryResult(environment, asyncQueryResult.rows(), asyncQueryResult.info(),
+                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess());
                 }
             })
             .single(), timeout, timeUnit);
@@ -549,8 +549,8 @@ public class CouchbaseBucket implements Bucket {
             .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
                 public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(environment, asyncQueryResult.rows(),
-                        asyncQueryResult.info(), asyncQueryResult.error(), asyncQueryResult.success());
+                    return new DefaultQueryResult(environment, asyncQueryResult.rows(), asyncQueryResult.info(),
+                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess());
                 }
             })
             .single(), timeout, timeUnit);
