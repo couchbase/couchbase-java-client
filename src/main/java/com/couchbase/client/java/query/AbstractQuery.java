@@ -31,7 +31,7 @@ import com.couchbase.client.java.document.json.JsonValue;
  * @author Simon Baslé
  * @since 2.1
  */
-public abstract class AbstractQuery implements Query {
+public abstract class AbstractQuery extends Query {
 
     private QueryParams queryParameters;
     private Statement statement;
