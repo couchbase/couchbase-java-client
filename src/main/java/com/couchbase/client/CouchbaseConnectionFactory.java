@@ -22,32 +22,13 @@
 
 package com.couchbase.client;
 
-import com.couchbase.client.vbucket.ConfigurationException;
-import com.couchbase.client.vbucket.provider.BucketConfigurationProvider;
-import com.couchbase.client.vbucket.provider.ConfigurationProvider;
-import com.couchbase.client.vbucket.ConfigurationProviderHTTP;
 import com.couchbase.client.vbucket.CouchbaseNodeOrder;
 import com.couchbase.client.vbucket.Reconfigurable;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
-import com.couchbase.client.vbucket.config.Bucket;
 import com.couchbase.client.vbucket.config.Config;
 import com.couchbase.client.vbucket.config.ConfigType;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.couchbase.client.vbucket.provider.BucketConfigurationProvider;
+import com.couchbase.client.vbucket.provider.ConfigurationProvider;
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.FailureMode;
@@ -58,6 +39,17 @@ import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.NodeLocator;
 import net.spy.memcached.auth.AuthDescriptor;
 import net.spy.memcached.auth.PlainCallbackHandler;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Couchbase implementation of ConnectionFactory.

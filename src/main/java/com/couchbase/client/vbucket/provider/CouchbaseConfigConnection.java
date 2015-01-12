@@ -24,6 +24,8 @@ package com.couchbase.client.vbucket.provider;
 
 import com.couchbase.client.CouchbaseConnection;
 import com.couchbase.client.CouchbaseConnectionFactory;
+import com.couchbase.client.CouchbaseProperties;
+import net.spy.memcached.BroadcastOpFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedNode;
@@ -31,11 +33,15 @@ import net.spy.memcached.OperationFactory;
 import net.spy.memcached.compat.log.Level;
 import net.spy.memcached.compat.log.Logger;
 import net.spy.memcached.compat.log.LoggerFactory;
-
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
+import net.spy.memcached.ops.OperationStatus;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A custom {@link CouchbaseConnection} that is used for binary config
@@ -47,13 +53,28 @@ import java.util.List;
  */
 public class CouchbaseConfigConnection extends CouchbaseConnection {
 
-  private static final Logger LOGGER = new LoggerProxy(LoggerFactory.getLogger(
-    CouchbaseConfigConnection.class));;
+  /**
+   * If 3 consecutive NOOPS are missed, an outdated config is signaled.
+   */
+  private static final String DEFAULT_MISSED_NOOPS_THRESHOLD = "3";
+  private final short noopsThreshold;
+  private volatile short outstandingNoops = 0;
+
+  private static final Logger LOGGER = new LoggerProxy(
+      LoggerFactory.getLogger(CouchbaseConfigConnection.class)
+  );
 
   public CouchbaseConfigConnection(int bufSize, CouchbaseConnectionFactory f,
     List<InetSocketAddress> a, Collection<ConnectionObserver> obs,
     FailureMode fm, OperationFactory opfactory) throws IOException {
     super(bufSize, f, a, obs, fm, opfactory);
+
+    noopsThreshold = Short.decode(CouchbaseProperties.getProperty(
+      "configPollThreshold",
+      DEFAULT_MISSED_NOOPS_THRESHOLD
+    ));
+
+    LOGGER.debug("Using config noop threshold of " + noopsThreshold);
   }
 
   @Override
@@ -65,6 +86,39 @@ public class CouchbaseConfigConnection extends CouchbaseConnection {
     }
     sb.append("}");
     return sb.toString();
+  }
+
+  @Override
+  protected void handleWokenUpSelector() {
+    long now = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime());
+    long diff = now - lastWrite;
+    if (lastWrite > 0 && diff >= ALLOWED_IDLE_TIME) {
+      if (outstandingNoops >= noopsThreshold) {
+        cf.getConfigurationProvider().signalOutdated();
+        outstandingNoops = 0;
+      }
+
+      updateLastWrite();
+      getLogger().debug("Wakeup counter triggered, broadcasting noops.");
+      final OperationFactory fact = cf.getOperationFactory();
+      outstandingNoops++;
+      broadcastOperation(new BroadcastOpFactory() {
+        @Override
+        public Operation newOp(MemcachedNode n, final CountDownLatch latch) {
+          return fact.noop(new OperationCallback() {
+            @Override
+            public void receivedStatus(OperationStatus status) {
+              if (status.isSuccess() && outstandingNoops > 0) {
+                outstandingNoops--;
+              }
+            }
+
+            @Override
+            public void complete() {}
+          });
+        }
+      });
+    }
   }
 
   @Override
