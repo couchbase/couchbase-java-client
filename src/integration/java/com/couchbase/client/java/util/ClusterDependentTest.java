@@ -23,6 +23,8 @@ package com.couchbase.client.java.util;
 
 import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
@@ -52,6 +54,7 @@ public class ClusterDependentTest {
     private static final String adminName = TestProperties.adminName();
     private static final String adminPassword = TestProperties.adminPassword();
 
+    private static CouchbaseEnvironment env;
     private static Cluster cluster;
     private static Bucket bucket;
     private static ClusterManager clusterManager;
@@ -59,7 +62,8 @@ public class ClusterDependentTest {
 
     @BeforeClass
     public static void connect() throws Exception {
-        cluster = CouchbaseCluster.create(seedNode);
+        env = DefaultCouchbaseEnvironment.create();
+        cluster = CouchbaseCluster.create(env, seedNode);
         clusterManager = cluster.clusterManager(adminName, adminPassword);
         boolean exists = clusterManager.hasBucket(bucketName());
 
@@ -107,6 +111,10 @@ public class ClusterDependentTest {
 
     public static String password() {
         return  TestProperties.password();
+    }
+
+    public static CouchbaseEnvironment env() {
+        return env;
     }
 
     public static Cluster cluster() {
