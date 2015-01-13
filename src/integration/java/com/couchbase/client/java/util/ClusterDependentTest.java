@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.util;
 
+import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
@@ -42,6 +43,10 @@ import com.couchbase.client.java.cluster.DefaultBucketSettings;
  * @author Simon Baslé
  */
 public class ClusterDependentTest {
+
+    static {
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+    }
 
     private static final String seedNode = TestProperties.seedNode();
     private static final String adminName = TestProperties.adminName();
