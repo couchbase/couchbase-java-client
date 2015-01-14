@@ -132,8 +132,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .<GetResponse>send(new GetRequest(id, bucket))
             .filter(new Func1<GetResponse, Boolean>() {
                 @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public Boolean call(GetResponse response) {
+                    if (response.status().isSuccess()) {
+                        return true;
+                    }
+                    ByteBuf content = response.content();
+                    if (content != null && content.refCnt() > 0) {
+                        content.release();
+                    }
+                    return false;
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -163,8 +170,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return core.<GetResponse>send(new GetRequest(id, bucket, true, false, lockTime))
             .filter(new Func1<GetResponse, Boolean>() {
                 @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public Boolean call(GetResponse response) {
+                    if (response.status().isSuccess()) {
+                        return true;
+                    }
+                    ByteBuf content = response.content();
+                    if (content != null && content.refCnt() > 0) {
+                        content.release();
+                    }
+                    return false;
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -194,8 +208,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return core.<GetResponse>send(new GetRequest(id, bucket, false, true, expiry))
             .filter(new Func1<GetResponse, Boolean>() {
                 @Override
-                public Boolean call(GetResponse getResponse) {
-                    return getResponse.status() == ResponseStatus.SUCCESS;
+                public Boolean call(GetResponse response) {
+                    if (response.status().isSuccess()) {
+                        return true;
+                    }
+                    ByteBuf content = response.content();
+                    if (content != null && content.refCnt() > 0) {
+                        content.release();
+                    }
+                    return false;
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -258,15 +279,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return incoming
             .filter(new Func1<GetResponse, Boolean>() {
                 @Override
-                public Boolean call(GetResponse getResponse) {
-                    if (getResponse.status() == ResponseStatus.SUCCESS) {
+                public Boolean call(GetResponse response) {
+                    if (response.status().isSuccess()) {
                         return true;
-                    } else {
-                        if (getResponse.content() != null) {
-                            getResponse.content().release();
-                        }
-                        return false;
                     }
+                    ByteBuf content = response.content();
+                    if (content != null && content.refCnt() > 0) {
+                        content.release();
+                    }
+                    return false;
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -289,7 +310,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<InsertResponse, Observable<? extends D>>() {
                 @Override
                 public Observable<? extends D> call(InsertResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.EXISTS) {
@@ -334,7 +355,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<UpsertResponse, Observable<D>>() {
                 @Override
                 public Observable<D> call(UpsertResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.EXISTS) {
@@ -374,7 +395,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
             @Override
             public Observable<D> call(ReplaceResponse response) {
-                if (response.content() != null) {
+                if (response.content() != null && response.content().refCnt() > 0) {
                     response.content().release();
                 }
                 if (response.status() == ResponseStatus.NOT_EXISTS) {
@@ -411,15 +432,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public <D extends Document<?>> Observable<D> remove(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder =
             (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        RemoveRequest request = new RemoveRequest(document.id(), document.cas(),
-            bucket);
-
         return core
-            .<RemoveResponse>send(request)
+            .<RemoveResponse>send(new RemoveRequest(document.id(), document.cas(), bucket))
             .map(new Func1<RemoveResponse, D>() {
                 @Override
                 public D call(final RemoveResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.EXISTS) {
@@ -675,7 +693,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<CounterResponse, JsonLongDocument>() {
                 @Override
                 public JsonLongDocument call(CounterResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     return JsonLongDocument.create(id, expiry, response.value(), response.cas());
@@ -690,7 +708,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<UnlockResponse, Boolean>() {
                 @Override
                 public Boolean call(UnlockResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.NOT_EXISTS) {
@@ -714,7 +732,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return core.<TouchResponse>send(new TouchRequest(id, expiry, bucket)).map(new Func1<TouchResponse, Boolean>() {
             @Override
             public Boolean call(TouchResponse response) {
-                if (response.content() != null) {
+                if (response.content() != null && response.content().refCnt() > 0) {
                     response.content().release();
                 }
                 return response.status().isSuccess();
@@ -737,7 +755,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<AppendResponse, D>() {
                 @Override
                 public D call(final AppendResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.FAILURE) {
@@ -758,7 +776,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .map(new Func1<PrependResponse, D>() {
                 @Override
                 public D call(final PrependResponse response) {
-                    if (response.content() != null) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
                     if (response.status() == ResponseStatus.FAILURE) {

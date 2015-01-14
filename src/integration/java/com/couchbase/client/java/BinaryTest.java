@@ -226,7 +226,7 @@ public class BinaryTest extends ClusterDependentTest {
     public void shouldTouch() throws Exception {
         String key = "touch";
 
-        JsonDocument upsert = bucket().upsert(JsonDocument.create(key, 3, JsonObject.empty().put("k", "v")));
+        bucket().upsert(JsonDocument.create(key, 3, JsonObject.empty().put("k", "v")));
 
         Thread.sleep(2000);
 
