@@ -21,7 +21,32 @@
  */
 package com.couchbase.client.java.query.dsl;
 
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static org.junit.Assert.assertEquals;
+
+import com.couchbase.client.java.query.Select;
+import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.query.dsl.path.AsPath;
+import org.junit.Test;
+
 public class ExpressionTest {
 
+    @Test
+    public void shouldEscapeOneIdentifier() {
+        Expression escaped = i("beer-sample");
+        assertEquals("`beer-sample`", escaped.toString());
+    }
+
+    @Test
+    public void shouldEscapedMultipleIdentifiers() {
+        Expression escaped = i("beer-sample", "someothersample", "third-sample");
+        assertEquals("`beer-sample`, `someothersample`, `third-sample`", escaped.toString());
+    }
+
+    @Test
+    public void shouldEscapeIdentifierInFromClause() {
+        Statement escapedFrom = Select.select("*").from(i("test"));
+        assertEquals("SELECT * FROM `test`", escapedFrom.toString());
+    }
 
 }
