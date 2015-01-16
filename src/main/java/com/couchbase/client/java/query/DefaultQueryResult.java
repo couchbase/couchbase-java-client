@@ -86,4 +86,9 @@ public class DefaultQueryResult implements QueryResult {
     public boolean finalSuccess() {
         return Blocking.blockForSingle(asyncQueryResult.finalSuccess().single(), timeout, TIMEOUT_UNIT);
     }
+
+    @Override
+    public Iterator<QueryRow> iterator() {
+        return rows();
+    }
 }
