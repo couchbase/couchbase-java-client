@@ -76,7 +76,9 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                 @Override
                 public BucketInfo call(BucketConfigResponse response) {
                     try {
-                        return DefaultBucketInfo.create(CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.config()));
+                        return DefaultBucketInfo.create(
+                            CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.config())
+                        );
                     } catch (Exception ex) {
                         throw new TranscodingException("Could not decode bucket info.", ex);
                     }
@@ -111,6 +113,9 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                     }
                     while (true) {
                         GetResponse res = core.<GetResponse>send(new GetRequest(markerKey, bucket)).toBlocking().single();
+                        if (res.content() != null && res.content().refCnt() > 0) {
+                            res.content().release();
+                        }
                         if (res.status() == ResponseStatus.NOT_EXISTS) {
                             return Observable.just(true);
                         }
@@ -130,7 +135,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             .flatMap(new Func1<GetDesignDocumentsResponse, Observable<DesignDocument>>() {
                 @Override
                 public Observable<DesignDocument> call(GetDesignDocumentsResponse response) {
-                    JsonObject converted = null;
+                    JsonObject converted;
                     try {
                         converted = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(response.content());
                     } catch (Exception e) {
@@ -166,7 +171,13 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             .filter(new Func1<GetDesignDocumentResponse, Boolean>() {
                 @Override
                 public Boolean call(GetDesignDocumentResponse response) {
-                    return response.status().isSuccess();
+                    boolean success = response.status().isSuccess();
+                    if (!success) {
+                        if (response.content() != null && response.content().refCnt() > 0) {
+                           response.content().release();
+                        }
+                    }
+                    return success;
                 }
             })
             .map(new Func1<GetDesignDocumentResponse, DesignDocument>() {
@@ -178,6 +189,10 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                             response.content().toString(CharsetUtil.UTF_8));
                     } catch (Exception e) {
                         throw new TranscodingException("Could not decode design document.", e);
+                    } finally {
+                        if (response.content() != null && response.content().refCnt() > 0) {
+                            response.content().release();
+                        }
                     }
                     return DesignDocument.from(response.name(), converted);
                 }
@@ -212,7 +227,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
 
     @Override
     public Observable<DesignDocument> upsertDesignDocument(final DesignDocument designDocument, boolean development) {
-        String body = null;
+        String body;
         try {
             body = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.jsonObjectToString(designDocument.toJsonObject());
         } catch (Exception e) {
@@ -224,9 +239,15 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             .map(new Func1<UpsertDesignDocumentResponse, DesignDocument>() {
                 @Override
                 public DesignDocument call(UpsertDesignDocumentResponse response) {
-                    if (!response.status().isSuccess()) {
-                        String msg = response.content().toString(CharsetUtil.UTF_8);
-                        throw new DesignDocumentException("Could not store DesignDocument: " + msg);
+                    try {
+                        if (!response.status().isSuccess()) {
+                            String msg = response.content().toString(CharsetUtil.UTF_8);
+                            throw new DesignDocumentException("Could not store DesignDocument: " + msg);
+                        }
+                    } finally {
+                        if (response.content() != null && response.content().refCnt() > 0) {
+                            response.content().release();
+                        }
                     }
                     return designDocument;
                 }
@@ -245,6 +266,9 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             .map(new Func1<RemoveDesignDocumentResponse, Boolean>() {
                 @Override
                 public Boolean call(RemoveDesignDocumentResponse response) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
+                        response.content().release();
+                    }
                     return response.status().isSuccess();
                 }
             });
