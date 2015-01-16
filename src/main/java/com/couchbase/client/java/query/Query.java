@@ -59,6 +59,21 @@ public abstract class Query {
      */
     public abstract JsonObject n1ql();
 
+    //== PRIVATE CLASS FOR RAW STATEMENT ==
+
+    private static class RawStatement implements Statement {
+        private final String rawStatement;
+
+        public RawStatement(String rawStatement) {
+            this.rawStatement = rawStatement;
+        }
+
+        @Override
+        public String toString() {
+            return rawStatement;
+        }
+    }
+
     //========== FACTORY METHODS ==========
     /**
      * Create a new {@link Query} with a plain un-parametrized {@link Statement}.
@@ -67,6 +82,15 @@ public abstract class Query {
      */
     public static SimpleQuery simple(Statement statement) {
         return new SimpleQuery(statement, null);
+    }
+
+    /**
+     * Create a new {@link Query} with a plain raw statement in String form.
+     *
+     * @param statement the raw statement string to execute (eg. "SELECT * FROM default").
+     */
+    public static SimpleQuery simple(String statement) {
+        return simple(new RawStatement(statement));
     }
 
     /**
@@ -80,6 +104,18 @@ public abstract class Query {
         return new SimpleQuery(statement, params);
     }
 
+    /**
+     * Create a new {@link Query} with a plain raw statement in {@link String} form and
+     * custom query parameters.
+     *
+     * @param statement the raw statement string to execute (eg. "SELECT * FROM default").
+     * @param params the {@link QueryParams query parameters}.
+     */
+    public static SimpleQuery simple(String statement, QueryParams params) {
+        return simple(new RawStatement(statement), params);
+    }
+
+    //== PARAMETRIZED with Statement ==
     /**
      * Create a new query with positionalParameters. Note that the {@link JsonArray}
      * should not be mutated until {@link #n1ql()} is called since it backs the
@@ -130,6 +166,58 @@ public abstract class Query {
         return new ParametrizedQuery(statement, namedParams, params);
     }
 
+    //== PARAMETRIZED with raw String ==
+    /**
+     * Create a new query with positionalParameters. Note that the {@link JsonArray}
+     * should not be mutated until {@link #n1ql()} is called since it backs the
+     * creation of the query string.
+     *
+     * @param statement the raw statement to execute (containing positional placeholders)
+     * @param positionalParams the values for the positional placeholders in statement
+     */
+    public static ParametrizedQuery parametrized(String statement, JsonArray positionalParams) {
+        return new ParametrizedQuery(new RawStatement(statement), positionalParams, null);
+    }
+
+    /**
+     * Create a new query with named parameters. Note that the {@link JsonObject}
+     * should not be mutated until {@link #n1ql()} is called since it backs the
+     * creation of the query string.
+     *
+     * @param statement the raw statement to execute (containing named placeholders)
+     * @param namedParams the values for the named placeholders in statement
+     */
+    public static ParametrizedQuery parametrized(String statement, JsonObject namedParams) {
+        return new ParametrizedQuery(new RawStatement(statement), namedParams, null);
+    }
+
+    /**
+     * Create a new query with positionalParameters. Note that the {@link JsonArray}
+     * should not be mutated until {@link #n1ql()} is called since it backs the
+     * creation of the query string.
+     *
+     * @param statement the raw statement to execute (containing positional placeholders)
+     * @param positionalParams the values for the positional placeholders in statement
+     * @param params the {@link QueryParams query parameters}.
+     */
+    public static ParametrizedQuery parametrized(String statement, JsonArray positionalParams, QueryParams params) {
+        return new ParametrizedQuery(new RawStatement(statement), positionalParams, params);
+    }
+
+    /**
+     * Create a new query with named parameters. Note that the {@link JsonObject}
+     * should not be mutated until {@link #n1ql()} is called since it backs the
+     * creation of the query string.
+     *
+     * @param statement the raw statement to execute (containing named placeholders)
+     * @param namedParams the values for the named placeholders in statement
+     * @param params the {@link QueryParams query parameters}.
+     */
+    public static ParametrizedQuery parametrized(String statement, JsonObject namedParams, QueryParams params) {
+        return new ParametrizedQuery(new RawStatement(statement), namedParams, params);
+    }
+
+    //== PREPARED ==
     /**
      * Create a new prepared query without parameters (the original statement shouldn't contain
      * parameter placeholders).

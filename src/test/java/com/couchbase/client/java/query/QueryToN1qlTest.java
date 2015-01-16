@@ -52,6 +52,14 @@ public class QueryToN1qlTest {
     }
 
     @Test
+    public void rawSimpleQueryShouldJustProduceStatementAsIs() {
+        SimpleQuery query = Query.simple("Here goes anything even not \"JSON\"");
+
+        //notice JSON is between escaped quotes since inside json
+        assertEquals("{\"statement\":\"Here goes anything even not \\\"JSON\\\"\"}", query.n1ql().toString());
+    }
+
+    @Test
     public void parametrizedQueryWithArrayShouldProduceStatementAndArgs() {
         ParametrizedQuery query = new ParametrizedQuery(select("*"), JsonArray.from("aString", 123, true), null);
 
