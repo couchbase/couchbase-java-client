@@ -34,6 +34,7 @@ public class TestProperties {
     private static String password;
     private static String adminName;
     private static String adminPassword;
+    private static boolean queryEnabled;
 
     /**
     * Initialize static the properties.
@@ -44,6 +45,7 @@ public class TestProperties {
         password = System.getProperty("password", "");
         adminName = System.getProperty("adminName", "Administrator");
         adminPassword = System.getProperty("adminPassword", "password");
+        queryEnabled = Boolean.parseBoolean(System.getProperty("queryEnabled", "false"));
     }
 
     /**
@@ -89,6 +91,15 @@ public class TestProperties {
      */
     public static String adminPassword() {
         return adminPassword;
+    }
+
+    /**
+     * Checks if N1QL querying is enabled or not.
+     *
+     * @return true if query is enabled, false otherwise.
+     */
+    public static boolean queryEnabled() {
+        return queryEnabled;
     }
 
 }

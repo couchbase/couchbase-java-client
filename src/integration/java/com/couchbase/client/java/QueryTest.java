@@ -21,30 +21,27 @@
  */
 package com.couchbase.client.java;
 
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryPlan;
+import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.QueryRow;
+import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.features.CouchbaseFeature;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.List;
+
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.PrepareStatement;
-import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryPlan;
-import com.couchbase.client.java.query.QueryResult;
-import com.couchbase.client.java.query.QueryRow;
-import com.couchbase.client.java.query.Statement;
-import com.couchbase.client.java.util.ClusterDependentTest;
-import com.couchbase.client.java.util.features.CouchbaseFeature;
-import com.couchbase.client.java.util.features.Version;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  * Integration tests of the N1QL Query features.
@@ -66,10 +63,7 @@ public class QueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldProduceAndExecutePlan() {
-        Statement toPrepare = select(x("*")).from("default").where(x("item").eq(x("$1")));
-        PrepareStatement prepare = PrepareStatement.prepare(toPrepare);
-
-        QueryPlan plan = bucket().queryPrepare(prepare);
+        QueryPlan plan = bucket().prepare(select(x("*")).from("default").where(x("item").eq(x("$1"))));
 
         assertNotNull(plan);
         assertTrue(plan.plan().containsKey("signature"));

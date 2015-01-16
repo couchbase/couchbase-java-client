@@ -26,17 +26,29 @@ import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.bucket.BucketManager;
-import com.couchbase.client.java.document.*;
+import com.couchbase.client.java.document.BinaryDocument;
+import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.JsonLongDocument;
+import com.couchbase.client.java.document.LegacyDocument;
+import com.couchbase.client.java.document.StringDocument;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.error.*;
-import com.couchbase.client.java.query.PrepareStatement;
+import com.couchbase.client.java.error.CASMismatchException;
+import com.couchbase.client.java.error.DocumentAlreadyExistsException;
+import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.error.ViewDoesNotExistException;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryPlan;
-import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.view.*;
+import com.couchbase.client.java.view.SpatialViewQuery;
+import com.couchbase.client.java.view.SpatialViewResult;
+import com.couchbase.client.java.view.View;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
 import rx.Observable;
 
 import java.util.List;
@@ -2023,7 +2035,7 @@ public interface Bucket {
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
-     * {@link PrepareStatement}, with the default timeout.
+     * {@link Statement}, with the default timeout.
      *
      * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
      *
@@ -2033,14 +2045,14 @@ public interface Bucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
-     * @param prepare the {@link PrepareStatement} wrapping the statement to prepare a plan for.
+     * @param statement the statement to prepare a plan for.
      * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
      */
-    QueryPlan queryPrepare(PrepareStatement prepare);
+    QueryPlan prepare(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
-     * {@link PrepareStatement}, with a custom timeout.
+     * {@link Statement}, with a custom timeout.
      *
      * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
      *
@@ -2050,12 +2062,12 @@ public interface Bucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
-     * @param prepare the {@link PrepareStatement} wrapping the statement to prepare a plan for.
+     * @param statement the statement to prepare a plan for.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
      */
-    QueryPlan queryPrepare(PrepareStatement prepare, long timeout, TimeUnit timeUnit);
+    QueryPlan prepare(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
      * Unlocks a write-locked {@link Document} with the default key/value timeout.

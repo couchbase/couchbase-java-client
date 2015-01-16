@@ -963,7 +963,7 @@ public interface AsyncBucket {
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
-     * {@link PrepareStatement}.
+     * {@link Statement}.
      * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
      *
      * The returned {@link Observable} can error under the following conditions:
@@ -971,10 +971,10 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
-     * @param statement the {@link PrepareStatement} wrapping the statement to prepare a plan for.
+     * @param statement the statement to prepare a plan for.
      * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
      */
-    Observable<QueryPlan> queryPrepare(PrepareStatement statement);
+    Observable<QueryPlan> prepare(Statement statement);
 
     /**
      * Unlocks a write-locked {@link Document}.
