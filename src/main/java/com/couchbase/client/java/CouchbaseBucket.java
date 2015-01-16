@@ -525,28 +525,30 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryResult query(Statement statement, long timeout, TimeUnit timeUnit) {
+    public QueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .query(statement)
             .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
                 public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(environment, asyncQueryResult.rows(), asyncQueryResult.info(),
-                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess());
+                    return new DefaultQueryResult(asyncQueryResult.rows(), asyncQueryResult.info(),
+                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess(),
+                            timeout, timeUnit);
                 }
             })
             .single(), timeout, timeUnit);
     }
 
     @Override
-    public QueryResult query(Query query, long timeout, TimeUnit timeUnit) {
+    public QueryResult query(Query query, final long timeout, final TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .query(query)
             .map(new Func1<AsyncQueryResult, QueryResult>() {
                 @Override
                 public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(environment, asyncQueryResult.rows(), asyncQueryResult.info(),
-                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess());
+                    return new DefaultQueryResult(asyncQueryResult.rows(), asyncQueryResult.info(),
+                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess(),
+                            timeout, timeUnit);
                 }
             })
             .single(), timeout, timeUnit);

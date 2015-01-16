@@ -60,14 +60,19 @@ public class QueryTest extends ClusterDependentTest {
         bucket().insert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
         bucket().insert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
 
+        bucket().query(Query.simple("CREATE PRIMARY INDEX ON " + bucketName()));
+    }
+
+    @Test
+    public void shouldAlreadyHaveCreatedIndex() {
         QueryResult indexResult = bucket().query(Query.simple("CREATE PRIMARY INDEX ON " + bucketName()));
+        assertFalse(indexResult.finalSuccess());
         assertEquals(0, indexResult.allRows().size());
         assertNotNull(indexResult.info());
-        List<JsonObject> indexErrors = indexResult.errors();
-        Assume.assumeTrue(indexResult.finalSuccess()
-                || (indexErrors.size() == 1
-                    && "Primary index already exists".equals(indexErrors.get(0).getString("msg"))
-        ));
+        //having two calls to errors() here validates that there's not a reference to the async stream
+        //each time the method is called.
+        assertEquals(1, indexResult.errors().size());
+        assertEquals("Primary index already exists", indexResult.errors().get(0).getString("msg"));
     }
 
     @Test

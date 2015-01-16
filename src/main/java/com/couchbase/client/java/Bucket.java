@@ -1974,7 +1974,8 @@ public interface Bucket {
     SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the default query timeout.
+     * Experimental: Queries a N1QL secondary index with the default query timeout. Said timeout includes the time it
+     * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
@@ -1988,7 +1989,8 @@ public interface Bucket {
     QueryResult query(Statement statement);
 
     /**
-     * Experimental: Queries a N1QL secondary index with a custom timeout.
+     * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
+     * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
@@ -1997,14 +1999,15 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
      * @param statement the statement in a DSL form (start with a static select() import)
-     * @param timeout the custom timeout.
+     * @param timeout the custom full timeout, including the time to retrieve all rows, errors, etc...
      * @param timeUnit the unit for the timeout.
      * @return a result containing all found rows and additional information.
      */
     QueryResult query(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the default query timeout.
+     * Experimental: Queries a N1QL secondary index with the default query timeout. Said timeout includes the time it
+     * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
@@ -2018,7 +2021,8 @@ public interface Bucket {
     QueryResult query(Query query);
 
     /**
-     * Experimental: Queries a N1QL secondary index with a custom timeout.
+     * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
+     * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
@@ -2027,7 +2031,7 @@ public interface Bucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      *
      * @param query the full {@link Query}, including statement and any other additional parameter.
-     * @param timeout the custom timeout.
+     * @param timeout the custom full timeout, including the time to retrieve all rows, errors, etc...
      * @param timeUnit the unit for the timeout.
      * @return a result containing all found rows and additional information.
      */
