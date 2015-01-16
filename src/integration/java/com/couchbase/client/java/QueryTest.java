@@ -59,6 +59,15 @@ public class QueryTest extends ClusterDependentTest {
 
         bucket().insert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
         bucket().insert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
+
+        QueryResult indexResult = bucket().query(Query.simple("CREATE PRIMARY INDEX ON " + bucketName()));
+        assertEquals(0, indexResult.allRows().size());
+        assertNotNull(indexResult.info());
+        List<JsonObject> indexErrors = indexResult.errors();
+        Assume.assumeTrue(indexResult.finalSuccess()
+                || (indexErrors.size() == 1
+                    && "Primary index already exists".equals(indexErrors.get(0).getString("msg"))
+        ));
     }
 
     @Test
