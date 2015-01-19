@@ -30,19 +30,22 @@ import com.couchbase.client.protocol.views.SpatialViewRowWithDocs;
 import com.couchbase.client.protocol.views.Stale;
 import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
+import net.spy.memcached.PersistTo;
+import net.spy.memcached.TestConfig;
+import net.spy.memcached.compat.log.Logger;
+import net.spy.memcached.compat.log.LoggerFactory;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import net.spy.memcached.PersistTo;
-import net.spy.memcached.TestConfig;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,12 +55,17 @@ import static org.junit.Assert.assertTrue;
  * Verifies the correct functionality of spatial view queries.
  */
 public class SpatialViewTest {
+
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(SpatialViewTest.class);
+
   protected static TestingClient client = null;
   private static final ArrayList<City> CITY_DOCS;
   private static final String SERVER_URI = "http://" + TestConfig.IPV4_ADDR
       + ":8091/pools";
   public static final String DESIGN_DOC = "cities";
   public static final String VIEW_NAME_SPATIAL = "all_cities";
+  private static boolean isOldSpatial = false;
 
   static {
     CITY_DOCS = new ArrayList<City>();
@@ -147,6 +155,15 @@ public class SpatialViewTest {
     };
     bucketTool.poll(callback);
     bucketTool.waitForWarmup(client);
+
+    ArrayList<String> versions = new ArrayList<String>(
+        client.getVersions().values());
+    if (versions.size() > 0) {
+      CbTestConfig.Version version = new CbTestConfig.Version(versions.get(0));
+      isOldSpatial = version.isOldSpatialAware();
+    }
+
+    Assume.assumeTrue(isOldSpatial);
 
     String docUri = "/default/_design/" + TestingClient.MODE_PREFIX
         + DESIGN_DOC;
