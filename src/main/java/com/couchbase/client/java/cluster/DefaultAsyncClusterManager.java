@@ -37,6 +37,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.BucketAlreadyExistsException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.error.TranscodingException;
 import rx.Observable;
 import rx.functions.Action1;
@@ -72,12 +73,23 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
     @Override
     public Observable<ClusterInfo> info() {
-        return
-            ensureServiceEnabled()
+        return ensureServiceEnabled()
             .flatMap(new Func1<Boolean, Observable<ClusterConfigResponse>>() {
                 @Override
                 public Observable<ClusterConfigResponse> call(Boolean aBoolean) {
                     return core.send(new ClusterConfigRequest(username, password));
+                }
+            })
+            .doOnNext(new Action1<ClusterConfigResponse>() {
+                @Override
+                public void call(ClusterConfigResponse response) {
+                    if (!response.status().isSuccess()) {
+                        if (response.config().contains("Unauthorized")) {
+                            throw new InvalidPasswordException();
+                        } else {
+                            throw new CouchbaseException(response.status() + ": " + response.config());
+                        }
+                    }
                 }
             })
             .map(new Func1<ClusterConfigResponse, ClusterInfo>() {
@@ -94,14 +106,26 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
     @Override
     public Observable<BucketSettings> getBuckets() {
-        return
-            ensureServiceEnabled()
+        return ensureServiceEnabled()
             .flatMap(new Func1<Boolean, Observable<BucketsConfigResponse>>() {
                 @Override
                 public Observable<BucketsConfigResponse> call(Boolean aBoolean) {
                     return core.send(new BucketsConfigRequest(username, password));
                 }
-            }).flatMap(new Func1<BucketsConfigResponse, Observable<BucketSettings>>() {
+            })
+            .doOnNext(new Action1<BucketsConfigResponse>() {
+                @Override
+                public void call(BucketsConfigResponse response) {
+                    if (!response.status().isSuccess()) {
+                        if (response.config().contains("Unauthorized")) {
+                            throw new InvalidPasswordException();
+                        } else {
+                            throw new CouchbaseException(response.status() + ": " + response.config());
+                        }
+                    }
+                }
+            })
+            .flatMap(new Func1<BucketsConfigResponse, Observable<BucketSettings>>() {
                 @Override
                 public Observable<BucketSettings> call(BucketsConfigResponse response) {
                     try {
