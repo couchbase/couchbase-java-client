@@ -15,14 +15,19 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
     private final boolean parsingSuccess;
     private final Observable<JsonObject> errors;
     private final Observable<Boolean> finalSuccess;
+    private final String requestId;
+    private final String clientContextId;
 
     public DefaultAsyncQueryResult(Observable<AsyncQueryRow> rows, Observable<JsonObject> info,
-            Observable<JsonObject> errors, Observable<Boolean> finalSuccess, boolean parsingSuccess) {
+            Observable<JsonObject> errors, Observable<Boolean> finalSuccess, boolean parsingSuccess,
+            String requestId, String clientContextId) {
         this.rows = rows;
         this.info = info;
         this.errors = errors;
         this.finalSuccess = finalSuccess;
         this.parsingSuccess = parsingSuccess;
+        this.requestId = requestId;
+        this.clientContextId = clientContextId;
     }
 
     @Override
@@ -56,5 +61,15 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
     @Override
     public Observable<JsonObject> errors() {
         return errors;
+    }
+
+    @Override
+    public String requestId() {
+        return requestId;
+    }
+
+    @Override
+    public String clientContextId() {
+        return clientContextId;
     }
 }
