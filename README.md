@@ -13,13 +13,17 @@ The package is available from Maven Central:
     <dependency>
         <groupId>com.couchbase.client</groupId>
         <artifactId>java-client</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.3</version>
     </dependency>
 </dependencies>
 ```
 
 You can also [go here](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.couchbase.client%22) and download
 the jars directly.
+
+## Staying Updated, Asking Questions
+Come by the [forums](https://forums.couchbase.com/c/java-sdk)! And be sure to check out our
+[blog](https://blog.couchbase.com).
 
 ### Usage
 Both synchronous and asynchronous (reactive, through [RxJava](https://github.com/ReactiveX/RxJava)) are supported.
