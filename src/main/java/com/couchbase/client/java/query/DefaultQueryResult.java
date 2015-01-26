@@ -1,13 +1,10 @@
 package com.couchbase.client.java.query;
 
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.util.Blocking;
-import rx.Observable;
-import rx.functions.Func1;
-
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+
+import com.couchbase.client.java.document.json.JsonObject;
 
 public class DefaultQueryResult implements QueryResult {
 
@@ -23,38 +20,27 @@ public class DefaultQueryResult implements QueryResult {
     /**
      * Create a default blocking representation of a query result.
      *
-     * @param rows the async view of rows.
-     * @param info the async view of metrics.
-     * @param errors the async view of errors and warnings.
+     * @param rows the list of rows.
+     * @param info the metrics.
+     * @param errors the list of errors and warnings.
      * @param finalSuccess the definitive (but potentially delayed) result of the query.
      * @param parseSuccess the intermediate result of the query
-     * @param timeout the maximum time allowed for all components of the result to be retrieved (global timeout).
-     * @param timeUnit the unit for timeout.
      */
-    public DefaultQueryResult(Observable<AsyncQueryRow> rows,
-            Observable<JsonObject> info, Observable<JsonObject> errors,
-            Observable<Boolean> finalSuccess, boolean parseSuccess,
-            String requestId, String clientContextId,
-            long timeout, TimeUnit timeUnit) {
+    public DefaultQueryResult(List<AsyncQueryRow> rows,
+            JsonObject info, List<JsonObject> errors,
+            Boolean finalSuccess, boolean parseSuccess,
+            String requestId, String clientContextId) {
 
         this.requestId = requestId;
         this.clientContextId = clientContextId;
         this.parseSuccess = parseSuccess;
-        //block on the finalSuccess item, ensuring streamed section of the result is finished
-        this.finalSuccess = Blocking.blockForSingle(finalSuccess, timeout, timeUnit);
-
-        //since we have the final status, other streams should be instantaneous
-        this.allRows = Blocking.blockForSingle(rows
-                .map(new Func1<AsyncQueryRow, QueryRow>() {
-                    @Override
-                    public QueryRow call(AsyncQueryRow asyncQueryRow) {
-                        return new DefaultQueryRow(asyncQueryRow.value());
-                    }
-                })
-                .toList(), 1, TimeUnit.SECONDS);
-
-        this.errors = Blocking.blockForSingle(errors.toList(), 1, TimeUnit.SECONDS);
-        this.info = Blocking.blockForSingle(info.singleOrDefault(JsonObject.empty()), 1, TimeUnit.SECONDS);
+        this.finalSuccess = finalSuccess != null && finalSuccess;
+        this.allRows = new ArrayList<QueryRow>(rows.size());
+        for (AsyncQueryRow row : rows) {
+            this.allRows.add(new DefaultQueryRow(row.value()));
+        }
+        this.errors = errors;
+        this.info = info;
     }
 
     @Override

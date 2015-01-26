@@ -28,8 +28,10 @@ import com.couchbase.client.java.bucket.DefaultBucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
+import com.couchbase.client.java.query.AsyncQueryRow;
 import com.couchbase.client.java.query.DefaultQueryResult;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryPlan;
@@ -45,7 +47,9 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
+import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.Func4;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -526,34 +530,35 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public QueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket
-            .query(statement)
-            .map(new Func1<AsyncQueryResult, QueryResult>() {
-                @Override
-                public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(asyncQueryResult.rows(), asyncQueryResult.info(),
-                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess(),
-                            asyncQueryResult.requestId(), asyncQueryResult.clientContextId(),
-                            timeout, timeUnit);
-                }
-            })
-            .single(), timeout, timeUnit);
+        return query(Query.simple(statement), timeout, timeUnit);
     }
 
     @Override
     public QueryResult query(Query query, final long timeout, final TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
-            .query(query)
-            .map(new Func1<AsyncQueryResult, QueryResult>() {
-                @Override
-                public QueryResult call(AsyncQueryResult asyncQueryResult) {
-                    return new DefaultQueryResult(asyncQueryResult.rows(), asyncQueryResult.info(),
-                            asyncQueryResult.errors(), asyncQueryResult.finalSuccess(), asyncQueryResult.parseSuccess(),
-                            asyncQueryResult.requestId(), asyncQueryResult.clientContextId(),
-                            timeout, timeUnit);
-                }
-            })
-            .single(), timeout, timeUnit);
+                .query(query)
+                .flatMap(new Func1<AsyncQueryResult, Observable<QueryResult>>() {
+                    @Override
+                    public Observable<QueryResult> call(AsyncQueryResult aqr) {
+                        final boolean parseSuccess = aqr.parseSuccess();
+                        final String requestId = aqr.requestId();
+                        final String clientContextId = aqr.clientContextId();
+
+                        return Observable.zip(aqr.rows().toList(),
+                                aqr.info().singleOrDefault(JsonObject.empty()),
+                                aqr.errors().toList(),
+                                aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
+                                new Func4<List<AsyncQueryRow>, JsonObject, List<JsonObject>, Boolean, QueryResult>() {
+                                    @Override
+                                    public QueryResult call(List<AsyncQueryRow> rows, JsonObject info,
+                                            List<JsonObject> errors, Boolean finalSuccess) {
+                                        return new DefaultQueryResult(rows, info, errors, finalSuccess, parseSuccess,
+                                                requestId, clientContextId);
+                                    }
+                                });
+                    }
+                })
+                .single(), timeout, timeUnit);
     }
 
     @Override
