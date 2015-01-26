@@ -27,17 +27,37 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
-import com.couchbase.client.core.message.kv.*;
+import com.couchbase.client.core.message.kv.AppendRequest;
+import com.couchbase.client.core.message.kv.AppendResponse;
+import com.couchbase.client.core.message.kv.BinaryRequest;
+import com.couchbase.client.core.message.kv.CounterRequest;
+import com.couchbase.client.core.message.kv.CounterResponse;
+import com.couchbase.client.core.message.kv.GetRequest;
+import com.couchbase.client.core.message.kv.GetResponse;
+import com.couchbase.client.core.message.kv.InsertRequest;
+import com.couchbase.client.core.message.kv.InsertResponse;
+import com.couchbase.client.core.message.kv.PrependRequest;
+import com.couchbase.client.core.message.kv.PrependResponse;
+import com.couchbase.client.core.message.kv.RemoveRequest;
+import com.couchbase.client.core.message.kv.RemoveResponse;
+import com.couchbase.client.core.message.kv.ReplaceRequest;
+import com.couchbase.client.core.message.kv.ReplaceResponse;
+import com.couchbase.client.core.message.kv.ReplicaGetRequest;
+import com.couchbase.client.core.message.kv.TouchRequest;
+import com.couchbase.client.core.message.kv.TouchResponse;
+import com.couchbase.client.core.message.kv.UnlockRequest;
+import com.couchbase.client.core.message.kv.UnlockResponse;
+import com.couchbase.client.core.message.kv.UpsertRequest;
+import com.couchbase.client.core.message.kv.UpsertResponse;
+import com.couchbase.client.core.message.observe.Observe;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
-import com.couchbase.client.core.message.observe.Observe;
 import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
@@ -47,10 +67,41 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.error.*;
-import com.couchbase.client.java.query.*;
-import com.couchbase.client.java.transcoder.*;
-import com.couchbase.client.java.view.*;
+import com.couchbase.client.java.error.CASMismatchException;
+import com.couchbase.client.java.error.CouchbaseOutOfMemoryException;
+import com.couchbase.client.java.error.DocumentAlreadyExistsException;
+import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.error.RequestTooBigException;
+import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.query.AsyncQueryResult;
+import com.couchbase.client.java.query.AsyncQueryRow;
+import com.couchbase.client.java.query.DefaultAsyncQueryResult;
+import com.couchbase.client.java.query.DefaultAsyncQueryRow;
+import com.couchbase.client.java.query.PrepareStatement;
+import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryPlan;
+import com.couchbase.client.java.query.SimpleQuery;
+import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.transcoder.BinaryTranscoder;
+import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
+import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
+import com.couchbase.client.java.transcoder.JsonDoubleTranscoder;
+import com.couchbase.client.java.transcoder.JsonLongTranscoder;
+import com.couchbase.client.java.transcoder.JsonStringTranscoder;
+import com.couchbase.client.java.transcoder.JsonTranscoder;
+import com.couchbase.client.java.transcoder.LegacyTranscoder;
+import com.couchbase.client.java.transcoder.RawJsonTranscoder;
+import com.couchbase.client.java.transcoder.SerializableTranscoder;
+import com.couchbase.client.java.transcoder.StringTranscoder;
+import com.couchbase.client.java.transcoder.Transcoder;
+import com.couchbase.client.java.view.AsyncSpatialViewResult;
+import com.couchbase.client.java.view.AsyncViewResult;
+import com.couchbase.client.java.view.SpatialViewQuery;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewQueryResponseMapper;
+import com.couchbase.client.java.view.ViewRetryHandler;
 import rx.Observable;
 import rx.exceptions.CompositeException;
 import rx.functions.Func0;
@@ -143,7 +194,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (content != null && content.refCnt() > 0) {
                         content.release();
                     }
-                    return false;
+
+                    switch(response.status()) {
+                        case NOT_EXISTS:
+                            return false;
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -181,7 +242,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (content != null && content.refCnt() > 0) {
                         content.release();
                     }
-                    return false;
+
+                    switch(response.status()) {
+                        case NOT_EXISTS:
+                            return false;
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -219,7 +290,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (content != null && content.refCnt() > 0) {
                         content.release();
                     }
-                    return false;
+
+                    switch(response.status()) {
+                        case NOT_EXISTS:
+                            return false;
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -290,7 +371,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (content != null && content.refCnt() > 0) {
                         content.release();
                     }
-                    return false;
+
+                    switch(response.status()) {
+                        case NOT_EXISTS:
+                            return false;
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             })
             .map(new Func1<GetResponse, D>() {
@@ -316,10 +407,24 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.EXISTS) {
-                        return Observable.error(new DocumentAlreadyExistsException());
+
+                    if (response.status().isSuccess()) {
+                        return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
+                            document.content(), response.cas()));
                     }
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas()));
+
+                    switch(response.status()) {
+                        case TOO_BIG:
+                            return Observable.error(new RequestTooBigException());
+                        case EXISTS:
+                            return Observable.error(new DocumentAlreadyExistsException());
+                        case TEMPORARY_FAILURE:
+                            return Observable.error(new TemporaryFailureException());
+                        case OUT_OF_MEMORY:
+                            return Observable.error(new CouchbaseOutOfMemoryException());
+                        default:
+                            return Observable.error(new CouchbaseException(response.status().toString()));
+                    }
                 }
             });
     }
@@ -362,10 +467,24 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.EXISTS) {
-                        return Observable.error(new CASMismatchException());
+
+                    if (response.status().isSuccess()) {
+                        return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
+                            document.content(), response.cas()));
                     }
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(), response.cas()));
+
+                    switch(response.status()) {
+                        case TOO_BIG:
+                            return Observable.error(new RequestTooBigException());
+                        case EXISTS:
+                            return Observable.error(new CASMismatchException());
+                        case TEMPORARY_FAILURE:
+                            return Observable.error(new TemporaryFailureException());
+                        case OUT_OF_MEMORY:
+                            return Observable.error(new CouchbaseOutOfMemoryException());
+                        default:
+                            return Observable.error(new CouchbaseException(response.status().toString()));
+                    }
                 }
             });
     }
@@ -396,21 +515,32 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     return core.<ReplaceResponse>send(
             new ReplaceRequest(document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(),
                     bucket))
-
         .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
             @Override
             public Observable<D> call(ReplaceResponse response) {
                 if (response.content() != null && response.content().refCnt() > 0) {
                     response.content().release();
                 }
-                if (response.status() == ResponseStatus.NOT_EXISTS) {
-                    return Observable.error(new DocumentDoesNotExistException());
-                }
-                if (response.status() == ResponseStatus.EXISTS) {
-                    return Observable.error(new CASMismatchException());
-                }
-                return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
+
+                if (response.status().isSuccess()) {
+                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
                         response.cas()));
+                }
+
+                switch(response.status()) {
+                    case TOO_BIG:
+                        return Observable.error(new RequestTooBigException());
+                    case NOT_EXISTS:
+                        return Observable.error(new DocumentDoesNotExistException());
+                    case EXISTS:
+                        return Observable.error(new CASMismatchException());
+                    case TEMPORARY_FAILURE:
+                        return Observable.error(new TemporaryFailureException());
+                    case OUT_OF_MEMORY:
+                        return Observable.error(new CouchbaseOutOfMemoryException());
+                    default:
+                        return Observable.error(new CouchbaseException(response.status().toString()));
+                }
             }
         });
   }
@@ -446,10 +576,21 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.EXISTS) {
-                        throw new CASMismatchException();
+
+                    if (response.status().isSuccess()) {
+                        return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
                     }
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
+
+                    switch(response.status()) {
+                        case EXISTS:
+                            throw new CASMismatchException();
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             });
     }
@@ -707,7 +848,19 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    return JsonLongDocument.create(id, expiry, response.value(), response.cas());
+
+                    if (response.status().isSuccess()) {
+                        return JsonLongDocument.create(id, expiry, response.value(), response.cas());
+                    }
+
+                    switch(response.status()) {
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             });
     }
@@ -722,13 +875,23 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.NOT_EXISTS) {
-                        throw new DocumentDoesNotExistException();
+
+                    if (response.status().isSuccess()) {
+                        return true;
                     }
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new CASMismatchException();
+
+                    switch(response.status()) {
+                        case NOT_EXISTS:
+                            throw new DocumentDoesNotExistException();
+                        case FAILURE:
+                            throw new CASMismatchException();
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
                     }
-                    return response.status().isSuccess();
                 }
             });
     }
@@ -746,7 +909,19 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 if (response.content() != null && response.content().refCnt() > 0) {
                     response.content().release();
                 }
-                return response.status().isSuccess();
+
+                if (response.status().isSuccess()) {
+                    return true;
+                }
+
+                switch(response.status()) {
+                    case TEMPORARY_FAILURE:
+                        throw new TemporaryFailureException();
+                    case OUT_OF_MEMORY:
+                        throw new CouchbaseOutOfMemoryException();
+                    default:
+                        throw new CouchbaseException(response.status().toString());
+                }
             }
         });
     }
@@ -769,10 +944,23 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new DocumentDoesNotExistException();
+
+                    if (response.status().isSuccess()) {
+                        return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
                     }
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
+
+                    switch(response.status()) {
+                        case TOO_BIG:
+                            throw new RequestTooBigException();
+                        case NOT_STORED:
+                            throw new DocumentDoesNotExistException();
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             });
     }
@@ -790,10 +978,23 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
-                    if (response.status() == ResponseStatus.FAILURE) {
-                        throw new DocumentDoesNotExistException();
+
+                    if (response.status().isSuccess()) {
+                        return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
                     }
-                    return (D) transcoder.newDocument(document.id(),  0, null, response.cas());
+
+                    switch(response.status()) {
+                        case TOO_BIG:
+                            throw new RequestTooBigException();
+                        case NOT_STORED:
+                            throw new DocumentDoesNotExistException();
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
             });
     }

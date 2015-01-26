@@ -25,10 +25,12 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.LegacyDocument;
 import com.couchbase.client.java.document.RawJsonDocument;
+import com.couchbase.client.java.document.StringDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Test;
 
@@ -222,6 +224,25 @@ public class BinaryTest extends ClusterDependentTest {
         bucket().upsert(JsonDocument.create(key, JsonObject.empty().put("k", "v")));
     }
 
+    @Test(expected = CASMismatchException.class)
+    public void shouldFailUnlockWithInvalidCAS() throws Exception {
+        String key = "unlockfail";
+
+        JsonDocument upsert = bucket().upsert(JsonDocument.create(key, JsonObject.empty().put("k", "v")));
+        assertNotNull(upsert);
+        assertEquals(key, upsert.id());
+
+        JsonDocument locked = bucket().getAndLock(key, 15);
+        assertEquals("v", locked.content().getString("k"));
+
+        bucket().unlock(key, locked.cas()+1);
+    }
+
+    @Test(expected = DocumentDoesNotExistException.class)
+    public void shouldFailUnlockWhenDocDoesNotExist() throws Exception {
+        bucket().unlock("thisDocDoesNotExist", 1234);
+    }
+
     @Test
     public void shouldTouch() throws Exception {
         String key = "touch";
@@ -329,6 +350,51 @@ public class BinaryTest extends ClusterDependentTest {
 
         JsonDocument foundParsed = bucket().get(id);
         assertEquals(1234, (int) foundParsed.content().getInt("foo"));
+    }
+
+    @Test(expected = RequestTooBigException.class)
+    public void shouldFailStoringLargeDoc() {
+        int size = 21000000;
+        StringBuilder buffer = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            buffer.append('l');
+        }
+
+        bucket().upsert(RawJsonDocument.create("tooLong", buffer.toString()));
+    }
+
+    @Test(expected = RequestTooBigException.class)
+    public void shouldFailAppendWhenTooLarge() {
+        String id = "longAppend";
+
+        int size = 5000000;
+        StringBuilder chunk = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            chunk.append('l');
+        }
+
+        bucket().upsert(StringDocument.create(id, "a"));
+
+        for(int i = 0; i < 5; i++) {
+            bucket().append(StringDocument.create(id,chunk.toString()));
+        }
+    }
+
+    @Test(expected = RequestTooBigException.class)
+    public void shouldFailPrependWhenTooLarge() {
+        String id = "longPrepend";
+
+        int size = 5000000;
+        StringBuilder chunk = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            chunk.append('l');
+        }
+
+        bucket().upsert(StringDocument.create(id, "a"));
+
+        for(int i = 0; i < 5; i++) {
+            bucket().prepend(StringDocument.create(id, chunk.toString()));
+        }
     }
 
     static class User implements Serializable {

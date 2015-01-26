@@ -22,14 +22,26 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.BackpressureException;
+import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
-import com.couchbase.client.java.document.*;
-import com.couchbase.client.java.error.*;
+import com.couchbase.client.java.document.BinaryDocument;
+import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.JsonLongDocument;
+import com.couchbase.client.java.document.LegacyDocument;
+import com.couchbase.client.java.document.StringDocument;
+import com.couchbase.client.java.error.CASMismatchException;
+import com.couchbase.client.java.error.CouchbaseOutOfMemoryException;
+import com.couchbase.client.java.error.DocumentAlreadyExistsException;
+import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.DurabilityException;
+import com.couchbase.client.java.error.RequestTooBigException;
+import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.ViewDoesNotExistException;
 import com.couchbase.client.java.query.AsyncQueryResult;
-import com.couchbase.client.java.query.PrepareStatement;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryPlan;
@@ -78,6 +90,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the unique ID of the document.
      * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
@@ -97,6 +112,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the source document from which the ID is taken and the type is inferred.
      * @return an {@link Observable} eventually containing the found {@link Document}.
@@ -116,6 +134,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the unique ID of the document.
      * @param target the target document type to use.
@@ -144,6 +165,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -175,6 +199,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the source document from which the ID is taken and the type is inferred.
      * @param type the {@link ReplicaMode} to select.
@@ -206,6 +233,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -228,6 +258,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param lockTime the time to write lock the document (max. 30 seconds).
@@ -249,6 +282,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the source document from which the ID is taken and the type is inferred.
      * @param lockTime the time to write lock the document (max. 30 seconds).
@@ -273,6 +309,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param lockTime the time to write lock the document (max. 30 seconds).
@@ -294,6 +333,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param expiry the new expiration time for the document.
@@ -314,6 +356,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the source document from which the ID and expiry is taken and the type is inferred.
      * @return an {@link Observable} eventually containing the found {@link Document}.
@@ -336,6 +381,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id id the unique ID of the document.
      * @param expiry the new expiration time for the document.
@@ -362,6 +410,10 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the {@link Document} to insert.
      * @return an {@link Observable} eventually containing a new {@link Document}.
@@ -380,8 +432,12 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -410,8 +466,12 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -439,8 +499,12 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -470,6 +534,10 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the {@link Document} to upsert.
      * @return an {@link Observable} eventually containing a new {@link Document}.
@@ -487,8 +555,12 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -516,8 +588,12 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -544,8 +620,12 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -579,7 +659,11 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the {@link Document} to replace.
      * @return an {@link Observable} eventually containing a new {@link Document}.
@@ -598,9 +682,13 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -629,9 +717,13 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -659,9 +751,13 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
      * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
@@ -688,6 +784,9 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
      * @return the document containing the ID.
@@ -707,6 +806,9 @@ public interface AsyncBucket {
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -728,6 +830,9 @@ public interface AsyncBucket {
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
@@ -748,6 +853,9 @@ public interface AsyncBucket {
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
      * @param replicateTo the replication constraint to watch.
@@ -765,6 +873,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @return the document containing the ID.
@@ -783,6 +894,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
@@ -803,6 +917,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
@@ -822,6 +939,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param replicateTo the replication constraint to watch.
@@ -839,6 +959,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param target the target document type to use.
@@ -858,6 +981,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
@@ -879,6 +1005,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
@@ -899,6 +1028,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
      * @param replicateTo the replication constraint to watch.
@@ -985,6 +1117,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
      * - The CAS value was not correct: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to unlock.
      * @param cas the CAS value which is mandatory to unlock it.
@@ -1001,6 +1136,9 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
      * - The CAS value was not correct: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document where ID and CAS are extracted from.
      * @return a Boolean indicating if the unlock was successful or not.
@@ -1017,6 +1155,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
      * @param expiry the new expiration time. 0 means no expiry.
@@ -1034,6 +1175,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to extract the ID and expiry from.
      * @return a copy of the document inserted.
@@ -1049,6 +1193,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
@@ -1065,6 +1212,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
@@ -1082,6 +1232,9 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
@@ -1110,7 +1263,11 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to be appended.
      * @return a document which mirrors the one supplied as an argument.
@@ -1138,7 +1295,11 @@ public interface AsyncBucket {
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to be prepended.
      * @return a document which mirrors the one supplied as an argument.

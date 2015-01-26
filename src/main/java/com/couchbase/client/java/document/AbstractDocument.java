@@ -42,6 +42,9 @@ public abstract class AbstractDocument<T> implements Document<T> {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("The Document ID must not be null or empty.");
         }
+        if (id.getBytes().length > 250) {
+            throw new IllegalArgumentException("The Document ID must not be larger than 250 bytes");
+        }
         if (expiry < 0) {
             throw new IllegalArgumentException("The Document expiry must not be negative.");
         }
