@@ -89,7 +89,8 @@ public interface AsyncBucket {
      *  The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -111,7 +112,8 @@ public interface AsyncBucket {
      *  The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -133,7 +135,8 @@ public interface AsyncBucket {
      *  The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -164,7 +167,8 @@ public interface AsyncBucket {
      *  The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -198,7 +202,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -232,7 +237,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -257,7 +263,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -281,7 +288,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -308,7 +316,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -332,7 +341,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -355,7 +365,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -380,7 +391,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -408,7 +420,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -430,7 +443,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -464,7 +478,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -497,7 +512,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -533,7 +549,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -554,7 +571,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
@@ -587,7 +605,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
@@ -619,7 +638,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
@@ -657,7 +677,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
      * - The request content is too big: {@link RequestTooBigException}
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
@@ -680,7 +701,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -715,7 +737,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -749,7 +772,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
      * - The request content is too big: {@link RequestTooBigException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
@@ -782,7 +806,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -802,7 +827,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
@@ -826,7 +852,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
@@ -849,7 +876,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
@@ -872,7 +900,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -891,7 +920,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -914,7 +944,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -936,7 +967,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -958,7 +990,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -978,7 +1011,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1002,7 +1036,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1025,7 +1060,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1045,7 +1081,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
      *
      * @param query the query to perform.
@@ -1059,7 +1096,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - If the design document or view is not found: {@link ViewDoesNotExistException}
      *
      * @param query the spatial query to perform.
@@ -1073,7 +1111,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      *
      * @param statement the statement in a DSL form (start with a static select() import).
      * @return a result containing all found rows and additional information.
@@ -1086,7 +1125,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      *
      * @param query the full {@link Query}.
      * @return a result containing all found rows and additional information.
@@ -1101,7 +1141,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      *
      * @param statement the statement to prepare a plan for.
      * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
@@ -1114,7 +1155,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
      * - The CAS value was not correct: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1133,7 +1175,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
      * - The CAS value was not correct: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1154,7 +1197,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1174,7 +1218,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1192,7 +1237,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1211,7 +1257,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1231,7 +1278,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1262,7 +1310,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1294,7 +1343,8 @@ public interface AsyncBucket {
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while "in flight" on the wire: {@link RequestCancelledException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
      * - The request content is too big: {@link RequestTooBigException}
      * - If the document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
