@@ -410,7 +410,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
-                            document.content(), response.cas()));
+                                document.content(), response.cas()));
                     }
 
                     switch(response.status()) {
@@ -470,7 +470,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
-                            document.content(), response.cas()));
+                                document.content(), response.cas()));
                     }
 
                     switch(response.status()) {
@@ -523,11 +523,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
 
                 if (response.status().isSuccess()) {
-                    return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
-                        response.cas()));
+                    return Observable.just(
+                            (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
+                                    response.cas()));
                 }
 
-                switch(response.status()) {
+                switch (response.status()) {
                     case TOO_BIG:
                         return Observable.error(new RequestTooBigException());
                     case NOT_EXISTS:
@@ -762,9 +763,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
+    public Observable<QueryPlan> prepare(String statement) {
+        return prepare(PrepareStatement.prepare(statement));
+    }
+
+    @Override
     public Observable<QueryPlan> prepare(Statement statement) {
         Statement prepared = statement instanceof PrepareStatement ? statement : PrepareStatement.prepare(statement);
         SimpleQuery query = Query.simple(prepared);
+
         GenericQueryRequest prepareRequest = GenericQueryRequest.jsonQuery(query.n1ql().toString(),
                 bucket, password);
         return core

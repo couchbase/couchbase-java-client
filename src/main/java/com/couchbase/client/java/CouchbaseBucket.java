@@ -486,6 +486,10 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public QueryPlan prepare(String statement) {
+        return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+    @Override
     public QueryPlan prepare(Statement statement) {
         return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
     }
@@ -561,6 +565,12 @@ public class CouchbaseBucket implements Bucket {
                 .single(), timeout, timeUnit);
     }
 
+    @Override
+    public QueryPlan prepare(String statement, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucket
+            .prepare(statement)
+            .single(), timeout, timeUnit);
+    }
     @Override
     public QueryPlan prepare(Statement statement, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
