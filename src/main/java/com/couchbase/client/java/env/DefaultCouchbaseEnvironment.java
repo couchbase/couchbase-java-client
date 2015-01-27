@@ -24,6 +24,7 @@ package com.couchbase.client.java.env;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
 import com.couchbase.client.java.AsyncCluster;
@@ -51,8 +52,6 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
      * The logger used.
      */
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseEnvironment.class);
-
-    private static final String NAMESPACE = "com.couchbase.";
 
     private static final long MANAGEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
@@ -122,6 +121,23 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         kvTimeout = longPropertyOr("kvTimeout", builder.kvTimeout());
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout());
         disconnectTimeout = longPropertyOr("disconnectTimeout", builder.disconnectTimeout());
+
+        if (queryTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured query timeout is greater than the maximum request lifetime. " +
+                "This can lead to falsely cancelled requests.");
+        }
+        if (kvTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured key/value timeout is greater than the maximum request lifetime." +
+                "This can lead to falsely cancelled requests.");
+        }
+        if (viewTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured view timeout is greater than the maximum request lifetime." +
+                "This can lead to falsely cancelled requests.");
+        }
+        if (managementTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured management timeout is greater than the maximum request lifetime." +
+                "This can lead to falsely cancelled requests.");
+        }
     }
 
     /**
@@ -347,6 +363,34 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
+        public Builder dcpEnabled(boolean dcpEnabled) {
+            if (dcpEnabled) {
+                throw new IllegalArgumentException("DCP is not supported from the Java SDK.");
+            }
+
+            super.dcpEnabled(dcpEnabled);
+            return this;
+        }
+
+        @Override
+        public Builder retryDelay(Delay retryDelay) {
+            super.retryDelay(retryDelay);
+            return this;
+        }
+
+        @Override
+        public Builder retryStrategy(RetryStrategy retryStrategy) {
+            super.retryStrategy(retryStrategy);
+            return this;
+        }
+
+        @Override
+        public Builder maxRequestLifetime(long maxRequestLifetime) {
+            super.maxRequestLifetime(maxRequestLifetime);
+            return this;
+        }
+
+        @Override
         public Builder packageNameAndVersion(final String packageNameAndVersion) {
             super.packageNameAndVersion(packageNameAndVersion);
             return this;
@@ -367,8 +411,6 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         public String userAgent() {
             return userAgent;
         }
-
-
 
         @Override
         public DefaultCouchbaseEnvironment build() {
