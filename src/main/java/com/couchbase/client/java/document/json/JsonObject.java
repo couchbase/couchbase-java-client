@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
+import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 /**
@@ -142,6 +143,23 @@ public class JsonObject extends JsonValue {
             }
         }
         return result;
+    }
+
+    /**
+     * Static method to create a {@link JsonObject} from a JSON {@link String}.
+     *
+     * The string is expected to be a valid JSON object representation (eg. starting with a '{').
+     *
+     * @param s the JSON String to convert to a {@link JsonObject}.
+     * @return the corresponding {@link JsonObject}.
+     * @throws IllegalArgumentException if the conversion cannot be done.
+     */
+    public static JsonObject fromJson(String s) {
+        try {
+            return CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(s);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot convert string to JsonObject", e);
+        }
     }
 
     /**

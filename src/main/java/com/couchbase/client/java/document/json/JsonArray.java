@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 /**
@@ -156,6 +157,25 @@ public class JsonArray extends JsonValue implements Iterable<Object> {
             }
         }
         return array;
+    }
+
+    /**
+     * Static method to create a {@link JsonArray} from a JSON {@link String}.
+     *
+     * Not to be confused with {@link #from(Object...)} from(aString)} which will populate a new array with the string.
+     *
+     * The string is expected to be a valid JSON array representation (eg. starting with a '[').
+     *
+     * @param s the JSON String to convert to a {@link JsonArray}.
+     * @return the corresponding {@link JsonArray}.
+     * @throws IllegalArgumentException if the conversion cannot be done.
+     */
+    public static JsonArray fromJson(String s) {
+        try {
+            return CouchbaseAsyncBucket.JSON_ARRAY_TRANSCODER.stringToJsonArray(s);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot convert string to JsonArray", e);
+        }
     }
 
     /**
