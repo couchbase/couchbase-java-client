@@ -78,4 +78,10 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
      */
     long disconnectTimeout();
 
+    /**
+     * Returns whether DNS SRV lookup for the bootstrap nodes is enabled or not.
+     *
+     * @return true if enabled, false otherwise.
+     */
+    boolean dnsSrvEnabled();
 }

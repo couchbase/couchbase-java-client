@@ -25,6 +25,8 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.config.ConfigurationException;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.DisconnectRequest;
@@ -39,6 +41,7 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.transcoder.Transcoder;
+import com.couchbase.client.java.util.Bootstrap;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -48,6 +51,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CouchbaseAsyncCluster implements AsyncCluster {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseAsyncCluster.class);
 
     private static final String DEFAULT_BUCKET = "default";
     private static final String DEFAULT_HOST = "127.0.0.1";
@@ -93,17 +98,60 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     CouchbaseAsyncCluster(final CouchbaseEnvironment environment, final ConnectionString connectionString, final boolean sharedEnvironment) {
         this.sharedEnvironment = sharedEnvironment;
         core = new CouchbaseCore(environment);
-        List<String> seedNodes = new ArrayList<String>();
-        for (InetSocketAddress node : connectionString.hosts()) {
-            seedNodes.add(node.getHostName());
-        }
-        if (seedNodes.isEmpty()) {
-            seedNodes.add(DEFAULT_HOST);
-        }
-        SeedNodesRequest request = new SeedNodesRequest(seedNodes);
+        SeedNodesRequest request = new SeedNodesRequest(assembleSeedNodes(connectionString, environment));
         core.send(request).toBlocking().single();
         this.environment = environment;
         this.connectionString = connectionString;
+    }
+
+    /**
+     * Helper method to assemble list of seed nodes depending on the given input.
+     *
+     * If DNS SRV is enabled on the environment and exactly one hostname is passed in (not an IP address), the
+     * code performs a DNS SRV lookup, but falls back to the A record if nothing suitable is found. Since the
+     * user is expected to enable it manually, a warning will be issued if so.
+     *
+     * @param connectionString the connection string to check.
+     * @param environment the environment for context.
+     * @return a list of seed nodes ready to send.
+     */
+    private List<String> assembleSeedNodes(ConnectionString connectionString, CouchbaseEnvironment environment) {
+        List<String> seedNodes = new ArrayList<String>();
+
+        if (environment.dnsSrvEnabled()) {
+            if (connectionString.hosts().size() == 1) {
+                InetSocketAddress lookupNode = connectionString.hosts().get(0);
+                LOGGER.debug("Attempting to load DNS SRV records from {}.", connectionString.hosts().get(0));
+                try {
+                    List<String> foundNodes = Bootstrap.fromDnsSrv(lookupNode.getHostName(), false,
+                        environment.sslEnabled());
+                    if (foundNodes.isEmpty()) {
+                        throw new IllegalStateException("DNS SRV list is empty.");
+                    }
+                    seedNodes.addAll(foundNodes);
+                    LOGGER.info("Loaded seed nodes from DNS SRV {}.", foundNodes);
+                } catch (Exception ex) {
+                    LOGGER.warn("DNS SRV lookup failed, proceeding with normal bootstrap.", ex);
+                    seedNodes.add(lookupNode.getHostName());
+                }
+            } else {
+                LOGGER.info("DNS SRV enabled, but less or more than one seed node given. Proceeding with normal "
+                    + "bootstrap.");
+                for (InetSocketAddress node : connectionString.hosts()) {
+                    seedNodes.add(node.getHostName());
+                }
+            }
+        } else {
+            for (InetSocketAddress node : connectionString.hosts()) {
+                seedNodes.add(node.getHostName());
+            }
+        }
+
+        if (seedNodes.isEmpty()) {
+            seedNodes.add(DEFAULT_HOST);
+        }
+
+        return seedNodes;
     }
 
     @Override
