@@ -1,13 +1,36 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
 package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.Query;
 
 import java.net.URLEncoder;
 
 /**
- * Fluent API for a View Query.
+ * Fluent DSL for a View Query.
+ *
+ * @author Michael Nitschinger
+ * @since 2.0
  */
 public class ViewQuery {
 
@@ -27,12 +50,11 @@ public class ViewQuery {
     private static final int PARAM_ENDKEYDOCID_OFFSET = 26;
     private static final int PARAM_KEYS_OFFSET = 28;
     private static final int PARAM_KEY_OFFSET = 30;
-    private static final int PARAM_BBOX_OFFSET = 32;
 
     /**
      * Number of supported possible params for a query.
      */
-    private static final int NUM_PARAMS = 17;
+    private static final int NUM_PARAMS = 16;
 
     /**
      * Contains all stored params.
@@ -43,7 +65,6 @@ public class ViewQuery {
     private final String view;
 
     private boolean development;
-    private boolean withDocs;
 
     private ViewQuery(String design, String view) {
         this.design = design;
@@ -51,6 +72,13 @@ public class ViewQuery {
         params = new String[NUM_PARAMS * 2];
     }
 
+    /**
+     * Creates an new {@link ViewQuery}.
+     *
+     * @param design the name of the design document.
+     * @param view the name of the view.
+     * @return a {@link ViewQuery} DSL.
+     */
     public static ViewQuery from(String design, String view) {
         return new ViewQuery(design, view);
     }
@@ -60,17 +88,7 @@ public class ViewQuery {
     }
 
     public ViewQuery development(boolean development) {
-        this.development = true;
-        return this;
-    }
-
-
-    public ViewQuery withDocuments() {
-        return withDocuments(true);
-    }
-
-    public ViewQuery withDocuments(boolean withDocs) {
-        this.withDocs = withDocs;
+        this.development = development;
         return this;
     }
 
@@ -78,7 +96,7 @@ public class ViewQuery {
      * Explicitly enable/disable the reduce function on the query.
      *
      * @param reduce if reduce should be enabled or not.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery reduce(final boolean reduce) {
         params[PARAM_REDUCE_OFFSET] = "reduce";
@@ -95,9 +113,12 @@ public class ViewQuery {
      * Limit the number of the returned documents to the specified number.
      *
      * @param limit the number of documents to return.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery limit(final int limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("Limit must be >= 0.");
+        }
         params[PARAM_LIMIT_OFFSET] = "limit";
         params[PARAM_LIMIT_OFFSET+1] = Integer.toString(limit);
         return this;
@@ -107,11 +128,11 @@ public class ViewQuery {
      * Group the results using the reduce function to a group or single row.
      *
      * Important: this setter and {@link #groupLevel(int)} should not be used
-     * together in the same {@link Query}. It is sufficient to only set the
+     * together in the same {@link ViewQuery}. It is sufficient to only set the
      * grouping level only and use this setter in cases where you always want the
      * highest group level implictly.
      *
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery group() {
         return group(true);
@@ -127,12 +148,12 @@ public class ViewQuery {
      * Specify the group level to be used.
      *
      * Important: {@link #group()} and this setter should not be used
-     * together in the same {@link Query}. It is sufficient to only use this
+     * together in the same {@link ViewQuery}. It is sufficient to only use this
      * setter and use {@link #group()} in cases where you always want
      * the highest group level implictly.
      *
      * @param grouplevel How deep the grouping level should be.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery groupLevel(final int grouplevel) {
         params[PARAM_GROUPLEVEL_OFFSET] = "group_level";
@@ -144,7 +165,7 @@ public class ViewQuery {
     /**
      * Specifies whether the specified end key should be included in the result.
      *
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery inclusiveEnd() {
         return inclusiveEnd(true);
@@ -161,9 +182,12 @@ public class ViewQuery {
      * Skip this number of records before starting to return the results.
      *
      * @param skip The number of records to skip.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery skip(final int skip) {
+        if (skip < 0) {
+            throw new IllegalArgumentException("Skip must be >= 0.");
+        }
         params[PARAM_SKIP_OFFSET] = "skip";
         params[PARAM_SKIP_OFFSET+1] = Integer.toString(skip);
         return this;
@@ -176,7 +200,7 @@ public class ViewQuery {
      * default setting is "update_after"!
      *
      * @param stale Which stale mode should be used.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery stale(final Stale stale) {
         params[PARAM_STALE_OFFSET] = "stale";
@@ -190,7 +214,7 @@ public class ViewQuery {
      * See the "OnError" enum for more details on the available options.
      *
      * @param onError The appropriate error handling type.
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery onError(final OnError onError) {
         params[PARAM_ONERROR_OFFSET] = "on_error";
@@ -201,7 +225,7 @@ public class ViewQuery {
     /**
      * Enabled debugging on view queries.
      *
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery debug() {
         return debug(true);
@@ -216,7 +240,7 @@ public class ViewQuery {
     /**
      * Return the documents in descending by key order.
      *
-     * @return the {@link Query} object for proper chaining.
+     * @return the {@link ViewQuery} object for proper chaining.
      */
     public ViewQuery descending() {
         return descending(true);
@@ -280,13 +304,13 @@ public class ViewQuery {
 
     public ViewQuery startKeyDocId(String id) {
         params[PARAM_STARTKEYDOCID_OFFSET] = "startkey_docid";
-        params[PARAM_STARTKEYDOCID_OFFSET+1] = encode("\"" + id + "\"");
+        params[PARAM_STARTKEYDOCID_OFFSET+1] = encode(id);
         return this;
     }
 
     public ViewQuery endKeyDocId(String id) {
         params[PARAM_ENDKEYDOCID_OFFSET] = "endkey_docid";
-        params[PARAM_ENDKEYDOCID_OFFSET+1] = encode("\"" + id + "\"");
+        params[PARAM_ENDKEYDOCID_OFFSET+1] = encode(id);
         return this;
     }
 
@@ -428,10 +452,6 @@ public class ViewQuery {
 
     public boolean isDevelopment() {
     return development;
-    }
-
-    public boolean isWithDocuments() {
-        return withDocs;
     }
 
 }

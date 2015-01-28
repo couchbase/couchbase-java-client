@@ -43,14 +43,6 @@ public class ViewQueryTest {
         assertEquals("design", query.getDesign());
         assertEquals("view", query.getView());
         assertFalse(query.isDevelopment());
-        assertFalse(query.isWithDocuments());
-        assertTrue(query.toString().isEmpty());
-    }
-
-    @Test
-    public void shouldSetIncludeDocs() {
-        ViewQuery query = ViewQuery.from("design", "view").withDocuments();
-        assertTrue(query.isWithDocuments());
         assertTrue(query.toString().isEmpty());
     }
 
@@ -214,13 +206,22 @@ public class ViewQueryTest {
     @Test
     public void shouldHandleStartKeyDocID() {
         ViewQuery query = ViewQuery.from("design", "view").startKeyDocId("mykey");
-        assertEquals("startkey_docid=%22mykey%22", query.toString());
+        assertEquals("startkey_docid=mykey", query.toString());
     }
 
     @Test
     public void shouldHandleEndKeyDocID() {
         ViewQuery query = ViewQuery.from("design", "view").endKeyDocId("mykey");
-        assertEquals("endkey_docid=%22mykey%22", query.toString());
+        assertEquals("endkey_docid=mykey", query.toString());
+    }
+
+    @Test
+    public void shouldRespectDevelopmentParam() {
+        ViewQuery query = ViewQuery.from("design", "view").development(true);
+        assertTrue(query.isDevelopment());
+
+        query = ViewQuery.from("design", "view").development(false);
+        assertFalse(query.isDevelopment());
     }
 
     @Test
@@ -235,4 +236,24 @@ public class ViewQueryTest {
         assertEquals("reduce=false&group=true&debug=true&descending=true&startkey=%5B%22foo%22%2Ctrue%5D",
             query.toString());
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldDisallowNegativeLimit() {
+        ViewQuery.from("design", "view").limit(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldDisallowNegativeSkip() {
+        ViewQuery.from("design", "view").skip(-1);
+    }
+
+    @Test
+    public void shouldToggleDevelopment() {
+        ViewQuery query = ViewQuery.from("design", "view").development(true);
+        assertTrue(query.isDevelopment());
+
+        query = ViewQuery.from("design", "view").development(false);
+        assertFalse(query.isDevelopment());
+    }
+
 }

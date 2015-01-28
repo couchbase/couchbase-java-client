@@ -24,9 +24,10 @@ package com.couchbase.client.java.error;
 import com.couchbase.client.core.CouchbaseException;
 
 /**
- * .
+ * Raised when the document does not exist and a replace operation is used..
  *
  * @author Michael Nitschinger
+ * @since 2.0
  */
 public class DocumentDoesNotExistException extends CouchbaseException {
 

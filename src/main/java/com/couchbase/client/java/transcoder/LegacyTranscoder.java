@@ -1,3 +1,25 @@
+/**
+ * Copyright (C) 2014 Couchbase, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
+ * IN THE SOFTWARE.
+ */
+
 package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.core.lang.Tuple;
@@ -56,9 +78,15 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
     }
 
     @Override
+    public Class<LegacyDocument> documentType() {
+        return LegacyDocument.class;
+    }
+
+    @Override
     protected LegacyDocument doDecode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status)
         throws Exception {
-        byte[] data = content.array();
+        byte[] data = new byte[content.readableBytes()];
+        content.readBytes(data);
         Object decoded = null;
         if ((flags & COMPRESSED) != 0) {
             data = decompress(data);
@@ -157,7 +185,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
         return Tuple.create(encoded, flags);
     }
 
-    private static byte[] encodeNum(long l, int maxBytes) {
+    public static byte[] encodeNum(long l, int maxBytes) {
         byte[] rv = new byte[maxBytes];
         for (int i = 0; i < rv.length; i++) {
             int pos = rv.length - i - 1;

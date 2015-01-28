@@ -18,4 +18,5 @@ public class DefaultQueryRow implements QueryRow {
     public String toString() {
         return value.toString();
     }
+
 }

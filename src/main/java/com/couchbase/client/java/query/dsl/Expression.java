@@ -25,6 +25,26 @@ public class Expression {
         return new Expression(value);
     }
 
+    /**
+     * An identifier or list of identifiers escaped using backquotes `.
+     * Useful for example for identifiers that contains a dash like "beer-sample".
+     * Multiple identifiers are returned as a list of escaped identifiers separated by ", ".
+     *
+     * @param identifiers the identifier(s) to escape.
+     * @return an {@link Expression} representing the escaped identifier.
+     */
+    public static Expression i(String... identifiers) {
+        StringBuilder escaped = new StringBuilder();
+        for (String i : identifiers) {
+            escaped.append(", ");
+            escaped.append('`').append(i).append('`');
+        }
+        if (escaped.length() > 2) {
+            escaped.delete(0, 2);
+        }
+        return new Expression(escaped.toString());
+    }
+
     public static Expression s(String value) {
         return new Expression("\"" + value + "\"");
     }

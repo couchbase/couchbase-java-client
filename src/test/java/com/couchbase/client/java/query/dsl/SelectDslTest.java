@@ -22,7 +22,7 @@
 package com.couchbase.client.java.query.dsl;
 
 import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.path.*;
 import org.junit.Test;
 
@@ -117,64 +117,64 @@ public class SelectDslTest {
 
     @Test
     public void testSelect() {
-        Query query = new DefaultSelectPath(null).select(x("firstname"), x("lastname"));
-        assertEquals("SELECT firstname, lastname", query.toString());
+        Statement statement = new DefaultSelectPath(null).select(x("firstname"), x("lastname"));
+        assertEquals("SELECT firstname, lastname", statement.toString());
 
-        query = new DefaultSelectPath(null).selectAll(x("firstname"));
-        assertEquals("SELECT ALL firstname", query.toString());
+        statement = new DefaultSelectPath(null).selectAll(x("firstname"));
+        assertEquals("SELECT ALL firstname", statement.toString());
     }
 
     @Test
     public void testSelectWithUnion() {
-        Query query = new DefaultSelectPath(null)
+        Statement statement = new DefaultSelectPath(null)
             .select(x("firstname"), x("lastname"))
             .union()
             .select(x("a"), x("b"));
-        assertEquals("SELECT firstname, lastname UNION SELECT a, b", query.toString());
+        assertEquals("SELECT firstname, lastname UNION SELECT a, b", statement.toString());
     }
 
     @Test
     public void testOrderBy() {
-        Query query = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname"));
-        assertEquals("ORDER BY firstname ASC", query.toString());
+        Statement statement = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname"));
+        assertEquals("ORDER BY firstname ASC", statement.toString());
 
-        query = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname"), Sort.desc("lastname"));
-        assertEquals("ORDER BY firstname ASC, lastname DESC", query.toString());
+        statement = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname"), Sort.desc("lastname"));
+        assertEquals("ORDER BY firstname ASC, lastname DESC", statement.toString());
     }
 
     @Test
     public void testOrderByWithLimit() {
-        Query query = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname")).limit(5);
-        assertEquals("ORDER BY firstname ASC LIMIT 5", query.toString());
+        Statement statement = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname")).limit(5);
+        assertEquals("ORDER BY firstname ASC LIMIT 5", statement.toString());
     }
 
     @Test
     public void testOrderByWithLimitAndOffset() {
-        Query query = new DefaultOrderByPath(null)
+        Statement statement = new DefaultOrderByPath(null)
             .orderBy(Sort.asc("firstname"), Sort.desc("lastname"))
             .limit(5)
             .offset(10);
-        assertEquals("ORDER BY firstname ASC, lastname DESC LIMIT 5 OFFSET 10", query.toString());
+        assertEquals("ORDER BY firstname ASC, lastname DESC LIMIT 5 OFFSET 10", statement.toString());
     }
 
     @Test
     public void testOrderByWithOffset() {
-        Query query = new DefaultOrderByPath(null)
+        Statement statement = new DefaultOrderByPath(null)
             .orderBy(Sort.asc("firstname"), Sort.desc("lastname"))
             .offset(3);
-        assertEquals("ORDER BY firstname ASC, lastname DESC OFFSET 3", query.toString());
+        assertEquals("ORDER BY firstname ASC, lastname DESC OFFSET 3", statement.toString());
     }
 
     @Test
     public void testOffset() {
-        Query query = new DefaultOffsetPath(null).offset(3);
-        assertEquals("OFFSET 3", query.toString());
+        Statement statement = new DefaultOffsetPath(null).offset(3);
+        assertEquals("OFFSET 3", statement.toString());
     }
 
     @Test
     public void testLimitWithOffset() {
-        Query query = new DefaultLimitPath(null).limit(4).offset(3);
-        assertEquals("LIMIT 4 OFFSET 3", query.toString());
+        Statement statement = new DefaultLimitPath(null).limit(4).offset(3);
+        assertEquals("LIMIT 4 OFFSET 3", statement.toString());
     }
 
     //
@@ -185,93 +185,93 @@ public class SelectDslTest {
 
     @Test
     public void testSimpleFrom() {
-        Query query = new DefaultFromPath(null).from("default");
-        assertEquals("FROM default", query.toString());
+        Statement statement = new DefaultFromPath(null).from("default");
+        assertEquals("FROM default", statement.toString());
 
-        query = new DefaultFromPath(null).from("beer-sample").as("b");
-        assertEquals("FROM beer-sample AS b", query.toString());
+        statement = new DefaultFromPath(null).from("beer-sample").as("b");
+        assertEquals("FROM beer-sample AS b", statement.toString());
     }
 
     @Test
     public void testFromWithKeys() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("beer-sample")
             .as("b")
             .keys("my-brewery");
-        assertEquals("FROM beer-sample AS b KEYS [\"my-brewery\"]", query.toString());
+        assertEquals("FROM beer-sample AS b KEYS [\"my-brewery\"]", statement.toString());
 
-        query = new DefaultFromPath(null)
+        statement = new DefaultFromPath(null)
             .from("beer-sample")
             .keys(JsonArray.from("key1", "key2"));
-        assertEquals("FROM beer-sample KEYS [\"key1\",\"key2\"]", query.toString());
+        assertEquals("FROM beer-sample KEYS [\"key1\",\"key2\"]", statement.toString());
     }
 
     @Test
     public void testUnnest() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("tutorial").as("contact")
             .unnest("contact.children")
             .where(x("contact.fname").eq(s("Dave")));
         assertEquals("FROM tutorial AS contact UNNEST contact.children WHERE contact.fname = \"Dave\"",
-            query.toString());
+            statement.toString());
 
-        query = new DefaultFromPath(null)
+        statement = new DefaultFromPath(null)
             .from("default")
             .leftOuterUnnest("foo.bar")
             .leftUnnest("bar.baz")
             .innerUnnest("x.y");
-        assertEquals("FROM default LEFT OUTER UNNEST foo.bar LEFT UNNEST bar.baz INNER UNNEST x.y", query.toString());
+        assertEquals("FROM default LEFT OUTER UNNEST foo.bar LEFT UNNEST bar.baz INNER UNNEST x.y", statement.toString());
     }
 
     @Test
     public void testNest() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .nest("orders_with_users").as("orders");
-        assertEquals("FROM users_with_orders AS user NEST orders_with_users AS orders", query.toString());
+        assertEquals("FROM users_with_orders AS user NEST orders_with_users AS orders", statement.toString());
 
-        query = new DefaultFromPath(null)
+        statement = new DefaultFromPath(null)
             .from("default")
             .leftOuterNest("foo.bar")
             .leftNest("bar.baz")
             .innerNest("x.y");
-        assertEquals("FROM default LEFT OUTER NEST foo.bar LEFT NEST bar.baz INNER NEST x.y", query.toString());
+        assertEquals("FROM default LEFT OUTER NEST foo.bar LEFT NEST bar.baz INNER NEST x.y", statement.toString());
     }
 
     @Test
     public void testNestWithKeys() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .nest("orders_with_users").as("orders")
             .keys(x(JsonArray.from("key1", "key2")));
         assertEquals("FROM users_with_orders AS user NEST orders_with_users AS orders KEYS [\"key1\",\"key2\"]",
-            query.toString());
+            statement.toString());
     }
 
 
     @Test
     public void testJoin() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .join("orders_with_users").as("orders");
-        assertEquals("FROM users_with_orders AS user JOIN orders_with_users AS orders", query.toString());
+        assertEquals("FROM users_with_orders AS user JOIN orders_with_users AS orders", statement.toString());
 
-        query = new DefaultFromPath(null)
+        statement = new DefaultFromPath(null)
             .from("default")
             .leftOuterJoin("foo.bar")
             .leftJoin("bar.baz")
             .innerJoin("x.y");
-        assertEquals("FROM default LEFT OUTER JOIN foo.bar LEFT JOIN bar.baz INNER JOIN x.y", query.toString());
+        assertEquals("FROM default LEFT OUTER JOIN foo.bar LEFT JOIN bar.baz INNER JOIN x.y", statement.toString());
     }
 
     @Test
     public void testJoinWithKeys() {
-        Query query = new DefaultFromPath(null)
+        Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .join("orders_with_users").as("orders")
             .keys(x(JsonArray.from("key1", "key2")));
         assertEquals("FROM users_with_orders AS user JOIN orders_with_users AS orders KEYS [\"key1\",\"key2\"]",
-            query.toString());
+            statement.toString());
     }
 
 }

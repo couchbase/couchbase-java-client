@@ -24,42 +24,56 @@ package com.couchbase.client.java.document;
 /**
  * Common parent implementation of a {@link Document}.
  *
+ * It is recommended that all {@link Document} implementations extend from this class so that parameter checks
+ * are consistently applied. It also ensures that equals and hashcode are applied on the contents and therefore
+ * comparisons work as expected.
+ *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.0.0
  */
 public abstract class AbstractDocument<T> implements Document<T> {
 
-  private final String id;
-  private final long cas;
-  private final int expiry;
-  private final T content;
+    private final String id;
+    private final long cas;
+    private final int expiry;
+    private final T content;
 
-  protected AbstractDocument(String id, int expiry, T content, long cas) {
-    this.id = id;
-    this.cas = cas;
-    this.expiry = expiry;
-    this.content = content;
-  }
+    protected AbstractDocument(String id, int expiry, T content, long cas) {
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("The Document ID must not be null or empty.");
+        }
+        if (id.getBytes().length > 250) {
+            throw new IllegalArgumentException("The Document ID must not be larger than 250 bytes");
+        }
+        if (expiry < 0) {
+            throw new IllegalArgumentException("The Document expiry must not be negative.");
+        }
 
-  @Override
-  public String id() {
-    return id;
-  }
+        this.id = id;
+        this.cas = cas;
+        this.expiry = expiry;
+        this.content = content;
+    }
 
-  @Override
-  public long cas() {
-    return cas;
-  }
+    @Override
+    public String id() {
+        return id;
+    }
 
-  @Override
-  public int expiry() {
-    return expiry;
-  }
+    @Override
+    public long cas() {
+        return cas;
+    }
 
-  @Override
-  public T content() {
-    return content;
-  }
+    @Override
+    public int expiry() {
+        return expiry;
+    }
+
+    @Override
+    public T content() {
+        return content;
+    }
 
     @Override
     public String toString() {
@@ -70,5 +84,29 @@ public abstract class AbstractDocument<T> implements Document<T> {
         sb.append(", content=").append(content);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractDocument that = (AbstractDocument) o;
+
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (cas != that.cas) return false;
+        if (expiry != that.expiry) return false;
+        if (content != null ? !content.equals(that.content) : that.content != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (int) (cas ^ (cas >>> 32));
+        result = 31 * result + expiry;
+        result = 31 * result + (content != null ? content.hashCode() : 0);
+        return result;
     }
 }

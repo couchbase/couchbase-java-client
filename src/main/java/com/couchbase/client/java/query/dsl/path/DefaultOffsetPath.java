@@ -1,6 +1,6 @@
 package com.couchbase.client.java.query.dsl.path;
 
-import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.element.OffsetElement;
 
 /**
@@ -15,7 +15,7 @@ public class DefaultOffsetPath extends AbstractPath implements OffsetPath {
     }
 
     @Override
-    public Query offset(int offset) {
+    public Statement offset(int offset) {
         element(new OffsetElement(offset));
         return this;
     }

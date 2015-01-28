@@ -20,16 +20,19 @@
  * IN THE SOFTWARE.
  */
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
-apply plugin: 'checkstyle'
 
 apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 apply plugin: 'propdeps-idea'
 apply plugin: 'propdeps-eclipse'
+
+apply plugin: 'checkstyle'
 
 group = 'com.couchbase.client'
 description = 'Official Couchbase Java Client Library'
@@ -51,8 +54,27 @@ repositories {
     jcenter()
 }
 
+checkstyle {
+    toolVersion = "6.0"
+}
+
+def getVersionName() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--always', '--dirty'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    } catch (e) {
+        //in case git command is not accessible...
+        //put the date in there to have at least a reference point
+        return "unknown" + new Date().format("yyyyMMdd");
+    }
+}
+
 ext {
-    coreVersion = '1.0.0-SNAPSHOT'
+    coreVersion = '1.1.0-dp2'
 
     slf4jVersion = '1.7.7'
     commonsVersion = '1.1.3'
@@ -60,6 +82,8 @@ ext {
 
     junitVersion = '4.11'
     mockitoVersion = '1.9.5'
+
+    gitVersion = getVersionName()
 }
 
 sourceSets {
@@ -127,6 +151,18 @@ javadoc.options {
     docletpath = configurations.markdownDoclet.files.asType(List)
     doclet = "ch.raffael.doclets.pegdown.PegdownDoclet"
     addStringOption("parse-timeout", "10")
+
+    windowTitle = "Couchbase Java SDK"
+    docTitle = "Couchbase Java SDK ($project.version)"
+    bottom = "Copyright &copy; 2014 Couchbase, Inc."
+    links = [
+            "http://download.oracle.com/javase/6/docs/api/",
+            "http://netty.io/4.0/api/",
+            "http://fasterxml.github.io/jackson-databind/javadoc/2.4/",
+            "http://reactivex.io/RxJava/javadoc/",
+            "http://docs.couchbase.com/sdk-api/couchbase-core-io-" + coreVersion
+    ]
+    overview = "docs/teaser.html"
 }
 
 
@@ -141,6 +177,7 @@ artifacts {
 }
 
 def pomConfig = {
+    name 'Couchbase Java SDK'
     url 'http://couchbase.com'
     organization {
         name 'Couchbase, Inc.'
@@ -168,6 +205,16 @@ def pomConfig = {
             name 'Michael Nitschinger'
             email 'michael.nitschinger@couchbase.com'
         }
+        developer {
+            id 'simonbasle'
+            name 'Simon Baslé'
+            email 'simon@couchbase.com'
+        }
+        developer {
+            id 'avsej'
+            name 'Sergey Avseyev'
+            email 'sergey@couchbase.com'
+        }
     }
 }
 
@@ -175,7 +222,7 @@ publishing  {
     publications {
         compile(MavenPublication) {
             from components.java
-            artifactId = 'couchbase-client'
+            artifactId = 'java-client'
 
             artifact(javadocJar) {
                 classifier = 'javadoc'
@@ -192,6 +239,8 @@ publishing  {
                         it.appendNode('optional', 'true')
                     }
                 }
+                // For some weird reason description does not work in pomConfig, so doing it manually here.
+                root.appendNode('description', 'The official Couchbase Java SDK');
                 root.children().last() + pomConfig
             }
         }
@@ -203,12 +252,6 @@ publishing  {
         }
     }
 }
-
-
-
-
-
-
 
 install {
     repositories.mavenInstaller {
@@ -227,39 +270,22 @@ def customizePom(def pom) {
         generatedPom.dependencies = generatedPom.dependencies.sort { dep ->
             "$dep.scope:$dep.groupId:$dep.artifactId"
         }
+    }
+}
 
-        // add all items necessary for maven central publication
-        generatedPom.project {
-            name = rootProject.name
-            description = rootProject.description
-            url = 'http://couchbase.com'
-            organization {
-                name = 'Couchbase, Inc.'
-                url = 'http://couchbase.com'
-            }
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
-            scm {
-                url = 'https://github.com/couchbase/couchbase-java-client'
-                connection = 'scm:git:git://github.com/couchbase/couchbase-java-client'
-                developerConnection = 'scm:git:git://github.com/couchbase/couchbase-java-client'
-            }
-            developers {
-                developer {
-                    id = 'daschl'
-                    name = 'Michael Nitschinger'
-                    email = 'michael.nitschinger@couchbase.com'
-                }
-            }
-            issueManagement {
-                system = "Couchbase JIRA"
-                url = "http://www.couchbase.com/issues/browse/JCBC"
-            }
-        }
+jar.manifest.mainAttributes(
+        'Implementation-Title': 'Couchbase Java Client',
+        'Implementation-Version': ext.gitVersion,
+        'Implementation-Vendor': 'Couchbase, Inc.',
+        'Specification-Title': 'com.couchbase.client.java',
+        'Specification-Version': version,
+        'Specification-Vendor': 'Couchbase, Inc.'
+)
+
+afterEvaluate {
+    //resources in src/main/resources will have @tokens@ replaced
+    configure(processResources) {
+        filter(ReplaceTokens,
+                tokens: [specVersion: version, implVersion: getVersionName()])
     }
 }

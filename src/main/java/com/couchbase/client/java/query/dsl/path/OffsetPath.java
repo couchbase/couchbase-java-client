@@ -1,14 +1,14 @@
 package com.couchbase.client.java.query.dsl.path;
 
-import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.Statement;
 
 /**
  * .
  *
  * @author Michael Nitschinger
  */
-public interface OffsetPath extends Query, Path {
+public interface OffsetPath extends Statement, Path {
 
-    Query offset(int offset);
+    Statement offset(int offset);
 
 }
