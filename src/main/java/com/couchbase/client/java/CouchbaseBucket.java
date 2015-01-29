@@ -85,6 +85,11 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public ClusterFacade core() {
+        return asyncBucket.core().toBlocking().single();
+    }
+
+    @Override
     public JsonDocument get(String id) {
         return get(id, kvTimeout, TIMEOUT_UNIT);
     }

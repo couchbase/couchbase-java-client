@@ -22,6 +22,7 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.BackpressureException;
+import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
@@ -79,6 +80,16 @@ public interface AsyncBucket {
      * @return the name of the bucket.
      */
     String name();
+
+    /**
+     * Returns the underlying "core-io" library through its {@link ClusterFacade}.
+     *
+     * Handle with care, with great power comes great responsibility. All additional checks which are normally performed
+     * by this library are skipped.
+     *
+     * @return the underlying {@link ClusterFacade} from the "core-io" package.
+     */
+    Observable<ClusterFacade> core();
 
     /**
      * Retrieves a {@link JsonDocument} by its unique ID.
