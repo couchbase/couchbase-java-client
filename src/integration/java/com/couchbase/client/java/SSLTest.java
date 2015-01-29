@@ -218,10 +218,11 @@ public class SSLTest{
 	@Test
 	public void ServerRegenerateCertificate(){	
 	
-		String server_username = System.getProperty("com.couchbase.client.bootstrap.server_username");
-		String server_password = System.getProperty("com.couchbase.client.bootstrap.server_password");
-		String serverCertPath = System.getProperty("com.couchbase.client.bootstrap.serverCertPath");
-		String sslKeystorePassword = System.getProperty("com.couchbase.client.bootstrap.sslKeystorePassword");
+		String server_username = "Administrator";//System.getProperty("com.couchbase.client.bootstrap.server_username");
+		String server_password = "password";//System.getProperty("com.couchbase.client.bootstrap.server_password");
+		String serverCertPath = "/Users/wei-li/Library/Application Support/Couchbase/var/lib/couchbase/config/ssl-cert-key.pem-ca";
+		//System.getProperty("com.couchbase.client.bootstrap.serverCertPath");
+		String sslKeystorePassword = "couchbase";//System.getProperty("com.couchbase.client.bootstrap.sslKeystorePassword");
 			
 		try{	
 			Process p;

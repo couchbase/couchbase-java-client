@@ -32,12 +32,11 @@ public class SSLTestSupportFunc{
 
     public void connect(CouchbaseEnvironment env) {
         cluster = CouchbaseCluster.create(env);
-        bucket = cluster.openBucket(bucketName, password).toBlocking().single();
-        bucket.bucketManager().toBlocking().single().flush().toBlocking().single();
+        bucket = cluster.openBucket(bucketName, password);
     }
 
     public void disconnect() throws InterruptedException {
-        cluster.disconnect().toBlocking().single();
+        cluster.disconnect();
     }	
     
 	
@@ -52,15 +51,9 @@ public class SSLTestSupportFunc{
 		
 		JsonObject content = JsonObject.empty().put(key, value);
 		final JsonDocument doc = JsonDocument.create(id, content);
-		JsonDocument response = bucket.upsert(doc)
-				.flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
-					@Override
-					public Observable<JsonDocument> call(JsonDocument document) {
-						return bucket.get(id);
-					}
-				})
-				.toBlocking()
-				.single();
+		bucket.upsert(doc);
+		JsonDocument response = bucket.get(id);
+
 		assertEquals(content.getString(key), response.content().getString(key));
 	}
 	
