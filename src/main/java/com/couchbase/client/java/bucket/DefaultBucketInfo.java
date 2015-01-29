@@ -21,7 +21,13 @@
  */
 package com.couchbase.client.java.bucket;
 
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.java.document.json.JsonObject;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Default implementation of {@link BucketInfo}.
@@ -30,6 +36,8 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @since 2.0
  */
 public class DefaultBucketInfo implements BucketInfo {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(DefaultBucketInfo.class);
 
     private final JsonObject raw;
 
@@ -64,6 +72,21 @@ public class DefaultBucketInfo implements BucketInfo {
     @Override
     public int replicaCount() {
         return raw.getInt("replicaNumber");
+    }
+
+    @Override
+    public List<InetAddress> nodeList() {
+        List<InetAddress> nodes = new ArrayList<InetAddress>();
+        for (Object node : raw.getArray("nodes")) {
+            try {
+                String hostname = ((JsonObject) node).getString("hostname");
+                String[] hostAndPort = hostname.split(":");
+                nodes.add(InetAddress.getByName(hostAndPort[0]));
+            } catch (Exception ex) {
+                LOGGER.warn("Exception while parsing node list on bucket info.", ex);
+            }
+        }
+        return nodes;
     }
 
     @Override

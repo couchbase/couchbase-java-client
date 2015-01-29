@@ -16,6 +16,7 @@ public class BucketInfoTest extends ClusterDependentTest  {
         assertEquals(BucketType.COUCHBASE, info.type());
         assertEquals(bucketName(), info.name());
         assertTrue(info.nodeCount() > 0);
+        assertEquals(info.nodeCount(), info.nodeList().size());
         assertNotNull(info.raw());
     }
 
