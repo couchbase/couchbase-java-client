@@ -133,7 +133,7 @@ public class ViewQueryTest extends ClusterDependentTest {
         assertEquals(0, result.totalRows());
 
         List<ViewRow> rows = result.allRows();
-        System.out.println(rows);
+        assertEquals(1, rows.size());
     }
 
     @Test

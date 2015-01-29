@@ -41,7 +41,6 @@ import java.util.List;
 
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.s;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -105,8 +104,7 @@ public class QueryTest extends ClusterDependentTest {
     public void shouldHaveRequestIdAndContextId() {
         Query query = Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
                 QueryParams.build().withContextId("TEST"));
-        System.out.println(bucket().get("test1"));
-        System.out.println(query.n1ql());
+
         QueryResult result = bucket().query(query);
         assertNotNull(result);
         assertTrue(result.parseSuccess());
@@ -114,7 +112,6 @@ public class QueryTest extends ClusterDependentTest {
         assertNotNull(result.info());
         assertNotNull(result.allRows());
         assertNotNull(result.errors());
-        System.out.println("AllRows " + result.allRows().size());
         assertFalse(result.allRows().isEmpty());
         assertTrue(result.errors().isEmpty());
 
@@ -127,7 +124,6 @@ public class QueryTest extends ClusterDependentTest {
     public void shouldHaveRequestIdAndTruncatedContextId() {
         String contextIdMoreThan64Bytes = "123456789012345678901234567890123456789012345678901234567890☃BCD";
         String contextIdTruncatedExpected = new String(Arrays.copyOf(contextIdMoreThan64Bytes.getBytes(), 64));
-        System.out.println("contextId expected to be truncated to " + contextIdTruncatedExpected);
 
         Query query = Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
                 QueryParams.build().withContextId(contextIdMoreThan64Bytes));
@@ -163,7 +159,6 @@ public class QueryTest extends ClusterDependentTest {
         PreparedQuery preparedQuery = Query.prepared(plan,
                 JsonArray.from(123),
                 QueryParams.build().withContextId("TEST"));
-        System.out.println(preparedQuery.n1ql());
         QueryResult response = bucket().query(preparedQuery);
         assertTrue(response.finalSuccess());
         List<QueryRow> rows = response.allRows();

@@ -21,19 +21,6 @@
  */
 package com.couchbase.client.java.transcoder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonParseException;
@@ -46,6 +33,18 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests which verify the functionality for the {@link JsonTranscoder}.
@@ -254,7 +253,6 @@ public class JsonTranscoderTest {
         JsonDocument doc = JsonDocument.create("test", obj);
 
         Tuple2<ByteBuf, Integer> encoded = converter.encode(doc);
-        System.err.println(encoded.value1().toString(CharsetUtil.UTF_8));
         JsonDocument decoded = converter.decode("test", encoded.value1(), 0, 0, encoded.value2(),
                 ResponseStatus.SUCCESS);
 
