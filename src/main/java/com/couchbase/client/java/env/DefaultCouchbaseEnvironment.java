@@ -395,6 +395,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
+        public Builder keepAliveInterval(long keepAliveIntervalMilliseconds) {
+            super.keepAliveInterval(keepAliveIntervalMilliseconds);
+            return this;
+        }
+
+        @Override
         public Builder packageNameAndVersion(final String packageNameAndVersion) {
             super.packageNameAndVersion(packageNameAndVersion);
             return this;
