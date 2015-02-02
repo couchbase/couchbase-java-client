@@ -689,7 +689,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Boolean close() {
-        return close(environment.managementTimeout(), TIMEOUT_UNIT);
+        return close(environment.disconnectTimeout(), TIMEOUT_UNIT);
     }
 
     @Override

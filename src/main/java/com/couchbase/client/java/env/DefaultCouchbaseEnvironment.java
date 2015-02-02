@@ -58,7 +58,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long VIEW_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
-    private static final long DISCONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private static final long DISCONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(25);
     private static final boolean DNS_SRV_ENABLED = false;
 
     private final long managementTimeout;
