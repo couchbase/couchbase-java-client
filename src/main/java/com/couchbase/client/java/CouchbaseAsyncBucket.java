@@ -406,29 +406,29 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
         return core
             .<InsertResponse>send(new InsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket))
-            .flatMap(new Func1<InsertResponse, Observable<? extends D>>() {
+            .map(new Func1<InsertResponse, D>() {
                 @Override
-                public Observable<? extends D> call(InsertResponse response) {
+                public D call(InsertResponse response) {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
 
                     if (response.status().isSuccess()) {
-                        return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
-                                document.content(), response.cas()));
+                        return (D) transcoder.newDocument(document.id(), document.expiry(),
+                            document.content(), response.cas());
                     }
 
-                    switch(response.status()) {
+                    switch (response.status()) {
                         case TOO_BIG:
-                            return Observable.error(new RequestTooBigException());
+                            throw new RequestTooBigException();
                         case EXISTS:
-                            return Observable.error(new DocumentAlreadyExistsException());
+                            throw new DocumentAlreadyExistsException();
                         case TEMPORARY_FAILURE:
-                            return Observable.error(new TemporaryFailureException());
+                            throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
-                            return Observable.error(new CouchbaseOutOfMemoryException());
+                            throw new CouchbaseOutOfMemoryException();
                         default:
-                            return Observable.error(new CouchbaseException(response.status().toString()));
+                            throw new CouchbaseException(response.status().toString());
                     }
                 }
             });
@@ -466,29 +466,29 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
         return core
             .<UpsertResponse>send(new UpsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket))
-            .flatMap(new Func1<UpsertResponse, Observable<D>>() {
+            .map(new Func1<UpsertResponse, D>() {
                 @Override
-                public Observable<D> call(UpsertResponse response) {
+                public D call(UpsertResponse response) {
                     if (response.content() != null && response.content().refCnt() > 0) {
                         response.content().release();
                     }
 
                     if (response.status().isSuccess()) {
-                        return Observable.just((D) transcoder.newDocument(document.id(), document.expiry(),
-                                document.content(), response.cas()));
+                        return (D) transcoder.newDocument(document.id(), document.expiry(),
+                            document.content(), response.cas());
                     }
 
-                    switch(response.status()) {
+                    switch (response.status()) {
                         case TOO_BIG:
-                            return Observable.error(new RequestTooBigException());
+                             throw new RequestTooBigException();
                         case EXISTS:
-                            return Observable.error(new CASMismatchException());
+                             throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
-                            return Observable.error(new TemporaryFailureException());
+                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
-                            return Observable.error(new CouchbaseOutOfMemoryException());
+                             throw new CouchbaseOutOfMemoryException();
                         default:
-                            return Observable.error(new CouchbaseException(response.status().toString()));
+                             throw new CouchbaseException(response.status().toString());
                     }
                 }
             });
@@ -517,38 +517,37 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
   public <D extends Document<?>> Observable<D> replace(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
         Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-    return core.<ReplaceResponse>send(
-            new ReplaceRequest(document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(),
-                    bucket))
-        .flatMap(new Func1<ReplaceResponse, Observable<D>>() {
-            @Override
-            public Observable<D> call(ReplaceResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
 
-                if (response.status().isSuccess()) {
-                    return Observable.just(
-                            (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
-                                    response.cas()));
-                }
+        return core.<ReplaceResponse>send(new ReplaceRequest(document.id(), encoded.value1(), document.cas(), document.expiry(),
+            encoded.value2(), bucket))
+            .map(new Func1<ReplaceResponse, D>() {
+                @Override
+                public D call(ReplaceResponse response) {
+                    if (response.content() != null && response.content().refCnt() > 0) {
+                        response.content().release();
+                    }
 
-                switch (response.status()) {
-                    case TOO_BIG:
-                        return Observable.error(new RequestTooBigException());
-                    case NOT_EXISTS:
-                        return Observable.error(new DocumentDoesNotExistException());
-                    case EXISTS:
-                        return Observable.error(new CASMismatchException());
-                    case TEMPORARY_FAILURE:
-                        return Observable.error(new TemporaryFailureException());
-                    case OUT_OF_MEMORY:
-                        return Observable.error(new CouchbaseOutOfMemoryException());
-                    default:
-                        return Observable.error(new CouchbaseException(response.status().toString()));
+                    if (response.status().isSuccess()) {
+                        return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
+                                response.cas());
+                    }
+
+                    switch (response.status()) {
+                        case TOO_BIG:
+                            throw new RequestTooBigException();
+                        case NOT_EXISTS:
+                            throw new DocumentDoesNotExistException();
+                        case EXISTS:
+                            throw new CASMismatchException();
+                        case TEMPORARY_FAILURE:
+                            throw new TemporaryFailureException();
+                        case OUT_OF_MEMORY:
+                            throw new CouchbaseOutOfMemoryException();
+                        default:
+                            throw new CouchbaseException(response.status().toString());
+                    }
                 }
-            }
-        });
+            });
   }
 
     @Override
