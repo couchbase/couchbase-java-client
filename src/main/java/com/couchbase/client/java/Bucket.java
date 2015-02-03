@@ -1640,6 +1640,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1662,6 +1663,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1688,6 +1690,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1714,6 +1717,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1742,6 +1746,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1767,6 +1772,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1794,6 +1800,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1819,6 +1826,7 @@ public interface Bucket {
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to remove, with the ID extracted.
@@ -1843,6 +1851,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1864,6 +1873,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1890,6 +1900,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1915,6 +1926,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1943,6 +1955,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1967,6 +1980,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -1994,6 +2008,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2018,6 +2033,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2042,6 +2058,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2064,6 +2081,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2091,6 +2109,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2117,6 +2136,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2147,6 +2167,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2172,6 +2193,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2200,6 +2222,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.
@@ -2225,6 +2248,7 @@ public interface Bucket {
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document to remove.

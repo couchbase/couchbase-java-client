@@ -819,6 +819,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -842,6 +843,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -867,6 +869,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -891,6 +894,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -913,6 +917,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -933,6 +938,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -957,6 +963,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -980,6 +987,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
@@ -1003,6 +1011,7 @@ public interface AsyncBucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1026,6 +1035,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1051,6 +1061,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1075,6 +1086,7 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.

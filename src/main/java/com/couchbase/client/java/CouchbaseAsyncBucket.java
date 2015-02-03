@@ -588,6 +588,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
 
                     switch(response.status()) {
+                        case NOT_EXISTS:
+                            throw new DocumentDoesNotExistException();
                         case EXISTS:
                             throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
