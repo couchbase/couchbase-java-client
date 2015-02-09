@@ -217,7 +217,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 public D call(final GetResponse response) {
                     Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
                     return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                            response.status());
+                        response.status());
                 }
             });
     }
@@ -265,7 +265,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 public D call(final GetResponse response) {
                     Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
                     return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                            response.status());
+                        response.status());
                 }
             });
     }
@@ -313,7 +313,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 public D call(final GetResponse response) {
                     Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
                     return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                            response.status());
+                        response.status());
                 }
             });
     }
@@ -394,7 +394,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 public D call(final GetResponse response) {
                     Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
                     return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                            response.status());
+                        response.status());
                 }
             });
     }
@@ -437,7 +437,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public <D extends Document<?>> Observable<D> insert(final D document, final PersistTo persistTo,
         final ReplicateTo replicateTo) {
-        return insert(document).flatMap(new Func1<D, Observable<D>>() {
+        Observable<D> insertResult = insert(document);
+
+        if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
+            return insertResult;
+        }
+
+        return insertResult.flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
@@ -452,7 +458,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(
-                                    new DurabilityException("Durability constraint failed.", throwable));
+                                new DurabilityException("Durability constraint failed.", throwable));
                         }
                     });
             }
@@ -480,23 +486,30 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     switch (response.status()) {
                         case TOO_BIG:
-                             throw new RequestTooBigException();
+                            throw new RequestTooBigException();
                         case EXISTS:
-                             throw new CASMismatchException();
+                            throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
-                             throw new TemporaryFailureException();
+                            throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
-                             throw new CouchbaseOutOfMemoryException();
+                            throw new CouchbaseOutOfMemoryException();
                         default:
-                             throw new CouchbaseException(response.status().toString());
+                            throw new CouchbaseException(response.status().toString());
                     }
                 }
             });
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> upsert(final D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        return upsert(document).flatMap(new Func1<D, Observable<D>>() {
+    public <D extends Document<?>> Observable<D> upsert(final D document, final PersistTo persistTo,
+        final ReplicateTo replicateTo) {
+        Observable<D> upsertResult = upsert(document);
+
+        if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
+            return upsertResult;
+        }
+
+        return upsertResult.flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
@@ -513,8 +526,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-  @SuppressWarnings("unchecked")
-  public <D extends Document<?>> Observable<D> replace(final D document) {
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> replace(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
         Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
 
@@ -529,7 +542,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
-                                response.cas());
+                            response.cas());
                     }
 
                     switch (response.status()) {
@@ -548,11 +561,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
                 }
             });
-  }
+    }
 
     @Override
-    public <D extends Document<?>> Observable<D> replace(final D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        return replace(document).flatMap(new Func1<D, Observable<D>>() {
+    public <D extends Document<?>> Observable<D> replace(final D document, final PersistTo persistTo,
+        final ReplicateTo replicateTo) {
+        Observable<D> replaceResult = replace(document);
+
+        if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
+            return replaceResult;
+        }
+
+        return replaceResult.flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
@@ -628,7 +648,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
         final ReplicateTo replicateTo, Class<D> target) {
-        return remove(id, target).flatMap(new Func1<D, Observable<D>>() {
+        Observable<D> removeResult = remove(id, target);
+
+        if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
+            return removeResult;
+        }
+
+        return removeResult.flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
@@ -645,7 +671,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-  public Observable<AsyncViewResult> query(final ViewQuery query) {
+    public Observable<AsyncViewResult> query(final ViewQuery query) {
         Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
             @Override
             public Observable<ViewQueryResponse> call() {
@@ -663,7 +689,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     return ViewQueryResponseMapper.mapToViewResult(CouchbaseAsyncBucket.this, query, response);
                 }
             });
-  }
+    }
 
     @Override
     public Observable<AsyncSpatialViewResult> query(final SpatialViewQuery query) {
@@ -762,7 +788,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     String requestId = response.requestId();
 
                     AsyncQueryResult r = new DefaultAsyncQueryResult(rows, info, errors, finalSuccess, parseSuccess,
-                            requestId, contextId);
+                        requestId, contextId);
                     return Observable.just(r);
                 }
             });
@@ -779,66 +805,66 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         SimpleQuery query = Query.simple(prepared);
 
         GenericQueryRequest prepareRequest = GenericQueryRequest.jsonQuery(query.n1ql().toString(),
-                bucket, password);
+            bucket, password);
         return core
-                .<GenericQueryResponse>send(prepareRequest)
-                .flatMap(new Func1<GenericQueryResponse, Observable<QueryPlan>>() {
-                    @Override
-                    public Observable<QueryPlan> call(GenericQueryResponse r) {
-                        if (r.status().isSuccess()) {
-                            r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
-                            r.errors().subscribe(Buffers.BYTE_BUF_RELEASER);
-                            return r.rows().map(new Func1<ByteBuf, QueryPlan>() {
-                                @Override
-                                public QueryPlan call(ByteBuf byteBuf) {
-                                    try {
-                                        JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                        return new QueryPlan(value);
-                                    } catch (Exception e) {
-                                        throw new TranscodingException("Could not decode N1QL Query Plan.", e);
-                                    } finally {
-                                        byteBuf.release();
-                                    }
+            .<GenericQueryResponse>send(prepareRequest)
+            .flatMap(new Func1<GenericQueryResponse, Observable<QueryPlan>>() {
+                @Override
+                public Observable<QueryPlan> call(GenericQueryResponse r) {
+                    if (r.status().isSuccess()) {
+                        r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        r.errors().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        return r.rows().map(new Func1<ByteBuf, QueryPlan>() {
+                            @Override
+                            public QueryPlan call(ByteBuf byteBuf) {
+                                try {
+                                    JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                    return new QueryPlan(value);
+                                } catch (Exception e) {
+                                    throw new TranscodingException("Could not decode N1QL Query Plan.", e);
+                                } finally {
+                                    byteBuf.release();
                                 }
-                            });
-                        } else {
-                            r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
-                            r.rows().subscribe(Buffers.BYTE_BUF_RELEASER);
-                            return r.errors().map(new Func1<ByteBuf, Exception>() {
-                                @Override
-                                public Exception call(ByteBuf byteBuf) {
-                                    try {
-                                        JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                        return new CouchbaseException("Query Error - " + value.toString());
-                                    } catch (Exception e) {
-                                        throw new TranscodingException("Could not decode N1QL Query Plan.", e);
-                                    } finally {
-                                        byteBuf.release();
-                                    }
+                            }
+                        });
+                    } else {
+                        r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        r.rows().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        return r.errors().map(new Func1<ByteBuf, Exception>() {
+                            @Override
+                            public Exception call(ByteBuf byteBuf) {
+                                try {
+                                    JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                    return new CouchbaseException("Query Error - " + value.toString());
+                                } catch (Exception e) {
+                                    throw new TranscodingException("Could not decode N1QL Query Plan.", e);
+                                } finally {
+                                    byteBuf.release();
                                 }
-                            }).reduce(new ArrayList<Throwable>(),
-                                    new Func2<ArrayList<Throwable>, Exception, ArrayList<Throwable>>() {
-                                        @Override
-                                        public ArrayList<Throwable> call(ArrayList<Throwable> throwables,
-                                                Exception error) {
-                                            throwables.add(error);
-                                            return throwables;
-                                        }
-                                    }).flatMap(new Func1<ArrayList<Throwable>, Observable<QueryPlan>>() {
+                            }
+                        }).reduce(new ArrayList<Throwable>(),
+                            new Func2<ArrayList<Throwable>, Exception, ArrayList<Throwable>>() {
                                 @Override
-                                public Observable<QueryPlan> call(ArrayList<Throwable> errors) {
-                                    if (errors.size() == 1) {
-                                        return Observable.error(new CouchbaseException(
-                                                "Error while preparing plan", errors.get(0)));
-                                    } else {
-                                        return Observable.error(new CompositeException(
-                                                "Multiple errors while preparing plan", errors));
-                                    }
+                                public ArrayList<Throwable> call(ArrayList<Throwable> throwables,
+                                                                 Exception error) {
+                                    throwables.add(error);
+                                    return throwables;
                                 }
-                            });
-                        }
+                            }).flatMap(new Func1<ArrayList<Throwable>, Observable<QueryPlan>>() {
+                            @Override
+                            public Observable<QueryPlan> call(ArrayList<Throwable> errors) {
+                                if (errors.size() == 1) {
+                                    return Observable.error(new CouchbaseException(
+                                        "Error while preparing plan", errors.get(0)));
+                                } else {
+                                    return Observable.error(new CompositeException(
+                                        "Multiple errors while preparing plan", errors));
+                                }
+                            }
+                        });
                     }
-                });
+                }
+            });
     }
 
     @Override
