@@ -457,8 +457,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(
-                                new DurabilityException("Durability constraint failed.", throwable));
+                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
+                                throwable));
                         }
                     });
             }
@@ -519,6 +519,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public D call(Boolean aBoolean) {
                             return doc;
+                        }
+                    })
+                    .onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                        @Override
+                        public Observable<? extends D> call(Throwable throwable) {
+                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
+                                throwable));
                         }
                     });
             }
@@ -582,6 +589,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public D call(Boolean aBoolean) {
                             return doc;
+                        }
+                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                        @Override
+                        public Observable<? extends D> call(Throwable throwable) {
+                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
+                                throwable));
                         }
                     });
             }
@@ -664,6 +677,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public D call(Boolean aBoolean) {
                             return doc;
+                        }
+                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                        @Override
+                        public Observable<? extends D> call(Throwable throwable) {
+                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
+                                throwable));
                         }
                     });
             }
