@@ -448,7 +448,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay())
+                        environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -514,7 +514,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay())
+                        environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -584,7 +584,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay())
+                        environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -672,7 +672,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), true, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay())
+                        environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
