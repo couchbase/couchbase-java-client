@@ -41,6 +41,7 @@ import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.PreparedQuery;
@@ -271,8 +272,12 @@ public interface AsyncBucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
@@ -296,8 +301,12 @@ public interface AsyncBucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
@@ -324,8 +333,11 @@ public interface AsyncBucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
-     * The returned {@link Observable} can error under the following conditions:
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
      *
+     * The returned {@link Observable} can error under the following conditions:
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
@@ -1193,11 +1205,11 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -1213,11 +1225,11 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.

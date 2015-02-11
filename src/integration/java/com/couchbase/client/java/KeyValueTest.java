@@ -32,6 +32,8 @@ import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.RequestTooBigException;
+import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Assume;
 import org.junit.Test;
@@ -230,7 +232,7 @@ public class KeyValueTest extends ClusterDependentTest {
         bucket().upsert(JsonDocument.create(key, JsonObject.empty().put("k", "v")));
     }
 
-    @Test(expected = CASMismatchException.class)
+    @Test(expected = TemporaryLockFailureException.class)
     public void shouldFailUnlockWithInvalidCAS() throws Exception {
         String key = "unlockfail";
 
@@ -242,6 +244,20 @@ public class KeyValueTest extends ClusterDependentTest {
         assertEquals("v", locked.content().getString("k"));
 
         bucket().unlock(key, locked.cas()+1);
+    }
+
+    @Test(expected = TemporaryLockFailureException.class)
+    public void shouldFailDoubleLocking() throws Exception {
+        String key = "doubleLockFail";
+
+        JsonDocument upsert = bucket().upsert(JsonDocument.create(key, JsonObject.empty().put("k", "v")));
+        assertNotNull(upsert);
+        assertEquals(key, upsert.id());
+
+        JsonDocument locked = bucket().getAndLock(key, 15);
+        assertEquals("v", locked.content().getString("k"));
+
+        bucket().getAndLock(key, 5);
     }
 
     @Test(expected = DocumentDoesNotExistException.class)

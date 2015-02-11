@@ -74,6 +74,7 @@ import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.AsyncQueryRow;
@@ -204,6 +205,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_EXISTS:
                             return false;
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -252,6 +254,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_EXISTS:
                             return false;
                         case TEMPORARY_FAILURE:
+                            throw new TemporaryLockFailureException();
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -300,6 +304,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_EXISTS:
                             return false;
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -381,6 +386,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_EXISTS:
                             return false;
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -415,7 +421,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return (D) transcoder.newDocument(document.id(), document.expiry(),
-                            document.content(), response.cas());
+                                document.content(), response.cas());
                     }
 
                     switch (response.status()) {
@@ -424,6 +430,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case EXISTS:
                             throw new DocumentAlreadyExistsException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -447,20 +454,21 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    });
+                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy())
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
             }
         });
     }
@@ -481,7 +489,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return (D) transcoder.newDocument(document.id(), document.expiry(),
-                            document.content(), response.cas());
+                                document.content(), response.cas());
                     }
 
                     switch (response.status()) {
@@ -490,6 +498,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case EXISTS:
                             throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -513,21 +522,22 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    })
-                    .onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    });
+                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy())
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        })
+                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
             }
         });
     }
@@ -549,7 +559,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     if (response.status().isSuccess()) {
                         return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
-                            response.cas());
+                                response.cas());
                     }
 
                     switch (response.status()) {
@@ -560,6 +570,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case EXISTS:
                             throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -583,20 +594,21 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    });
+                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy())
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
             }
         });
     }
@@ -625,6 +637,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case EXISTS:
                             throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -671,20 +684,21 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), true, persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException("Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    });
+                        .call(core, bucket, doc.id(), doc.cas(), true, persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy())
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
             }
         });
     }
@@ -862,22 +876,22 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 }
                             }
                         }).reduce(new ArrayList<Throwable>(),
-                            new Func2<ArrayList<Throwable>, Exception, ArrayList<Throwable>>() {
-                                @Override
-                                public ArrayList<Throwable> call(ArrayList<Throwable> throwables,
-                                                                 Exception error) {
-                                    throwables.add(error);
-                                    return throwables;
-                                }
-                            }).flatMap(new Func1<ArrayList<Throwable>, Observable<QueryPlan>>() {
+                                new Func2<ArrayList<Throwable>, Exception, ArrayList<Throwable>>() {
+                                    @Override
+                                    public ArrayList<Throwable> call(ArrayList<Throwable> throwables,
+                                            Exception error) {
+                                        throwables.add(error);
+                                        return throwables;
+                                    }
+                                }).flatMap(new Func1<ArrayList<Throwable>, Observable<QueryPlan>>() {
                             @Override
                             public Observable<QueryPlan> call(ArrayList<Throwable> errors) {
                                 if (errors.size() == 1) {
                                     return Observable.error(new CouchbaseException(
-                                        "Error while preparing plan", errors.get(0)));
+                                            "Error while preparing plan", errors.get(0)));
                                 } else {
                                     return Observable.error(new CompositeException(
-                                        "Multiple errors while preparing plan", errors));
+                                            "Multiple errors while preparing plan", errors));
                                 }
                             }
                         });
@@ -913,6 +927,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                     switch(response.status()) {
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -924,7 +939,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<Boolean> unlock(String id, long cas) {
+    public Observable<Boolean> unlock(String id, final long cas) {
         return core
             .<UnlockResponse>send(new UnlockRequest(id, cas, bucket))
             .map(new Func1<UnlockResponse, Boolean>() {
@@ -941,9 +956,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     switch(response.status()) {
                         case NOT_EXISTS:
                             throw new DocumentDoesNotExistException();
-                        case FAILURE:
-                            throw new CASMismatchException();
                         case TEMPORARY_FAILURE:
+                            throw new TemporaryLockFailureException();
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -974,6 +989,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                 switch(response.status()) {
                     case TEMPORARY_FAILURE:
+                    case SERVER_BUSY:
                         throw new TemporaryFailureException();
                     case OUT_OF_MEMORY:
                         throw new CouchbaseOutOfMemoryException();
@@ -1013,6 +1029,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_STORED:
                             throw new DocumentDoesNotExistException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();
@@ -1047,6 +1064,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_STORED:
                             throw new DocumentDoesNotExistException();
                         case TEMPORARY_FAILURE:
+                        case SERVER_BUSY:
                             throw new TemporaryFailureException();
                         case OUT_OF_MEMORY:
                             throw new CouchbaseOutOfMemoryException();

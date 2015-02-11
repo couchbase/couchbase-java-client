@@ -42,6 +42,7 @@ import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
@@ -465,12 +466,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -491,12 +496,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -519,12 +528,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -545,12 +558,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -576,12 +593,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -606,12 +627,16 @@ public interface Bucket {
      * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
      * value and is not configurable. The document will unlock afterwards automatically.
      *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
+     * - A transient error occurred, most probably the key was already locked: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2483,7 +2508,7 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
+     * - A transient error occurred, most probably the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2504,7 +2529,7 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
+     * - A transient error occurred, most probably the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2527,7 +2552,7 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
+     * - A transient error occurred, most probably the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2547,7 +2572,7 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      * - The document does not exist: {@link DocumentDoesNotExistException}
-     * - The CAS value was not correct: {@link CASMismatchException}
+     * - A transient error occurred, most probably the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
