@@ -21,6 +21,11 @@
  */
 package com.couchbase.client.java.document;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Stores a properly encoded JSON scalar quoted string as the toplevel type.
  *
@@ -30,7 +35,9 @@ package com.couchbase.client.java.document;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class JsonStringDocument extends AbstractDocument<String> {
+public class JsonStringDocument extends AbstractDocument<String> implements Serializable {
+
+    private static final long serialVersionUID = -2404431009274846282L;
 
     /**
      * Creates a {@link JsonStringDocument} which the document id.
@@ -127,5 +134,13 @@ public class JsonStringDocument extends AbstractDocument<String> {
      */
     private JsonStringDocument(String id, int expiry, String content, long cas) {
         super(id, expiry, content, cas);
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        writeToSerializedStream(stream);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        readFromSerializedStream(stream);
     }
 }

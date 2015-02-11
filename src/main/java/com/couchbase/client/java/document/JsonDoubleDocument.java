@@ -21,6 +21,11 @@
  */
 package com.couchbase.client.java.document;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Stores a properly encoded JSON scalar double or float as the toplevel type.
  *
@@ -30,7 +35,9 @@ package com.couchbase.client.java.document;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class JsonDoubleDocument extends AbstractDocument<Double> {
+public class JsonDoubleDocument extends AbstractDocument<Double> implements Serializable {
+
+    private static final long serialVersionUID = 4684741457536669224L;
 
     /**
      * Creates a {@link JsonDoubleDocument} which the document id.
@@ -149,5 +156,13 @@ public class JsonDoubleDocument extends AbstractDocument<Double> {
      */
     private JsonDoubleDocument(String id, int expiry, Double content, long cas) {
         super(id, expiry, content, cas);
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        writeToSerializedStream(stream);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        readFromSerializedStream(stream);
     }
 }

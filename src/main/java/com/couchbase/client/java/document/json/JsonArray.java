@@ -21,14 +21,15 @@
  */
 package com.couchbase.client.java.document.json;
 
+import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.transcoder.JacksonTransformers;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
-import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 /**
  * Represents a JSON array that can be stored and loaded from Couchbase Server.
@@ -43,7 +44,9 @@ import com.couchbase.client.java.transcoder.JacksonTransformers;
  * @author Simon Baslé
  * @since 2.0
  */
-public class JsonArray extends JsonValue implements Iterable<Object> {
+public class JsonArray extends JsonValue implements Iterable<Object>, Serializable {
+
+    private static final long serialVersionUID = 456072884048969058L;
 
     /**
      * The backing list of the array.

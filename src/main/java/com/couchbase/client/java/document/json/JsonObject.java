@@ -21,14 +21,15 @@
  */
 package com.couchbase.client.java.document.json;
 
+import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
+import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.transcoder.JacksonTransformers;
+
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
-import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 /**
  * Represents a JSON object that can be stored and loaded from Couchbase Server.
@@ -43,7 +44,9 @@ import com.couchbase.client.java.transcoder.JacksonTransformers;
  * @author Simon Baslé
  * @since 2.0
  */
-public class JsonObject extends JsonValue {
+public class JsonObject extends JsonValue implements Serializable {
+
+    private static final long serialVersionUID = 8817717605659870262L;
 
     /**
      * The backing {@link Map} for the object.

@@ -21,7 +21,14 @@
  */
 package com.couchbase.client.java.document.json;
 
+import com.couchbase.client.java.SerializationHelper;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -29,12 +36,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Verifies the functionality provided by a {@link JsonObject}.
@@ -431,4 +432,19 @@ public class JsonObjectTest {
         try { JsonObject.fromJson(bad3); fail(); } catch (IllegalArgumentException e) { }
         try { JsonObject.fromJson(bad4); fail(); } catch (IllegalArgumentException e) { }
     }
+
+    @Test
+    public void shouldSupportSerialization() throws Exception {
+        JsonObject original = JsonObject
+           .create()
+           .put("a", "b")
+           .put("list", JsonArray.from(1, 2, 3));
+
+        byte[] serialized = SerializationHelper.serializeToBytes(original);
+        assertNotNull(serialized);
+
+        JsonObject deserialized = SerializationHelper.deserializeFromBytes(serialized, JsonObject.class);
+        assertEquals(original, deserialized);
+    }
+
 }

@@ -21,6 +21,9 @@
  */
 package com.couchbase.client.java.document;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
@@ -33,7 +36,9 @@ import java.io.Serializable;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class SerializableDocument extends AbstractDocument<Serializable> {
+public class SerializableDocument extends AbstractDocument<Serializable> implements Serializable {
+
+    private static final long serialVersionUID = 2153366534711753989L;
 
     /**
      * Creates a {@link SerializableDocument} which the document id.
@@ -152,5 +157,13 @@ public class SerializableDocument extends AbstractDocument<Serializable> {
      */
     private SerializableDocument(String id, int expiry, Serializable content, long cas) {
         super(id, expiry, content, cas);
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        writeToSerializedStream(stream);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        readFromSerializedStream(stream);
     }
 }

@@ -23,6 +23,11 @@ package com.couchbase.client.java.document;
 
 import com.couchbase.client.java.document.json.JsonObject;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Represents a {@link Document} that contains a {@link JsonObject} as the content.
  *
@@ -51,7 +56,10 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class JsonDocument extends AbstractDocument<JsonObject> {
+public class JsonDocument extends AbstractDocument<JsonObject> implements Serializable {
+
+    private static final long serialVersionUID = 2050104986260610101L;
+
 
     /**
      * Creates a {@link JsonDocument} which the document id.
@@ -170,6 +178,14 @@ public class JsonDocument extends AbstractDocument<JsonObject> {
      */
     private JsonDocument(String id, int expiry, JsonObject content, long cas) {
         super(id, expiry, content, cas);
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        writeToSerializedStream(stream);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        readFromSerializedStream(stream);
     }
 
 }

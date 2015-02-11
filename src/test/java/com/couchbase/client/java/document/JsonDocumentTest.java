@@ -21,8 +21,12 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.java.SerializationHelper;
 import com.couchbase.client.java.document.json.JsonObject;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Verifies functionality of the {@link JsonDocument}.
@@ -54,5 +58,16 @@ public class JsonDocumentTest {
             + "thisIsCertainlyATooLongDocumentIdToStoreInCouchbaseWhoWouldUseItLikeThisAnyway?"
             + "thisIsCertainlyATooLongDocumentIdToStoreInCouchbaseWhoWouldUseItLikeThisAnyway?";
         JsonDocument.create(id);
+    }
+
+    @Test
+    public void shouldSupportSerialization() throws Exception {
+        JsonDocument original = JsonDocument.create("Ķěƴ", JsonObject.create().put("foo", "bar"));
+
+        byte[] serialized = SerializationHelper.serializeToBytes(original);
+        assertNotNull(serialized);
+
+        JsonDocument deserialized = SerializationHelper.deserializeFromBytes(serialized, JsonDocument.class);
+        assertEquals(original, deserialized);
     }
 }

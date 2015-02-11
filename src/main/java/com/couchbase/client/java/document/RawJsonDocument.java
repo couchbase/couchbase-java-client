@@ -21,6 +21,11 @@
  */
 package com.couchbase.client.java.document;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Represents a {@link Document} that contains a already encoded JSON document.
  *
@@ -31,7 +36,9 @@ package com.couchbase.client.java.document;
  * @author Michael Nitschinger
  * @since 2.0
  */
-public class RawJsonDocument extends AbstractDocument<String> {
+public class RawJsonDocument extends AbstractDocument<String> implements Serializable {
+
+    private static final long serialVersionUID = 375731014642624274L;
 
     /**
      * Creates a {@link RawJsonDocument} which the document id.
@@ -128,6 +135,14 @@ public class RawJsonDocument extends AbstractDocument<String> {
      */
     private RawJsonDocument(String id, int expiry, String content, long cas) {
         super(id, expiry, content, cas);
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        writeToSerializedStream(stream);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        readFromSerializedStream(stream);
     }
 
 }
