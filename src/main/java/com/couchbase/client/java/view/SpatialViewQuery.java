@@ -23,7 +23,9 @@ package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.document.json.JsonArray;
 
+import java.io.Serializable;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 /**
  * Fluent DSL for a Spatial View Query.
@@ -31,7 +33,9 @@ import java.net.URLEncoder;
  * @author Michael Nitschinger
  * @since 2.1.0
  */
-public class SpatialViewQuery {
+public class SpatialViewQuery implements Serializable {
+
+    private static final long serialVersionUID = -2743654475987033659L;
 
     private static final int PARAM_LIMIT_OFFSET = 0;
     private static final int PARAM_SKIP_OFFSET = 2;
@@ -228,4 +232,27 @@ public class SpatialViewQuery {
         return development;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SpatialViewQuery query = (SpatialViewQuery) o;
+
+        if (development != query.development) return false;
+        if (design != null ? !design.equals(query.design) : query.design != null) return false;
+        if (!Arrays.equals(params, query.params)) return false;
+        if (view != null ? !view.equals(query.view) : query.view != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = params != null ? Arrays.hashCode(params) : 0;
+        result = 31 * result + (design != null ? design.hashCode() : 0);
+        result = 31 * result + (view != null ? view.hashCode() : 0);
+        result = 31 * result + (development ? 1 : 0);
+        return result;
+    }
 }

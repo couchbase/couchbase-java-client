@@ -21,12 +21,14 @@
  */
 package com.couchbase.client.java.view;
 
+import com.couchbase.client.java.SerializationHelper;
 import com.couchbase.client.java.document.json.JsonArray;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Verifies the functionality of a {@link SpatialViewQuery}.
@@ -126,4 +128,16 @@ public class SpatialViewQueryTest {
         assertFalse(query.isDevelopment());
     }
 
+    @Test
+    public void shouldSupportSerialization() throws Exception {
+        SpatialViewQuery query = SpatialViewQuery.from("design", "view")
+            .debug()
+            .development();
+
+        byte[] serialized = SerializationHelper.serializeToBytes(query);
+        assertNotNull(serialized);
+
+        SpatialViewQuery deserialized = SerializationHelper.deserializeFromBytes(serialized, SpatialViewQuery.class);
+        assertEquals(query, deserialized);
+    }
 }
