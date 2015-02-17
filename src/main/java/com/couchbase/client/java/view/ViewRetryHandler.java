@@ -64,7 +64,15 @@ public class ViewRetryHandler {
             .flatMap(new Func1<ViewQueryResponse, Observable<ViewQueryResponse>>() {
                 @Override
                 public Observable<ViewQueryResponse> call(final ViewQueryResponse response) {
-                    return passThroughOrThrow(response);
+                    ViewQueryResponse res = new ViewQueryResponse(
+                        response.rows(),
+                        response.info().cache(1),
+                        response.responseCode(),
+                        response.responsePhrase(),
+                        response.status(),
+                        response.request()
+                    );
+                    return passThroughOrThrow(res);
                 }
             })
             .retryWhen(new Func1<Observable<? extends Throwable>, Observable<?>>() {

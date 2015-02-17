@@ -55,6 +55,7 @@ public class ViewRetryHandlerTest {
             public void call(Subscriber<? super ViewQueryResponse> subscriber) {
                 subscriberCount.incrementAndGet();
                 ViewQueryResponse response = mock(ViewQueryResponse.class);
+                when(response.info()).thenReturn(Observable.just(Unpooled.buffer()));
                 when(response.responseCode()).thenReturn(200);
                 subscriber.onNext(response);
                 subscriber.onCompleted();
