@@ -21,20 +21,17 @@
  */
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.java.SerializationHelper;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
+import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import com.couchbase.client.java.document.json.JsonArray;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.consistency.ScanConsistency;
-import org.junit.Test;
 
 /**
  * Tests on {@link QueryParams}.
@@ -211,5 +208,19 @@ public class QueryParamsTest {
         p.injectParams(empty);
 
         assertTrue(empty.isEmpty());
+    }
+
+    @Test
+    public void shouldSupportSerialization() throws Exception {
+        QueryParams source = QueryParams
+            .build()
+            .serverSideTimeout(1, TimeUnit.DAYS)
+            .consistency(ScanConsistency.NOT_BOUNDED);
+
+        byte[] serialized = SerializationHelper.serializeToBytes(source);
+        assertNotNull(serialized);
+
+        QueryParams deserialized = SerializationHelper.deserializeFromBytes(serialized, QueryParams.class);
+        assertEquals(source, deserialized);
     }
 }
