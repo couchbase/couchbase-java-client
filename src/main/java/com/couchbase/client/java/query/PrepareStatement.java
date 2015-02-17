@@ -28,15 +28,21 @@ package com.couchbase.client.java.query;
  * @author Simon Baslé
  * @since 2.1
  */
-public class PrepareStatement implements Statement {
+public class PrepareStatement implements SerializableStatement {
 
     /** a prefix to be used in order to prepare a query plan for a statement */
     public static final String PREPARE_PREFIX = "PREPARE ";
 
-    private final Statement toPrepare;
+    private static final long serialVersionUID = -3951622990579947393L;
+
+    private final SerializableStatement toPrepare;
 
     private PrepareStatement(Statement toPrepare) {
-        this.toPrepare = toPrepare;
+        if (toPrepare instanceof SerializableStatement) {
+            this.toPrepare = (SerializableStatement) toPrepare;
+        } else {
+            this.toPrepare = new Query.RawStatement(toPrepare.toString());
+        }
     }
 
     @Override

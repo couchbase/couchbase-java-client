@@ -21,33 +21,13 @@
  */
 package com.couchbase.client.java.query;
 
-import com.couchbase.client.java.document.json.JsonObject;
+import java.io.Serializable;
 
 /**
- * Represents the execution plan of a prepared statement, as returned by the server after a "PREPARE ..." query.
+ * A {@link Statement} that is also explicitly {@link Serializable}.
  *
  * @author Simon Baslé
  * @since 2.1
  */
-public class QueryPlan implements SerializableStatement {
-
-    private static final long serialVersionUID = 872622310459659115L;
-
-    private final JsonObject jsonPlan;
-
-    public QueryPlan(JsonObject jsonPlan) {
-        this .jsonPlan = jsonPlan;
-    }
-
-    /**
-     * @return a String representation of the JSON for the execution plan.
-     */
-    @Override
-    public String toString() {
-        return jsonPlan.toString();
-    }
-
-    public JsonObject plan() {
-        return jsonPlan;
-    }
+public interface SerializableStatement extends Statement, Serializable {
 }
