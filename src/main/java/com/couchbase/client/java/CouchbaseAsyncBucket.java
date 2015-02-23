@@ -786,6 +786,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                             }
                         }
                     });
+                    final Observable<JsonObject> signature = response.signature().map(new Func1<ByteBuf, JsonObject>() {
+                        @Override
+                        public JsonObject call(ByteBuf byteBuf) {
+                            try {
+                                return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
+                            } catch (Exception e) {
+                                throw new TranscodingException("Could not decode N1QL Query Signature", e);
+                            } finally {
+                                byteBuf.release();
+                            }
+                        }
+                    });
                     final Observable<JsonObject> info = response.info().map(new Func1<ByteBuf, JsonObject>() {
                         @Override
                         public JsonObject call(ByteBuf byteBuf) {
@@ -820,8 +832,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     String contextId = response.clientRequestId() == null ? "" : response.clientRequestId();
                     String requestId = response.requestId();
 
-                    AsyncQueryResult r = new DefaultAsyncQueryResult(rows, info, errors, finalSuccess, parseSuccess,
-                        requestId, contextId);
+                    AsyncQueryResult r = new DefaultAsyncQueryResult(rows, signature, info, errors,
+                            finalSuccess, parseSuccess, requestId, contextId);
                     return Observable.just(r);
                 }
             });
@@ -846,6 +858,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 public Observable<QueryPlan> call(GenericQueryResponse r) {
                     if (r.status().isSuccess()) {
                         r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        r.signature().subscribe(Buffers.BYTE_BUF_RELEASER);
                         r.errors().subscribe(Buffers.BYTE_BUF_RELEASER);
                         return r.rows().map(new Func1<ByteBuf, QueryPlan>() {
                             @Override
@@ -862,6 +875,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         });
                     } else {
                         r.info().subscribe(Buffers.BYTE_BUF_RELEASER);
+                        r.signature().subscribe(Buffers.BYTE_BUF_RELEASER);
                         r.rows().subscribe(Buffers.BYTE_BUF_RELEASER);
                         return r.errors().map(new Func1<ByteBuf, Exception>() {
                             @Override

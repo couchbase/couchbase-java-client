@@ -11,6 +11,7 @@ public class DefaultQueryResult implements QueryResult {
     private final boolean finalSuccess;
     private final boolean parseSuccess;
     private final List<QueryRow> allRows;
+    private final JsonObject signature;
     private final JsonObject info;
     private final List<JsonObject> errors;
     private final String requestId;
@@ -21,12 +22,13 @@ public class DefaultQueryResult implements QueryResult {
      * Create a default blocking representation of a query result.
      *
      * @param rows the list of rows.
+     * @param signature the signature for rows.
      * @param info the metrics.
      * @param errors the list of errors and warnings.
      * @param finalSuccess the definitive (but potentially delayed) result of the query.
      * @param parseSuccess the intermediate result of the query
      */
-    public DefaultQueryResult(List<AsyncQueryRow> rows,
+    public DefaultQueryResult(List<AsyncQueryRow> rows, JsonObject signature,
             JsonObject info, List<JsonObject> errors,
             Boolean finalSuccess, boolean parseSuccess,
             String requestId, String clientContextId) {
@@ -39,6 +41,7 @@ public class DefaultQueryResult implements QueryResult {
         for (AsyncQueryRow row : rows) {
             this.allRows.add(new DefaultQueryRow(row.value()));
         }
+        this.signature = signature;
         this.errors = errors;
         this.info = info;
     }
@@ -51,6 +54,11 @@ public class DefaultQueryResult implements QueryResult {
     @Override
     public Iterator<QueryRow> rows() {
         return this.allRows.iterator();
+    }
+
+    @Override
+    public JsonObject signature() {
+        return this.signature;
     }
 
     @Override

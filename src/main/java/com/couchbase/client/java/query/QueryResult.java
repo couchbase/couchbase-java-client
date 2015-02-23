@@ -44,6 +44,8 @@ public interface QueryResult extends Iterable<QueryRow> {
 
     Iterator<QueryRow> rows();
 
+    JsonObject signature();
+
     JsonObject info();
 
     boolean parseSuccess();
