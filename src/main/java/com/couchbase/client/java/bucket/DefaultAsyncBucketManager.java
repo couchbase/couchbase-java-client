@@ -22,32 +22,22 @@
 package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
-import com.couchbase.client.core.CouchbaseException;
-import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.config.BucketConfigRequest;
 import com.couchbase.client.core.message.config.BucketConfigResponse;
-import com.couchbase.client.core.message.config.FlushRequest;
-import com.couchbase.client.core.message.config.FlushResponse;
 import com.couchbase.client.core.message.config.GetDesignDocumentsRequest;
 import com.couchbase.client.core.message.config.GetDesignDocumentsResponse;
-import com.couchbase.client.core.message.kv.GetRequest;
-import com.couchbase.client.core.message.kv.GetResponse;
-import com.couchbase.client.core.message.kv.UpsertRequest;
-import com.couchbase.client.core.message.kv.UpsertResponse;
 import com.couchbase.client.core.message.view.GetDesignDocumentRequest;
 import com.couchbase.client.core.message.view.GetDesignDocumentResponse;
 import com.couchbase.client.core.message.view.RemoveDesignDocumentRequest;
 import com.couchbase.client.core.message.view.RemoveDesignDocumentResponse;
 import com.couchbase.client.core.message.view.UpsertDesignDocumentRequest;
 import com.couchbase.client.core.message.view.UpsertDesignDocumentResponse;
-import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DesignDocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DesignDocumentException;
-import com.couchbase.client.java.error.FlushDisabledException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.view.DesignDocument;
 import rx.Observable;
@@ -99,42 +89,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
 
     @Override
     public Observable<Boolean> flush() {
-        final String markerKey = "__flush_marker";
-        return core
-            .<UpsertResponse>send(new UpsertRequest(markerKey, Unpooled.copiedBuffer(markerKey, CharsetUtil.UTF_8), bucket))
-            .flatMap(new Func1<UpsertResponse, Observable<FlushResponse>>() {
-                @Override
-                public Observable<FlushResponse> call(UpsertResponse res) {
-                    if (res.content() != null && res.content().refCnt() > 0) {
-                        res.content().release();
-                    }
-                    return core.send(new FlushRequest(bucket, password));
-                }
-            }).flatMap(new Func1<FlushResponse, Observable<? extends Boolean>>() {
-                @Override
-                public Observable<? extends Boolean> call(FlushResponse flushResponse) {
-                    if (flushResponse.status() == ResponseStatus.FAILURE) {
-                        if (flushResponse.content().contains("disabled")) {
-                            return Observable.error(new FlushDisabledException("Flush is disabled for this bucket."));
-                        } else {
-                            return Observable.error(new CouchbaseException("Flush failed because of: "
-                                + flushResponse.content()));
-                        }
-                    }
-                    if (flushResponse.isDone()) {
-                        return Observable.just(true);
-                    }
-                    while (true) {
-                        GetResponse res = core.<GetResponse>send(new GetRequest(markerKey, bucket)).toBlocking().single();
-                        if (res.content() != null && res.content().refCnt() > 0) {
-                            res.content().release();
-                        }
-                        if (res.status() == ResponseStatus.NOT_EXISTS) {
-                            return Observable.just(true);
-                        }
-                    }
-                }
-            });
+        return BucketFlusher.flush(core, bucket, password);
     }
 
     @Override
