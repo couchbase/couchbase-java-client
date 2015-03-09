@@ -1225,6 +1225,7 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
@@ -1235,7 +1236,8 @@ public interface AsyncBucket {
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document where ID and CAS are extracted from.
-     * @return a Boolean indicating if the unlock was successful or not.
+     * @return a Boolean indicating if the unlock was successful. (note that unsuccessful touch will rather
+     * raise an exception)
      */
     <D extends Document<?>> Observable<Boolean> unlock(D document);
 
@@ -1247,6 +1249,7 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
@@ -1256,7 +1259,8 @@ public interface AsyncBucket {
      *
      * @param id the id of the document.
      * @param expiry the new expiration time. 0 means no expiry.
-     * @return a Boolean indicating if the touch had been successful or not.
+     * @return a Boolean indicating if the touch had been successful. (note that unsuccessful touch will rather
+     * raise an exception)
      */
     Observable<Boolean> touch(String id, int expiry);
 

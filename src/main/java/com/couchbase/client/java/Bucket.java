@@ -2592,6 +2592,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
@@ -2614,6 +2615,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
@@ -2638,6 +2640,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
@@ -2647,7 +2650,7 @@ public interface Bucket {
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param document the document to extract the ID and expiry from.
-     * @return a copy of the document inserted.
+     * @return a Boolean indicating if the touch had been successful or not.
      */
     <D extends Document<?>> Boolean touch(D document);
 
@@ -2659,6 +2662,7 @@ public interface Bucket {
      *
      * This method throws under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
@@ -2670,7 +2674,7 @@ public interface Bucket {
      * @param document the document to extract the ID and expiry from.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
-     * @return a copy of the document inserted.
+     * @return a Boolean indicating if the touch had been successful or not.
      */
     <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit);
 

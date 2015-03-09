@@ -41,10 +41,12 @@ import org.junit.Test;
 import java.io.Serializable;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class KeyValueTest extends ClusterDependentTest {
 
@@ -280,6 +282,26 @@ public class KeyValueTest extends ClusterDependentTest {
 
         JsonDocument loaded = bucket().get(key);
         assertEquals("v", loaded.content().getString("k"));
+    }
+
+    @Test
+    public void shouldFailTouchWhenNotExist() {
+        String key = "touchFail";
+        JsonDocument touchDoc = JsonDocument.create(key);
+
+        try {
+            bucket().touch(key, 3);
+            fail("touch(key, expiry) with unknown key expected to fail");
+        } catch (DocumentDoesNotExistException e) {
+            //expected
+        }
+
+        try {
+            bucket().touch(touchDoc);
+            fail("touch(document) with unknown key expected to fail");
+        } catch (DocumentDoesNotExistException e) {
+            //expected
+        }
     }
 
     @Test
