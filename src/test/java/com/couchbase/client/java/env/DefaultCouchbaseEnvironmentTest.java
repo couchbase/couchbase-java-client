@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the functionality of a {@link DefaultCouchbaseEnvironment}.
@@ -63,5 +64,12 @@ public class DefaultCouchbaseEnvironmentTest {
 
         assertEquals(10, env.kvEndpoints());
         System.clearProperty("com.couchbase.kvEndpoints");
+    }
+
+    @Test
+    public void toStringShouldContainJavaClientSpecificParameters() {
+        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.create();
+
+        assertTrue(env.toString().contains("kvTimeout="));
     }
 }
