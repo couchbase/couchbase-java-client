@@ -34,6 +34,7 @@ import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.AsyncQueryRow;
 import com.couchbase.client.java.query.DefaultQueryResult;
 import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.QueryMetrics;
 import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.Statement;
@@ -555,14 +556,14 @@ public class CouchbaseBucket implements Bucket {
 
                         return Observable.zip(aqr.rows().toList(),
                                 aqr.signature().singleOrDefault(JsonObject.empty()),
-                                aqr.info().singleOrDefault(JsonObject.empty()),
+                                aqr.info().singleOrDefault(QueryMetrics.EMPTY_METRICS),
                                 aqr.errors().toList(),
                                 aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                                new Func5<List<AsyncQueryRow>, JsonObject, JsonObject,
+                                new Func5<List<AsyncQueryRow>, JsonObject, QueryMetrics,
                                         List<JsonObject>, Boolean, QueryResult>() {
                                     @Override
                                     public QueryResult call(List<AsyncQueryRow> rows, JsonObject signature,
-                                            JsonObject info, List<JsonObject> errors, Boolean finalSuccess) {
+                                            QueryMetrics info, List<JsonObject> errors, Boolean finalSuccess) {
                                         return new DefaultQueryResult(rows, signature, info, errors, finalSuccess,
                                                 parseSuccess, requestId, clientContextId);
                                     }

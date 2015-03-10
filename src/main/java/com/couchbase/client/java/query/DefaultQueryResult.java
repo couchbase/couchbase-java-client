@@ -12,7 +12,7 @@ public class DefaultQueryResult implements QueryResult {
     private final boolean parseSuccess;
     private final List<QueryRow> allRows;
     private final JsonObject signature;
-    private final JsonObject info;
+    private final QueryMetrics info;
     private final List<JsonObject> errors;
     private final String requestId;
     private final String clientContextId;
@@ -29,7 +29,7 @@ public class DefaultQueryResult implements QueryResult {
      * @param parseSuccess the intermediate result of the query
      */
     public DefaultQueryResult(List<AsyncQueryRow> rows, JsonObject signature,
-            JsonObject info, List<JsonObject> errors,
+            QueryMetrics info, List<JsonObject> errors,
             Boolean finalSuccess, boolean parseSuccess,
             String requestId, String clientContextId) {
 
@@ -62,7 +62,7 @@ public class DefaultQueryResult implements QueryResult {
     }
 
     @Override
-    public JsonObject info() {
+    public QueryMetrics info() {
         return this.info;
     }
 

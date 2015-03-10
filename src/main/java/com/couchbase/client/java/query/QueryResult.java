@@ -40,18 +40,42 @@ import com.couchbase.client.java.document.json.JsonObject;
 @InterfaceAudience.Public
 public interface QueryResult extends Iterable<QueryRow> {
 
+    /**
+     * @return the list of all {@link QueryRow}, the results of the query, if successful.
+     */
     List<QueryRow> allRows();
 
+    /**
+     * @return an iterator over the list of all {@link QueryRow}, the results of the query, if successful.
+     */
     Iterator<QueryRow> rows();
 
+    /**
+     * @return an object representing the signature of the results, that can be used to
+     * learn about the common structure of each {@link #rows() row}.
+     */
     JsonObject signature();
 
-    JsonObject info();
+    /**
+     * @return an object describing some metrics/info about the execution of the query.
+     */
+    QueryMetrics info();
 
+    /**
+     * @return true if the query could be parsed, false if it short-circuited due to syntax/fatal error.
+     */
     boolean parseSuccess();
 
+    /**
+     * Denotes the success or failure of the query. It could fail slower than with
+     * {@link #parseSuccess()}, for example if a fatal error comes up while streaming the results
+     * to the client. Receiving a (single) value for finalSuccess means the query is over.
+     */
     boolean finalSuccess();
 
+    /**
+     * @return A list of errors or warnings encountered while executing the query.
+     */
     List<JsonObject> errors();
 
     /**

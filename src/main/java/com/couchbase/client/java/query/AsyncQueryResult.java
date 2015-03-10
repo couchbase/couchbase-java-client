@@ -1,25 +1,55 @@
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
 
 /**
- * .
+ * A representation of an N1QL query result.
  *
  * @author Michael Nitschinger
  */
+@InterfaceStability.Experimental
+@InterfaceAudience.Public
 public interface AsyncQueryResult {
 
+    /**
+     * @return an async stream of each row resulting from the query (empty if fatal errors occurred).
+     */
     Observable<AsyncQueryRow> rows();
 
+    /**
+     * @return an async single-item representing the signature of the results, that can be used to
+     * learn about the common structure of each {@link #rows() row}.
+     */
     Observable<JsonObject> signature();
 
-    Observable<JsonObject> info();
+    /**
+     * @return an async single item describing some metrics/info about the execution of the query.
+     */
+    Observable<QueryMetrics> info();
 
+    /**
+     * Immediately denotes initial parsing success of the query.
+     *
+     * As rows are processed, it could be that a late failure occurs.
+     * See {@link #finalSuccess} for the end of processing status.
+     *
+     * @return true if the query could be parsed, false if it short-circuited due to syntax/fatal error.
+     */
     boolean parseSuccess();
 
+    /**
+     * Asynchronously denotes the success or failure of the query. It could fail slower than with
+     * {@link #parseSuccess()}, for example if a fatal error comes up while streaming the results
+     * to the client. Receiving a (single) value for finalSuccess means the query is over.
+     */
     Observable<Boolean> finalSuccess();
 
+    /**
+     * @return an async stream of errors or warnings encountered while executing the query.
+     */
     Observable<JsonObject> errors();
 
     /**

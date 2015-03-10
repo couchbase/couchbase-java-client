@@ -1,18 +1,23 @@
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
+import rx.functions.Func1;
 
 /**
- * .
+ * The default implementation of an {@link AsyncQueryResult}.
  *
  * @author Michael Nitschinger
  */
+@InterfaceStability.Uncommitted
+@InterfaceAudience.Public
 public class DefaultAsyncQueryResult implements AsyncQueryResult {
 
     private final Observable<AsyncQueryRow> rows;
     private final Observable<JsonObject> signature;
-    private final Observable<JsonObject> info;
+    private final Observable<QueryMetrics> info;
     private final boolean parsingSuccess;
     private final Observable<JsonObject> errors;
     private final Observable<Boolean> finalSuccess;
@@ -24,7 +29,12 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
             boolean parsingSuccess, String requestId, String clientContextId) {
         this.rows = rows;
         this.signature = signature;
-        this.info = info;
+        this.info = info.map(new Func1<JsonObject, QueryMetrics>() {
+            @Override
+            public QueryMetrics call(JsonObject jsonObject) {
+                return new QueryMetrics(jsonObject);
+            }
+        });
         this.errors = errors;
         this.finalSuccess = finalSuccess;
         this.parsingSuccess = parsingSuccess;
@@ -42,7 +52,7 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
         return signature;
     }
     @Override
-    public Observable<JsonObject> info() {
+    public Observable<QueryMetrics> info() {
         return info;
     }
 
@@ -51,14 +61,6 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
         return finalSuccess;
     }
 
-    /**
-     * This only denotes initial success in parsing the query. As rows are processed, it could be
-     * that a late failure occurs. See {@link #finalSuccess} for the end of processing status.
-     *
-     * {@inheritDoc}
-     *
-     * @return true if no errors were detected upfront / query was successfully parsed.
-     */
     @Override
     public boolean parseSuccess() {
         return parsingSuccess;
