@@ -53,20 +53,16 @@ public class JacksonTransformers {
                     switch(current) {
                         case VALUE_TRUE:
                         case VALUE_FALSE:
-                            target.put(field, parser.getValueAsBoolean());
+                            target.put(field, parser.getBooleanValue());
                             break;
                         case VALUE_STRING:
                             target.put(field, parser.getValueAsString());
                             break;
                         case VALUE_NUMBER_INT:
-                            try {
-                                target.put(field, parser.getValueAsInt());
-                            } catch (final JsonParseException e) {
-                                target.put(field, parser.getValueAsLong());
-                            }
+                            target.put(field, parser.getNumberValue());
                             break;
                         case VALUE_NUMBER_FLOAT:
-                            target.put(field, parser.getValueAsDouble());
+                            target.put(field, parser.getDoubleValue());
                             break;
                         case VALUE_NULL:
                             target.put(field, (JsonObject) null);
@@ -92,20 +88,16 @@ public class JacksonTransformers {
                     switch(current) {
                         case VALUE_TRUE:
                         case VALUE_FALSE:
-                            target.add(parser.getValueAsBoolean());
+                            target.add(parser.getBooleanValue());
                             break;
                         case VALUE_STRING:
                             target.add(parser.getValueAsString());
                             break;
                         case VALUE_NUMBER_INT:
-                            try {
-                                target.add(parser.getValueAsInt());
-                            } catch (final JsonParseException e) {
-                                target.add(parser.getValueAsLong());
-                            }
+                            target.add(parser.getNumberValue());
                             break;
                         case VALUE_NUMBER_FLOAT:
-                            target.add(parser.getValueAsDouble());
+                            target.add(parser.getDoubleValue());
                             break;
                         case VALUE_NULL:
                             target.add((JsonObject) null);
