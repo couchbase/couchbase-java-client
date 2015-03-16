@@ -55,6 +55,9 @@ public class JsonLongTranscoder extends AbstractTranscoder<JsonLongDocument, Lon
                 rv = (rv << 8) | (b < 0 ? 256 + b : b);
             }
             decoded = rv;
+        } else if (flags == 0) {
+            String val = content.toString(CharsetUtil.UTF_8);
+            decoded = Long.valueOf(val);
         } else {
             throw new TranscodingException("Flags (0x" + Integer.toHexString(flags) + ") indicate non " +
                 "JsonLongDocument id " + id + ", could not decode.");
