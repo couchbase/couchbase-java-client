@@ -11,7 +11,7 @@ public class DefaultQueryResult implements QueryResult {
     private final boolean finalSuccess;
     private final boolean parseSuccess;
     private final List<QueryRow> allRows;
-    private final JsonObject signature;
+    private final Object signature;
     private final QueryMetrics info;
     private final List<JsonObject> errors;
     private final String requestId;
@@ -28,7 +28,7 @@ public class DefaultQueryResult implements QueryResult {
      * @param finalSuccess the definitive (but potentially delayed) result of the query.
      * @param parseSuccess the intermediate result of the query
      */
-    public DefaultQueryResult(List<AsyncQueryRow> rows, JsonObject signature,
+    public DefaultQueryResult(List<AsyncQueryRow> rows, Object signature,
             QueryMetrics info, List<JsonObject> errors,
             Boolean finalSuccess, boolean parseSuccess,
             String requestId, String clientContextId) {
@@ -57,7 +57,7 @@ public class DefaultQueryResult implements QueryResult {
     }
 
     @Override
-    public JsonObject signature() {
+    public Object signature() {
         return this.signature;
     }
 

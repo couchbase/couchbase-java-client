@@ -86,6 +86,7 @@ import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.SimpleQuery;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.transcoder.BinaryTranscoder;
+import com.couchbase.client.java.transcoder.JacksonTransformers;
 import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
 import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
 import com.couchbase.client.java.transcoder.JsonDoubleTranscoder;
@@ -786,11 +787,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                             }
                         }
                     });
-                    final Observable<JsonObject> signature = response.signature().map(new Func1<ByteBuf, JsonObject>() {
+                    final Observable<Object> signature = response.signature().map(new Func1<ByteBuf, Object>() {
                         @Override
-                        public JsonObject call(ByteBuf byteBuf) {
+                        public Object call(ByteBuf byteBuf) {
                             try {
-                                return JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
+                                return JSON_OBJECT_TRANSCODER.byteBufJsonValueToObject(byteBuf);
                             } catch (Exception e) {
                                 throw new TranscodingException("Could not decode N1QL Query Signature", e);
                             } finally {

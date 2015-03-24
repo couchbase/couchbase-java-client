@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 /**
@@ -52,9 +53,10 @@ public interface QueryResult extends Iterable<QueryRow> {
 
     /**
      * @return an object representing the signature of the results, that can be used to
-     * learn about the common structure of each {@link #rows() row}.
+     * learn about the common structure of each {@link #rows() row}. This signature is usually a
+     * {@link JsonObject}, but could also be any JSON-valid type like a boolean scalar, {@link JsonArray}...
      */
-    JsonObject signature();
+    Object signature();
 
     /**
      * @return an object describing some metrics/info about the execution of the query.

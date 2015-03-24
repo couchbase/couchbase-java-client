@@ -21,12 +21,19 @@
  */
 package com.couchbase.client.java.transcoder;
 
+import java.util.List;
+import java.util.Map;
+
+import com.couchbase.client.core.endpoint.util.WhitespaceSkipper;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
 
@@ -37,6 +44,8 @@ import com.couchbase.client.java.error.TranscodingException;
  * @since 2.0
  */
 public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject> {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(JsonTranscoder.class);
 
     public JsonTranscoder() {
     }
@@ -78,14 +87,7 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
         return JacksonTransformers.MAPPER.readValue(input, JsonObject.class);
     }
 
-    /**
-     * Converts a {@link ByteBuf} to a {@link JsonObject}, <b>without releasing the buffer</b>
-     *
-     * @param input the buffer to convert. It won't be cleared (contrary to {@link #doDecode(String, ByteBuf, long, int, int, ResponseStatus) classical decode})
-     * @return a JsonObject decoded from the buffer
-     * @throws Exception
-     */
-    public JsonObject byteBufToJsonObject(ByteBuf input) throws Exception {
+    private <T> T byteBufToClass(ByteBuf input, Class<? extends T> clazz) throws Exception {
         byte[] inputBytes;
         int offset = 0;
         int length = input.readableBytes();
@@ -96,8 +98,64 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
             inputBytes = new byte[length];
             input.getBytes(input.readerIndex(), inputBytes);
         }
-        return JacksonTransformers.MAPPER.readValue(inputBytes, offset, length, JsonObject.class);
+        return JacksonTransformers.MAPPER.readValue(inputBytes, offset, length, clazz);
     }
 
+    /**
+     * Converts a {@link ByteBuf} to a {@link JsonObject}, <b>without releasing the buffer</b>
+     *
+     * @param input the buffer to convert. It won't be cleared (contrary to {@link #doDecode(String, ByteBuf, long, int, int, ResponseStatus) classical decode})
+     * @return a JsonObject decoded from the buffer
+     * @throws Exception
+     */
+    public JsonObject byteBufToJsonObject(ByteBuf input) throws Exception {
+        return byteBufToClass(input, JsonObject.class);
+    }
+
+    /**
+     * Converts a {@link ByteBuf} representing a valid JSON entity to a generic {@link Object},
+     * <b>without releasing the buffer</b>. The entity can either be a JSON object, array or scalar value, potentially with leading whitespace (which gets ignored).
+     *
+     * Detection of JSON objects and arrays is attempted in order not to incur an
+     * additional conversion step (JSON to Map to JsonObject for example), but if a
+     * Map or List is produced, it will be transformed to {@link JsonObject} or
+     * {@link JsonArray} (with a warning logged).
+     *
+     * @param input the buffer to convert. It won't be cleared (contrary to
+     * {@link #doDecode(String, ByteBuf, long, int, int, ResponseStatus) classical decode})
+     * @return a Object decoded from the buffer
+     * @throws Exception
+     */
+    public Object byteBufJsonValueToObject(ByteBuf input) throws Exception {
+        //skip leading whitespaces
+        int toSkip = input.forEachByte(new WhitespaceSkipper());
+        if (toSkip > 0) {
+            input.skipBytes(toSkip);
+        }
+        //peek into the buffer for quick detection of objects and arrays
+        input.markReaderIndex();
+        byte first = input.readByte();
+        input.resetReaderIndex();
+
+        switch (first) {
+            case '{':
+                return byteBufToJsonObject(input);
+            case '[':
+                return byteBufToClass(input, JsonArray.class);
+        }
+
+        //we couldn't fast detect the type, we'll have to unmarshall to object and make sure maps and lists
+        //are converted to JsonObject/JsonArray.
+        Object value = byteBufToClass(input, Object.class);
+        if (value instanceof Map) {
+            LOGGER.warn("A JSON object could not be fast detected (first byte '" + (char) first + "')");
+            return JsonObject.from((Map<String, ?>) value);
+        } else if (value instanceof List) {
+            LOGGER.warn("A JSON array could not be fast detected (first byte '" + (char) first + "')");
+            return JsonArray.from((List<?>) value);
+        } else {
+            return value;
+        }
+    }
 
 }
