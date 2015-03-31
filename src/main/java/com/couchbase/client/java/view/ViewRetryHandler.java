@@ -26,9 +26,6 @@ import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -64,15 +61,7 @@ public class ViewRetryHandler {
             .flatMap(new Func1<ViewQueryResponse, Observable<ViewQueryResponse>>() {
                 @Override
                 public Observable<ViewQueryResponse> call(final ViewQueryResponse response) {
-                    ViewQueryResponse res = new ViewQueryResponse(
-                        response.rows(),
-                        response.info().cache(1),
-                        response.responseCode(),
-                        response.responsePhrase(),
-                        response.status(),
-                        response.request()
-                    );
-                    return passThroughOrThrow(res);
+                    return passThroughOrThrow(response);
                 }
             })
             .retryWhen(new Func1<Observable<? extends Throwable>, Observable<?>>() {
@@ -108,28 +97,11 @@ public class ViewRetryHandler {
         }
 
         return response
-            .info()
-            .map(new Func1<ByteBuf, ViewQueryResponse>() {
+            .error()
+            .map(new Func1<String, ViewQueryResponse>() {
                 @Override
-                public ViewQueryResponse call(ByteBuf infoBuffer) {
-                    ByteBuf infoBufferCopy = infoBuffer.copy();
-                    JsonObject content = null;
-                    try {
-                        content =
-                            CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.byteBufToJsonObject(infoBufferCopy);
-                    } catch (Exception e) {
-                        if (infoBuffer.refCnt() > 0) {
-                            infoBuffer.release();
-                        }
-                        throw new CouchbaseException("Could not parse View error message", e);
-                    } finally {
-                        infoBufferCopy.release();
-                    }
-
-                    if (shouldRetry(responseCode, content)) {
-                        if (infoBuffer.refCnt() > 0) {
-                            infoBuffer.release();
-                        }
+                public ViewQueryResponse call(String error) {
+                    if (shouldRetry(responseCode, error)) {
                         throw SHOULD_RETRY;
                     }
                     return response;
@@ -147,7 +119,7 @@ public class ViewRetryHandler {
      * @param content the error body from the response.
      * @return true if retry is needed, false otherwise.
      */
-    private static boolean shouldRetry(final int status, final JsonObject content) {
+    private static boolean shouldRetry(final int status, final String content) {
         switch (status) {
             case 200:
                 return false;
@@ -187,13 +159,12 @@ public class ViewRetryHandler {
      * @param content the parsed error content.
      * @return true if it needs to be retried, false otherwise.
      */
-    private static boolean analyse404Response(final JsonObject content) {
-        String stringified = content.toString();
-        if (stringified.contains("\"reason\":\"missing\"")) {
+    private static boolean analyse404Response(final String content) {
+        if (content.contains("\"reason\":\"missing\"")) {
             return true;
         }
 
-        LOGGER.debug("Design document not found, error is {}", stringified);
+        LOGGER.debug("Design document not found, error is {}", content);
         return false;
     }
 
@@ -203,10 +174,9 @@ public class ViewRetryHandler {
      * @param content the parsed error content.
      * @return true if it needs to be retried, false otherwise.
      */
-    private static boolean analyse500Response(final JsonObject content) {
-        String stringified = content.toString();
-        if (stringified.contains("error") && stringified.contains("{not_found, missing_named_view}")) {
-            LOGGER.debug("Design document not found, error is {}", stringified);
+    private static boolean analyse500Response(final String content) {
+        if (content.contains("error") && content.contains("{not_found, missing_named_view}")) {
+            LOGGER.debug("Design document not found, error is {}", content);
             return false;
         }
         return true;

@@ -23,7 +23,6 @@ package com.couchbase.client.java.view;
 
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
-import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import org.junit.Test;
 import rx.Observable;
 import rx.Subscriber;
@@ -84,8 +83,7 @@ public class ViewRetryHandlerTest {
                 ViewQueryResponse response = mock(ViewQueryResponse.class);
                 int statusCode = subscriberCount.get() == 5 ? 200 : 300;
                 when(response.responseCode()).thenReturn(statusCode);
-                when(response.info()).thenReturn(Observable.just(Unpooled.copiedBuffer("{\"err\": true}",
-                    CharsetUtil.UTF_8)));
+                when(response.error()).thenReturn(Observable.just("{\"err\": true}"));
                 subscriber.onNext(response);
                 subscriber.onCompleted();
             }
@@ -135,10 +133,9 @@ public class ViewRetryHandlerTest {
                 subscriberCount.incrementAndGet();
                 ViewQueryResponse response = mock(ViewQueryResponse.class);
                 when(response.responseCode()).thenReturn(404);
-                when(response.info()).thenReturn(Observable.just(Unpooled.copiedBuffer("\n" +
-                        "{\"error\":\"not_found\",\"reason\":\"Error opening view `al1l`, from set `default`, "
-                        + "design document `_design/users`: {not_found,\\nmissing_named_view}\"}\n",
-                    CharsetUtil.UTF_8)));
+                when(response.error()).thenReturn(Observable.just("\n" +
+                        "{\"errors:\"[{\"error\":\"not_found\",\"reason\":\"Error opening view `al1l`, from set `default`, "
+                        + "design document `_design/users`: {not_found,\\nmissing_named_view}\"}]}\n"));
                 subscriber.onNext(response);
                 subscriber.onCompleted();
             }

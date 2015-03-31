@@ -19,7 +19,7 @@ public class DefaultViewResult implements ViewResult {
     private final CouchbaseEnvironment env;
     private final Bucket bucket;
 
-    public DefaultViewResult(CouchbaseEnvironment env, Bucket bucket, Observable<AsyncViewRow>rows, int totalRows, boolean success, JsonObject error, JsonObject debug) {
+    public DefaultViewResult(CouchbaseEnvironment env, Bucket bucket, Observable<AsyncViewRow>rows, int totalRows, boolean success, Observable<JsonObject> error, JsonObject debug) {
         asyncViewResult = new DefaultAsyncViewResult(rows, totalRows, success, error, debug);
         this.timeout = env.viewTimeout();
         this.env = env;
@@ -81,7 +81,12 @@ public class DefaultViewResult implements ViewResult {
 
     @Override
     public JsonObject error() {
-        return asyncViewResult.error();
+        return error(timeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonObject error(long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncViewResult.error(), timeout, TIMEOUT_UNIT);
     }
 
     @Override

@@ -46,7 +46,7 @@ public class DefaultSpatialViewResult implements SpatialViewResult {
     private final CouchbaseEnvironment env;
     private final Bucket bucket;
 
-    public DefaultSpatialViewResult(CouchbaseEnvironment env, Bucket bucket, Observable<AsyncSpatialViewRow> rows, boolean success, JsonObject error, JsonObject debug) {
+    public DefaultSpatialViewResult(CouchbaseEnvironment env, Bucket bucket, Observable<AsyncSpatialViewRow> rows, boolean success, Observable<JsonObject> error, JsonObject debug) {
         asyncViewResult = new DefaultAsyncSpatialViewResult(rows, success, error, debug);
         this.timeout = env.viewTimeout();
         this.env = env;
@@ -98,7 +98,12 @@ public class DefaultSpatialViewResult implements SpatialViewResult {
 
     @Override
     public JsonObject error() {
-        return asyncViewResult.error();
+        return error(timeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public JsonObject error(long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncViewResult.error(), timeout, timeUnit);
     }
 
     @Override

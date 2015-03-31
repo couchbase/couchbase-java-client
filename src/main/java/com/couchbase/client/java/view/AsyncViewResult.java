@@ -62,7 +62,7 @@ public interface AsyncViewResult {
      *
      * @return the potential error.
      */
-    JsonObject error();
+    Observable<JsonObject> error();
 
     /**
      * If debug was enabled on the query, it is contained here.
