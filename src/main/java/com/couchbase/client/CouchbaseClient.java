@@ -1642,19 +1642,17 @@ public class CouchbaseClient extends MemcachedClient
   }
 
   private Map<MemcachedNode, ObserveResponse> observe(final String key,
-    final long cas, final boolean toMaster, final boolean toReplica) {
+    final long cas, final boolean toReplica) {
     Config cfg = ((CouchbaseConnectionFactory) connFactory).getVBucketConfig();
     VBucketNodeLocator locator = (VBucketNodeLocator) mconn.getLocator();
 
     final int vb = locator.getVBucketIndex(key);
     List<MemcachedNode> bcastNodes = new ArrayList<MemcachedNode>();
 
-    if (toMaster) {
       MemcachedNode primary = locator.getPrimary(key);
       if (primary != null) {
         bcastNodes.add(primary);
       }
-    }
 
     if (toReplica) {
       List<Integer> replicaIndexes = locator.getReplicaIndexes(key);
@@ -1710,7 +1708,7 @@ public class CouchbaseClient extends MemcachedClient
   @Override
   public Map<MemcachedNode, ObserveResponse> observe(final String key,
       final long cas) {
-    return observe(key, cas, true, true);
+    return observe(key, cas, true);
   }
 
   @Override
@@ -1782,8 +1780,6 @@ public class CouchbaseClient extends MemcachedClient
     final int shouldPersistTo = persist.getValue() > 0 ? persist.getValue() - 1 : 0;
     final int shouldReplicateTo = replicate.getValue();
     final boolean shouldPersistToMaster = persist.getValue() > 0;
-
-    final boolean toMaster = persist.getValue() > 0;
     final boolean toReplica = replicate.getValue() > 0 || persist.getValue() > 1;
 
     int donePolls = 0;
@@ -1802,8 +1798,7 @@ public class CouchbaseClient extends MemcachedClient
           + TimeUnit.MILLISECONDS.toSeconds(timeTried) + " seconds.");
       }
 
-      Map<MemcachedNode, ObserveResponse> response = observe(key, cas, toMaster,
-        toReplica);
+      Map<MemcachedNode, ObserveResponse> response = observe(key, cas, toReplica);
 
       MemcachedNode master = locator.getPrimary(key);
       alreadyPersistedTo = 0;
@@ -1813,7 +1808,7 @@ public class CouchbaseClient extends MemcachedClient
         MemcachedNode node = r.getKey();
         ObserveResponse observeResponse = r.getValue();
 
-        boolean isMaster = node == master ? true : false;
+        boolean isMaster = node == master;
         if (isMaster && observeResponse == ObserveResponse.MODIFIED) {
           throw new ObservedModifiedException("Key was modified");
         }
