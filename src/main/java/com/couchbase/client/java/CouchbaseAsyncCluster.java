@@ -54,8 +54,8 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseAsyncCluster.class);
 
-    private static final String DEFAULT_BUCKET = "default";
-    private static final String DEFAULT_HOST = "127.0.0.1";
+    public static final String DEFAULT_BUCKET = "default";
+    public static final String DEFAULT_HOST = "127.0.0.1";
 
     private final ClusterFacade core;
     private final CouchbaseEnvironment environment;
