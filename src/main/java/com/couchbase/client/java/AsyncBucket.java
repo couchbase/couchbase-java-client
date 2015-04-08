@@ -48,6 +48,8 @@ import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.repository.AsyncRepository;
+import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.view.AsyncSpatialViewResult;
 import com.couchbase.client.java.view.AsyncViewResult;
@@ -1453,6 +1455,16 @@ public interface AsyncBucket {
      * @return the bucket manager for administrative operations.
      */
     Observable<AsyncBucketManager> bucketManager();
+
+    /**
+     * The {@link Repository} provides access to full object document mapping (ODM) capabilities.
+     *
+     * It allows you to work with POJO entities only and use annotations to customize the behaviour and mapping
+     * characteristics.
+     *
+     * @return the repository for ODM capabilities.
+     */
+    Observable<AsyncRepository> repository();
 
     /**
      * Closes the {@link AsyncBucket}.

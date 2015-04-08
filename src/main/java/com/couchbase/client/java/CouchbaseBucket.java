@@ -38,6 +38,8 @@ import com.couchbase.client.java.query.QueryMetrics;
 import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.repository.CouchbaseRepository;
+import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
 import com.couchbase.client.java.view.AsyncSpatialViewResult;
@@ -88,6 +90,11 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public ClusterFacade core() {
         return asyncBucket.core().toBlocking().single();
+    }
+
+    @Override
+    public Repository repository() {
+        return new CouchbaseRepository(this, environment);
     }
 
     @Override

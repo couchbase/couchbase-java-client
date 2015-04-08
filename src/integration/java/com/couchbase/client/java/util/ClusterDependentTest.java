@@ -25,6 +25,7 @@ import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
@@ -59,6 +60,7 @@ public class ClusterDependentTest {
     private static Bucket bucket;
     private static ClusterManager clusterManager;
     private static BucketManager bucketManager;
+    private static Repository repository;
 
     @BeforeClass
     public static void connect() throws Exception {
@@ -82,6 +84,7 @@ public class ClusterDependentTest {
         }
 
         bucket = cluster.openBucket(bucketName(), password());
+        repository = bucket.repository();
         bucketManager = bucket.bucketManager();
         bucketManager.flush();
     }
@@ -134,6 +137,10 @@ public class ClusterDependentTest {
 
     public static boolean queryEnabled() {
         return TestProperties.queryEnabled();
+    }
+
+    public static Repository repository() {
+        return repository;
     }
 
     public static ClusterManager clusterManager() {
