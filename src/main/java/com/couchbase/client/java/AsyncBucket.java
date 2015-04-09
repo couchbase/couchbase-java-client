@@ -160,6 +160,40 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
     /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @return true if it exists, false otherwise.
+     */
+    Observable<Boolean> exists(String id);
+
+    /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document where the ID is extracted from.
+     * @return true if it exists, false otherwise.
+     */
+    <D extends Document<?>> Observable<Boolean> exists(D document);
+
+    /**
      * Retrieves one or more, possibly stale, representations of a {@link JsonDocument} by its unique ID.
      *
      * Depending on the {@link ReplicaMode} selected, there can be none to four {@link JsonDocument} be returned

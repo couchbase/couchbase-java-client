@@ -40,6 +40,7 @@ import org.junit.Test;
 import java.io.Serializable;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -82,12 +83,15 @@ public class KeyValueTest extends ClusterDependentTest {
         JsonDocument response = bucket().get("upsert");
         assertEquals(content.getString("hello"), response.content().getString("hello"));
 
+        assertTrue(bucket().exists("upsert"));
+
         JsonDocument removed = bucket().remove(doc);
         assertEquals(doc.id(), removed.id());
         assertNull(removed.content());
         assertEquals(0, removed.expiry());
         assertTrue(removed.cas() != 0);
 
+        assertFalse(bucket().exists("upsert"));
         assertNull(bucket().get("upsert"));
     }
 

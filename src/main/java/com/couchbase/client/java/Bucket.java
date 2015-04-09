@@ -246,6 +246,82 @@ public interface Bucket {
     <D extends Document<?>> D get(String id, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @return true if it exists, false otherwise.
+     */
+    boolean exists(String id);
+
+    /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return true if it exists, false otherwise.
+     */
+    boolean exists(String id, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document where the ID is extracted from.
+     * @return true if it exists, false otherwise.
+     */
+    <D extends Document<?>> boolean exists(D document);
+
+    /**
+     * Check whether a document with the given ID does exist in the bucket.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document where the ID is extracted from.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return true if it exists, false otherwise.
+     */
+    <D extends Document<?>> boolean exists(D document, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieves one or more, possibly stale, representations of a {@link JsonDocument} by its unique ID with the
      * default timeout.
      *
