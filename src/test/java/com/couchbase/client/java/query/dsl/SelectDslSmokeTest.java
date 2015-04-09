@@ -123,7 +123,7 @@ public class SelectDslSmokeTest {
     public void test11() {
         Statement statement = select("fname", "children")
             .from("tutorial")
-            .where(x("children").is(NULL()));
+            .where(x("children").isNull());
         assertEquals("SELECT fname, children FROM tutorial WHERE children IS NULL", statement.toString());
     }
 
