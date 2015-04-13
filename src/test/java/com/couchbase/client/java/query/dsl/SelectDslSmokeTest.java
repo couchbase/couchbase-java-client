@@ -149,8 +149,8 @@ public class SelectDslSmokeTest {
     public void test14() {
         Statement statement = select("fname", "email")
             .from("tutorial")
-            .keys(x(JsonArray.from("dave", "ian")));
-        assertEquals("SELECT fname, email FROM tutorial KEYS [\"dave\",\"ian\"]", statement.toString());
+            .useKeys("dave", "ian");
+        assertEquals("SELECT fname, email FROM tutorial USE KEYS [\"dave\",\"ian\"]", statement.toString());
     }
 
     @Test

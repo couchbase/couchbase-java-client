@@ -197,13 +197,18 @@ public class SelectDslTest {
         Statement statement = new DefaultFromPath(null)
             .from("beer-sample")
             .as("b")
-            .keys("my-brewery");
-        assertEquals("FROM beer-sample AS b KEYS [\"my-brewery\"]", statement.toString());
+            .useKeys("my-brewery");
+        assertEquals("FROM beer-sample AS b USE KEYS \"my-brewery\"", statement.toString());
 
         statement = new DefaultFromPath(null)
             .from("beer-sample")
-            .keys(JsonArray.from("key1", "key2"));
-        assertEquals("FROM beer-sample KEYS [\"key1\",\"key2\"]", statement.toString());
+            .useKeys(JsonArray.from("key1", "key2"));
+        assertEquals("FROM beer-sample USE KEYS [\"key1\",\"key2\"]", statement.toString());
+
+        statement = new DefaultFromPath(null)
+            .from("beer-sample")
+            .useKeys("key1", "key2");
+        assertEquals("FROM beer-sample USE KEYS [\"key1\",\"key2\"]", statement.toString());
     }
 
     @Test
@@ -243,8 +248,8 @@ public class SelectDslTest {
         Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .nest("orders_with_users").as("orders")
-            .keys(x(JsonArray.from("key1", "key2")));
-        assertEquals("FROM users_with_orders AS user NEST orders_with_users AS orders KEYS [\"key1\",\"key2\"]",
+            .onKeys(x(JsonArray.from("key1", "key2")));
+        assertEquals("FROM users_with_orders AS user NEST orders_with_users AS orders ON KEYS [\"key1\",\"key2\"]",
             statement.toString());
     }
 
@@ -269,8 +274,8 @@ public class SelectDslTest {
         Statement statement = new DefaultFromPath(null)
             .from("users_with_orders").as("user")
             .join("orders_with_users").as("orders")
-            .keys(x(JsonArray.from("key1", "key2")));
-        assertEquals("FROM users_with_orders AS user JOIN orders_with_users AS orders KEYS [\"key1\",\"key2\"]",
+            .onKeys(x(JsonArray.from("key1", "key2")));
+        assertEquals("FROM users_with_orders AS user JOIN orders_with_users AS orders ON KEYS [\"key1\",\"key2\"]",
             statement.toString());
     }
 
