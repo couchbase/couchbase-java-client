@@ -22,6 +22,8 @@
 package com.couchbase.client.java.view;
 
 import com.couchbase.client.java.SerializationHelper;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.RawJsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import org.junit.Test;
 
@@ -29,6 +31,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * Verifies the functionality of a {@link SpatialViewQuery}.
@@ -49,7 +52,7 @@ public class SpatialViewQueryTest {
 
     @Test
     public void shouldSetStartRange() {
-        SpatialViewQuery query = SpatialViewQuery.from("design", "view").startRange(JsonArray.from(5.87,47.27,1000));
+        SpatialViewQuery query = SpatialViewQuery.from("design", "view").startRange(JsonArray.from(5.87, 47.27, 1000));
         assertEquals("start_range=[5.87,47.27,1000]", query.toString());
     }
 
@@ -139,5 +142,24 @@ public class SpatialViewQueryTest {
 
         SpatialViewQuery deserialized = SerializationHelper.deserializeFromBytes(serialized, SpatialViewQuery.class);
         assertEquals(query, deserialized);
+    }
+
+    @Test
+    public void shouldIncludeDocs() {
+        SpatialViewQuery query = SpatialViewQuery.from("design", "view").includeDocs();
+        assertTrue(query.isIncludeDocs());
+        assertEquals(JsonDocument.class, query.includeDocsTarget());
+
+        query = SpatialViewQuery.from("design", "view").includeDocs(JsonDocument.class);
+        assertTrue(query.isIncludeDocs());
+        assertEquals(JsonDocument.class, query.includeDocsTarget());
+
+        query = SpatialViewQuery.from("design", "view");
+        assertFalse(query.isIncludeDocs());
+        assertNull(query.includeDocsTarget());
+
+        query = SpatialViewQuery.from("design", "view").includeDocs(false, RawJsonDocument.class);
+        assertFalse(query.isIncludeDocs());
+        assertEquals(RawJsonDocument.class, query.includeDocsTarget());
     }
 }

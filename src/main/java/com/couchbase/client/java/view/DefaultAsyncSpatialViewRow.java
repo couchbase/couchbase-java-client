@@ -41,13 +41,15 @@ public class DefaultAsyncSpatialViewRow implements AsyncSpatialViewRow {
     private final Object value;
     private final AsyncBucket bucket;
     private final JsonObject geometry;
+    private final Document<?> document;
 
-    public DefaultAsyncSpatialViewRow(AsyncBucket bucket, String id, JsonArray key, Object value, JsonObject geometry) {
+    public DefaultAsyncSpatialViewRow(AsyncBucket bucket, String id, JsonArray key, Object value, JsonObject geometry, Document<?> document) {
         this.bucket = bucket;
         this.id = id;
         this.key = key;
         this.value = value;
         this.geometry = geometry;
+        this.document = document;
     }
 
     @Override
@@ -72,14 +74,15 @@ public class DefaultAsyncSpatialViewRow implements AsyncSpatialViewRow {
 
     @Override
     public Observable<JsonDocument> document() {
-        if (id == null) {
-            return Observable.error(new UnsupportedOperationException("Document cannot be loaded, id is null."));
-        }
-        return bucket.get(id);
+        return document(JsonDocument.class);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> document(Class<D> target) {
+        if (document != null) {
+            return Observable.just((D) document);
+        }
         if (id == null) {
             return Observable.error(new UnsupportedOperationException("Document cannot be loaded, id is null."));
         }
@@ -93,6 +96,7 @@ public class DefaultAsyncSpatialViewRow implements AsyncSpatialViewRow {
         sb.append(", key=").append(key);
         sb.append(", value=").append(value);
         sb.append(", geometry=").append(geometry);
+        sb.append(", document=").append(document);
         sb.append('}');
         return sb.toString();
     }

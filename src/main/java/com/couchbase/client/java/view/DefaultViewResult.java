@@ -38,7 +38,7 @@ public class DefaultViewResult implements ViewResult {
             .map(new Func1<AsyncViewRow, ViewRow>() {
                 @Override
                 public ViewRow call(AsyncViewRow asyncViewRow) {
-                    return new DefaultViewRow(env, bucket, asyncViewRow.id(), asyncViewRow.key(), asyncViewRow.value());
+                    return new DefaultViewRow(env, asyncViewRow);
                 }
             })
             .toList(), timeout, timeUnit);
@@ -56,7 +56,7 @@ public class DefaultViewResult implements ViewResult {
             .map(new Func1<AsyncViewRow, ViewRow>() {
                 @Override
                 public ViewRow call(AsyncViewRow asyncViewRow) {
-                    return new DefaultViewRow(env, bucket, asyncViewRow.id(), asyncViewRow.key(), asyncViewRow.value());
+                    return new DefaultViewRow(env, asyncViewRow);
                 }
             })
             .timeout(timeout, timeUnit)

@@ -29,6 +29,7 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
 import com.couchbase.client.java.error.TranscodingException;
@@ -142,11 +143,25 @@ public class ViewQueryResponseMapper {
             Observable<AsyncSpatialViewRow> rows = response
                 .rows()
                 .map(new ByteBufToJsonObject())
-                .map(new Func1<JsonObject, AsyncSpatialViewRow>() {
+                .flatMap(new Func1<JsonObject, Observable<AsyncSpatialViewRow>>() {
                     @Override
-                    public AsyncSpatialViewRow call(JsonObject row) {
-                        return new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
-                            row.get("value"), row.getObject("geometry"));
+                    public Observable<AsyncSpatialViewRow> call(final JsonObject row) {
+                        final String id = row.getString("id");
+
+                        if (query.isIncludeDocs()) {
+                            return bucket.get(id, query.includeDocsTarget()).map(new Func1<Document<?>, AsyncSpatialViewRow>() {
+                                @Override
+                                public AsyncSpatialViewRow call(Document<?> document) {
+                                    return new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
+                                        row.get("value"), row.getObject("geometry"), document);
+                                }
+                            });
+                        } else {
+                            return Observable.just((AsyncSpatialViewRow)
+                                new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
+                                    row.get("value"), row.getObject("geometry"), null)
+                            );
+                        }
                     }
                 });
 
@@ -203,10 +218,23 @@ public class ViewQueryResponseMapper {
             Observable<AsyncViewRow> rows = response
                 .rows()
                 .map(new ByteBufToJsonObject())
-                .map(new Func1<JsonObject, AsyncViewRow>() {
+                .flatMap(new Func1<JsonObject, Observable<AsyncViewRow>>() {
                     @Override
-                    public AsyncViewRow call(JsonObject row) {
-                        return new DefaultAsyncViewRow(bucket, row.getString("id"), row.get("key"), row.get("value"));
+                    public Observable<AsyncViewRow> call(final JsonObject row) {
+                        final String id = row.getString("id");
+
+                        if (query.isIncludeDocs()) {
+                            return bucket.get(id, query.includeDocsTarget()).map(new Func1<Document<?>, AsyncViewRow>() {
+                                @Override
+                                public AsyncViewRow call(Document<?> document) {
+                                    return new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get("value"), document);
+                                }
+                            });
+                        } else {
+                            return Observable.just((AsyncViewRow)
+                                new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get("value"), null)
+                            );
+                        }
                     }
                 });
 

@@ -21,15 +21,6 @@
  */
 package com.couchbase.client.java;
 
-import static com.couchbase.client.java.util.features.CouchbaseFeature.SPATIAL_VIEW;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.List;
-
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -45,6 +36,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Func1;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the functionality of {@link SpatialViewQuery}.
@@ -157,6 +156,19 @@ public class SpatialViewQueryTest extends ClusterDependentTest {
             assertTrue(row.id().matches("city::(Vienna|Berlin|Paris)"));
             assertNull(row.value());
             assertNull(row.geometry());
+        }
+    }
+
+    @Test
+    public void shouldQueryWithIncludeDocs() {
+        SpatialViewResult result = bucket().query(
+            SpatialViewQuery.from("cities", "by_location").stale(Stale.FALSE).includeDocs()
+        );
+        List<SpatialViewRow> allRows = result.allRows();
+        assertEquals(FIXTURES.length, allRows.size());
+
+        for (SpatialViewRow row : allRows) {
+            assertNotNull(row.document().content());
         }
     }
 

@@ -65,7 +65,7 @@ public class DefaultSpatialViewResult implements SpatialViewResult {
             .map(new Func1<AsyncSpatialViewRow, SpatialViewRow>() {
                 @Override
                 public SpatialViewRow call(AsyncSpatialViewRow asyncViewRow) {
-                    return new DefaultSpatialViewRow(env, bucket, asyncViewRow.id(), asyncViewRow.key(), asyncViewRow.value(), asyncViewRow.geometry());
+                    return new DefaultSpatialViewRow(env, asyncViewRow);
                 }
             })
             .toList(), timeout, timeUnit);
@@ -83,7 +83,7 @@ public class DefaultSpatialViewResult implements SpatialViewResult {
             .map(new Func1<AsyncSpatialViewRow, SpatialViewRow>() {
                 @Override
                 public SpatialViewRow call(AsyncSpatialViewRow asyncViewRow) {
-                    return new DefaultSpatialViewRow(env, bucket, asyncViewRow.id(), asyncViewRow.key(), asyncViewRow.value(), asyncViewRow.geometry());
+                    return new DefaultSpatialViewRow(env, asyncViewRow);
                 }
             })
             .timeout(timeout, timeUnit)
