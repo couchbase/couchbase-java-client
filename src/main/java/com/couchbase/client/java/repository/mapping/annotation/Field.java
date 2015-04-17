@@ -31,4 +31,15 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface Field {
+
+    /**
+     * The actual name of the field inside the JSON document.
+     *
+     * It can be used to shorten or rename/map field names to save space
+     * or provide additional compatibility.
+     *
+     * @return the actual name of the field inside the document.
+     */
+    String value() default "";
+
 }

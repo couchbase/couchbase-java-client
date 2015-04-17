@@ -39,7 +39,7 @@ public class RepositoryTest extends ClusterDependentTest {
         JsonDocument storedRaw = bucket().get(user.id());
         assertEquals(user.name(), storedRaw.content().getString("name"));
         assertEquals(user.published(), storedRaw.content().getBoolean("published"));
-        assertEquals(user.someNumber(), storedRaw.content().getInt("someNumber"), 0);
+        assertEquals(user.someNumber(), storedRaw.content().getInt("num"), 0);
         assertEquals(user.otherNumber(), storedRaw.content().getDouble("otherNumber"), 0);
 
         User found = repository().get(user.id(), User.class);
