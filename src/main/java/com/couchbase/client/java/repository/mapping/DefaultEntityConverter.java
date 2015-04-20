@@ -39,17 +39,13 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
     public JsonDocument fromEntity(Object document) {
         EntityMetadata entityMetadata = metadata(document.getClass());
 
-        if (!entityMetadata.hasIdProperty()) {
-            throw new RepositoryMappingException("No Id Field annotated with @Id present.");
-        }
-
+        verifyId(entityMetadata);
         String id = (String) entityMetadata.idProperty().get(document);
-        if (id == null) {
-            throw new RepositoryMappingException("Id Field cannot be null.");
+        if (id == null || id.isEmpty()) {
+            throw new RepositoryMappingException("The @Id field cannot be null or empty.");
         }
 
         JsonObject content = JsonObject.create();
-
         for (PropertyMetadata propertyMetadata : entityMetadata.properties()) {
             String name = propertyMetadata.name();
             Class<?> type = propertyMetadata.type();
@@ -83,10 +79,7 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
                 }
             }
 
-            if (!entityMetadata.hasIdProperty()) {
-                throw new RepositoryMappingException("No Id Field annotated with @Id present.");
-            }
-
+            verifyId(entityMetadata);
             entityMetadata.idProperty().set(source.id(), instance);
             return instance;
         } catch (Exception e) {
@@ -109,6 +102,22 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             return generated;
         } else {
             return metadata;
+        }
+    }
+
+
+    /**
+     * Helper method to check that the ID field is present and is of the desired types.
+     *
+     * @param entityMetadata the entity metadata.
+     */
+    private static void verifyId(final EntityMetadata entityMetadata) {
+        if (!entityMetadata.hasIdProperty()) {
+            throw new RepositoryMappingException("No field annotated with @Id present.");
+        }
+
+        if (entityMetadata.idProperty().type() != String.class) {
+            throw new RepositoryMappingException("The @Id Field needs to be of type String.");
         }
     }
 }

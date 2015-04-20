@@ -22,10 +22,12 @@
 package com.couchbase.client.java.repository;
 
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
 import com.couchbase.client.java.repository.annotation.Id;
+import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Test;
+
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 
@@ -56,11 +58,20 @@ public class RepositoryTest extends ClusterDependentTest {
         repository().upsert(new EntityWithId());
     }
 
+    @Test(expected = RepositoryMappingException.class)
+    public void shouldFailWithNonStringIdProperty() {
+        repository().upsert(new EntityWithNoNStringId());
+    }
+
     static class EntityWithoutId {
     }
 
     static class EntityWithId {
         public @Id String id = null;
+    }
+
+    static class EntityWithNoNStringId {
+        public @Id Date id = new Date();
     }
 
 }
