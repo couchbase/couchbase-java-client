@@ -21,8 +21,8 @@
  */
 package com.couchbase.client.java.repository;
 
-import com.couchbase.client.java.repository.mapping.annotation.Field;
-import com.couchbase.client.java.repository.mapping.annotation.Id;
+import com.couchbase.client.java.repository.annotation.Field;
+import com.couchbase.client.java.repository.annotation.Id;
 
 public class User {
 

@@ -23,7 +23,7 @@ package com.couchbase.client.java.repository;
 
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
-import com.couchbase.client.java.repository.mapping.annotation.Id;
+import com.couchbase.client.java.repository.annotation.Id;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Test;
 

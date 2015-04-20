@@ -21,7 +21,7 @@
  */
 package com.couchbase.client.java.repository.mapping;
 
-import com.couchbase.client.java.repository.mapping.annotation.Id;
+import com.couchbase.client.java.repository.annotation.Id;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class ReflectionBasedEntityProperties implements EntityProperties {
             if (field.isAnnotationPresent(Id.class)) {
                 idField = field;
                 field.setAccessible(true);
-            } else if (field.isAnnotationPresent(com.couchbase.client.java.repository.mapping.annotation.Field.class)) {
+            } else if (field.isAnnotationPresent(com.couchbase.client.java.repository.annotation.Field.class)) {
                 fields.add(field);
                 field.setAccessible(true);
             }
@@ -69,8 +69,8 @@ public class ReflectionBasedEntityProperties implements EntityProperties {
 
     @Override
     public String actualFieldPropertyName(Field field) {
-        com.couchbase.client.java.repository.mapping.annotation.Field annotation =
-            field.getDeclaredAnnotation(com.couchbase.client.java.repository.mapping.annotation.Field.class);
+        com.couchbase.client.java.repository.annotation.Field annotation =
+            field.getDeclaredAnnotation(com.couchbase.client.java.repository.annotation.Field.class);
 
         if (annotation == null) {
             return field.getName();
