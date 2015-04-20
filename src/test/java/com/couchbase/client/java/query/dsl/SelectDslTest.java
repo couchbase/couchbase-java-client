@@ -140,6 +140,9 @@ public class SelectDslTest {
 
         statement = new DefaultOrderByPath(null).orderBy(Sort.asc("firstname"), Sort.desc("lastname"));
         assertEquals("ORDER BY firstname ASC, lastname DESC", statement.toString());
+
+        statement = new DefaultOrderByPath(null).orderBy(Sort.def("firstname"), Sort.def(x("lastname")));
+        assertEquals("ORDER BY firstname, lastname", statement.toString());
     }
 
     @Test
