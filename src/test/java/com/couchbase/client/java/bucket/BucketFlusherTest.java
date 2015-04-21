@@ -23,6 +23,7 @@ package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.endpoint.ResponseStatusConverter;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.config.FlushRequest;
@@ -44,6 +45,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.couchbase.client.core.endpoint.ResponseStatusConverter.BINARY_ERR_NOT_FOUND;
+import static com.couchbase.client.core.endpoint.ResponseStatusConverter.BINARY_SUCCESS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
@@ -63,8 +66,8 @@ public class BucketFlusherTest {
 
     private static final CouchbaseResponse GOOD_FLUSH_RESPONSE = new FlushResponse(true, "", ResponseStatus.SUCCESS);
     private static final CouchbaseResponse PEND_FLUSH_RESPONSE =  new FlushResponse(false, "", ResponseStatus.SUCCESS);
-    private static final CouchbaseResponse GOOD_UPSERT_RESPONSE = new UpsertResponse(ResponseStatus.SUCCESS, 0, BUCKET,
-        Unpooled.EMPTY_BUFFER, null);
+    private static final CouchbaseResponse GOOD_UPSERT_RESPONSE = new UpsertResponse(ResponseStatus.SUCCESS,
+            BINARY_SUCCESS, 0, BUCKET, Unpooled.EMPTY_BUFFER, null);
 
     @Test
     public void shouldFlushBucket() {
@@ -79,8 +82,8 @@ public class BucketFlusherTest {
             @Override
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 return Observable.just(
-                    (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, 0, BUCKET, upsertIterator.next(),
-                        null)
+                    (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, BINARY_SUCCESS, 0, BUCKET,
+                            upsertIterator.next(), null)
                 );
             }
         });
@@ -104,8 +107,8 @@ public class BucketFlusherTest {
             @Override
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 return Observable.just(
-                    (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, 0, BUCKET, upsertIterator.next(),
-                        null)
+                    (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, BINARY_SUCCESS,
+                            0, BUCKET, upsertIterator.next(), null)
                 );
             }
         });
@@ -122,8 +125,8 @@ public class BucketFlusherTest {
             @Override
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 return Observable.just(
-                    (CouchbaseResponse) new GetResponse(ResponseStatus.NOT_EXISTS, 0, 0, BUCKET, getIterator.next(),
-                        null)
+                    (CouchbaseResponse) new GetResponse(ResponseStatus.NOT_EXISTS, BINARY_ERR_NOT_FOUND,
+                            0, 0, BUCKET, getIterator.next(), null)
                 );
             }
         });
@@ -149,8 +152,9 @@ public class BucketFlusherTest {
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 ResponseStatus status = docsStillExisting.getAndDecrement() > 0
                     ? ResponseStatus.SUCCESS : ResponseStatus.NOT_EXISTS;
+                short statusCode = status == ResponseStatus.SUCCESS ? BINARY_SUCCESS : BINARY_ERR_NOT_FOUND;
                 return Observable.just(
-                    (CouchbaseResponse) new GetResponse(status, 0, 0, BUCKET, Unpooled.EMPTY_BUFFER, null)
+                    (CouchbaseResponse) new GetResponse(status, statusCode, 0, 0, BUCKET, Unpooled.EMPTY_BUFFER, null)
                 );
             }
         });
