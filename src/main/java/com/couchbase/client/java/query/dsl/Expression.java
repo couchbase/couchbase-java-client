@@ -1,7 +1,12 @@
 package com.couchbase.client.java.query.dsl;
 
+import java.util.Objects;
+
+import javafx.beans.binding.ObjectExpression;
+
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.Statement;
 
 /**
  * Represents a N1QL Expression.
@@ -15,6 +20,7 @@ public class Expression {
     private static final Expression TRUE_INSTANCE = new Expression("TRUE");
     private static final Expression FALSE_INSTANCE = new Expression("FALSE");
     private static final Expression MISSING_INSTANCE = new Expression("MISSING");
+    private static final Expression EMPTY_INSTANCE = new Expression("");
 
     private final Object value;
 
@@ -124,6 +130,60 @@ public class Expression {
      */
     public static Expression x(final JsonObject value) {
         return new Expression(value);
+    }
+
+    /**
+     * Creates an expression for a given {@link Statement}, as is.
+     *
+     * @param statement the statement to convert to an expression.
+     * @return the statement, converted as is into an expression.
+     */
+    public static Expression x(final Statement statement) {
+        return x(statement.toString());
+    }
+
+    /**
+     * Creates an expression from a {@link Number}, as is.
+     *
+     * @param number the number constant to convert to an expression.
+     * @return the number converted into an expression.
+     */
+    public static Expression x(final Number number) {
+        return x(String.valueOf(number));
+    }
+
+    /**
+     * Creates an expression from a given sub-{@link Statement}, wrapping it in parenthesis.
+     *
+     * @param statement the statement to convert to an expression.
+     * @return the statement, converted into an expression wrapped in parenthesis.
+     */
+    public static Expression sub(final Statement statement) {
+        return x("(" + statement.toString() + ")");
+    }
+
+    /**
+     * Construct a path ("a.b.c") from Expressions or values. Strings are considered identifiers
+     * (so they won't be quoted).
+     *
+     * @param pathComponents the elements of the path, joined together by a dot.
+     * @return the path created from the given components.
+     */
+    public static Expression path(Object... pathComponents) {
+        if (pathComponents == null || pathComponents.length == 0) {
+            return EMPTY_INSTANCE;
+        }
+        StringBuilder path = new StringBuilder();
+        for (Object p : pathComponents) {
+            path.append('.');
+            if (p instanceof Expression) {
+                path.append(((Expression) p).toString());
+            } else {
+                path.append(String.valueOf(p));
+            }
+        }
+        path.deleteCharAt(0);
+        return x(path.toString());
     }
 
     /**
@@ -1616,6 +1676,130 @@ public class Expression {
     public Expression as(Expression alias) {
         return infix("AS", toString(), alias.toString());
     }
+
+    //============ SIMPLE ARITHMETICS ============
+
+    /**
+     * Arithmetic addition between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the addition expression.
+     */
+    public Expression add(Expression expression) {
+        return infix("+", toString(), expression.toString());
+    }
+
+    /**
+     * Arithmetic addition between current expression and a given number.
+     *
+     * @param b the right hand side number.
+     * @return the addition expression.
+     */
+    public Expression add(Number b) {
+        return add(x(String.valueOf(b)));
+    }
+
+    /**
+     * Arithmetic addition between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the addition expression.
+     */
+    public Expression add(String expression) {
+        return add(x(expression));
+    }
+
+    /**
+     * Arithmetic v between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the subtraction expression.
+     */
+    public Expression subtract(Expression expression) {
+        return infix("-", toString(), expression.toString());
+    }
+
+    /**
+     * Arithmetic subtraction between current expression and a given number.
+     *
+     * @param b the right hand side number.
+     * @return the subtraction expression.
+     */
+    public Expression subtract(Number b) {
+        return subtract(x(String.valueOf(b)));
+    }
+
+    /**
+     * Arithmetic subtraction between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the subtraction expression.
+     */
+    public Expression subtract(String expression) {
+        return subtract(x(expression));
+    }
+
+    /**
+     * Arithmetic multiplication between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the multiplication expression.
+     */
+    public Expression multiply(Expression expression) {
+        return infix("*", toString(), expression.toString());
+    }
+
+    /**
+     * Arithmetic multiplication between current expression and a given number.
+     *
+     * @param b the right hand side number.
+     * @return the multiplication expression.
+     */
+    public Expression multiply(Number b) {
+        return multiply(x(String.valueOf(b)));
+    }
+
+    /**
+     * Arithmetic multiplication between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the multiplication expression.
+     */
+    public Expression multiply(String expression) {
+        return multiply(x(expression));
+    }
+
+    /**
+     * Arithmetic division between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the division expression.
+     */
+    public Expression divide(Expression expression) {
+        return infix("/", toString(), expression.toString());
+    }
+
+    /**
+     * Arithmetic division between current expression and a given number.
+     *
+     * @param b the right hand side number.
+     * @return the division expression.
+     */
+    public Expression divide(Number b) {
+        return divide(x(String.valueOf(b)));
+    }
+
+    /**
+     * Arithmetic division between current and given expression.
+     *
+     * @param expression the right hand side expression.
+     * @return the division expression.
+     */
+    public Expression divide(String expression) {
+        return divide(x(expression));
+    }
+
+    //===== HELPERS =====
 
     /**
      * Helper method to prefix a string.

@@ -28,48 +28,28 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.dsl.Expression;
 
 /**
- * DSL for N1QL functions in the misc/meta category.
+ * DSL for N1QL functions in the Numbers category.
  *
  * @author Simon Baslé
- * @author Michael Nitschinger
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public class MetaFunctions {
+public class NumberFunctions {
 
-    /**
-     * @return metadata for the document expression
-     */
-    public static Expression meta(Expression expression) {
-        return x("META(" + expression.toString() + ")");
+    public static Expression round(Expression expression) {
+        return x("ROUND(" + expression.toString() + ")");
     }
 
-    /**
-     * @return metadata for the document expression
-     */
-    public static Expression meta(String expression) {
-        return meta(x(expression));
+    public static Expression round(Expression expression, int digits) {
+        return x("ROUND(" + expression.toString() + ", " + digits + ")");
     }
 
-    /**
-     * @return Base64 encoding of the expression, on the server side
-     */
-    public static Expression base64(Expression expression) {
-        return x("BASE64(" + expression + ")");
+    public static Expression round(Number expression) {
+        return round(x(expression));
     }
 
-    /**
-     * @return Base64 encoding of the expression, on the server side
-     */
-    public static Expression base64(String expression) {
-        return base64(x(expression));
-    }
-
-    /**
-     * @return a version 4 Universally Unique Identifier(UUID), generated on the server side
-     */
-    public static Expression uuid() {
-        return x("UUID()");
+    public static Expression round(Number expression, int digits) {
+        return round(x(expression), digits);
     }
 }
