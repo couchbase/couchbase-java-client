@@ -1,9 +1,5 @@
 package com.couchbase.client.java.query.dsl;
 
-import java.util.Objects;
-
-import javafx.beans.binding.ObjectExpression;
-
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Statement;

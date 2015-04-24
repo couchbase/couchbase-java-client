@@ -80,7 +80,7 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
      */
     private static String extractName(final Field fieldReference) {
         com.couchbase.client.java.repository.annotation.Field annotation =
-            fieldReference.getDeclaredAnnotation(com.couchbase.client.java.repository.annotation.Field.class);
+            fieldReference.getAnnotation(com.couchbase.client.java.repository.annotation.Field.class);
         if (annotation == null || annotation.value() == null || annotation.value().isEmpty()) {
             return fieldReference.getName();
         } else {
