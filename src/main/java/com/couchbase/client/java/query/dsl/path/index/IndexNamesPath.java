@@ -23,30 +23,29 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * On path in the primary Index creation DSL.
+ * Path of the Index building DSL to specify which index(es) to build.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+public interface IndexNamesPath extends Path {
 
     /**
-     * Describes on which keyspace (bucket name) to index.
+     * Specify the index or indexes in a pending state that needs building.
      *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
+     * @param indexName minimum index to build (name will be escaped).
+     * @param indexNames 0-n additional indexes to also build (names will be escaped).
      */
-    UsingWithPath on(String keyspace);
+    UsingPath indexes(String indexName, String... indexNames);
 
     /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
+     * Build the primary index (using a name of {@link Index#PRIMARY_NAME}, must be in a pending state).
      */
-    UsingWithPath on(String namespace, String keyspace);
+    UsingPath primary();
 }

@@ -23,30 +23,32 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.path.Path;
+import com.couchbase.client.java.query.dsl.element.BuildIndexElement;
+import com.couchbase.client.java.query.dsl.path.AbstractPath;
 
 /**
- * On path in the primary Index creation DSL.
+ * see {@link BuildIndexPath}
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+@InterfaceAudience.Private
+public class DefaultBuildIndexPath extends AbstractPath implements BuildIndexPath {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    public DefaultBuildIndexPath() {
+        super(null);
+    }
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    @Override
+    public IndexNamesPath on(String namespace, String keyspace) {
+        element(new BuildIndexElement(namespace, keyspace));
+        return new DefaultIndexNamesPath(this);
+    }
+
+    @Override
+    public IndexNamesPath on(String keyspace) {
+        element(new BuildIndexElement(null, keyspace));
+        return new DefaultIndexNamesPath(this);
+    }
 }

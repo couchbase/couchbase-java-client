@@ -26,7 +26,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.dsl.Expression;
 
 /**
- * Starting clause of the secondary Index creation DSL.
+ * Where clause in the Index creation DSL.
  *
  * @author Simon Baslé
  * @since 2.2

@@ -19,34 +19,33 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.query.dsl.path.index;
+package com.couchbase.client.java.query.dsl.element;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * On path in the primary Index creation DSL.
+ * Element for initial clause of a BUILD index statement.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+public class BuildIndexElement implements Element {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    private final String fullKeyspace;
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    public BuildIndexElement(String namespace, String keyspace) {
+        if (namespace == null) {
+            this.fullKeyspace = ESCAPE_CHAR + keyspace + ESCAPE_CHAR;
+        } else {
+            this.fullKeyspace = ESCAPE_CHAR + namespace + "`:`" + keyspace + ESCAPE_CHAR;
+        }
+    }
+
+    @Override
+    public String export() {
+        return "BUILD INDEX ON " + fullKeyspace;
+    }
 }

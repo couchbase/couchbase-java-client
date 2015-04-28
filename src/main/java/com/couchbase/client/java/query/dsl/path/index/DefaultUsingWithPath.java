@@ -23,30 +23,26 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.path.Path;
+import com.couchbase.client.java.query.dsl.element.UsingElement;
+import com.couchbase.client.java.query.dsl.path.AbstractPath;
 
 /**
- * On path in the primary Index creation DSL.
+ * See {@link UsingWithPath}.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+@InterfaceAudience.Private
+public class DefaultUsingWithPath extends DefaultWithPath implements UsingWithPath {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    protected DefaultUsingWithPath(AbstractPath parent) {
+        super(parent);
+    }
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    @Override
+    public WithPath using(IndexType type) {
+        element(new UsingElement(type));
+        return new DefaultWithPath(this);
+    }
 }

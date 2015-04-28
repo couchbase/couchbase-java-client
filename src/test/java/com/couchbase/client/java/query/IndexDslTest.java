@@ -22,19 +22,23 @@
 
 package com.couchbase.client.java.query;
 
+import static com.couchbase.client.java.query.Index.buildIndex;
+import static com.couchbase.client.java.query.Index.dropIndex;
+import static com.couchbase.client.java.query.Index.dropPrimaryIndex;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.dsl.path.index.DefaultBuildIndexPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPrimaryPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultWithPath;
 import com.couchbase.client.java.query.dsl.path.index.IndexType;
 import com.couchbase.client.java.query.dsl.path.index.OnPath;
 import com.couchbase.client.java.query.dsl.path.index.OnPrimaryPath;
-import com.couchbase.client.java.query.dsl.path.index.UsingPath;
+import com.couchbase.client.java.query.dsl.path.index.UsingWithPath;
 import com.couchbase.client.java.query.dsl.path.index.UsingWherePath;
 import com.couchbase.client.java.query.dsl.path.index.WithPath;
 import org.junit.Test;
@@ -65,7 +69,7 @@ public class IndexDslTest {
         OnPrimaryPath idx1 = Index.createPrimaryIndex();
         assertFalse(idx1 instanceof Statement);
 
-        UsingPath idx2 = idx1.on("beer-sample");
+        UsingWithPath idx2 = idx1.on("beer-sample");
         assertTrue(idx2 instanceof Statement);
 
         Statement fullIndex = Index.createPrimaryIndex()
@@ -108,5 +112,43 @@ public class IndexDslTest {
         assertEquals("ON `test`", onP1);
         assertEquals("ON `prefix`:`test`", onP2);
         assertEquals("ON `test`", onP3);
+    }
+
+    @Test
+    public void testDropIndex() {
+        String drop1 = dropIndex("a", "b", "c").using(IndexType.GSI).toString();
+        String drop2 = dropIndex("b", "c").using(IndexType.GSI).toString();
+        String drop3 = dropPrimaryIndex("a", "b").using(IndexType.GSI).toString();
+        String drop4 = dropPrimaryIndex("b").using(IndexType.VIEW).toString();
+
+        assertEquals("DROP INDEX `a`:`b`.`c` USING GSI", drop1);
+        assertEquals("DROP INDEX `b`.`c` USING GSI", drop2);
+        assertEquals("DROP PRIMARY INDEX ON `a`:`b` USING GSI", drop3);
+        assertEquals("DROP PRIMARY INDEX ON `b` USING VIEW", drop4);
+    }
+
+    @Test
+    public void testDropIndexWithoutUsing() {
+        Statement drop1 = dropIndex("a", "b", "c");
+        Statement drop2 = dropIndex("b", "c");
+        Statement drop3 = dropPrimaryIndex("a", "b");
+        Statement drop4 = dropPrimaryIndex("b");
+
+        assertEquals("DROP INDEX `a`:`b`.`c`", drop1.toString());
+        assertEquals("DROP INDEX `b`.`c`", drop2.toString());
+        assertEquals("DROP PRIMARY INDEX ON `a`:`b`", drop3.toString());
+        assertEquals("DROP PRIMARY INDEX ON `b`", drop4.toString());
+    }
+
+    @Test
+    public void testBuildIndex() {
+        Statement build1 = buildIndex().on("test").primary().using(IndexType.GSI);
+        Statement build2 = buildIndex().on("prefix", "test").indexes("a").using(IndexType.GSI);
+        //note: as of CB4.0 DP1 this defaults to using VIEW type, which is not supported for deferred building.
+        Statement build3 = buildIndex().on(null, "test").indexes("a", "b", "c");
+
+        assertEquals("BUILD INDEX ON `test` (`" + Index.PRIMARY_NAME + "`) USING GSI", build1.toString());
+        assertEquals("BUILD INDEX ON `prefix`:`test` (`a`) USING GSI", build2.toString());
+        assertEquals("BUILD INDEX ON `test` (`a`, `b`, `c`)", build3.toString());
     }
 }

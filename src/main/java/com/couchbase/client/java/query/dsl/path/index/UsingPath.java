@@ -23,22 +23,22 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * Using path of the Index creation DSL.
+ * Using path of the Index dropping DSL.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface UsingPath extends WithPath {
+public interface UsingPath extends Path, Statement {
 
     /**
-     * Describes what kind of index to create.
-     *
-     * @param type the type of index to create.
+     * Describes the type of index to drop.
+     * @param indexType the type of the index.
      */
-    WithPath using(IndexType type);
-
+    Statement using(IndexType indexType);
 }

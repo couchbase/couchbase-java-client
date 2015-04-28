@@ -19,34 +19,36 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.query.dsl.path.index;
+package com.couchbase.client.java.query.dsl.element;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * On path in the primary Index creation DSL.
+ * Element for listing index names when Building an Index.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+@InterfaceAudience.Private
+public class IndexNamesElement implements Element {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    private final String indexName;
+    private final String[] otherNames;
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    public IndexNamesElement(String indexName, String... indexNames) {
+        this.indexName = indexName;
+        this.otherNames = indexNames;
+    }
+
+    @Override
+    public String export() {
+        StringBuilder sb = new StringBuilder("(`").append(indexName).append('`');
+        for (String otherName : otherNames) {
+            sb.append(", `").append(otherName).append('`');
+        }
+        sb.append(')');
+        return sb.toString();
+    }
 }

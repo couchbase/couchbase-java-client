@@ -23,30 +23,48 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * On path in the primary Index creation DSL.
+ * Initial path of the Index dropping DSL.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+public interface DropPath extends Path, Statement {
 
     /**
-     * Describes on which keyspace (bucket name) to index.
+     * Drop one secondary indexes in the specified keyspace.
      *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
+     * @param keyspace the keyspace (bucket) in which we'll drop indexes (will be escaped).
+     * @param indexName the name of the index to drop (will be escaped).
      */
-    UsingWithPath on(String keyspace);
+    UsingPath drop(String keyspace, String indexName);
 
     /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
+     * Drop one or more secondary indexes on the specified namespace:keyspace.
      *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
+     * @param namespace the namespace in which to work (will be escaped).
+     * @param keyspace the keyspace (bucket) in which we'll drop indexes (will be escaped).
+     * @param indexName the name of the index to drop (will be escaped).
      */
-    UsingWithPath on(String namespace, String keyspace);
+    UsingPath drop(String namespace, String keyspace, String indexName);
+
+    /**
+     * Drop the primary index in the specified keyspace.
+     *
+     * @param keyspace the keyspace (bucket) in which to drop primary index (will be escaped).
+     */
+    UsingPath dropPrimary(String keyspace);
+
+    /**
+     * Drop the primary index in the specified namespace:keyspace.
+     *
+     * @param namespace the namespace in which to work (will be escaped).
+     * @param keyspace the keyspace (bucket) in which to drop primary index (will be escaped).
+     */
+    UsingPath dropPrimary(String namespace, String keyspace);
 }

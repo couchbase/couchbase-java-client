@@ -23,30 +23,33 @@ package com.couchbase.client.java.query.dsl.path.index;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.path.Path;
+import com.couchbase.client.java.query.Index;
+import com.couchbase.client.java.query.dsl.element.IndexNamesElement;
+import com.couchbase.client.java.query.dsl.path.AbstractPath;
 
 /**
- * On path in the primary Index creation DSL.
+ * See {@link IndexNamesPath}.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+@InterfaceAudience.Private
+public class DefaultIndexNamesPath extends AbstractPath implements IndexNamesPath {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    protected DefaultIndexNamesPath(AbstractPath parent) {
+        super(parent);
+    }
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    @Override
+    public UsingPath indexes(String indexName, String... indexNames) {
+        element(new IndexNamesElement(indexName, indexNames));
+        return new DefaultUsingPath(this);
+    }
+
+    @Override
+    public UsingPath primary() {
+        element(new IndexNamesElement(Index.PRIMARY_NAME));
+        return new DefaultUsingPath(this);
+    }
 }

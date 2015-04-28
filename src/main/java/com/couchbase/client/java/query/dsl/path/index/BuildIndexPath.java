@@ -26,27 +26,16 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.dsl.path.Path;
 
 /**
- * On path in the primary Index creation DSL.
+ * Starting path of the Index building DSL.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface OnPrimaryPath extends Path {
+public interface BuildIndexPath extends Path {
 
-    /**
-     * Describes on which keyspace (bucket name) to index.
-     *
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String keyspace);
+    IndexNamesPath on(String namespace, String keyspace);
 
-    /**
-     * Describes on which keyspace (bucket name) to index, also prefixing the keyspace with a namespace.
-     *
-     * @param namespace the optional namespace prefix for the keyspace (it will automatically be escaped).
-     * @param keyspace the keyspace targeted (it will automatically be escaped).
-     */
-    UsingWithPath on(String namespace, String keyspace);
+    IndexNamesPath on(String keyspace);
 }
