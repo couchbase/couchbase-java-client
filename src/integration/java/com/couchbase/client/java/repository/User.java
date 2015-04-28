@@ -22,11 +22,9 @@
 package com.couchbase.client.java.repository;
 
 import com.couchbase.client.java.repository.annotation.Field;
-import com.couchbase.client.java.repository.annotation.Id;
 
 public class User {
 
-    @Id
     private String id;
 
     @Field

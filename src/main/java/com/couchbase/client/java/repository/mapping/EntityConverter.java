@@ -22,12 +22,13 @@
 package com.couchbase.client.java.repository.mapping;
 
 import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.document.EntityDocument;
 
 public interface EntityConverter<D extends Document<?>> {
 
-    D fromEntity(Object source);
+    D fromEntity(EntityDocument<Object> source);
 
-    <T> T toEntity(D source, Class<T> clazz);
+    <T> EntityDocument<T> toEntity(D source, Class<T> clazz);
 
 
 

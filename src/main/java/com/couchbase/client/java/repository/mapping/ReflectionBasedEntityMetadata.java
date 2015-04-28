@@ -44,4 +44,5 @@ public class ReflectionBasedEntityMetadata implements EntityMetadata {
     public PropertyMetadata idProperty() {
         return idProperty;
     }
+
 }

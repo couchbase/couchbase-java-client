@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.repository;
 
+import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.repository.annotation.Id;
 import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
@@ -30,48 +31,128 @@ import org.junit.Test;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 public class RepositoryTest extends ClusterDependentTest {
 
     @Test
     public void shouldUpsertAndGetEntity() {
-        User user = new User("Michael", true, 1234, 55.6766);
-        repository().upsert(user);
+        User entity = new User("Michael", true, 1234, 55.6766);
+        EntityDocument<User> document = EntityDocument.create(entity.id(), entity);
 
-        JsonDocument storedRaw = bucket().get(user.id());
-        assertEquals(user.name(), storedRaw.content().getString("name"));
-        assertEquals(user.published(), storedRaw.content().getBoolean("published"));
-        assertEquals(user.someNumber(), storedRaw.content().getInt("num"), 0);
-        assertEquals(user.otherNumber(), storedRaw.content().getDouble("otherNumber"), 0);
+        assertFalse(repository().exists(document));
+        assertEquals(0, document.cas());
+        EntityDocument<User> stored = repository().upsert(document);
+        assertNotEquals(0, stored.cas());
+        assertEquals(document.content(), stored.content());
 
-        User found = repository().get(user.id(), User.class);
-        assertEquals(user, found);
+        JsonDocument storedRaw = bucket().get(entity.id());
+        assertEquals(entity.name(), storedRaw.content().getString("name"));
+        assertEquals(entity.published(), storedRaw.content().getBoolean("published"));
+        assertEquals(entity.someNumber(), storedRaw.content().getInt("num"), 0);
+        assertEquals(entity.otherNumber(), storedRaw.content().getDouble("otherNumber"), 0);
+
+        EntityDocument<User> found = repository().get(entity.id(), User.class);
+        assertEquals(found.cas(), stored.cas());
+        assertEquals(entity, found.content());
+        assertNotEquals(0, found.cas());
+
+        assertTrue(repository().exists(document));
+    }
+
+    @Test
+    public void shouldInsertEntity() {
+        User entity = new User("Tom", false, -34, -55.6766);
+        EntityDocument<User> document = EntityDocument.create(entity.id(), entity);
+
+        assertFalse(repository().exists(document));
+        EntityDocument<User> stored = repository().insert(document);
+        assertEquals(document.content(), stored.content());
+
+        JsonDocument storedRaw = bucket().get(entity.id());
+        assertEquals(entity.name(), storedRaw.content().getString("name"));
+        assertEquals(entity.published(), storedRaw.content().getBoolean("published"));
+        assertEquals(entity.someNumber(), storedRaw.content().getInt("num"), 0);
+        assertEquals(entity.otherNumber(), storedRaw.content().getDouble("otherNumber"), 0);
+
+        EntityDocument<User> found = repository().get(entity.id(), User.class);
+        assertEquals(entity, found.content());
+        assertNotEquals(0, found.cas());
+
+        assertTrue(repository().exists(document));
+    }
+
+    @Test
+    public void shouldReplaceEntity() {
+        User entity = new User("John", false, -34, -55.6766);
+        EntityDocument<User> document = EntityDocument.create(entity.id(), entity);
+
+        assertFalse(repository().exists(document));
+        EntityDocument<User> stored = repository().upsert(document);
+        assertEquals(document.content(), stored.content());
+
+        entity = new User("John", true, 0, 0);
+        document = EntityDocument.create(entity.id(), entity);
+
+        EntityDocument<User> replaced = repository().replace(document);
+        assertEquals(entity, replaced.content());
+
+        JsonDocument storedRaw = bucket().get(entity.id());
+        assertEquals(entity.name(), storedRaw.content().getString("name"));
+        assertEquals(entity.published(), storedRaw.content().getBoolean("published"));
+        assertEquals(entity.someNumber(), storedRaw.content().getInt("num"), 0);
+        assertEquals(entity.otherNumber(), storedRaw.content().getDouble("otherNumber"), 0);
+
+        EntityDocument<User> found = repository().get(entity.id(), User.class);
+        assertEquals(entity, found.content());
+        assertNotEquals(0, found.cas());
+
+        assertTrue(repository().exists(document));
+    }
+
+    @Test
+    public void shouldRemoveEntity() {
+        User entity = new User("Jane", false, -34, -55.6766);
+        EntityDocument<User> document = EntityDocument.create(entity.id(), entity);
+
+        assertFalse(repository().exists(document));
+        EntityDocument<User> stored = repository().upsert(document);
+        assertEquals(entity, stored.content());
+        assertTrue(repository().exists(stored));
+
+        EntityDocument<User> removed = repository().remove(stored);
+        assertFalse(repository().exists(removed));
+        assertEquals(document.id(), removed.id());
     }
 
     @Test(expected = RepositoryMappingException.class)
     public void shouldFailWithoutIdProperty() {
-        repository().upsert(new EntityWithoutId());
+        repository().upsert(EntityDocument.create(new EntityWithoutId()));
     }
 
     @Test(expected = RepositoryMappingException.class)
     public void shouldFailWithNullIdProperty() {
-        repository().upsert(new EntityWithId());
+        repository().upsert(EntityDocument.create(new EntityWithId()));
     }
 
     @Test(expected = RepositoryMappingException.class)
     public void shouldFailWithNonStringIdProperty() {
-        repository().upsert(new EntityWithNoNStringId());
+        repository().upsert(EntityDocument.create(new EntityWithNoNStringId()));
     }
 
     static class EntityWithoutId {
     }
 
     static class EntityWithId {
-        public @Id String id = null;
+        public @Id
+        String id = null;
     }
 
     static class EntityWithNoNStringId {
-        public @Id Date id = new Date();
+        public @Id
+        Date id = new Date();
     }
 
 }

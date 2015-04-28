@@ -21,6 +21,10 @@
  */
 package com.couchbase.client.java.repository;
 
+import com.couchbase.client.java.PersistTo;
+import com.couchbase.client.java.ReplicaMode;
+import com.couchbase.client.java.ReplicateTo;
+import com.couchbase.client.java.document.EntityDocument;
 import rx.Observable;
 
 /**
@@ -31,8 +35,36 @@ import rx.Observable;
  */
 public interface AsyncRepository {
 
-    <T> Observable<T> get(String id, Class<T> documentClass);
+    <T> Observable<EntityDocument<T>> get(String id, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> getFromReplica(String id, ReplicaMode type, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> getAndLock(String id, int lockTime, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> getAndTouch(String id, int expiry, Class<T> entityClass);
 
-    <T> Observable<T> upsert(T document);
+    Observable<Boolean> exists(String id);
+    <T> Observable<Boolean> exists(EntityDocument<T> document);
+
+    <T> Observable<EntityDocument<T>> upsert(EntityDocument<T> document);
+    <T> Observable<EntityDocument<T>> upsert(EntityDocument<T> document, PersistTo persistTo);
+    <T> Observable<EntityDocument<T>> upsert(EntityDocument<T> document, ReplicateTo replicateTo);
+    <T> Observable<EntityDocument<T>> upsert(EntityDocument<T> document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    <T> Observable<EntityDocument<T>> insert(EntityDocument<T> document);
+    <T> Observable<EntityDocument<T>> insert(EntityDocument<T> document, PersistTo persistTo);
+    <T> Observable<EntityDocument<T>> insert(EntityDocument<T> document, ReplicateTo replicateTo);
+    <T> Observable<EntityDocument<T>> insert(EntityDocument<T> document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    <T> Observable<EntityDocument<T>> replace(EntityDocument<T> document);
+    <T> Observable<EntityDocument<T>> replace(EntityDocument<T> document, PersistTo persistTo);
+    <T> Observable<EntityDocument<T>> replace(EntityDocument<T> document, ReplicateTo replicateTo);
+    <T> Observable<EntityDocument<T>> replace(EntityDocument<T> document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    <T> Observable<EntityDocument<T>> remove(EntityDocument<T> document);
+    <T> Observable<EntityDocument<T>> remove(EntityDocument<T> document, PersistTo persistTo);
+    <T> Observable<EntityDocument<T>> remove(EntityDocument<T> document, ReplicateTo replicateTo);
+    <T> Observable<EntityDocument<T>> remove(EntityDocument<T> document, PersistTo persistTo, ReplicateTo replicateTo);
+    <T> Observable<EntityDocument<T>> remove(String id, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> remove(String id, PersistTo persistTo, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> remove(String id, ReplicateTo replicateTo, Class<T> entityClass);
+    <T> Observable<EntityDocument<T>> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<T> entityClass);
 
 }
