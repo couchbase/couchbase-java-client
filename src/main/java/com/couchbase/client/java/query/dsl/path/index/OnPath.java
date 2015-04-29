@@ -43,7 +43,7 @@ public interface OnPath extends Path {
      * @param expression the base expression to be indexed (mandatory).
      * @param additionalExpressions additional expressions to be indexed (optional).
      */
-    UsingWherePath on(String keyspace, Expression expression, Expression... additionalExpressions);
+    WherePath on(String keyspace, Expression expression, Expression... additionalExpressions);
 
     /**
      * Describes the target of a secondary N1QL index.
@@ -53,7 +53,7 @@ public interface OnPath extends Path {
      * @param expression the base expression to be indexed (mandatory).
      * @param additionalExpressions additional expressions to be indexed (optional).
      */
-    UsingWherePath on(String namespace, String keyspace, Expression expression, Expression... additionalExpressions);
+    WherePath on(String namespace, String keyspace, Expression expression, Expression... additionalExpressions);
 
 
 

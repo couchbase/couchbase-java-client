@@ -33,19 +33,19 @@ import com.couchbase.client.java.query.dsl.Expression;
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface WherePath extends WithPath {
+public interface WherePath extends UsingWithPath {
 
     /**
      * Adds filtering clause to the secondary index creation.
      *
      * @param filterExpression the expression to use for index filtering.
      */
-    WithPath where(Expression filterExpression);
+    UsingWithPath where(Expression filterExpression);
 
     /**
      * Adds filtering clause to the secondary index creation.
      *
      * @param filterExpression the expression to use for index filtering.
      */
-    WithPath where(String filterExpression);
+    UsingWithPath where(String filterExpression);
 }

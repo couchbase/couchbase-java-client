@@ -47,6 +47,6 @@ public class WithIndexOptionElement implements Element {
 
     @Override
     public String export() {
-        return "WITH `" + options.toString() + "`";
+        return "WITH " + options.toString();
     }
 }

@@ -31,7 +31,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.dsl.path.index.DefaultBuildIndexPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPrimaryPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultWithPath;
@@ -39,7 +38,7 @@ import com.couchbase.client.java.query.dsl.path.index.IndexType;
 import com.couchbase.client.java.query.dsl.path.index.OnPath;
 import com.couchbase.client.java.query.dsl.path.index.OnPrimaryPath;
 import com.couchbase.client.java.query.dsl.path.index.UsingWithPath;
-import com.couchbase.client.java.query.dsl.path.index.UsingWherePath;
+import com.couchbase.client.java.query.dsl.path.index.WherePath;
 import com.couchbase.client.java.query.dsl.path.index.WithPath;
 import org.junit.Test;
 
@@ -50,18 +49,18 @@ public class IndexDslTest {
         OnPath idx1 = Index.createIndex("test");
         assertFalse(idx1 instanceof Statement);
 
-        UsingWherePath idx2 = idx1.on("prefix", "beer-sample", x("abv"));
+        WherePath idx2 = idx1.on("prefix", "beer-sample", x("abv"));
         assertTrue(idx2 instanceof Statement);
         assertEquals("CREATE INDEX `test` ON `prefix`:`beer-sample`(abv)", idx2.toString());
 
         Statement fullIndex = Index.createIndex("test")
                 .on("beer-sample", x("abv"), x("ibu"))
-                .using(IndexType.GSI)
                 .where(x("abv").gt(10))
+                .using(IndexType.GSI)
                 .withDefer();
 
         assertEquals("CREATE INDEX `test` ON `beer-sample`(abv, ibu) " +
-                "USING GSI WHERE abv > 10 WITH `{\"defer_build\":true}`", fullIndex.toString());
+                "WHERE abv > 10 USING GSI WITH {\"defer_build\":true}", fullIndex.toString());
     }
 
     @Test
@@ -78,16 +77,16 @@ public class IndexDslTest {
             .withDefer();
 
         assertEquals("CREATE PRIMARY INDEX ON `beer-sample` " +
-                "USING GSI WITH `{\"defer_build\":true}`", fullIndex.toString());
+                "USING GSI WITH {\"defer_build\":true}", fullIndex.toString());
     }
 
     @Test
     public void testWithVariants() {
         WithPath path = new DefaultWithPath(null);
 
-        String expectedDefer = "WITH `" + JsonObject.create().put("defer_build", true) + "`";
-        String expectedDeferAndNode = "WITH `" + JsonObject.create().put("defer_build", true).put("nodes", "test") + "`";
-        String expectedNode = "WITH `" + JsonObject.create().put("nodes", "test") + "`";
+        String expectedDefer = "WITH " + JsonObject.create().put("defer_build", true);
+        String expectedDeferAndNode = "WITH " + JsonObject.create().put("defer_build", true).put("nodes", "test");
+        String expectedNode = "WITH " + JsonObject.create().put("nodes", "test");
 
         assertEquals(expectedDefer, path.withDefer().toString());
         assertEquals(expectedDeferAndNode, path.withDeferAndNode("test").toString());

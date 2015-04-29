@@ -42,13 +42,13 @@ public class DefaultOnPath extends AbstractPath implements OnPath {
     }
 
     @Override
-    public UsingWherePath on(String namespace, String keyspace, Expression expression, Expression... additionalExpressions) {
+    public WherePath on(String namespace, String keyspace, Expression expression, Expression... additionalExpressions) {
         element(new OnElement(namespace, keyspace, expression, additionalExpressions));
-        return new DefaultUsingWherePath(this);
+        return new DefaultWherePath(this);
     }
 
     @Override
-    public UsingWherePath on(String keyspace, Expression expression, Expression... additionalExpressions) {
+    public WherePath on(String keyspace, Expression expression, Expression... additionalExpressions) {
         return on(null, keyspace, expression, additionalExpressions);
     }
 }
