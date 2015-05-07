@@ -21,22 +21,38 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.RawJsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.error.ViewDoesNotExistException;
-import com.couchbase.client.java.util.ClusterDependentTest;
-import com.couchbase.client.java.view.*;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import rx.Observable;
-import rx.functions.Func1;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.RawJsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.ViewDoesNotExistException;
+import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.view.AsyncViewResult;
+import com.couchbase.client.java.view.AsyncViewRow;
+import com.couchbase.client.java.view.DefaultView;
+import com.couchbase.client.java.view.DesignDocument;
+import com.couchbase.client.java.view.Stale;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import rx.Observable;
+import rx.functions.Func1;
 
 /**
  * Runs end-to-end {@link ViewQuery}s and verifies their output.
@@ -322,6 +338,23 @@ public class ViewQueryTest extends ClusterDependentTest {
         assertEquals(1000, row.value());
 
         row.document();
+    }
+
+    @Test
+    public void shouldSucceedWithLargeKeysArray() throws IOException {
+        InputStream ras = this.getClass().getResourceAsStream("/data/view/key_many.txt");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(ras));
+        String[] keys = reader.readLine().split(",");
+        reader.close();
+        JsonArray keysArray = JsonArray.from((Object[]) keys);
+
+        ViewResult result = bucket().query(
+                ViewQuery.from("users", "by_name")
+                         .keys(keysArray)
+        );
+
+        assertTrue(result.success());
+        assertNull(result.error());
     }
 
 }

@@ -87,7 +87,12 @@ ext {
 }
 
 sourceSets {
-    integration
+    integration {
+        //bug in IntelliJ prevent it from seeing resources dirs of a custom sourceSet
+        //instead, let's always use test's resource dir (which is the one seen by IntelliJ when running tests)
+        // (see https://youtrack.jetbrains.com/issue/IDEA-128966)
+        resources.srcDirs = ['src/test/resources']
+    }
 }
 
 configurations {

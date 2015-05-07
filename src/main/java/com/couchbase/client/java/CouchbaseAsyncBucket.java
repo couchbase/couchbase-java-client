@@ -746,7 +746,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<ViewQueryResponse> call() {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
-                    query.isDevelopment(), query.toString(), bucket, password);
+                    query.isDevelopment(), query.toString(), query.getKeys(), bucket, password);
                 return core.send(request);
             }
         });
@@ -767,7 +767,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<ViewQueryResponse> call() {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
-                    query.isDevelopment(), true, query.toString(), bucket, password);
+                    query.isDevelopment(), true, query.toString(), null, bucket, password);
                 return core.send(request);
             }
         });
