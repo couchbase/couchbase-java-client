@@ -30,6 +30,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * Verifies the correct functionality of the {@link ViewQuery} DSL.
@@ -159,8 +160,10 @@ public class ViewQueryTest {
 
     @Test
     public void shouldHandleKeys() {
-        ViewQuery query = ViewQuery.from("design", "view").keys(JsonArray.from("foo", 3, true));
-        assertEquals("keys=%5B%22foo%22%2C3%2Ctrue%5D", query.toString());
+        JsonArray keysArray = JsonArray.from("foo", 3, true);
+        ViewQuery query = ViewQuery.from("design", "view").keys(keysArray);
+        assertEquals("", query.toString());
+        assertEquals(keysArray.toString(), query.getKeys());
     }
 
     @Test
@@ -236,7 +239,7 @@ public class ViewQueryTest {
             .reduce(false)
             .startKey(JsonArray.from("foo", true));
         assertEquals("reduce=false&group=true&debug=true&descending=true&startkey=%5B%22foo%22%2Ctrue%5D",
-            query.toString());
+                query.toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -275,4 +278,16 @@ public class ViewQueryTest {
         assertEquals(query, deserialized);
     }
 
+    @Test
+    public void shouldStoreKeysAsJsonOutsideParams() {
+        JsonArray keys = JsonArray.create().add("1").add("2").add("3");
+        String keysJson = keys.toString();
+        ViewQuery query = ViewQuery.from("design", "view");
+        assertNull(query.getKeys());
+
+        query.keys(keys);
+        assertEquals(keysJson, query.getKeys());
+        assertFalse(query.toString().contains("keys="));
+        assertFalse(query.toString().contains("3"));
+    }
 }

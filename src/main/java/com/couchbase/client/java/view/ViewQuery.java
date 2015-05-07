@@ -52,13 +52,12 @@ public class ViewQuery implements Serializable {
     private static final int PARAM_STARTKEYDOCID_OFFSET = 22;
     private static final int PARAM_ENDKEY_OFFSET = 24;
     private static final int PARAM_ENDKEYDOCID_OFFSET = 26;
-    private static final int PARAM_KEYS_OFFSET = 28;
-    private static final int PARAM_KEY_OFFSET = 30;
+    private static final int PARAM_KEY_OFFSET = 28;
 
     /**
      * Number of supported possible params for a query.
      */
-    private static final int NUM_PARAMS = 16;
+    private static final int NUM_PARAMS = 15;
 
     /**
      * Contains all stored params.
@@ -69,6 +68,7 @@ public class ViewQuery implements Serializable {
     private final String view;
 
     private boolean development;
+    private String keysJson;
 
     private ViewQuery(String design, String view) {
         this.design = design;
@@ -259,7 +259,7 @@ public class ViewQuery implements Serializable {
 
     public ViewQuery key(String key) {
         params[PARAM_KEY_OFFSET] = "key";
-        params[PARAM_KEY_OFFSET+1] = encode("\"" + key + "\"");
+        params[PARAM_KEY_OFFSET + 1] = encode("\"" + key + "\"");
         return this;
     }
 
@@ -301,8 +301,7 @@ public class ViewQuery implements Serializable {
     }
 
     public ViewQuery keys(JsonArray keys) {
-        params[PARAM_KEYS_OFFSET] = "keys";
-        params[PARAM_KEYS_OFFSET+1] = encode(keys.toString());
+        this.keysJson = keys.toString();
         return this;
     }
 
@@ -408,7 +407,8 @@ public class ViewQuery implements Serializable {
      * Helper method to properly encode a string.
      *
      * This method can be overridden if a different encoding logic needs to be
-     * used.
+     * used. If so, note that {@link #keys(JsonArray) keys} is not encoded via
+     * this method, but by the core.
      *
      * @param source source string.
      * @return encoded target string.
@@ -454,6 +454,13 @@ public class ViewQuery implements Serializable {
     return view;
     }
 
+    /**
+     * @return the String JSON representation of the {@link #keys(JsonArray) keys} parameter.
+     */
+    public String getKeys() {
+        return this.keysJson;
+    }
+
     public boolean isDevelopment() {
     return development;
     }
@@ -468,6 +475,7 @@ public class ViewQuery implements Serializable {
         if (development != viewQuery.development) return false;
         if (design != null ? !design.equals(viewQuery.design) : viewQuery.design != null) return false;
         if (!Arrays.equals(params, viewQuery.params)) return false;
+        if (keysJson != null ? !keysJson.equals(viewQuery.keysJson) : viewQuery.keysJson != null) return false;
         if (view != null ? !view.equals(viewQuery.view) : viewQuery.view != null) return false;
 
         return true;
@@ -479,6 +487,7 @@ public class ViewQuery implements Serializable {
         result = 31 * result + (design != null ? design.hashCode() : 0);
         result = 31 * result + (view != null ? view.hashCode() : 0);
         result = 31 * result + (development ? 1 : 0);
+        result = 31 * result + (keysJson != null ? keysJson.hashCode() : 0);
         return result;
     }
 }
