@@ -162,8 +162,10 @@ public class ViewQueryTest {
 
     @Test
     public void shouldHandleKeys() {
-        ViewQuery query = ViewQuery.from("design", "view").keys(JsonArray.from("foo", 3, true));
-        assertEquals("keys=%5B%22foo%22%2C3%2Ctrue%5D", query.toString());
+        JsonArray keysArray = JsonArray.from("foo", 3, true);
+        ViewQuery query = ViewQuery.from("design", "view").keys(keysArray);
+        assertEquals("", query.toString());
+        assertEquals(keysArray.toString(), query.getKeys());
     }
 
     @Test
