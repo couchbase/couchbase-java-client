@@ -13,7 +13,7 @@ The package is available from Maven Central:
     <dependency>
         <groupId>com.couchbase.client</groupId>
         <artifactId>java-client</artifactId>
-        <version>2.1.2</version>
+        <version>2.1.3</version>
     </dependency>
 </dependencies>
 ```
