@@ -78,7 +78,7 @@ public class Case {
          * Otherwise, in a "simple case", the given Expression is matched against the initial case Expression for equality.
          *
          * If the condition holds true, the CASE will return the expression given by the following THEN clause.
-         * Otherwise next WHEN clause is evaluated, if note ELSE clause is used, if none the CASE returns NULL.
+         * Otherwise next WHEN clause is evaluated, if none left the ELSE clause is used, if none the CASE returns NULL.
          *
          * @see Case#caseSearch()
          * @see Case#caseSimple(Expression)
