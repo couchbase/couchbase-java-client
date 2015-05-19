@@ -784,6 +784,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncQueryResult> query(final Statement statement) {
+        if (statement instanceof QueryPlan) {
+            return query(Query.prepared((QueryPlan) statement));
+        }
         return query(Query.simple(statement));
     }
 
