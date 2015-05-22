@@ -22,6 +22,7 @@
 package com.couchbase.client.java.env;
 
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
+import com.couchbase.client.core.env.resources.ShutdownHook;
 import com.couchbase.client.core.event.EventBus;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
@@ -350,8 +351,20 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
+        public Builder ioPool(EventLoopGroup group, ShutdownHook shutdownHook) {
+            super.ioPool(group, shutdownHook);
+            return this;
+        }
+
+        @Override
         public Builder scheduler(final Scheduler scheduler) {
             super.scheduler(scheduler);
+            return this;
+        }
+
+        @Override
+        public Builder scheduler(Scheduler scheduler, ShutdownHook shutdownHook) {
+            super.scheduler(scheduler, shutdownHook);
             return this;
         }
 
