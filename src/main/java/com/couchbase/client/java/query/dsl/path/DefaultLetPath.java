@@ -1,6 +1,7 @@
 package com.couchbase.client.java.query.dsl.path;
 
 import com.couchbase.client.java.query.dsl.Alias;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.dsl.element.JoinElement;
 import com.couchbase.client.java.query.dsl.element.LetElement;
 import com.couchbase.client.java.query.dsl.element.NestElement;
@@ -90,5 +91,67 @@ public class DefaultLetPath extends DefaultWherePath implements LetPath {
     public UnnestPath leftOuterUnnest(String path) {
         element(new UnnestElement(JoinType.LEFT_OUTER, path));
         return new DefaultUnnestPath(this);
+    }
+
+    //===Expression Overrides===
+
+    @Override
+    public JoinPath join(Expression from) {
+        return join(from.toString());
+    }
+
+    @Override
+    public JoinPath innerJoin(Expression from) {
+        return innerJoin(from.toString());
+    }
+
+    @Override
+    public JoinPath leftJoin(Expression from) {
+        return leftJoin(from.toString());
+    }
+
+    @Override
+    public JoinPath leftOuterJoin(Expression from) {
+        return leftOuterJoin(from.toString());
+    }
+
+    @Override
+    public NestPath nest(Expression from) {
+        return nest(from.toString());
+    }
+
+    @Override
+    public NestPath innerNest(Expression from) {
+        return innerNest(from.toString());
+    }
+
+    @Override
+    public NestPath leftNest(Expression from) {
+        return leftNest(from.toString());
+    }
+
+    @Override
+    public NestPath leftOuterNest(Expression from) {
+        return leftOuterNest(from.toString());
+    }
+
+    @Override
+    public UnnestPath unnest(Expression path) {
+        return unnest(path.toString());
+    }
+
+    @Override
+    public UnnestPath innerUnnest(Expression path) {
+        return innerUnnest(path.toString());
+    }
+
+    @Override
+    public UnnestPath leftUnnest(Expression path) {
+        return leftUnnest(path.toString());
+    }
+
+    @Override
+    public UnnestPath leftOuterUnnest(Expression path) {
+        return leftOuterUnnest(path.toString());
     }
 }
