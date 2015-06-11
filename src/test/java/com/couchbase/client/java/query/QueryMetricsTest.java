@@ -40,6 +40,7 @@ public class QueryMetricsTest {
         assertEquals(0, metrics.mutationCount());
         assertEquals(0, metrics.resultCount());
         assertEquals(0, metrics.warningCount());
+        assertEquals(0, metrics.sortCount());
         assertEquals(0L, metrics.resultSize());
 
         assertEquals(0, metrics.asJsonObject().size());
@@ -54,7 +55,8 @@ public class QueryMetricsTest {
                   .put("resultSize", 2L)
                   .put("errorCount", 3)
                   .put("warningCount", 4)
-                  .put("mutationCount", 5);
+                  .put("mutationCount", 5)
+                  .put("sortCount", 6);
         QueryMetrics metrics = new QueryMetrics(wellFormed);
 
         assertEquals("123.45ms", metrics.elapsedTime());
@@ -64,6 +66,7 @@ public class QueryMetricsTest {
         assertEquals(3, metrics.errorCount());
         assertEquals(4, metrics.warningCount());
         assertEquals(5, metrics.mutationCount());
+        assertEquals(6, metrics.sortCount());
     }
 
     @Test
@@ -76,7 +79,7 @@ public class QueryMetricsTest {
     }
 
     @Test
-    public void ensureSourceJsonDoesntBackMetrics() {
+    public void ensureSourceJsonDoesntBackDefinedMetrics() {
         JsonObject partial = JsonObject.create().put("errorCount", 32);
         QueryMetrics metrics = new QueryMetrics(partial);
         partial.put("errorCount", 3);

@@ -59,6 +59,7 @@ public class QueryMetrics implements Serializable{
     private final int errorCount;
     private final int warningCount;
     private final int mutationCount;
+    private final int sortCount;
     private final long resultSize;
     private final String elapsedTime;
     private final String executionTime;
@@ -94,6 +95,9 @@ public class QueryMetrics implements Serializable{
         Integer mutationCount = rawMetrics.getInt("mutationCount");
         this.mutationCount = mutationCount == null ? 0 : mutationCount;
 
+        Integer sortCount = rawMetrics.getInt("sortCount");
+        this.sortCount = sortCount == null ? 0 : sortCount;
+
         Long resultSize = rawMetrics.getLong("resultSize");
         this.resultSize = resultSize == null ? 0L : resultSize;
     }
@@ -114,6 +118,14 @@ public class QueryMetrics implements Serializable{
      */
     public String executionTime() {
         return executionTime;
+    }
+
+    /**
+     * @return the total number of results selected by the engine before restriction
+     * through LIMIT clause.
+     */
+    public int sortCount() {
+        return sortCount;
     }
 
     /**
@@ -169,6 +181,7 @@ public class QueryMetrics implements Serializable{
         sb.append(", errorCount=").append(errorCount);
         sb.append(", warningCount=").append(warningCount);
         sb.append(", mutationCount=").append(mutationCount);
+        sb.append(", sortCount=").append(sortCount);
         sb.append(", resultSize=").append(resultSize);
         sb.append(", elapsedTime='").append(elapsedTime).append('\'');
         sb.append(", executionTime='").append(executionTime).append('\'');
