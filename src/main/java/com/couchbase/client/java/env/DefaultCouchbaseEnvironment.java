@@ -382,10 +382,6 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
 
         @Override
         public Builder dcpEnabled(boolean dcpEnabled) {
-            if (dcpEnabled) {
-                throw new IllegalArgumentException("DCP is not supported from the Java SDK.");
-            }
-
             super.dcpEnabled(dcpEnabled);
             return this;
         }
