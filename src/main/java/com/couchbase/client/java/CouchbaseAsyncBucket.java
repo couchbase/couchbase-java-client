@@ -120,6 +120,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
+    private static final int COUNTER_NOT_EXISTS_EXPIRY = 0xffffffff;
+
     public static final JsonTranscoder JSON_OBJECT_TRANSCODER = new JsonTranscoder();
     public static final JsonArrayTranscoder JSON_ARRAY_TRANSCODER = new JsonArrayTranscoder();
     public static final JsonBooleanTranscoder JSON_BOOLEAN_TRANSCODER = new JsonBooleanTranscoder();
@@ -956,7 +958,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<JsonLongDocument> counter(String id, long delta) {
-        return counter(id, delta, 0);
+        return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY);
     }
 
     @Override
@@ -976,10 +978,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
 
                     if (response.status().isSuccess()) {
-                        return JsonLongDocument.create(id, expiry, response.value(), response.cas());
+                        int returnedExpiry = expiry == COUNTER_NOT_EXISTS_EXPIRY ? 0 : expiry;
+                        return JsonLongDocument.create(id, returnedExpiry, response.value(), response.cas());
                     }
 
                     switch(response.status()) {
+                        case NOT_EXISTS:
+                            throw new DocumentDoesNotExistException();
                         case TEMPORARY_FAILURE:
                         case SERVER_BUSY:
                             throw new TemporaryFailureException();

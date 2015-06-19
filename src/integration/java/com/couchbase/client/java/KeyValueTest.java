@@ -203,19 +203,16 @@ public class KeyValueTest extends ClusterDependentTest {
         assertEquals(doc6.cas(), doc5.cas());
     }
 
-    @Test
-    public void shouldHaveCounterInitialZero() throws Exception {
+    @Test(expected = DocumentDoesNotExistException.class)
+    public void shouldThrowIfNotExistsIncrementing() throws Exception {
         JsonLongDocument doc1 = bucket().counter("defincr-key", 10);
         assertEquals(0, (long) doc1.content());
+    }
 
-        JsonLongDocument doc2 = bucket().get("defincr-key", JsonLongDocument.class);
-        assertEquals(0, (long) doc2.content());
-
+    @Test(expected = DocumentDoesNotExistException.class)
+    public void shouldThrowIfNotExistsDecrementing() throws Exception {
         JsonLongDocument doc3 = bucket().counter("defdecr-key", -10);
         assertEquals(0, (long) doc3.content());
-
-        JsonLongDocument doc4 = bucket().get("defdecr-key", JsonLongDocument.class);
-        assertEquals(0, (long) doc4.content());
     }
 
     @Test
