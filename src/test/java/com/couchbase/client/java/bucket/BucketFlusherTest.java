@@ -23,7 +23,6 @@ package com.couchbase.client.java.bucket;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
-import com.couchbase.client.core.endpoint.ResponseStatusConverter;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.config.FlushRequest;
@@ -67,7 +66,7 @@ public class BucketFlusherTest {
     private static final CouchbaseResponse GOOD_FLUSH_RESPONSE = new FlushResponse(true, "", ResponseStatus.SUCCESS);
     private static final CouchbaseResponse PEND_FLUSH_RESPONSE =  new FlushResponse(false, "", ResponseStatus.SUCCESS);
     private static final CouchbaseResponse GOOD_UPSERT_RESPONSE = new UpsertResponse(ResponseStatus.SUCCESS,
-            BINARY_SUCCESS, 0, BUCKET, Unpooled.EMPTY_BUFFER, null);
+            BINARY_SUCCESS, 0, BUCKET, Unpooled.EMPTY_BUFFER, null, null);
 
     @Test
     public void shouldFlushBucket() {
@@ -83,7 +82,7 @@ public class BucketFlusherTest {
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 return Observable.just(
                     (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, BINARY_SUCCESS, 0, BUCKET,
-                            upsertIterator.next(), null)
+                            upsertIterator.next(), null, null)
                 );
             }
         });
@@ -108,7 +107,7 @@ public class BucketFlusherTest {
             public Observable<CouchbaseResponse> answer(InvocationOnMock invocation) throws Throwable {
                 return Observable.just(
                     (CouchbaseResponse) new UpsertResponse(ResponseStatus.SUCCESS, BINARY_SUCCESS,
-                            0, BUCKET, upsertIterator.next(), null)
+                            0, BUCKET, upsertIterator.next(), null, null)
                 );
             }
         });

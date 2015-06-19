@@ -24,7 +24,6 @@ package com.couchbase.client.java;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryParams;
@@ -81,7 +80,8 @@ public class QueryTest extends ClusterDependentTest {
         //having two calls to errors() here validates that there's not a reference to the async stream
         //each time the method is called.
         assertEquals(1, indexResult.errors().size());
-        assertEquals("View index exists #primary", indexResult.errors().get(0).getString("msg"));
+        assertEquals("GSI CreatePrimaryIndex() - cause: Index #primary already exist.",
+            indexResult.errors().get(0).getString("msg"));
     }
 
     @Test
