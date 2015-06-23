@@ -65,28 +65,10 @@ public class Blocking {
      */
     public static <T> T blockForSingle(final Observable<? extends T> observable, final long timeout,
         final TimeUnit tu) {
-        final AtomicReference<T> returnItem = new AtomicReference<T>();
-        final AtomicReference<Throwable> returnException = new AtomicReference<Throwable>();
         final CountDownLatch latch = new CountDownLatch(1);
+        TrackingSubscriber<T> subscriber = new TrackingSubscriber<T>(latch);
 
-        observable
-            .subscribe(new Subscriber<T>() {
-                @Override
-                public void onCompleted() {
-                    latch.countDown();
-                }
-
-                @Override
-                public void onError(final Throwable e) {
-                    returnException.set(e);
-                    latch.countDown();
-                }
-
-                @Override
-                public void onNext(final T item) {
-                    returnItem.set(item);
-                }
-            });
+        observable.subscribe(subscriber);
 
         try {
             if (!latch.await(timeout, tu)) {
@@ -97,15 +79,61 @@ public class Blocking {
             throw new RuntimeException("Interrupted while waiting for subscription to complete.", e);
         }
 
-        if (returnException.get() != null) {
-            if (returnException.get() instanceof RuntimeException) {
-                throw (RuntimeException) returnException.get();
+        if (subscriber.returnException() != null) {
+            if (subscriber.returnException() instanceof RuntimeException) {
+                throw (RuntimeException) subscriber.returnException();
             } else {
-                throw new RuntimeException(returnException.get());
+                throw new RuntimeException(subscriber.returnException());
             }
         }
 
-        return returnItem.get();
+        return subscriber.returnItem();
+    }
+
+
+    /**
+     * A {@link Subscriber} which tracks the returned item or exception.
+     *
+     * By pushing out the {@link Subscriber} in it's own class, the code
+     * can get rid of {@link AtomicReference} objects and stick with
+     * plain volatiles instead (since it just needs get/set semantics) and
+     * reduce allocations a little bit.
+     *
+     * @since 2.2.0
+     */
+    private final static class TrackingSubscriber<T> extends Subscriber<T> {
+
+        private final CountDownLatch latch;
+        private volatile T returnItem = null;
+        private volatile Throwable returnException = null;
+
+        public TrackingSubscriber(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
+        @Override
+        public void onCompleted() {
+            latch.countDown();
+        }
+
+        @Override
+        public void onError(final Throwable e) {
+            returnException = e;
+            latch.countDown();
+        }
+
+        @Override
+        public void onNext(final T item) {
+            returnItem = item;
+        }
+
+        public Throwable returnException() {
+            return returnException;
+        }
+
+        public T returnItem() {
+            return returnItem;
+        }
     }
 
 }
