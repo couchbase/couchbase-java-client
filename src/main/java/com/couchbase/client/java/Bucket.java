@@ -263,15 +263,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -297,15 +295,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -333,15 +329,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param document the document to extract the ID from.
      * @param type the {@link ReplicaMode} to select.
@@ -367,15 +361,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param document the document to extract the ID from.
      * @param type the {@link ReplicaMode} to select.
@@ -403,15 +395,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param id the id of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -437,15 +427,13 @@ public interface Bucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, most errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
      * This method throws under the following conditions:
      *
-     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * - The operation takes longer than the specified timeout: {@link TimeoutException}
+     *   wrapped in a {@link RuntimeException}
      *
      * @param id the id of the document.
      * @param type the {@link ReplicaMode} to select.
