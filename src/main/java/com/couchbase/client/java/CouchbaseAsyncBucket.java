@@ -25,15 +25,11 @@ import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
-import com.couchbase.client.core.config.CouchbaseBucketConfig;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
-import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
-import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.kv.AppendRequest;
 import com.couchbase.client.core.message.kv.AppendResponse;
-import com.couchbase.client.core.message.kv.BinaryRequest;
 import com.couchbase.client.core.message.kv.CounterRequest;
 import com.couchbase.client.core.message.kv.CounterResponse;
 import com.couchbase.client.core.message.kv.GetRequest;
@@ -48,7 +44,6 @@ import com.couchbase.client.core.message.kv.RemoveRequest;
 import com.couchbase.client.core.message.kv.RemoveResponse;
 import com.couchbase.client.core.message.kv.ReplaceRequest;
 import com.couchbase.client.core.message.kv.ReplaceResponse;
-import com.couchbase.client.core.message.kv.ReplicaGetRequest;
 import com.couchbase.client.core.message.kv.TouchRequest;
 import com.couchbase.client.core.message.kv.TouchResponse;
 import com.couchbase.client.core.message.kv.UnlockRequest;
@@ -64,6 +59,7 @@ import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
+import com.couchbase.client.java.bucket.ReplicaReader;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
@@ -377,63 +373,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getFromReplica(final String id, final ReplicaMode type,
         final Class<D> target) {
-
-        Observable<GetResponse> incoming;
-        if (type == ReplicaMode.ALL) {
-            incoming = core
-                .<GetClusterConfigResponse>send(new GetClusterConfigRequest())
-                .map(new Func1<GetClusterConfigResponse, Integer>() {
-                    @Override
-                    public Integer call(GetClusterConfigResponse response) {
-                        CouchbaseBucketConfig conf = (CouchbaseBucketConfig) response.config().bucketConfig(bucket);
-                        return conf.numberOfReplicas();
-                    }
-                }).flatMap(new Func1<Integer, Observable<BinaryRequest>>() {
-                    @Override
-                    public Observable<BinaryRequest> call(Integer max) {
-                        List<BinaryRequest> requests = new ArrayList<BinaryRequest>();
-
-                        requests.add(new GetRequest(id, bucket));
-                        for (int i = 0; i < max; i++) {
-                            requests.add(new ReplicaGetRequest(id, bucket, (short)(i+1)));
-                        }
-                        return Observable.from(requests);
-                    }
-                }).flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
-                    @Override
-                    public Observable<GetResponse> call(BinaryRequest req) {
-                        return core.send(req);
-                    }
-                });
-        } else {
-            incoming = core.send(new ReplicaGetRequest(id, bucket, (short) type.ordinal()));
-        }
-
-        return incoming
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse response) {
-                    if (response.status().isSuccess()) {
-                        return true;
-                    }
-                    ByteBuf content = response.content();
-                    if (content != null && content.refCnt() > 0) {
-                        content.release();
-                    }
-
-                    switch(response.status()) {
-                        case NOT_EXISTS:
-                            return false;
-                        case TEMPORARY_FAILURE:
-                        case SERVER_BUSY:
-                            throw new TemporaryFailureException();
-                        case OUT_OF_MEMORY:
-                            throw new CouchbaseOutOfMemoryException();
-                        default:
-                            throw new CouchbaseException(response.status().toString());
-                    }
-                }
-            })
+        return ReplicaReader
+            .read(core, id, type, bucket)
             .map(new Func1<GetResponse, D>() {
                 @Override
                 public D call(final GetResponse response) {

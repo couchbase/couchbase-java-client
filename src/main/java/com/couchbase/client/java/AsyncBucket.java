@@ -212,14 +212,8 @@ public interface AsyncBucket {
      *
      * Note that the returning {@link JsonDocument} responses can come in any order.
      *
-     *  The returned {@link Observable} can error under the following conditions:
-     *
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
@@ -249,12 +243,8 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
      *
      * @param document the source document from which the ID is taken and the type is inferred.
      * @param type the {@link ReplicaMode} to select.
@@ -284,12 +274,8 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
-     * - The producer outpaces the SDK: {@link BackpressureException}
-     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
-     *   retrying: {@link RequestCancelledException}
-     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
-     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
-     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
      *
      * @param id id the unique ID of the document.
      * @param type the {@link ReplicaMode} to select.
