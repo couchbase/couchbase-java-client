@@ -43,14 +43,13 @@ public class SpatialViewQuery implements Serializable {
     private static final int PARAM_SKIP_OFFSET = 2;
     private static final int PARAM_STALE_OFFSET = 4;
     private static final int PARAM_DEBUG_OFFSET = 6;
-    private static final int PARAM_START_RANGE_OFFSET = 8;
-    private static final int PARAM_END_RANGE_OFFSET = 10;
-    private static final int PARAM_ONERROR_OFFSET = 12;
+    private static final int PARAM_BBOX_OFFSET = 8;
+    private static final int PARAM_ONERROR_OFFSET = 10;
 
     /**
      * Number of supported possible params for a query.
      */
-    private static final int NUM_PARAMS = 7;
+    private static final int NUM_PARAMS = 6;
 
     /**
      * Contains all stored params.
@@ -197,22 +196,17 @@ public class SpatialViewQuery implements Serializable {
         params[PARAM_DEBUG_OFFSET+1] = Boolean.toString(debug);
         return this;
     }
-
-    public SpatialViewQuery startRange(final JsonArray startRange) {
-        params[PARAM_START_RANGE_OFFSET] = "start_range";
-        params[PARAM_START_RANGE_OFFSET+1] = startRange.toString();
-        return this;
-    }
-
-    public SpatialViewQuery endRange(final JsonArray endRange) {
-        params[PARAM_END_RANGE_OFFSET] = "end_range";
-        params[PARAM_END_RANGE_OFFSET+1] = endRange.toString();
-        return this;
-    }
-
-    public SpatialViewQuery range(final JsonArray startRange, final JsonArray endRange) {
-        startRange(startRange);
-        endRange(endRange);
+    /**
+     * Create a box selection
+     * @param left the left limit
+     * @param bottom the bottom limit
+     * @param right the right limit
+     * @param top the top limit
+     * @return the {@link SpatialViewQuery} object for proper chaining. 
+     */
+    public SpatialViewQuery bbox(double left, double bottom, double right, double top){
+        params[PARAM_BBOX_OFFSET] = "bbox";
+        params[PARAM_BBOX_OFFSET+1] = left+","+bottom+","+right+","+top;
         return this;
     }
 
