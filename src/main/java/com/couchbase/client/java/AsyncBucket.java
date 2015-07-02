@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java;
 
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
@@ -44,9 +46,9 @@ import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
 import com.couchbase.client.java.query.AsyncQueryResult;
+import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.Repository;
@@ -57,8 +59,6 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.View;
 import com.couchbase.client.java.view.ViewQuery;
 import rx.Observable;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Defines operations that can be executed asynchronously against a Couchbase Server bucket.
@@ -1193,7 +1193,7 @@ public interface AsyncBucket {
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
      * {@link Statement}. Statement can contain placeholders.
-     * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
+     * The resulting {@link PreparedPayload} can be cached and (re)used later in a {@link PreparedQuery}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -1202,14 +1202,14 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      *
      * @param statement the statement to prepare a plan for.
-     * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
+     * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    Observable<QueryPlan> prepare(Statement statement);
+    Observable<PreparedPayload> prepare(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
      * statement in {@link String} form. Statement can contain placeholders.
-     * The resulting {@link QueryPlan} can be cached and (re)used later in a {@link PreparedQuery}.
+     * The resulting {@link PreparedPayload} can be cached and (re)used later in a {@link PreparedQuery}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -1218,9 +1218,9 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      *
      * @param statement the statement to prepare a plan for.
-     * @return a {@link QueryPlan} that can be cached and reused later in {@link PreparedQuery}.
+     * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    Observable<QueryPlan> prepare(String statement);
+    Observable<PreparedPayload> prepare(String statement);
 
     /**
      * Unlocks a write-locked {@link Document}.

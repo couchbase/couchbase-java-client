@@ -40,15 +40,15 @@ import com.couchbase.client.java.document.json.JsonObject;
  */
 public class PreparedQuery extends ParametrizedQuery {
 
-    /* package */ PreparedQuery(QueryPlan plan, JsonArray positionalParams, QueryParams params) {
+    /* package */ PreparedQuery(PreparedPayload plan, JsonArray positionalParams, QueryParams params) {
         super(plan, positionalParams, params);
     }
 
-    /* package */ PreparedQuery(QueryPlan plan, JsonObject namedParams, QueryParams params) {
+    /* package */ PreparedQuery(PreparedPayload plan, JsonObject namedParams, QueryParams params) {
        super(plan, namedParams, params);
     }
 
-    /* package */ PreparedQuery(QueryPlan plan, QueryParams params) {
+    /* package */ PreparedQuery(PreparedPayload plan, QueryParams params) {
         super(plan, (JsonArray) null, params);
     }
 
@@ -59,11 +59,23 @@ public class PreparedQuery extends ParametrizedQuery {
 
     @Override
     protected Object statementValue() {
-        return statement().plan();
+        return statement().payload();
     }
 
     @Override
-    public QueryPlan statement() {
-        return (QueryPlan) super.statement();
+    public PreparedPayload statement() {
+        return (PreparedPayload) super.statement();
+    }
+
+    @Override
+    public JsonObject n1ql() {
+        JsonObject n1ql = super.n1ql();
+        String preparePrefix = "PREPARE " + statement().preparedName() + " ";
+        String prepareFallback = statement().originalStatement().toString();
+        if (!prepareFallback.toLowerCase().startsWith("prepare ")) {
+            prepareFallback = preparePrefix + prepareFallback;
+        }
+        n1ql.put("statement", prepareFallback);
+        return n1ql;
     }
 }

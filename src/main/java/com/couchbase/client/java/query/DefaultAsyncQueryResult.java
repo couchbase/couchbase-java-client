@@ -4,7 +4,6 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
-import rx.functions.Func1;
 
 /**
  * The default implementation of an {@link AsyncQueryResult}.
@@ -25,16 +24,11 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
     private final String clientContextId;
 
     public DefaultAsyncQueryResult(Observable<AsyncQueryRow> rows, Observable<Object> signature,
-            Observable<JsonObject> info, Observable<JsonObject> errors, Observable<Boolean> finalSuccess,
+            Observable<QueryMetrics> info, Observable<JsonObject> errors, Observable<Boolean> finalSuccess,
             boolean parsingSuccess, String requestId, String clientContextId) {
         this.rows = rows;
         this.signature = signature;
-        this.info = info.map(new Func1<JsonObject, QueryMetrics>() {
-            @Override
-            public QueryMetrics call(JsonObject jsonObject) {
-                return new QueryMetrics(jsonObject);
-            }
-        });
+        this.info = info;
         this.errors = errors;
         this.finalSuccess = finalSuccess;
         this.parsingSuccess = parsingSuccess;

@@ -21,33 +21,22 @@
  */
 package com.couchbase.client.java.query;
 
-import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.core.CouchbaseException;
 
 /**
- * Represents the execution plan of a prepared statement, as returned by the server after a "PREPARE ..." query.
+ * An exception marking the fact that a Named Prepared Statement in N1QL couldn't be executed and
+ * that there was a fallback to re-preparing it.
  *
  * @author Simon Baslé
- * @since 2.1
+ * @since 2.2
  */
-public class QueryPlan implements SerializableStatement {
+public class NamedPreparedStatementException extends CouchbaseException {
 
-    private static final long serialVersionUID = 872622310459659115L;
-
-    private final JsonObject jsonPlan;
-
-    public QueryPlan(JsonObject jsonPlan) {
-        this .jsonPlan = jsonPlan;
+    public NamedPreparedStatementException(String message) {
+        super(message);
     }
 
-    /**
-     * @return a String representation of the JSON for the execution plan.
-     */
-    @Override
-    public String toString() {
-        return jsonPlan.toString();
-    }
-
-    public JsonObject plan() {
-        return jsonPlan;
+    public NamedPreparedStatementException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

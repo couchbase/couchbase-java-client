@@ -33,9 +33,9 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.AsyncQueryRow;
 import com.couchbase.client.java.query.DefaultQueryResult;
+import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryMetrics;
-import com.couchbase.client.java.query.QueryPlan;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.CouchbaseRepository;
@@ -562,11 +562,11 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryPlan prepare(String statement) {
+    public PreparedPayload prepare(String statement) {
         return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
     }
     @Override
-    public QueryPlan prepare(Statement statement) {
+    public PreparedPayload prepare(Statement statement) {
         return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
     }
 
@@ -610,6 +610,9 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public QueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
+        if (statement instanceof PreparedPayload) {
+            return query(Query.prepared((PreparedPayload) statement), timeout, timeUnit);
+        }
         return query(Query.simple(statement), timeout, timeUnit);
     }
 
@@ -644,13 +647,13 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryPlan prepare(String statement, long timeout, TimeUnit timeUnit) {
+    public PreparedPayload prepare(String statement, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .prepare(statement)
             .single(), timeout, timeUnit);
     }
     @Override
-    public QueryPlan prepare(Statement statement, long timeout, TimeUnit timeUnit) {
+    public PreparedPayload prepare(Statement statement, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .prepare(statement)
             .single(), timeout, timeUnit);
