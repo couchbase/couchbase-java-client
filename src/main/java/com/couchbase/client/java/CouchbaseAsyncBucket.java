@@ -382,7 +382,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
                         response.status());
                 }
-            });
+            })
+            .cache(type.maxAffectedNodes());
     }
 
     @Override

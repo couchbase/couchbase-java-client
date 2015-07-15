@@ -32,20 +32,30 @@ public enum ReplicaMode {
     /**
      * Get from all replicas and the active node.
      */
-    ALL,
+    ALL(4),
 
     /**
      * Get only from the first replica configured for the document.
      */
-    FIRST,
+    FIRST(1),
 
     /**
      * Get only from the second replica configured for the document.
      */
-    SECOND,
+    SECOND(1),
 
     /**
      * Get only from the third replica configured for the document.
      */
-    THIRD
+    THIRD(1);
+
+    private int maxAffectedNodes;
+
+    ReplicaMode(int maxAffectedNodes) {
+        this.maxAffectedNodes = maxAffectedNodes;
+    }
+
+    public int maxAffectedNodes() {
+        return maxAffectedNodes;
+    }
 }
