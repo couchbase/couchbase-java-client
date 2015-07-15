@@ -32,6 +32,7 @@ import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.cluster.DisconnectRequest;
 import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
+import com.couchbase.client.core.message.cluster.OpenBucketResponse;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.cluster.DefaultAsyncClusterManager;
@@ -43,6 +44,7 @@ import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Bootstrap;
 import rx.Observable;
+import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.net.InetSocketAddress;
@@ -180,8 +182,12 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
         final List<Transcoder<? extends Document, ?>> trans = transcoders == null
             ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
-        return core
-            .send(new OpenBucketRequest(name, password))
+        return Observable.defer(new Func0<Observable<OpenBucketResponse>>() {
+                @Override
+                public Observable<OpenBucketResponse> call() {
+                    return core.send(new OpenBucketRequest(name, password));
+                }
+            })
             .map(new Func1<CouchbaseResponse, AsyncBucket>() {
                 @Override
                 public AsyncBucket call(CouchbaseResponse response) {
@@ -202,7 +208,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                         } else if (throwable.getCause() instanceof IllegalStateException
                             && throwable.getCause().getMessage().contains("Unauthorized")) {
                             return Observable.error(new InvalidPasswordException("Passwords for bucket \"" + name
-                                +"\" do not match."));
+                                + "\" do not match."));
                         } else {
                             return Observable.error(throwable);
                         }
