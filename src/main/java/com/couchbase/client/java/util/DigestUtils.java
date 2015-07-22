@@ -37,6 +37,12 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 @InterfaceAudience.Private
 public class DigestUtils {
 
+    /**
+     * Hashes the source with SHA1 and returns the resulting hash as an hexadecimal string.
+     *
+     * @param source the text to hash.
+     * @return the SHA1 hash of the source, in hexadecimal form.
+     */
     public static String digestSha1Hex(String source) {
         String sha1 = "";
         try {
