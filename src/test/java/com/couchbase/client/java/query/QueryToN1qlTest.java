@@ -125,7 +125,7 @@ public class QueryToN1qlTest {
 
         JsonObject expected = JsonObject.create()
             .put("prepared", "planName")
-            .put("statement", "PREPARE planName SELECT *")
+            .put("statement", "PREPARE planName FROM SELECT *")
             .put("args", JsonArray.from("aString", 123, true));
 
         assertEquals(expected, query.n1ql());
@@ -159,7 +159,7 @@ public class QueryToN1qlTest {
 
         JsonObject expected = JsonObject.create()
             .put("prepared", "planName")
-            .put("statement", "PREPARE planName SELECT *")
+            .put("statement", "PREPARE planName FROM SELECT *")
             .put("$myParamString", "aString")
             .put("$someInt", 123)
             .put("$fullN1qlParam", true);
@@ -188,7 +188,7 @@ public class QueryToN1qlTest {
         ParametrizedQuery query2 = new ParametrizedQuery(select(x("*")).from("default"), JsonObject.empty(), fullParams);
         assertEquals(expected, query2.n1ql());
 
-        expected.removeKey("statement").put("prepared", "planName").put("statement", "PREPARE planName SELECT *");
+        expected.removeKey("statement").put("prepared", "planName").put("statement", "PREPARE planName FROM SELECT *");
         PreparedQuery query3 = new PreparedQuery(new PreparedPayload(select("*"), "planName"), JsonArray.empty(), fullParams);
         assertEquals(expected, query3.n1ql());
     }

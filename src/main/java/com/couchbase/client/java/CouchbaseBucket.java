@@ -94,6 +94,11 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
+    public CouchbaseEnvironment environment() {
+        return environment;
+    }
+
+    @Override
     public Repository repository() {
         return new CouchbaseRepository(this, environment);
     }

@@ -96,6 +96,13 @@ public interface Bucket {
     ClusterFacade core();
 
     /**
+     * The {@link CouchbaseEnvironment} used.
+     *
+     * @return the CouchbaseEnvironment.
+     */
+    CouchbaseEnvironment environment();
+
+    /**
      * The name of the {@link Bucket}.
      *
      * @return the name of the bucket.
