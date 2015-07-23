@@ -273,9 +273,10 @@ public class BucketConfigurationProvider extends SpyObject
         getLogger().debug("Carrier Config Connection lost from " + sa);
         CouchbaseConnection conn = binaryConnection.getAndSet(null);
         try {
-          conn.shutdown();
-
-        } catch (IOException e) {
+          if (conn != null) {
+            conn.shutdown();
+          }
+        } catch (Exception e) {
           getLogger().debug("Could not shut down Carrier Config Connection", e);
         }
         signalOutdated();
@@ -500,24 +501,28 @@ public class BucketConfigurationProvider extends SpyObject
     }
 
     if (bootstrapProvider.isCarrier() || bootstrapProvider == BootstrapProviderType.NONE) {
-      if (binaryConnection.get() == null) {
-        bootstrap();
-      } else {
-        try {
-          List<String> configs = getConfigsFromBinaryConnection(binaryConnection.get());
-          if (configs.isEmpty()) {
-            bootstrap();
-            return;
-          }
-          String appliedConfig = binaryConnection.get().replaceConfigWildcards(
-            configs.get(0));
-          Bucket config = configurationParser.parseBucket(appliedConfig);
-          setConfig(config);
-        } catch(Exception ex) {
-          getLogger().info("Could not load config from existing "
-            + "connection, rerunning bootstrap.", ex);
+      try {
+        if (binaryConnection.get() == null) {
           bootstrap();
+        } else {
+          try {
+            List<String> configs = getConfigsFromBinaryConnection(binaryConnection.get());
+            if (configs.isEmpty()) {
+              bootstrap();
+              return;
+            }
+            String appliedConfig = binaryConnection.get().replaceConfigWildcards(
+                configs.get(0));
+            Bucket config = configurationParser.parseBucket(appliedConfig);
+            setConfig(config);
+          } catch(Exception ex) {
+            getLogger().info("Could not load config from existing "
+                + "connection, rerunning bootstrap.", ex);
+            bootstrap();
+          }
         }
+      } catch (Exception ex) {
+        getLogger().debug("Exception received during signalOutdated, ignoring to keep going.", ex);
       }
     } else {
       if (disableHttpBootstrap) {

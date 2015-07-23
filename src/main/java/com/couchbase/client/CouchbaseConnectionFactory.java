@@ -46,8 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -143,8 +141,6 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   private static final Logger LOGGER =
     Logger.getLogger(CouchbaseConnectionFactory.class.getName());
   private volatile boolean needsReconnect;
-  private volatile long thresholdLastCheck = System.nanoTime();
-  private final AtomicInteger configThresholdCount = new AtomicInteger(0);
   private final int maxConfigCheck = 10; //maximum allowed checks before we
                                          // reconnect in a 10 sec interval
   private volatile long configProviderLastUpdateTimestamp;
@@ -328,20 +324,17 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
   }
 
   /**
-   * Check if a configuration update is needed.
+   * Check for a new configuration update.
    *
-   * There are two main reasons that can trigger a configuration update. Either
-   * there is a configuration update happening in the cluster, or operations
-   * added to the queue can not find their corresponding node. For the latter,
-   * see the {@link #pastReconnThreshold()} method for further details.
+   * In many different cases, it is possible that for a new configuration should be checked
+   * proactively. This internally performs a {@link ConfigurationProvider#signalOutdated()}
+   * call under the covers to work with the configuration provider on a new configuration.
    *
-   * If a configuration update is needed, a resubscription for configuration
-   * updates is triggered. Note that since reconnection takes some time,
-   * the method will also wait a time period given by
-   * {@link #getMinReconnectInterval()} before the resubscription is triggered.
+   * To not ask too often, only if more time than specified through
+   * {@link #getMinReconnectInterval()} passed, the {@link ConfigurationProvider#signalOutdated()}
+   * will be executed.
    */
   void checkConfigUpdate() {
-    if (needsReconnect || pastReconnThreshold()) {
       long now = System.currentTimeMillis();
       long intervalWaited = now - this.configProviderLastUpdateTimestamp;
       if (intervalWaited < this.getMinReconnectInterval()) {
@@ -352,38 +345,7 @@ public class CouchbaseConnectionFactory extends BinaryConnectionFactory {
       }
 
       getConfigurationProvider().signalOutdated();
-    } else {
-      LOGGER.log(Level.FINE, "No reconnect required, though check requested."
-              + " Current config check is {0} out of a threshold of {1}.",
-              new Object[]{configThresholdCount, maxConfigCheck});
-    }
-  }
-
-  /**
-   * Checks if there have been more requests than allowed through
-   * maxConfigCheck in a 10 second period.
-   *
-   * If this is the case, then true is returned. If the timeframe between
-   * two distinct requests is more than 10 seconds, a fresh timeframe starts.
-   * This means that 10 calls every second would trigger an update while
-   * 1 operation, then a 11 second sleep and one more operation would not.
-   *
-   * @return true if there were more config check requests than maxConfigCheck
-   *              in the 10 second period.
-   */
-  protected boolean pastReconnThreshold() {
-    long currentTime = System.nanoTime();
-
-    if (currentTime - thresholdLastCheck >= TimeUnit.SECONDS.toNanos(10)) {
-      configThresholdCount.set(0);
-      thresholdLastCheck = currentTime;
-    }
-
-    if (configThresholdCount.incrementAndGet() >= maxConfigCheck) {
-      return true;
-    }
-
-    return false;
+      configProviderLastUpdateTimestamp = System.currentTimeMillis();
   }
 
   /**
