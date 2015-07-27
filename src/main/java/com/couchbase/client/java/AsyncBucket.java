@@ -21,8 +21,6 @@
  */
 package com.couchbase.client.java;
 
-import java.util.concurrent.TimeUnit;
-
 import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
@@ -51,7 +49,6 @@ import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.Statement;
-import com.couchbase.client.java.query.core.QueryExecutor;
 import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.transcoder.Transcoder;
@@ -61,6 +58,7 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.View;
 import com.couchbase.client.java.view.ViewQuery;
 import rx.Observable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Defines operations that can be executed asynchronously against a Couchbase Server bucket.
@@ -1213,7 +1211,7 @@ public interface AsyncBucket {
      * @param statement the statement to prepare a plan for.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    Observable<PreparedPayload> prepare(Statement statement);
+    //Observable<PreparedPayload> prepare(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
@@ -1229,7 +1227,7 @@ public interface AsyncBucket {
      * @param statement the statement to prepare a plan for.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    Observable<PreparedPayload> prepare(String statement);
+    //Observable<PreparedPayload> prepare(String statement);
 
     /**
      * Unlocks a write-locked {@link Document}.

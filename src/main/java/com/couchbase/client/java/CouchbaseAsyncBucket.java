@@ -21,10 +21,6 @@
  */
 package com.couchbase.client.java;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.lang.Tuple2;
@@ -72,7 +68,6 @@ import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.query.AsyncQueryResult;
-import com.couchbase.client.java.query.PrepareStatement;
 import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
@@ -101,6 +96,9 @@ import com.couchbase.client.java.view.ViewRetryHandler;
 import rx.Observable;
 import rx.functions.Func0;
 import rx.functions.Func1;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
@@ -789,20 +787,20 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return queryExecutor().executeRaw(query.n1ql().toString());
     }
 
-    @Override
-    public Observable<PreparedPayload> prepare(String statement) {
-        return prepare(PrepareStatement.prepare(statement));
-    }
+//    @Override
+//    public Observable<PreparedPayload> prepare(String statement) {
+//        return prepare(PrepareStatement.prepare(statement));
+//    }
 
-    /**
-     * {@inheritDoc}
-     *
-     * See also {@link QueryExecutor#prepare(Statement)}.
-     */
-    @Override
-    public Observable<PreparedPayload> prepare(Statement statement) {
-        return queryExecutor().prepare(statement);
-    }
+//    /**
+//     * {@inheritDoc}
+//     *
+//     * See also {@link QueryExecutor#prepare(Statement)}.
+//     */
+//    @Override
+//    public Observable<PreparedPayload> prepare(Statement statement) {
+//        return queryExecutor().prepare(statement);
+//    }
 
 
     @Override

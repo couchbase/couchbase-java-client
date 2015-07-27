@@ -21,38 +21,25 @@
  */
 package com.couchbase.client.java;
 
-import static com.couchbase.client.java.query.Index.createPrimaryIndex;
-import static com.couchbase.client.java.query.Select.select;
-import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.x;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.PrepareStatement;
-import com.couchbase.client.java.query.PreparedPayload;
-import com.couchbase.client.java.query.PreparedQuery;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryParams;
 import com.couchbase.client.java.query.QueryResult;
-import com.couchbase.client.java.query.QueryRow;
-import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Index.createPrimaryIndex;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests of the N1QL Query features.
@@ -182,53 +169,53 @@ public class QueryTest extends ClusterDependentTest {
 //        assertFalse(result.allRows().isEmpty());
     }
 
-    @Test
-    public void shouldProduceAndExecutePlan() {
-        String preparedName = "testPreparedNamed";
-
-        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
-        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
-        PreparedPayload payload = bucket().prepare(prepareStatement);
-        assertNotNull(bucket().get("test2"));
-
-        assertNotNull(payload);
-        assertNotNull(payload.originalStatement());
-        assertNotNull(payload.preparedName());
-        assertEquals(statement.toString(), payload.originalStatement().toString());
-        assertEquals(preparedName, payload.preparedName());
-
-        PreparedQuery preparedQuery = Query.prepared(payload,
-                JsonArray.from(123),
-                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
-        QueryResult response = bucket().query(preparedQuery, 2, TimeUnit.MINUTES);
-        assertTrue(response.errors().toString(), response.finalSuccess());
-        List<QueryRow> rows = response.allRows();
-        assertEquals("TEST", response.clientContextId());
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
+//    @Test
+//    public void shouldProduceAndExecutePlan() {
+//        String preparedName = "testPreparedNamed";
+//
+//        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
+//        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
+//        PreparedPayload payload = bucket().prepare(prepareStatement);
+//        assertNotNull(bucket().get("test2"));
+//
+//        assertNotNull(payload);
+//        assertNotNull(payload.originalStatement());
+//        assertNotNull(payload.preparedName());
+//        assertEquals(statement.toString(), payload.originalStatement().toString());
+//        assertEquals(preparedName, payload.preparedName());
+//
+//        PreparedQuery preparedQuery = Query.prepared(payload,
+//                JsonArray.from(123),
+//                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
+//        QueryResult response = bucket().query(preparedQuery, 2, TimeUnit.MINUTES);
+//        assertTrue(response.errors().toString(), response.finalSuccess());
+//        List<QueryRow> rows = response.allRows();
+//        assertEquals("TEST", response.clientContextId());
+//        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
 //        assertEquals(1, rows.size());
 //        assertTrue(rows.get(0).value().toString().contains("123"));
-    }
+//    }
 
-    @Test
-    public void shouldManageToExecuteUnknownNamedPreparedStatement() {
-        //this test is expected to work on a single node cluster, will generate named prepared statements that
-        //should be new on each iteration. The underlying expected behavior is for it to retry once and succeed.
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMddHHmmss");
-        String preparedName = "testPreparedNamed" + sdf.format(new Date());
-
-        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
-        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
-        PreparedPayload payload = new PreparedPayload(prepareStatement, preparedName);
-        PreparedQuery preparedQuery = Query.prepared(payload,
-                JsonArray.from(123),
-                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
-        QueryResult response = bucket().query(preparedQuery);
-
-        assertTrue(response.errors().toString(), response.finalSuccess());
-        assertEquals("TEST", response.clientContextId());
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
+//    @Test
+//    public void shouldManageToExecuteUnknownNamedPreparedStatement() {
+//        this test is expected to work on a single node cluster, will generate named prepared statements that
+//        should be new on each iteration. The underlying expected behavior is for it to retry once and succeed.
+//        SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMddHHmmss");
+//        String preparedName = "testPreparedNamed" + sdf.format(new Date());
+//
+//        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
+//        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
+//        PreparedPayload payload = new PreparedPayload(prepareStatement, preparedName);
+//        PreparedQuery preparedQuery = Query.prepared(payload,
+//                JsonArray.from(123),
+//                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
+//        QueryResult response = bucket().query(preparedQuery);
+//
+//        assertTrue(response.errors().toString(), response.finalSuccess());
+//        assertEquals("TEST", response.clientContextId());
+//        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
 //        List<QueryRow> rows = response.allRows();
 //        assertEquals(1, rows.size());
 //        assertTrue(rows.get(0).value().toString().contains("123"));
-    }
+//    }
 }

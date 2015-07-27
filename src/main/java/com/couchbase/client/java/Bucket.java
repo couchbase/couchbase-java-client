@@ -2704,7 +2704,7 @@ public interface Bucket {
      * @param statement the statement to prepare a plan for.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    PreparedPayload prepare(String statement);
+    //PreparedPayload prepare(String statement);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
@@ -2722,7 +2722,7 @@ public interface Bucket {
      * @param statement the statement to prepare a plan for.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    PreparedPayload prepare(Statement statement);
+    //PreparedPayload prepare(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
@@ -2742,7 +2742,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    PreparedPayload prepare(String statement, long timeout, TimeUnit timeUnit);
+    //PreparedPayload prepare(String statement, long timeout, TimeUnit timeUnit);
 
     /**
      * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
@@ -2762,7 +2762,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    PreparedPayload prepare(Statement statement, long timeout, TimeUnit timeUnit);
+    //PreparedPayload prepare(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
      * Unlocks a write-locked {@link Document} with the default key/value timeout.
