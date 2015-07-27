@@ -83,7 +83,7 @@ public abstract class Query implements Serializable {
 
     //========== FACTORY METHODS ==========
     /**
-     * Create a new {@link Query} with a plain un-parametrized {@link Statement}.
+     * Create a new {@link Query} with a plain un-parameterized {@link Statement}.
      *
      * @param statement the {@link Statement} to execute
      */
@@ -101,7 +101,7 @@ public abstract class Query implements Serializable {
     }
 
     /**
-     * Create a new {@link Query} with a plain un-parametrized {@link Statement} and
+     * Create a new {@link Query} with a plain un-parameterized {@link Statement} and
      * custom query parameters.
      *
      * @param statement the {@link Statement} to execute
@@ -122,7 +122,7 @@ public abstract class Query implements Serializable {
         return simple(new RawStatement(statement), params);
     }
 
-    //== PARAMETRIZED with Statement ==
+    //== PARAMETERIZED with Statement ==
     /**
      * Create a new query with positionalParameters. Note that the {@link JsonArray}
      * should not be mutated until {@link #n1ql()} is called since it backs the
@@ -131,8 +131,8 @@ public abstract class Query implements Serializable {
      * @param statement the {@link Statement} to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      */
-    public static ParametrizedQuery parametrized(Statement statement, JsonArray positionalParams) {
-        return new ParametrizedQuery(statement, positionalParams, null);
+    public static ParameterizedQuery parameterized(Statement statement, JsonArray positionalParams) {
+        return new ParameterizedQuery(statement, positionalParams, null);
     }
 
     /**
@@ -143,8 +143,8 @@ public abstract class Query implements Serializable {
      * @param statement the {@link Statement} to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
      */
-    public static ParametrizedQuery parametrized(Statement statement, JsonObject namedParams) {
-        return new ParametrizedQuery(statement, namedParams, null);
+    public static ParameterizedQuery parameterized(Statement statement, JsonObject namedParams) {
+        return new ParameterizedQuery(statement, namedParams, null);
     }
 
     /**
@@ -156,8 +156,8 @@ public abstract class Query implements Serializable {
      * @param positionalParams the values for the positional placeholders in statement
      * @param params the {@link QueryParams query parameters}.
      */
-    public static ParametrizedQuery parametrized(Statement statement, JsonArray positionalParams, QueryParams params) {
-        return new ParametrizedQuery(statement, positionalParams, params);
+    public static ParameterizedQuery parameterized(Statement statement, JsonArray positionalParams, QueryParams params) {
+        return new ParameterizedQuery(statement, positionalParams, params);
     }
 
     /**
@@ -169,11 +169,11 @@ public abstract class Query implements Serializable {
      * @param namedParams the values for the named placeholders in statement
      * @param params the {@link QueryParams query parameters}.
      */
-    public static ParametrizedQuery parametrized(Statement statement, JsonObject namedParams, QueryParams params) {
-        return new ParametrizedQuery(statement, namedParams, params);
+    public static ParameterizedQuery parameterized(Statement statement, JsonObject namedParams, QueryParams params) {
+        return new ParameterizedQuery(statement, namedParams, params);
     }
 
-    //== PARAMETRIZED with raw String ==
+    //== PARAMETERIZED with raw String ==
     /**
      * Create a new query with positionalParameters. Note that the {@link JsonArray}
      * should not be mutated until {@link #n1ql()} is called since it backs the
@@ -182,8 +182,8 @@ public abstract class Query implements Serializable {
      * @param statement the raw statement to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      */
-    public static ParametrizedQuery parametrized(String statement, JsonArray positionalParams) {
-        return new ParametrizedQuery(new RawStatement(statement), positionalParams, null);
+    public static ParameterizedQuery parameterized(String statement, JsonArray positionalParams) {
+        return new ParameterizedQuery(new RawStatement(statement), positionalParams, null);
     }
 
     /**
@@ -194,8 +194,8 @@ public abstract class Query implements Serializable {
      * @param statement the raw statement to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
      */
-    public static ParametrizedQuery parametrized(String statement, JsonObject namedParams) {
-        return new ParametrizedQuery(new RawStatement(statement), namedParams, null);
+    public static ParameterizedQuery parameterized(String statement, JsonObject namedParams) {
+        return new ParameterizedQuery(new RawStatement(statement), namedParams, null);
     }
 
     /**
@@ -207,8 +207,8 @@ public abstract class Query implements Serializable {
      * @param positionalParams the values for the positional placeholders in statement
      * @param params the {@link QueryParams query parameters}.
      */
-    public static ParametrizedQuery parametrized(String statement, JsonArray positionalParams, QueryParams params) {
-        return new ParametrizedQuery(new RawStatement(statement), positionalParams, params);
+    public static ParameterizedQuery parameterized(String statement, JsonArray positionalParams, QueryParams params) {
+        return new ParameterizedQuery(new RawStatement(statement), positionalParams, params);
     }
 
     /**
@@ -220,8 +220,8 @@ public abstract class Query implements Serializable {
      * @param namedParams the values for the named placeholders in statement
      * @param params the {@link QueryParams query parameters}.
      */
-    public static ParametrizedQuery parametrized(String statement, JsonObject namedParams, QueryParams params) {
-        return new ParametrizedQuery(new RawStatement(statement), namedParams, params);
+    public static ParameterizedQuery parameterized(String statement, JsonObject namedParams, QueryParams params) {
+        return new ParameterizedQuery(new RawStatement(statement), namedParams, params);
     }
 
     //== PREPARED ==

@@ -53,8 +53,8 @@ public class QueryTest {
     }
 
     @Test
-    public void parametrizedShouldSupportSerialization() throws Exception {
-        Query source = Query.parametrized(select("*").from("default"), JsonArray.from("a", "b"), params);
+    public void parameterizedShouldSupportSerialization() throws Exception {
+        Query source = Query.parameterized(select("*").from("default"), JsonArray.from("a", "b"), params);
 
         byte[] serialized = SerializationHelper.serializeToBytes(source);
         assertNotNull(serialized);

@@ -26,7 +26,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
 
 /**
- * Represent a N1QL {@link} with an optionally parametrized statement (in which case the
+ * Represent a N1QL {@link} with an optionally parameterized statement (in which case the
  * values must be passed according to the type and number of placeholders).
  *
  * Positional placeholders (in the form of either "$1" "$2" or just simple "?") are filled
@@ -39,16 +39,16 @@ import com.couchbase.client.java.document.json.JsonValue;
  * @author Simon Baslé
  * @since 2.1
  */
-public class ParametrizedQuery extends AbstractQuery {
+public class ParameterizedQuery extends AbstractQuery {
 
     private final JsonValue statementParams;
 
-    /* package */ ParametrizedQuery(Statement statement, JsonArray positionalParams, QueryParams params) {
+    /* package */ ParameterizedQuery(Statement statement, JsonArray positionalParams, QueryParams params) {
         super(statement, params);
         this.statementParams = positionalParams;
     }
 
-    /* package */ ParametrizedQuery(Statement statement, JsonObject namedParams, QueryParams params) {
+    /* package */ ParameterizedQuery(Statement statement, JsonObject namedParams, QueryParams params) {
         super(statement, params);
         this.statementParams = namedParams;
     }

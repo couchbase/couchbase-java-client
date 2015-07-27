@@ -25,7 +25,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 /**
- * Represent a N1QL query, with a parametrized prepared statement plan (for which the
+ * Represent a N1QL query, with a parameterized prepared statement plan (for which the
  * values must be passed according to the type and number of placeholders).
  *
  * Positional placeholders (in the form of either "$1" "$2" or just simple "?") are filled
@@ -38,7 +38,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Simon Baslé
  * @since 2.1
  */
-public class PreparedQuery extends ParametrizedQuery {
+public class PreparedQuery extends ParameterizedQuery {
 
     /* package */ PreparedQuery(PreparedPayload plan, JsonArray positionalParams, QueryParams params) {
         super(plan, positionalParams, params);

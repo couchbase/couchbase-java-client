@@ -24,7 +24,7 @@ package com.couchbase.client.java.query;
 import com.couchbase.client.java.document.json.JsonValue;
 
 /**
- * The simplest form of N1QL {@link Query} with a plain un-parametrized {@link Statement}.
+ * The simplest form of N1QL {@link Query} with a plain un-parameterized {@link Statement}.
  *
  * @author Simon Baslé
  * @since 2.1
