@@ -47,6 +47,7 @@ public class QueryParams implements Serializable {
     private ScanConsistency consistency;
     private String scanWait;
     private String clientContextId;
+    private Integer maxParallelism;
 
     private QueryParams() { }
 
@@ -68,6 +69,9 @@ public class QueryParams implements Serializable {
         }
         if (this.clientContextId != null) {
             queryJson.put("client_context_id", this.clientContextId);
+        }
+        if (this.maxParallelism != null) {
+            queryJson.put("max_parallelism", this.maxParallelism.toString());
         }
     }
 
@@ -155,6 +159,17 @@ public class QueryParams implements Serializable {
         } else {
             this.scanWait = durationToN1qlFormat(wait, unit);
         }
+        return this;
+    }
+
+    /**
+     * Allows to override the default maximum parallelism for the query execution on the server side.
+     *
+     * @param maxParallelism the maximum parallelism for this query, 0 or negative values disable it.
+     * @return this {@link QueryParams} for chaining.
+     */
+    public QueryParams maxParallelism(int maxParallelism) {
+        this.maxParallelism = maxParallelism;
         return this;
     }
 
