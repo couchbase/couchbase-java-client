@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
@@ -56,6 +57,12 @@ public class StringTranscoder extends AbstractTranscoder<StringDocument, String>
     @Override
     public StringDocument newDocument(String id, int expiry, String content, long cas) {
         return StringDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public StringDocument newDocument(String id, int expiry, String content, long cas,
+        MutationToken mutationToken) {
+        return StringDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

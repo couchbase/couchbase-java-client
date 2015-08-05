@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
+
 /**
  * This document is fully compatible with Java SDK 1.* stored documents.
  *
@@ -40,7 +42,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id) {
-        return new LegacyDocument(id, 0, null, 0);
+        return new LegacyDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -51,7 +53,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, Object content) {
-        return new LegacyDocument(id, 0, content, 0);
+        return new LegacyDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -63,7 +65,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, Object content, long cas) {
-        return new LegacyDocument(id, 0, content, cas);
+        return new LegacyDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -75,7 +77,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, int expiry, Object content) {
-        return new LegacyDocument(id, expiry, content, 0);
+        return new LegacyDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -92,7 +94,24 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a {@link LegacyDocument}.
      */
     public static LegacyDocument create(String id, int expiry, Object content, long cas) {
-        return new LegacyDocument(id, expiry, content, cas);
+        return new LegacyDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link LegacyDocument} which the document id, JSON content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param expiry the expiration time of the document.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @return a {@link LegacyDocument}.
+     */
+    public static LegacyDocument create(String id, int expiry, Object content, long cas, MutationToken mutationToken) {
+        return new LegacyDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -103,7 +122,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, String id) {
-        return LegacyDocument.create(id, doc.expiry(), doc.content(), doc.cas());
+        return LegacyDocument.create(id, doc.expiry(), doc.content(), doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -114,7 +133,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, Object content) {
-        return LegacyDocument.create(doc.id(), doc.expiry(), content, doc.cas());
+        return LegacyDocument.create(doc.id(), doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -126,7 +145,7 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, String id, Object content) {
-        return LegacyDocument.create(id, doc.expiry(), content, doc.cas());
+        return LegacyDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -137,10 +156,10 @@ public class LegacyDocument extends AbstractDocument<Object> {
      * @return a copied {@link LegacyDocument} with the changed properties.
      */
     public static LegacyDocument from(LegacyDocument doc, long cas) {
-        return LegacyDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return LegacyDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
-    private LegacyDocument(String id, int expiry, Object content, long cas) {
-        super(id, expiry, content, cas);
+    private LegacyDocument(String id, int expiry, Object content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 }

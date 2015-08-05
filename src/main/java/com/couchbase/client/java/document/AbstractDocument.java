@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -41,6 +42,7 @@ public abstract class AbstractDocument<T> implements Document<T> {
     private long cas;
     private int expiry;
     private T content;
+    private MutationToken mutationToken;
 
     /**
      * Constructor needed for possible subclass serialization.
@@ -49,6 +51,10 @@ public abstract class AbstractDocument<T> implements Document<T> {
     }
 
     protected AbstractDocument(String id, int expiry, T content, long cas) {
+        this(id, expiry, content, cas, null);
+    }
+
+    protected AbstractDocument(String id, int expiry, T content, long cas, MutationToken mutationToken) {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("The Document ID must not be null or empty.");
         }
@@ -63,6 +69,7 @@ public abstract class AbstractDocument<T> implements Document<T> {
         this.cas = cas;
         this.expiry = expiry;
         this.content = content;
+        this.mutationToken = mutationToken;
     }
 
     @Override
@@ -86,12 +93,18 @@ public abstract class AbstractDocument<T> implements Document<T> {
     }
 
     @Override
+    public MutationToken mutationToken() {
+        return mutationToken;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(this.getClass().getSimpleName() + "{");
         sb.append("id='").append(id).append('\'');
         sb.append(", cas=").append(cas);
         sb.append(", expiry=").append(expiry);
         sb.append(", content=").append(content);
+        sb.append(", mutationToken=").append(mutationToken);
         sb.append('}');
         return sb.toString();
     }
@@ -101,14 +114,14 @@ public abstract class AbstractDocument<T> implements Document<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AbstractDocument that = (AbstractDocument) o;
+        AbstractDocument<?> that = (AbstractDocument<?>) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (cas != that.cas) return false;
         if (expiry != that.expiry) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (content != null ? !content.equals(that.content) : that.content != null) return false;
+        return !(mutationToken != null ? !mutationToken.equals(that.mutationToken) : that.mutationToken != null);
 
-        return true;
     }
 
     @Override
@@ -117,6 +130,7 @@ public abstract class AbstractDocument<T> implements Document<T> {
         result = 31 * result + (int) (cas ^ (cas >>> 32));
         result = 31 * result + expiry;
         result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + (mutationToken != null ? mutationToken.hashCode() : 0);
         return result;
     }
 
@@ -131,6 +145,7 @@ public abstract class AbstractDocument<T> implements Document<T> {
         stream.writeInt(expiry);
         stream.writeUTF(id);
         stream.writeObject(content);
+        stream.writeObject(mutationToken);
     }
 
     /**
@@ -146,5 +161,6 @@ public abstract class AbstractDocument<T> implements Document<T> {
         expiry = stream.readInt();
         id = stream.readUTF();
         content = (T) stream.readObject();
+        mutationToken = (MutationToken) stream.readObject();
     }
 }

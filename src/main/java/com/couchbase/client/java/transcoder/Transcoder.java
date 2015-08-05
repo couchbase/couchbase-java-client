@@ -25,6 +25,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.document.Document;
 
@@ -41,7 +42,33 @@ public interface Transcoder<D extends Document<T>, T> {
 
     Tuple2<ByteBuf, Integer> encode(D document);
 
+    /**
+     * Creates a new Document with the passed in information.
+     *
+     * Use the one with the mutation token instead
+     * ({@link #newDocument(String, int, Object, long, MutationToken)}).
+     *
+     * @param id the id of the document.
+     * @param expiry the document expiration.
+     * @param content the document content.
+     * @param cas the documents cas value.
+     * @return the created document.
+     */
+    @Deprecated
     D newDocument(String id, int expiry, T content, long cas);
+
+    /**
+     * Creates a new Document with the passed in information.
+     *
+     * @param id the id of the document.
+     * @param expiry the document expiration.
+     * @param content the document content.
+     * @param cas the documents cas value.
+     * @param mutationToken the documents mutation token.
+     * @return the created document.
+     */
+    D newDocument(String id, int expiry, T content, long cas, MutationToken mutationToken);
+
 
     Class<D> documentType();
 }

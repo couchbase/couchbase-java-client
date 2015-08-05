@@ -21,21 +21,21 @@
  */
 package com.couchbase.client.java.transcoder;
 
-import java.util.List;
-import java.util.Map;
-
 import com.couchbase.client.core.endpoint.util.WhitespaceSkipper;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A transcoder to encode and decode {@link JsonDocument}s.
@@ -73,6 +73,12 @@ public class JsonTranscoder extends AbstractTranscoder<JsonDocument, JsonObject>
     @Override
     public JsonDocument newDocument(String id, int expiry, JsonObject content, long cas) {
         return JsonDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public JsonDocument newDocument(String id, int expiry, JsonObject content, long cas,
+        MutationToken mutationToken) {
+        return JsonDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     public String jsonObjectToString(JsonObject input) throws Exception {

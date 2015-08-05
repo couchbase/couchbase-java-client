@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -47,7 +48,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a {@link SerializableDocument}.
      */
     public static SerializableDocument create(String id) {
-        return new SerializableDocument(id, 0, null, 0);
+        return new SerializableDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -58,7 +59,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a {@link SerializableDocument}.
      */
     public static SerializableDocument create(String id, Serializable content) {
-        return new SerializableDocument(id, 0, content, 0);
+        return new SerializableDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -70,7 +71,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a {@link SerializableDocument}.
      */
     public static SerializableDocument create(String id, Serializable content, long cas) {
-        return new SerializableDocument(id, 0, content, cas);
+        return new SerializableDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -82,7 +83,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a {@link SerializableDocument}.
      */
     public static SerializableDocument create(String id, int expiry, Serializable content) {
-        return new SerializableDocument(id, expiry, content, 0);
+        return new SerializableDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -99,7 +100,24 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a {@link SerializableDocument}.
      */
     public static SerializableDocument create(String id, int expiry, Serializable content, long cas) {
-        return new SerializableDocument(id, expiry, content, cas);
+        return new SerializableDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link SerializableDocument} which the document id, content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @return a {@link SerializableDocument}.
+     */
+    public static SerializableDocument create(String id, int expiry, Serializable content, long cas, MutationToken mutationToken) {
+        return new SerializableDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -110,7 +128,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a copied {@link SerializableDocument} with the changed properties.
      */
     public static SerializableDocument from(SerializableDocument doc, String id) {
-        return SerializableDocument.create(id, doc.expiry(), doc.content(), doc.cas());
+        return SerializableDocument.create(id, doc.expiry(), doc.content(), doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -121,7 +139,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a copied {@link SerializableDocument} with the changed properties.
      */
     public static SerializableDocument from(SerializableDocument doc, Long content) {
-        return SerializableDocument.create(doc.id(), doc.expiry(), content, doc.cas());
+        return SerializableDocument.create(doc.id(), doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -133,7 +151,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a copied {@link SerializableDocument} with the changed properties.
      */
     public static SerializableDocument from(SerializableDocument doc, String id, Long content) {
-        return SerializableDocument.create(id, doc.expiry(), content, doc.cas());
+        return SerializableDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -144,7 +162,7 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @return a copied {@link SerializableDocument} with the changed properties.
      */
     public static SerializableDocument from(SerializableDocument doc, long cas) {
-        return SerializableDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return SerializableDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -155,8 +173,8 @@ public class SerializableDocument extends AbstractDocument<Serializable> impleme
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
      */
-    private SerializableDocument(String id, int expiry, Serializable content, long cas) {
-        super(id, expiry, content, cas);
+    private SerializableDocument(String id, int expiry, Serializable content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -47,7 +48,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a {@link RawJsonDocument}.
      */
     public static RawJsonDocument create(String id) {
-        return new RawJsonDocument(id, 0, null, 0);
+        return new RawJsonDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -58,7 +59,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a {@link RawJsonDocument}.
      */
     public static RawJsonDocument create(String id, String content) {
-        return new RawJsonDocument(id, 0, content, 0);
+        return new RawJsonDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -70,7 +71,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a {@link RawJsonDocument}.
      */
     public static RawJsonDocument create(String id, String content, long cas) {
-        return new RawJsonDocument(id, 0, content, cas);
+        return new RawJsonDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -82,7 +83,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a {@link RawJsonDocument}.
      */
     public static RawJsonDocument create(String id, int expiry, String content) {
-        return new RawJsonDocument(id, expiry, content, 0);
+        return new RawJsonDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -99,7 +100,24 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a {@link RawJsonDocument}.
      */
     public static RawJsonDocument create(String id, int expiry, String content, long cas) {
-        return new RawJsonDocument(id, expiry, content, cas);
+        return new RawJsonDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link RawJsonDocument} which the document id, JSON content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @return a {@link RawJsonDocument}.
+     */
+    public static RawJsonDocument create(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        return new RawJsonDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -111,7 +129,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a copied {@link RawJsonDocument} with the changed properties.
      */
     public static RawJsonDocument from(RawJsonDocument doc, String id, String content) {
-        return RawJsonDocument.create(id, doc.expiry(), content, doc.cas());
+        return RawJsonDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -122,7 +140,7 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @return a copied {@link RawJsonDocument} with the changed properties.
      */
     public static RawJsonDocument from(RawJsonDocument doc, long cas) {
-        return RawJsonDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return RawJsonDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -133,8 +151,8 @@ public class RawJsonDocument extends AbstractDocument<String> implements Seriali
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
      */
-    private RawJsonDocument(String id, int expiry, String content, long cas) {
-        super(id, expiry, content, cas);
+    private RawJsonDocument(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

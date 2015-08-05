@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -46,7 +47,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a {@link JsonStringDocument}.
      */
     public static JsonStringDocument create(String id) {
-        return new JsonStringDocument(id, 0, null, 0);
+        return new JsonStringDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -57,7 +58,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a {@link JsonStringDocument}.
      */
     public static JsonStringDocument create(String id, String content) {
-        return new JsonStringDocument(id, 0, content, 0);
+        return new JsonStringDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -69,7 +70,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a {@link JsonStringDocument}.
      */
     public static JsonStringDocument create(String id, String content, long cas) {
-        return new JsonStringDocument(id, 0, content, cas);
+        return new JsonStringDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -81,7 +82,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a {@link JsonStringDocument}.
      */
     public static JsonStringDocument create(String id, int expiry, String content) {
-        return new JsonStringDocument(id, expiry, content, 0);
+        return new JsonStringDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -98,7 +99,24 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a {@link JsonStringDocument}.
      */
     public static JsonStringDocument create(String id, int expiry, String content, long cas) {
-        return new JsonStringDocument(id, expiry, content, cas);
+        return new JsonStringDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link JsonStringDocument} which the document id, content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @return a {@link JsonStringDocument}.
+     */
+    public static JsonStringDocument create(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        return new JsonStringDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -110,7 +128,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a copied {@link JsonStringDocument} with the changed properties.
      */
     public static JsonStringDocument from(JsonStringDocument doc, String id, String content) {
-        return JsonStringDocument.create(id, doc.expiry(), content, doc.cas());
+        return JsonStringDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -121,7 +139,7 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @return a copied {@link JsonStringDocument} with the changed properties.
      */
     public static JsonStringDocument from(JsonStringDocument doc, long cas) {
-        return JsonStringDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return JsonStringDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -132,8 +150,8 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
      */
-    private JsonStringDocument(String id, int expiry, String content, long cas) {
-        super(id, expiry, content, cas);
+    private JsonStringDocument(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

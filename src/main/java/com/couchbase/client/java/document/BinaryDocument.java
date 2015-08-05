@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 
 /**
@@ -38,7 +39,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a {@link BinaryDocument}.
      */
     public static BinaryDocument create(String id) {
-        return new BinaryDocument(id, 0, null, 0);
+        return new BinaryDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -49,7 +50,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a {@link BinaryDocument}.
      */
     public static BinaryDocument create(String id, ByteBuf content) {
-        return new BinaryDocument(id, 0, content, 0);
+        return new BinaryDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -61,7 +62,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a {@link BinaryDocument}.
      */
     public static BinaryDocument create(String id, ByteBuf content, long cas) {
-        return new BinaryDocument(id, 0, content, cas);
+        return new BinaryDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -73,7 +74,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a {@link BinaryDocument}.
      */
     public static BinaryDocument create(String id, int expiry, ByteBuf content) {
-        return new BinaryDocument(id, expiry, content, 0);
+        return new BinaryDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -90,7 +91,25 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a {@link BinaryDocument}.
      */
     public static BinaryDocument create(String id, int expiry, ByteBuf content, long cas) {
-        return new BinaryDocument(id, expiry, content, cas);
+        return new BinaryDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link BinaryDocument} which the document id, content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @param mutationToken the optional mutation token of the document.
+     * @return a {@link BinaryDocument}.
+     */
+    public static BinaryDocument create(String id, int expiry, ByteBuf content, long cas, MutationToken mutationToken) {
+        return new BinaryDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -102,7 +121,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a copied {@link BinaryDocument} with the changed properties.
      */
     public static BinaryDocument from(BinaryDocument doc, String id, ByteBuf content) {
-        return BinaryDocument.create(id, doc.expiry(), content, doc.cas());
+        return BinaryDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -113,7 +132,7 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @return a copied {@link BinaryDocument} with the changed properties.
      */
     public static BinaryDocument from(BinaryDocument doc, long cas) {
-        return BinaryDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return BinaryDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -124,8 +143,8 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
      */
-    private BinaryDocument(String id, int expiry, ByteBuf content, long cas) {
-        super(id, expiry, content, cas);
+    private BinaryDocument(String id, int expiry, ByteBuf content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
 }

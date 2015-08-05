@@ -27,6 +27,7 @@ import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
@@ -132,6 +133,12 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
     @Override
     public LegacyDocument newDocument(String id, int expiry, Object content, long cas) {
         return LegacyDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public LegacyDocument newDocument(String id, int expiry, Object content, long cas,
+        MutationToken mutationToken) {
+        return LegacyDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

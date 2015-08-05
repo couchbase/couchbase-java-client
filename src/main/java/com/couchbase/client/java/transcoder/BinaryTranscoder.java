@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.document.BinaryDocument;
 import com.couchbase.client.java.error.TranscodingException;
@@ -48,6 +49,12 @@ public class BinaryTranscoder extends AbstractTranscoder<BinaryDocument, ByteBuf
     @Override
     public BinaryDocument newDocument(String id, int expiry, ByteBuf content, long cas) {
         return BinaryDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public BinaryDocument newDocument(String id, int expiry, ByteBuf content, long cas,
+        MutationToken mutationToken) {
+        return BinaryDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

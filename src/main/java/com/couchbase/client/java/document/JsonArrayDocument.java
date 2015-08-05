@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.java.document.json.JsonArray;
 
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.io.Serializable;
  * is interoperable with other SDKs.
  *
  * @author Michael Nitschinger
- * @since 2.0
+ * @since 2.0.0
  */
 public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Serializable {
 
@@ -48,7 +49,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a {@link JsonDocument}.
      */
     public static JsonArrayDocument create(String id) {
-        return new JsonArrayDocument(id, 0, null, 0);
+        return new JsonArrayDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -59,7 +60,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a {@link JsonDocument}.
      */
     public static JsonArrayDocument create(String id, JsonArray content) {
-        return new JsonArrayDocument(id, 0, content, 0);
+        return new JsonArrayDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -71,7 +72,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a {@link JsonDocument}.
      */
     public static JsonArrayDocument create(String id, JsonArray content, long cas) {
-        return new JsonArrayDocument(id, 0, content, cas);
+        return new JsonArrayDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -83,7 +84,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a {@link JsonArrayDocument}.
      */
     public static JsonArrayDocument create(String id, int expiry, JsonArray content) {
-        return new JsonArrayDocument(id, expiry, content, 0);
+        return new JsonArrayDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -100,7 +101,25 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a {@link JsonArrayDocument}.
      */
     public static JsonArrayDocument create(String id, int expiry, JsonArray content, long cas) {
-        return new JsonArrayDocument(id, expiry, content, cas);
+        return new JsonArrayDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link JsonDocument} which the document id, JSON content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @param mutationToken the optional mutation token.
+     * @return a {@link JsonArrayDocument}.
+     */
+    public static JsonArrayDocument create(String id, int expiry, JsonArray content, long cas, MutationToken mutationToken) {
+        return new JsonArrayDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -111,7 +130,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a copied {@link JsonArrayDocument} with the changed properties.
      */
     public static JsonArrayDocument from(JsonArrayDocument doc, String id) {
-        return JsonArrayDocument.create(id, doc.expiry(), doc.content(), doc.cas());
+        return JsonArrayDocument.create(id, doc.expiry(), doc.content(), doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -122,7 +141,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonArrayDocument from(JsonArrayDocument doc, JsonArray content) {
-        return JsonArrayDocument.create(doc.id(), doc.expiry(), content, doc.cas());
+        return JsonArrayDocument.create(doc.id(), doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -134,7 +153,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonArrayDocument from(JsonArrayDocument doc, String id, JsonArray content) {
-        return JsonArrayDocument.create(id, doc.expiry(), content, doc.cas());
+        return JsonArrayDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -145,7 +164,7 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @return a copied {@link JsonDocument} with the changed properties.
      */
     public static JsonArrayDocument from(JsonArrayDocument doc, long cas) {
-        return JsonArrayDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return JsonArrayDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -155,9 +174,10 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      * @param content the content of the document.
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
+     * @param mutationToken the optional mutation token.
      */
-    private JsonArrayDocument(String id, int expiry, JsonArray content, long cas) {
-        super(id, expiry, content, cas);
+    private JsonArrayDocument(String id, int expiry, JsonArray content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

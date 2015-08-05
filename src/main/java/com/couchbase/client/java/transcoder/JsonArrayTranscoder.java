@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.document.JsonArrayDocument;
@@ -62,6 +63,12 @@ public class JsonArrayTranscoder extends AbstractTranscoder<JsonArrayDocument, J
     @Override
     public JsonArrayDocument newDocument(String id, int expiry, JsonArray content, long cas) {
         return JsonArrayDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public JsonArrayDocument newDocument(String id, int expiry, JsonArray content, long cas,
+        MutationToken mutationToken) {
+        return JsonArrayDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     public String jsonArrayToString(JsonArray input) throws Exception {

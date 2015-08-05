@@ -22,7 +22,10 @@
 package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.core.lang.Tuple2;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.error.TranscodingException;
@@ -35,6 +38,8 @@ import com.couchbase.client.java.error.TranscodingException;
  * @since 2.0
  */
 public abstract class AbstractTranscoder<D extends Document<T>, T> implements Transcoder<D, T> {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(AbstractTranscoder.class);
 
     @Override
     public D decode(String id, ByteBuf content, long cas, int expiry, int flags, ResponseStatus status) {
@@ -116,5 +121,15 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
      */
     protected boolean shouldAutoReleaseOnError() {
         return true;
+    }
+
+    /**
+     * Default implementation for backwards compatibility.
+     */
+    @Override
+    public D newDocument(String id, int expiry, T content, long cas, MutationToken mutationToken) {
+        LOGGER.warn("This transcoder ({}) does not support mutation tokens - this method is a " +
+            "stub and needs to be implemented on custom transcoders.", this.getClass().getSimpleName());
+        return newDocument(id, expiry, content, cas);
     }
 }

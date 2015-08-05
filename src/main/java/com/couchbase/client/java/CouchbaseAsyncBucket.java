@@ -428,7 +428,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                 if (response.status().isSuccess()) {
                     return (D) transcoder.newDocument(document.id(), document.expiry(),
-                        document.content(), response.cas());
+                        document.content(), response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -500,7 +500,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                 if (response.status().isSuccess()) {
                     return (D) transcoder.newDocument(document.id(), document.expiry(),
-                        document.content(), response.cas());
+                        document.content(), response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -572,8 +572,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
 
                 if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), document.expiry(), document.content(),
-                        response.cas());
+                    return (D) transcoder.newDocument(document.id(), document.expiry(),
+                        document.content(), response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -644,7 +644,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
 
                 if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
+                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -829,7 +829,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
                 if (response.status().isSuccess()) {
                     int returnedExpiry = expiry == COUNTER_NOT_EXISTS_EXPIRY ? 0 : expiry;
-                    return JsonLongDocument.create(id, returnedExpiry, response.value(), response.cas());
+                    return JsonLongDocument.create(id, returnedExpiry, response.value(),
+                        response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -943,7 +944,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
 
                 if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
+                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {
@@ -981,7 +982,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
 
                 if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas());
+                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
                 }
 
                 switch (response.status()) {

@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
@@ -65,6 +66,12 @@ public class JsonBooleanTranscoder extends AbstractTranscoder<JsonBooleanDocumen
     @Override
     public JsonBooleanDocument newDocument(String id, int expiry, Boolean content, long cas) {
         return JsonBooleanDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public JsonBooleanDocument newDocument(String id, int expiry, Boolean content, long cas,
+        MutationToken mutationToken) {
+        return JsonBooleanDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

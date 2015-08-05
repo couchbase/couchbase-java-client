@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
@@ -75,6 +76,12 @@ public class JsonDoubleTranscoder extends AbstractTranscoder<JsonDoubleDocument,
     @Override
     public JsonDoubleDocument newDocument(String id, int expiry, Double content, long cas) {
         return JsonDoubleDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public JsonDoubleDocument newDocument(String id, int expiry, Double content, long cas,
+        MutationToken mutationToken) {
+        return JsonDoubleDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

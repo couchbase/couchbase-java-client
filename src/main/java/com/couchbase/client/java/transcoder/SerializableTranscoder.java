@@ -24,6 +24,7 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.document.SerializableDocument;
 import com.couchbase.client.java.error.TranscodingException;
@@ -58,6 +59,12 @@ public class SerializableTranscoder extends AbstractTranscoder<SerializableDocum
     @Override
     public SerializableDocument newDocument(String id, int expiry, Serializable content, long cas) {
         return SerializableDocument.create(id, expiry, content, cas);
+    }
+
+    @Override
+    public SerializableDocument newDocument(String id, int expiry, Serializable content, long cas,
+        MutationToken mutationToken) {
+        return SerializableDocument.create(id, expiry, content, cas, mutationToken);
     }
 
     @Override

@@ -21,6 +21,7 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.message.kv.MutationToken;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -47,7 +48,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a {@link StringDocument}.
      */
     public static StringDocument create(String id) {
-        return new StringDocument(id, 0, null, 0);
+        return new StringDocument(id, 0, null, 0, null);
     }
 
     /**
@@ -58,7 +59,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a {@link StringDocument}.
      */
     public static StringDocument create(String id, String content) {
-        return new StringDocument(id, 0, content, 0);
+        return new StringDocument(id, 0, content, 0, null);
     }
 
     /**
@@ -70,7 +71,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a {@link StringDocument}.
      */
     public static StringDocument create(String id, String content, long cas) {
-        return new StringDocument(id, 0, content, cas);
+        return new StringDocument(id, 0, content, cas, null);
     }
 
     /**
@@ -82,7 +83,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a {@link StringDocument}.
      */
     public static StringDocument create(String id, int expiry, String content) {
-        return new StringDocument(id, expiry, content, 0);
+        return new StringDocument(id, expiry, content, 0, null);
     }
 
     /**
@@ -99,7 +100,24 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a {@link StringDocument}.
      */
     public static StringDocument create(String id, int expiry, String content, long cas) {
-        return new StringDocument(id, expiry, content, cas);
+        return new StringDocument(id, expiry, content, cas, null);
+    }
+
+    /**
+     * Creates a {@link StringDocument} which the document id, content, CAS value, expiration time and status code.
+     *
+     * This factory method is normally only called within the client library when a response is analyzed and a document
+     * is returned which is enriched with the status code. It does not make sense to pre populate the status field from
+     * the user level code.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @return a {@link StringDocument}.
+     */
+    public static StringDocument create(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        return new StringDocument(id, expiry, content, cas, mutationToken);
     }
 
     /**
@@ -111,7 +129,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a copied {@link StringDocument} with the changed properties.
      */
     public static StringDocument from(StringDocument doc, String id, String content) {
-        return StringDocument.create(id, doc.expiry(), content, doc.cas());
+        return StringDocument.create(id, doc.expiry(), content, doc.cas(), doc.mutationToken());
     }
 
     /**
@@ -122,7 +140,7 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @return a copied {@link StringDocument} with the changed properties.
      */
     public static StringDocument from(StringDocument doc, long cas) {
-        return StringDocument.create(doc.id(), doc.expiry(), doc.content(), cas);
+        return StringDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
     }
 
     /**
@@ -133,8 +151,8 @@ public class StringDocument extends AbstractDocument<String> implements Serializ
      * @param cas the CAS (compare and swap) value for optimistic concurrency.
      * @param expiry the expiration time of the document.
      */
-    private StringDocument(String id, int expiry, String content, long cas) {
-        super(id, expiry, content, cas);
+    private StringDocument(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
