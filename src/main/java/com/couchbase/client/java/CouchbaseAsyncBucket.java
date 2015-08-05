@@ -461,7 +461,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
                                 environment.observeIntervalDelay(), environment.retryStrategy())
                         .map(new Func1<Boolean, D>() {
                             @Override
@@ -533,7 +533,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
                                 environment.observeIntervalDelay(), environment.retryStrategy())
                         .map(new Func1<Boolean, D>() {
                             @Override
@@ -608,7 +608,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                        .call(core, bucket, doc.id(), doc.cas(), false, persistTo.value(), replicateTo.value(),
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
                                 environment.observeIntervalDelay(), environment.retryStrategy())
                         .map(new Func1<Boolean, D>() {
                             @Override
@@ -700,7 +700,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                        .call(core, bucket, doc.id(), doc.cas(), true, persistTo.value(), replicateTo.value(),
+                        .call(core, bucket, doc.id(), doc.cas(), true, doc.mutationToken(), persistTo.value(), replicateTo.value(),
                                 environment.observeIntervalDelay(), environment.retryStrategy())
                         .map(new Func1<Boolean, D>() {
                             @Override
