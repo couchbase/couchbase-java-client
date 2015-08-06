@@ -173,6 +173,15 @@ public class QueryParams implements Serializable {
         return this;
     }
 
+    /**
+     * Helper method to check if a custom server side timeout has been applied on the params.
+     *
+     * @return true if it has, false otherwise.
+     */
+    public boolean hasServerSideTimeout() {
+        return serverSideTimeout != null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -99,6 +99,7 @@ import rx.functions.Func1;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
@@ -781,6 +782,10 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
      */
     @Override
     public Observable<AsyncQueryResult> query(final Query query) {
+        if (!query.params().hasServerSideTimeout()) {
+            query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
+        }
+
         if (query instanceof PreparedQuery) {
             return queryExecutor().executePreparedWithRetry((PreparedQuery) query);
         }

@@ -624,6 +624,10 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public QueryResult query(Query query, final long timeout, final TimeUnit timeUnit) {
+        if (!query.params().hasServerSideTimeout()) {
+            query.params().serverSideTimeout(timeout, timeUnit);
+        }
+
         return Blocking.blockForSingle(asyncBucket
                 .query(query)
                 .flatMap(new Func1<AsyncQueryResult, Observable<QueryResult>>() {

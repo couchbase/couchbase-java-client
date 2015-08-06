@@ -49,7 +49,7 @@ public abstract class AbstractQuery extends Query {
         this.statement = (statement instanceof SerializableStatement)
                 ? (SerializableStatement) statement
                 : new RawStatement(statement.toString());
-        this.queryParameters = params;
+        this.queryParameters = params == null ? QueryParams.build() : params;
     }
 
     @Override
@@ -66,9 +66,7 @@ public abstract class AbstractQuery extends Query {
     public JsonObject n1ql() {
         JsonObject query = JsonObject.create().put(statementType(), statementValue());
         populateParameters(query, statementParameters());
-        if (this.queryParameters != null) {
-            this.queryParameters.injectParams(query);
-        }
+        this.queryParameters.injectParams(query);
         return query; //return json-escaped string
     }
 
