@@ -30,9 +30,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Parameter Object for {@link Query queries} that allows to fluently set most of the N1QL query parameters:
  *  - server side timeout
- *  - credentials
  *  - client context ID
  *  - scan consistency (with associated scan vector and/or scan wait if relevant)
+ *  - max parallelism
  *
  * Note that these are different from statement-related named parameters or positional parameters.
  *
@@ -49,7 +49,14 @@ public class QueryParams implements Serializable {
     private String clientContextId;
     private Integer maxParallelism;
 
-    private QueryParams() { }
+    /**
+     * If adhoc, the query should never be prepared.
+     */
+    private boolean adhoc;
+
+    private QueryParams() {
+        adhoc = true;
+    }
 
     /**
      * Modifies the given N1QL query (as a {@link JsonObject}) to reflect these {@link QueryParams}.
@@ -173,6 +180,22 @@ public class QueryParams implements Serializable {
         return this;
     }
 
+
+    /**
+     * Allows to specify if this query is adhoc or not.
+     *
+     * If it is not adhoc (so performed often), the client will try to perform optimizations
+     * transparently based on the server capabilities, like preparing the statement and
+     * then executing a query plan instead of the raw query.
+     *
+     * @param adhoc if the query is adhoc, default is true (plain execution).
+     * @return this {@link QueryParams} for chaining.
+     */
+    public QueryParams adhoc(boolean adhoc) {
+        this.adhoc = adhoc;
+        return this;
+    }
+
     /**
      * Helper method to check if a custom server side timeout has been applied on the params.
      *
@@ -182,6 +205,15 @@ public class QueryParams implements Serializable {
         return serverSideTimeout != null;
     }
 
+    /**
+     * True if this query is adhoc, false otherwise.
+     *
+     * @return true if adhoc false otherwise.
+     */
+    public boolean isAdhoc() {
+        return adhoc;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -189,14 +221,16 @@ public class QueryParams implements Serializable {
 
         QueryParams that = (QueryParams) o;
 
-        if (clientContextId != null ? !clientContextId.equals(that.clientContextId) : that.clientContextId != null)
-            return false;
-        if (consistency != that.consistency) return false;
-        if (scanWait != null ? !scanWait.equals(that.scanWait) : that.scanWait != null) return false;
+        if (adhoc != that.adhoc) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
+        if (consistency != that.consistency) return false;
+        if (scanWait != null ? !scanWait.equals(that.scanWait) : that.scanWait != null)
+            return false;
+        if (clientContextId != null ? !clientContextId.equals(that.clientContextId) : that.clientContextId != null)
+            return false;
+        return !(maxParallelism != null ? !maxParallelism.equals(that.maxParallelism) : that.maxParallelism != null);
 
-        return true;
     }
 
     @Override
@@ -205,6 +239,21 @@ public class QueryParams implements Serializable {
         result = 31 * result + (consistency != null ? consistency.hashCode() : 0);
         result = 31 * result + (scanWait != null ? scanWait.hashCode() : 0);
         result = 31 * result + (clientContextId != null ? clientContextId.hashCode() : 0);
+        result = 31 * result + (maxParallelism != null ? maxParallelism.hashCode() : 0);
+        result = 31 * result + (adhoc ? 1 : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("QueryParams{");
+        sb.append("serverSideTimeout='").append(serverSideTimeout).append('\'');
+        sb.append(", consistency=").append(consistency);
+        sb.append(", scanWait='").append(scanWait).append('\'');
+        sb.append(", clientContextId='").append(clientContextId).append('\'');
+        sb.append(", maxParallelism=").append(maxParallelism);
+        sb.append(", adhoc=").append(adhoc);
+        sb.append('}');
+        return sb.toString();
     }
 }

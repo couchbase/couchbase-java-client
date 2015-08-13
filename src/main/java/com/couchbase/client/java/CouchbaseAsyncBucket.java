@@ -792,22 +792,6 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return queryExecutor().executeRaw(query.n1ql().toString());
     }
 
-//    @Override
-//    public Observable<PreparedPayload> prepare(String statement) {
-//        return prepare(PrepareStatement.prepare(statement));
-//    }
-
-//    /**
-//     * {@inheritDoc}
-//     *
-//     * See also {@link QueryExecutor#prepare(Statement)}.
-//     */
-//    @Override
-//    public Observable<PreparedPayload> prepare(Statement statement) {
-//        return queryExecutor().prepare(statement);
-//    }
-
-
     @Override
     public Observable<JsonLongDocument> counter(String id, long delta) {
         return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY);
