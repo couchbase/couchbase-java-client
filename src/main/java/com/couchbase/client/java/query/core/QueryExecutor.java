@@ -21,10 +21,6 @@
  */
 package com.couchbase.client.java.query.core;
 
-import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
-
-import java.util.ArrayList;
-
 import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
@@ -53,11 +49,17 @@ import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryMetrics;
 import com.couchbase.client.java.query.SimpleQuery;
 import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.util.LRUCache;
 import rx.Observable;
 import rx.exceptions.CompositeException;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+
+import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
 
 /**
  * A class used to execute various N1QL queries.
@@ -71,16 +73,24 @@ public class QueryExecutor {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(QueryExecutor.class);
 
+    /**
+     * The maximum number of cached queries after which the eldest will be evicted.
+     */
+    private static final int QUERY_CACHE_SIZE = 5000;
+
     private final ClusterFacade core;
     private final String bucket;
     private final String password;
     private final CouchbaseEnvironment environment;
+    private final Map<String, PreparedPayload> queryCache;
 
     public QueryExecutor(ClusterFacade core, String bucket, String password, CouchbaseEnvironment environment) {
         this.core = core;
         this.bucket = bucket;
         this.password = password;
         this.environment = environment;
+
+        queryCache = Collections.synchronizedMap(new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE));
     }
 
     /**
