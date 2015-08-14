@@ -3145,6 +3145,22 @@ public interface Bucket {
     <D extends Document<?>> D prepend(D document, long timeout, TimeUnit timeUnit);
 
     /**
+     * Invalidates and clears the internal query cache.
+     *
+     * This method can be used to explicitly clear the internal N1QL query cache. This cache will
+     * be filled with non-adhoc query statements (query plans) to speed up those subsequent executions.
+     *
+     * Triggering this method will wipe out the complete cache, which will not cause an interruption but
+     * rather all queries need to be re-prepared internally. This method is likely to be deprecated in
+     * the future once the server side query engine distributes its state throughout the cluster.
+     *
+     * This method will not throw under any conditions.
+     *
+     * @return the number of entries in the cache before it was cleared out.
+     */
+    int invalidateQueryCache();
+
+    /**
      * Provides access to the {@link BucketManager} for administrative access.
      *
      * The manager lets you perform operations such as flushing a bucket or creating and managing design documents.

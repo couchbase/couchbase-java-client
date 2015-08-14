@@ -33,7 +33,6 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.AsyncQueryRow;
 import com.couchbase.client.java.query.DefaultQueryResult;
-import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.Query;
 import com.couchbase.client.java.query.QueryMetrics;
 import com.couchbase.client.java.query.QueryResult;
@@ -53,7 +52,6 @@ import com.couchbase.client.java.view.ViewResult;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func5;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -616,9 +614,6 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public QueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
-        if (statement instanceof PreparedPayload) {
-            return query(Query.prepared((PreparedPayload) statement), timeout, timeUnit);
-        }
         return query(Query.simple(statement), timeout, timeUnit);
     }
 
@@ -773,5 +768,12 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public String toString() {
         return "Bucket[" + name() + "]";
+    }
+
+    @Override
+    public int invalidateQueryCache() {
+        return Blocking.blockForSingle(
+            asyncBucket.invalidateQueryCache(), environment.managementTimeout(), TIMEOUT_UNIT
+        );
     }
 }

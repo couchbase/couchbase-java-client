@@ -22,13 +22,13 @@
 
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.java.SerializationHelper;
+import org.junit.Test;
+
 import static com.couchbase.client.java.query.Select.select;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import com.couchbase.client.java.SerializationHelper;
-import org.junit.Test;
 
 public class StatementSerializationTest {
 
@@ -59,7 +59,7 @@ public class StatementSerializationTest {
     }
     @Test
     public void preparedPayloadShouldBeSerializable() throws Exception {
-        PreparedPayload plan = new PreparedPayload(select("*"), "planName");
+        PreparedPayload plan = new PreparedPayload(select("*"), "planName", "plan1234");
 
         byte[] bytes = SerializationHelper.serializeToBytes(plan);
         assertNotNull(bytes);

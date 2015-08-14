@@ -65,8 +65,8 @@ public class QueryTest {
 
     @Test
     public void preparedShouldSupportSerialization() throws Exception {
-        PreparedPayload plan = new PreparedPayload(select("*"), "planName");
-        Query source = Query.prepared(plan, JsonArray.from("a", "b"), params);
+        PreparedPayload plan = new PreparedPayload(select("*"), "planName", "somePlan434324");
+        Query source = new PreparedQuery(plan, JsonArray.from("a", "b"), params);
 
         byte[] serialized = SerializationHelper.serializeToBytes(source);
         assertNotNull(serialized);

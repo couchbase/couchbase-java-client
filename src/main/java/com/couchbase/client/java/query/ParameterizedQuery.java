@@ -42,15 +42,18 @@ import com.couchbase.client.java.document.json.JsonValue;
 public class ParameterizedQuery extends AbstractQuery {
 
     private final JsonValue statementParams;
+    private final boolean positional;
 
     /* package */ ParameterizedQuery(Statement statement, JsonArray positionalParams, QueryParams params) {
         super(statement, params);
         this.statementParams = positionalParams;
+        this.positional = true;
     }
 
     /* package */ ParameterizedQuery(Statement statement, JsonObject namedParams, QueryParams params) {
         super(statement, params);
         this.statementParams = namedParams;
+        this.positional = false;
     }
 
     @Override
@@ -64,7 +67,11 @@ public class ParameterizedQuery extends AbstractQuery {
     }
 
     @Override
-    protected JsonValue statementParameters() {
+    public JsonValue statementParameters() {
         return statementParams;
+    }
+
+    public boolean isPositional() {
+        return positional;
     }
 }

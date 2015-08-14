@@ -31,7 +31,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceAudience.Public
+@InterfaceAudience.Private
 @InterfaceStability.Experimental
 public class PreparedPayload implements SerializableStatement {
 
@@ -39,16 +39,22 @@ public class PreparedPayload implements SerializableStatement {
 
     private final String preparedName;
     private final SerializableStatement originalStatement;
+    private final String encodedPlan;
 
-    public PreparedPayload(Statement originalStatement, String preparedName) {
+    public PreparedPayload(Statement originalStatement, String preparedName, String encodedPlan) {
         this.originalStatement = originalStatement instanceof SerializableStatement
                 ? (SerializableStatement) originalStatement
                 : new Query.RawStatement(originalStatement.toString());
         this.preparedName = preparedName;
+        this.encodedPlan = encodedPlan;
     }
 
     public String payload() {
         return preparedName;
+    }
+
+    public String encodedPlan() {
+        return encodedPlan;
     }
 
     public String preparedName() {
@@ -66,26 +72,24 @@ public class PreparedPayload implements SerializableStatement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         PreparedPayload that = (PreparedPayload) o;
 
-        if (!preparedName.equals(that.preparedName)) {
+        if (preparedName != null ? !preparedName.equals(that.preparedName) : that.preparedName != null)
             return false;
-        }
-        return originalStatement.equals(that.originalStatement);
+        if (originalStatement != null ? !originalStatement.equals(that.originalStatement) : that.originalStatement != null)
+            return false;
+        return !(encodedPlan != null ? !encodedPlan.equals(that.encodedPlan) : that.encodedPlan != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = preparedName.hashCode();
-        result = 31 * result + originalStatement.hashCode();
+        int result = preparedName != null ? preparedName.hashCode() : 0;
+        result = 31 * result + (originalStatement != null ? originalStatement.hashCode() : 0);
+        result = 31 * result + (encodedPlan != null ? encodedPlan.hashCode() : 0);
         return result;
     }
 }
