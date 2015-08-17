@@ -292,7 +292,7 @@ public class KeyValueTest extends ClusterDependentTest {
         JsonDocument locked = bucket().getAndLock(key, 15);
         assertEquals("v", locked.content().getString("k"));
 
-        bucket().unlock(key, locked.cas()+1);
+        bucket().unlock(key, locked.cas() + 1);
     }
 
     @Test(expected = TemporaryLockFailureException.class)
@@ -520,6 +520,18 @@ public class KeyValueTest extends ClusterDependentTest {
 
         bucket().upsert(JsonDocument.create("removeSome", JsonObject.create()));
         bucket().replace(JsonDocument.create("removeSome", JsonObject.create()), ReplicateTo.THREE);
+    }
+
+    @Test(expected = CASMismatchException.class)
+    public void shouldFailWithInvalidCASOnAppend() {
+        StringDocument stored = bucket().upsert(StringDocument.create("appendCasMismatch", "foo"));
+        bucket().append(StringDocument.from(stored, stored.cas() + 1));
+    }
+
+    @Test(expected = CASMismatchException.class)
+    public void shouldFailWithInvalidCASOnPrepend() {
+        StringDocument stored = bucket().upsert(StringDocument.create("prependCasMismatch", "foo"));
+        bucket().prepend(StringDocument.from(stored, stored.cas() + 1));
     }
 
     @Test(expected = DocumentDoesNotExistException.class)
