@@ -24,6 +24,8 @@ package com.couchbase.client.java.env;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.core.env.resources.ShutdownHook;
 import com.couchbase.client.core.event.EventBus;
+import com.couchbase.client.core.event.consumers.LoggingConsumer;
+import com.couchbase.client.core.logging.CouchbaseLogLevel;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.metrics.LatencyMetricsCollectorConfig;
@@ -438,6 +440,18 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         @Override
         public Builder networkLatencyMetricsCollectorConfig(LatencyMetricsCollectorConfig metricsCollectorConfig) {
             super.networkLatencyMetricsCollectorConfig(metricsCollectorConfig);
+            return this;
+        }
+
+        @Override
+        public Builder defaultMetricsLoggingConsumer(boolean enabled, CouchbaseLogLevel level, LoggingConsumer.OutputFormat format) {
+            super.defaultMetricsLoggingConsumer(enabled, level, format);
+            return this;
+        }
+
+        @Override
+        public Builder defaultMetricsLoggingConsumer(boolean enabled, CouchbaseLogLevel level) {
+            super.defaultMetricsLoggingConsumer(enabled, level);
             return this;
         }
 
