@@ -35,6 +35,7 @@ import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.QueryExecutionException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.query.AsyncQueryResult;
 import com.couchbase.client.java.query.AsyncQueryRow;
@@ -51,6 +52,7 @@ import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.util.LRUCache;
 import rx.Observable;
 import rx.exceptions.CompositeException;
+import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -77,17 +79,95 @@ public class QueryExecutor {
      */
     private static final int QUERY_CACHE_SIZE = 5000;
 
+    private static final String ERROR_FIELD_CODE = "code";
+    private static final String ERROR_FIELD_MSG = "msg";
+    protected static final String ERROR_5000_SPECIFIC_MESSAGE = "index deleted or node hosting the index is down " +
+            "- cause: queryport.indexNotFound";
+
+    /**
+     * Tests a N1QL error JSON for conditions warranting a prepared statement retry.
+     */
+    private static boolean shouldRetry(JsonObject errorJson) {
+        if (errorJson == null) return false;
+        Integer code = errorJson.getInt(ERROR_FIELD_CODE);
+        String msg = errorJson.getString(ERROR_FIELD_MSG);
+
+        if (code == null || msg == null) return false;
+
+        if (code == 4050 || code == 4070 ||
+                (code == 5000 && msg.contains(ERROR_5000_SPECIFIC_MESSAGE))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Peeks into the error stream of the {@link AsyncQueryResult} and reemit a copy of it if no retry condition for
+     * prepared statement execution is found, otherwise emit an error than will trigger a retry (see {@link #shouldRetry(JsonObject)}).
+     */
+    private static final Func1<AsyncQueryResult, Observable<AsyncQueryResult>> QUERY_RESULT_PEEK_FOR_RETRY =
+    new Func1<AsyncQueryResult, Observable<AsyncQueryResult>>() {
+        @Override
+        public Observable<AsyncQueryResult> call(final AsyncQueryResult aqr) {
+            final Observable<JsonObject> cachedErrors = aqr.errors().cache();
+
+            return cachedErrors
+                    //only keep errors that triggers a prepared statement retry
+                    .filter(new Func1<JsonObject, Boolean>() {
+                        @Override
+                        public Boolean call(JsonObject e) {
+                            return shouldRetry(e);
+                        }
+                    })
+                    //if none, will emit null
+                    .lastOrDefault(null)
+                    //... in which case a copy of the AsyncQueryResult is propagated, otherwise an retry
+                    // triggering exception is propagated.
+                    .flatMap(new Func1<JsonObject, Observable<AsyncQueryResult>>() {
+                        @Override
+                        public Observable<AsyncQueryResult> call(JsonObject errorJson) {
+                            if (errorJson == null) {
+                                AsyncQueryResult copyResult = new DefaultAsyncQueryResult(
+                                        aqr.rows(), aqr.signature(), aqr.info(),
+                                        cachedErrors,
+                                        aqr.finalSuccess(), aqr.parseSuccess(), aqr.requestId(),
+                                        aqr.clientContextId());
+                                return Observable.just(copyResult);
+                            } else {
+                                return Observable.error(new QueryExecutionException("Error with prepared query",
+                                        errorJson));
+                            }
+                        }
+                    });
+        }
+    };
+
     private final ClusterFacade core;
     private final String bucket;
     private final String password;
     private final Map<String, PreparedPayload> queryCache;
 
+    /**
+     * Construct a new QueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
+     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     *
+     * @param core the core through which to send requests.
+     * @param bucket the bucket to bootstrap from.
+     * @param password the password for the bucket.
+     */
     public QueryExecutor(ClusterFacade core, String bucket, String password) {
+        this(core, bucket, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE));
+    }
+
+    /**
+     * This constructor is for testing purpose, prefer using {@link #QueryExecutor(ClusterFacade, String, String)}.
+     */
+    protected QueryExecutor(ClusterFacade core, String bucket, String password, LRUCache<String, PreparedPayload> lruCache) {
         this.core = core;
         this.bucket = bucket;
         this.password = password;
 
-        queryCache = Collections.synchronizedMap(new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE));
+        queryCache = Collections.synchronizedMap(lruCache);
     }
 
     public Observable<AsyncQueryResult> execute(final Query query) {
@@ -98,13 +178,46 @@ public class QueryExecutor {
         }
     }
 
-    private Observable<AsyncQueryResult> dispatchPrepared(final Query query) {
+    protected Observable<AsyncQueryResult> dispatchPrepared(final Query query) {
         PreparedPayload payload = queryCache.get(query.statement().toString());
+        Func1<Throwable, Observable<AsyncQueryResult>> retryFunction = new Func1<Throwable, Observable<AsyncQueryResult>>() {
+            @Override
+            public Observable<AsyncQueryResult> call(Throwable throwable) {
+                return retryPrepareAndExecuteOnce(throwable, query);
+            }
+        };
 
         if (payload != null) {
-            return executePrepared(query, payload);
+            //EXECUTE, if relevant error PREPARE + EXECUTE
+            return executePrepared(query, payload)
+                    .flatMap(QUERY_RESULT_PEEK_FOR_RETRY)
+                    .onErrorResumeNext(retryFunction);
         } else {
-            return prepare(query.statement())
+            //PREPARE, EXECUTE, if relevant error, PREPARE again + EXECUTE
+            return prepareAndExecute(query)
+                .flatMap(QUERY_RESULT_PEEK_FOR_RETRY)
+                .onErrorResumeNext(retryFunction);
+        }
+    }
+
+    /**
+     * In case the error warrants a retry, issue a PREPARE, followed by an update
+     * of the cache and an EXECUTE.
+     * Any failure in the EXECUTE won't continue the retry cycle.
+     */
+    protected Observable<AsyncQueryResult> retryPrepareAndExecuteOnce(Throwable error, Query query) {
+        if (error instanceof QueryExecutionException &&
+                shouldRetry(((QueryExecutionException) error).getN1qlError())) {
+            return prepareAndExecute(query);
+        }
+        return Observable.error(error);
+    }
+
+    /**
+     * Issues a N1QL PREPARE, puts the plan in cache then EXECUTE it.
+     */
+    protected Observable<AsyncQueryResult> prepareAndExecute(final Query query) {
+        return prepare(query.statement())
                 .flatMap(new Func1<PreparedPayload, Observable<AsyncQueryResult>>() {
                     @Override
                     public Observable<AsyncQueryResult> call(PreparedPayload payload) {
@@ -112,10 +225,12 @@ public class QueryExecutor {
                         return executePrepared(query, payload);
                     }
                 });
-        }
     }
 
-    private Observable<AsyncQueryResult> executePrepared(final Query query, PreparedPayload payload) {
+    /**
+     * Issues a proper N1QL EXECUTE, detecting if parameters must be added to it.
+     */
+    protected Observable<AsyncQueryResult> executePrepared(final Query query, PreparedPayload payload) {
         if (query instanceof ParameterizedQuery) {
             ParameterizedQuery pq = (ParameterizedQuery) query;
             if (pq.isPositional()) {
@@ -144,7 +259,7 @@ public class QueryExecutor {
      * @param query the full query as a Json String, including all necessary parameters.
      * @return a result containing all found rows and additional information.
      */
-    private Observable<AsyncQueryResult> executeQuery(final Query query) {
+    protected Observable<AsyncQueryResult> executeQuery(final Query query) {
         return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
             @Override
             public Observable<GenericQueryResponse> call() {
@@ -239,7 +354,7 @@ public class QueryExecutor {
      * @param statement the statement to prepare a plan for.
      * @return a {@link PreparedPayload} that can be cached and reused later in {@link PreparedQuery}.
      */
-    private Observable<PreparedPayload> prepare(Statement statement) {
+    protected Observable<PreparedPayload> prepare(Statement statement) {
         final PrepareStatement prepared;
         if (statement instanceof PrepareStatement) {
             prepared = (PrepareStatement) statement;
