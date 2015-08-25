@@ -576,7 +576,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public SpatialViewResult query(SpatialViewQuery query) {
-        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+        return query(query, environment.viewTimeout(), TIMEOUT_UNIT);
     }
 
     @Override

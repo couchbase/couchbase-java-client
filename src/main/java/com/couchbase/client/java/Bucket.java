@@ -2550,7 +2550,7 @@ public interface Bucket {
     <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
-     * Queries a Couchbase Server {@link View} with the default view timeout.
+     * Queries a Couchbase Server {@link View} with the {@link CouchbaseEnvironment#viewTimeout() default view timeout}.
      *
      * This method throws under the following conditions:
      *
@@ -2566,7 +2566,7 @@ public interface Bucket {
     ViewResult query(ViewQuery query);
 
     /**
-     * Queries a Couchbase Server Spatial {@link View} with the default view timeout.
+     * Queries a Couchbase Server Spatial {@link View} with the {@link CouchbaseEnvironment#viewTimeout() default view timeout}.
      *
      * This method throws under the following conditions:
      *
@@ -2618,8 +2618,8 @@ public interface Bucket {
     SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the default query timeout. Said timeout includes the time it
-     * takes to retrieve all of the rows and errors from server.
+     * Experimental: Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
+     * Said timeout includes the time it takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
@@ -2652,8 +2652,8 @@ public interface Bucket {
     QueryResult query(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the default query timeout. Said timeout includes the time it
-     * takes to retrieve all of the rows and errors from server.
+     * Experimental: Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
+     * Said timeout includes the time it takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
      *
