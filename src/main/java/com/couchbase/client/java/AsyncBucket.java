@@ -44,8 +44,8 @@ import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
-import com.couchbase.client.java.query.AsyncQueryResult;
-import com.couchbase.client.java.query.Query;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.Repository;
@@ -1179,7 +1179,7 @@ public interface AsyncBucket {
      * @param statement the statement in a DSL form (start with a static select() import).
      * @return a result containing all found rows and additional information.
      */
-    Observable<AsyncQueryResult> query(Statement statement);
+    Observable<AsyncN1qlQueryResult> query(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index.
@@ -1190,10 +1190,10 @@ public interface AsyncBucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      *
-     * @param query the full {@link Query}.
+     * @param query the full {@link N1qlQuery}.
      * @return a result containing all found rows and additional information.
      */
-    Observable<AsyncQueryResult> query(Query query);
+    Observable<AsyncN1qlQueryResult> query(N1qlQuery query);
 
     /**
      * Unlocks a write-locked {@link Document}.

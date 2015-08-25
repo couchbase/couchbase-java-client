@@ -44,7 +44,7 @@ public class PrepareStatement implements SerializableStatement {
         if (toPrepare instanceof SerializableStatement) {
             this.toPrepare = (SerializableStatement) toPrepare;
         } else {
-            this.toPrepare = new Query.RawStatement(toPrepare.toString());
+            this.toPrepare = new N1qlQuery.RawStatement(toPrepare.toString());
         }
         this.preparedName = preparedName;
     }
@@ -128,6 +128,6 @@ public class PrepareStatement implements SerializableStatement {
         }
 
         //delegate to other factory method so that a name is generated
-        return prepare(new Query.RawStatement(statement));
+        return prepare(new N1qlQuery.RawStatement(statement));
     }
 }

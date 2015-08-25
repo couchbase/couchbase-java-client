@@ -35,7 +35,7 @@ import java.io.Serializable;
  * @author Simon Baslé
  * @since 2.1
  */
-public abstract class Query implements Serializable {
+public abstract class N1qlQuery implements Serializable {
 
     private static final long serialVersionUID = 3758119606237959729L;
 
@@ -48,13 +48,13 @@ public abstract class Query implements Serializable {
     public abstract Statement statement();
 
     /**
-     * Returns the {@link QueryParams} representing customization of the N1QL query.
+     * Returns the {@link N1qlParams} representing customization of the N1QL query.
      *
      * Note that this is different from named or positional parameters (which relate to the statement).
      *
-     * @return the {@link QueryParams} for this query, null if none.
+     * @return the {@link N1qlParams} for this query, null if none.
      */
-    public abstract QueryParams params();
+    public abstract N1qlParams params();
 
     /**
      * Convert this query to a full N1QL query in Json form.
@@ -83,42 +83,42 @@ public abstract class Query implements Serializable {
 
     //========== FACTORY METHODS ==========
     /**
-     * Create a new {@link Query} with a plain un-parameterized {@link Statement}.
+     * Create a new {@link N1qlQuery} with a plain un-parameterized {@link Statement}.
      *
      * @param statement the {@link Statement} to execute
      */
-    public static SimpleQuery simple(Statement statement) {
-        return new SimpleQuery(statement, null);
+    public static SimpleN1qlQuery simple(Statement statement) {
+        return new SimpleN1qlQuery(statement, null);
     }
 
     /**
-     * Create a new {@link Query} with a plain raw statement in String form.
+     * Create a new {@link N1qlQuery} with a plain raw statement in String form.
      *
      * @param statement the raw statement string to execute (eg. "SELECT * FROM default").
      */
-    public static SimpleQuery simple(String statement) {
+    public static SimpleN1qlQuery simple(String statement) {
         return simple(new RawStatement(statement));
     }
 
     /**
-     * Create a new {@link Query} with a plain un-parameterized {@link Statement} and
+     * Create a new {@link N1qlQuery} with a plain un-parameterized {@link Statement} and
      * custom query parameters.
      *
      * @param statement the {@link Statement} to execute
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static SimpleQuery simple(Statement statement, QueryParams params) {
-        return new SimpleQuery(statement, params);
+    public static SimpleN1qlQuery simple(Statement statement, N1qlParams params) {
+        return new SimpleN1qlQuery(statement, params);
     }
 
     /**
-     * Create a new {@link Query} with a plain raw statement in {@link String} form and
+     * Create a new {@link N1qlQuery} with a plain raw statement in {@link String} form and
      * custom query parameters.
      *
      * @param statement the raw statement string to execute (eg. "SELECT * FROM default").
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static SimpleQuery simple(String statement, QueryParams params) {
+    public static SimpleN1qlQuery simple(String statement, N1qlParams params) {
         return simple(new RawStatement(statement), params);
     }
 
@@ -131,8 +131,8 @@ public abstract class Query implements Serializable {
      * @param statement the {@link Statement} to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      */
-    public static ParameterizedQuery parameterized(Statement statement, JsonArray positionalParams) {
-        return new ParameterizedQuery(statement, positionalParams, null);
+    public static ParameterizedN1qlQuery parameterized(Statement statement, JsonArray positionalParams) {
+        return new ParameterizedN1qlQuery(statement, positionalParams, null);
     }
 
     /**
@@ -143,8 +143,8 @@ public abstract class Query implements Serializable {
      * @param statement the {@link Statement} to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
      */
-    public static ParameterizedQuery parameterized(Statement statement, JsonObject namedParams) {
-        return new ParameterizedQuery(statement, namedParams, null);
+    public static ParameterizedN1qlQuery parameterized(Statement statement, JsonObject namedParams) {
+        return new ParameterizedN1qlQuery(statement, namedParams, null);
     }
 
     /**
@@ -154,10 +154,10 @@ public abstract class Query implements Serializable {
      *
      * @param statement the {@link Statement} to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static ParameterizedQuery parameterized(Statement statement, JsonArray positionalParams, QueryParams params) {
-        return new ParameterizedQuery(statement, positionalParams, params);
+    public static ParameterizedN1qlQuery parameterized(Statement statement, JsonArray positionalParams, N1qlParams params) {
+        return new ParameterizedN1qlQuery(statement, positionalParams, params);
     }
 
     /**
@@ -167,10 +167,10 @@ public abstract class Query implements Serializable {
      *
      * @param statement the {@link Statement} to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static ParameterizedQuery parameterized(Statement statement, JsonObject namedParams, QueryParams params) {
-        return new ParameterizedQuery(statement, namedParams, params);
+    public static ParameterizedN1qlQuery parameterized(Statement statement, JsonObject namedParams, N1qlParams params) {
+        return new ParameterizedN1qlQuery(statement, namedParams, params);
     }
 
     //== PARAMETERIZED with raw String ==
@@ -182,8 +182,8 @@ public abstract class Query implements Serializable {
      * @param statement the raw statement to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      */
-    public static ParameterizedQuery parameterized(String statement, JsonArray positionalParams) {
-        return new ParameterizedQuery(new RawStatement(statement), positionalParams, null);
+    public static ParameterizedN1qlQuery parameterized(String statement, JsonArray positionalParams) {
+        return new ParameterizedN1qlQuery(new RawStatement(statement), positionalParams, null);
     }
 
     /**
@@ -194,8 +194,8 @@ public abstract class Query implements Serializable {
      * @param statement the raw statement to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
      */
-    public static ParameterizedQuery parameterized(String statement, JsonObject namedParams) {
-        return new ParameterizedQuery(new RawStatement(statement), namedParams, null);
+    public static ParameterizedN1qlQuery parameterized(String statement, JsonObject namedParams) {
+        return new ParameterizedN1qlQuery(new RawStatement(statement), namedParams, null);
     }
 
     /**
@@ -205,10 +205,10 @@ public abstract class Query implements Serializable {
      *
      * @param statement the raw statement to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static ParameterizedQuery parameterized(String statement, JsonArray positionalParams, QueryParams params) {
-        return new ParameterizedQuery(new RawStatement(statement), positionalParams, params);
+    public static ParameterizedN1qlQuery parameterized(String statement, JsonArray positionalParams, N1qlParams params) {
+        return new ParameterizedN1qlQuery(new RawStatement(statement), positionalParams, params);
     }
 
     /**
@@ -218,9 +218,9 @@ public abstract class Query implements Serializable {
      *
      * @param statement the raw statement to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
-     * @param params the {@link QueryParams query parameters}.
+     * @param params the {@link N1qlParams query parameters}.
      */
-    public static ParameterizedQuery parameterized(String statement, JsonObject namedParams, QueryParams params) {
-        return new ParameterizedQuery(new RawStatement(statement), namedParams, params);
+    public static ParameterizedN1qlQuery parameterized(String statement, JsonObject namedParams, N1qlParams params) {
+        return new ParameterizedN1qlQuery(new RawStatement(statement), namedParams, params);
     }
 }

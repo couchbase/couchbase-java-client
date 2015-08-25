@@ -21,13 +21,12 @@
  */
 package com.couchbase.client.java.query;
 
-import com.couchbase.client.core.annotations.InterfaceAudience;
-import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.document.json.JsonValue;
 
 /**
- * Represent a N1QL query, with a parameterized prepared statement plan (for which the
+ * Represent a N1QL {@link} with an optionally parameterized statement (in which case the
  * values must be passed according to the type and number of placeholders).
  *
  * Positional placeholders (in the form of either "$1" "$2" or just simple "?") are filled
@@ -40,44 +39,39 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Simon Baslé
  * @since 2.1
  */
-@InterfaceStability.Experimental
-@InterfaceAudience.Private
-public class PreparedQuery extends ParameterizedQuery {
+public class ParameterizedN1qlQuery extends AbstractN1qlQuery {
 
-    public PreparedQuery(PreparedPayload plan, JsonArray positionalParams, QueryParams params) {
-        super(plan, positionalParams, params);
+    private final JsonValue statementParams;
+    private final boolean positional;
+
+    /* package */ ParameterizedN1qlQuery(Statement statement, JsonArray positionalParams, N1qlParams params) {
+        super(statement, params);
+        this.statementParams = positionalParams;
+        this.positional = true;
     }
 
-    public PreparedQuery(PreparedPayload plan, JsonObject namedParams, QueryParams params) {
-       super(plan, namedParams, params);
-    }
-
-    public PreparedQuery(PreparedPayload plan, QueryParams params) {
-        super(plan, (JsonArray) null, params);
+    /* package */ ParameterizedN1qlQuery(Statement statement, JsonObject namedParams, N1qlParams params) {
+        super(statement, params);
+        this.statementParams = namedParams;
+        this.positional = false;
     }
 
     @Override
     protected String statementType() {
-        return "prepared";
+        return "statement";
     }
 
     @Override
     protected Object statementValue() {
-        return statement().payload();
+        return statement().toString();
     }
 
     @Override
-    public PreparedPayload statement() {
-        return (PreparedPayload) super.statement();
+    public JsonValue statementParameters() {
+        return statementParams;
     }
 
-    @Override
-    public JsonObject n1ql() {
-        JsonObject n1ql = super.n1ql();
-        String encodedPlan = statement().encodedPlan();
-        if (encodedPlan != null) {
-            n1ql.put("encoded_plan", encodedPlan);
-        }
-        return n1ql;
+    public boolean isPositional() {
+        return positional;
     }
 }

@@ -23,9 +23,9 @@ package com.couchbase.client.java;
 
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryParams;
-import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.N1qlParams;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
@@ -47,10 +47,10 @@ import static org.junit.Assert.assertTrue;
  * @author Simon Baslé
  * @since 2.1
  */
-public class QueryTest extends ClusterDependentTest {
+public class N1qlQueryTest extends ClusterDependentTest {
     //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
     private static final ScanConsistency CONSISTENCY = ScanConsistency.NOT_BOUNDED;
-    private static final QueryParams WITH_CONSISTENCY = QueryParams.build().consistency(CONSISTENCY);
+    private static final N1qlParams WITH_CONSISTENCY = N1qlParams.build().consistency(CONSISTENCY);
 
     @BeforeClass
     public static void init() throws InterruptedException {
@@ -62,13 +62,14 @@ public class QueryTest extends ClusterDependentTest {
         bucket().upsert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
         bucket().upsert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
 
-        bucket().query(Query.simple("CREATE PRIMARY INDEX ON `" + bucketName() + "`",
-                QueryParams.build().consistency(CONSISTENCY)), 2, TimeUnit.MINUTES);
+        bucket().query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + bucketName() + "`",
+                N1qlParams.build().consistency(CONSISTENCY)), 2, TimeUnit.MINUTES);
     }
 
     @Test
     public void shouldAlreadyHaveCreatedIndex() {
-        QueryResult indexResult = bucket().query(Query.simple(createPrimaryIndex().on(bucketName()), WITH_CONSISTENCY));
+        N1qlQueryResult indexResult = bucket().query(
+                N1qlQuery.simple(createPrimaryIndex().on(bucketName()), WITH_CONSISTENCY));
         assertFalse(indexResult.finalSuccess());
         assertEquals(0, indexResult.allRows().size());
         assertNotNull(indexResult.info());
@@ -81,8 +82,8 @@ public class QueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldHaveRequestId() {
-        QueryResult result = bucket().query(Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
-                QueryParams.build().withContextId(null).consistency(CONSISTENCY)));
+        N1qlQueryResult result = bucket().query(N1qlQuery.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
+                N1qlParams.build().withContextId(null).consistency(CONSISTENCY)));
         assertNotNull(result);
         assertTrue(result.parseSuccess());
         assertTrue(result.finalSuccess());
@@ -101,10 +102,10 @@ public class QueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldHaveRequestIdAndContextId() {
-        Query query = Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
-                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
+                N1qlParams.build().withContextId("TEST").consistency(CONSISTENCY));
 
-        QueryResult result = bucket().query(query);
+        N1qlQueryResult result = bucket().query(query);
         assertNotNull(result);
         assertTrue(result.parseSuccess());
         assertTrue(result.finalSuccess());
@@ -126,9 +127,9 @@ public class QueryTest extends ClusterDependentTest {
         String contextIdMoreThan64Bytes = "123456789012345678901234567890123456789012345678901234567890☃BCD";
         String contextIdTruncatedExpected = new String(Arrays.copyOf(contextIdMoreThan64Bytes.getBytes(), 64));
 
-        Query query = Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
-                QueryParams.build().withContextId(contextIdMoreThan64Bytes).consistency(CONSISTENCY));
-        QueryResult result = bucket().query(query);
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3",
+                N1qlParams.build().withContextId(contextIdMoreThan64Bytes).consistency(CONSISTENCY));
+        N1qlQueryResult result = bucket().query(query);
         JsonObject params = JsonObject.create();
         query.params().injectParams(params);
 
@@ -151,8 +152,8 @@ public class QueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldHaveSignature() {
-        Query query = Query.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3", WITH_CONSISTENCY);
-        QueryResult result = bucket().query(query);
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM `" + bucketName() + "` LIMIT 3", WITH_CONSISTENCY);
+        N1qlQueryResult result = bucket().query(query);
 
         assertNotNull(result);
         assertTrue(result.parseSuccess());
@@ -184,12 +185,12 @@ public class QueryTest extends ClusterDependentTest {
 //        assertEquals(statement.toString(), payload.originalStatement().toString());
 //        assertEquals(preparedName, payload.preparedName());
 //
-//        PreparedQuery preparedQuery = Query.prepared(payload,
+//        PreparedN1qlQuery preparedQuery = N1qlQuery.prepared(payload,
 //                JsonArray.from(123),
-//                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
-//        QueryResult response = bucket().query(preparedQuery, 2, TimeUnit.MINUTES);
+//                N1qlParams.build().withContextId("TEST").consistency(CONSISTENCY));
+//        N1qlQueryResult response = bucket().query(preparedQuery, 2, TimeUnit.MINUTES);
 //        assertTrue(response.errors().toString(), response.finalSuccess());
-//        List<QueryRow> rows = response.allRows();
+//        List<N1qlQueryRow> rows = response.allRows();
 //        assertEquals("TEST", response.clientContextId());
 //        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
 //        assertEquals(1, rows.size());
@@ -206,15 +207,15 @@ public class QueryTest extends ClusterDependentTest {
 //        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
 //        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
 //        PreparedPayload payload = new PreparedPayload(prepareStatement, preparedName);
-//        PreparedQuery preparedQuery = Query.prepared(payload,
+//        PreparedN1qlQuery preparedQuery = N1qlQuery.prepared(payload,
 //                JsonArray.from(123),
-//                QueryParams.build().withContextId("TEST").consistency(CONSISTENCY));
-//        QueryResult response = bucket().query(preparedQuery);
+//                N1qlParams.build().withContextId("TEST").consistency(CONSISTENCY));
+//        N1qlQueryResult response = bucket().query(preparedQuery);
 //
 //        assertTrue(response.errors().toString(), response.finalSuccess());
 //        assertEquals("TEST", response.clientContextId());
 //        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
-//        List<QueryRow> rows = response.allRows();
+//        List<N1qlQueryRow> rows = response.allRows();
 //        assertEquals(1, rows.size());
 //        assertTrue(rows.get(0).value().toString().contains("123"));
 //    }

@@ -13,12 +13,12 @@ import rx.Observable;
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public interface AsyncQueryResult {
+public interface AsyncN1qlQueryResult {
 
     /**
      * @return an async stream of each row resulting from the query (empty if fatal errors occurred).
      */
-    Observable<AsyncQueryRow> rows();
+    Observable<AsyncN1qlQueryRow> rows();
 
     /**
      * @return an async single-item representing the signature of the results, that can be used to
@@ -30,7 +30,7 @@ public interface AsyncQueryResult {
     /**
      * @return an async single item describing some metrics/info about the execution of the query.
      */
-    Observable<QueryMetrics> info();
+    Observable<N1qlMetrics> info();
 
     /**
      * Immediately denotes initial parsing success of the query.

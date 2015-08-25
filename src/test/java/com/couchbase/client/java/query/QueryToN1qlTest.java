@@ -51,7 +51,7 @@ public class QueryToN1qlTest {
 
     @Test
     public void simpleQueryShouldJustProduceStatement() {
-        SimpleQuery query = new SimpleQuery(select("*").from("tutorial").where(x("fname").eq(s("ian"))), null);
+        SimpleN1qlQuery query = new SimpleN1qlQuery(select("*").from("tutorial").where(x("fname").eq(s("ian"))), null);
 
         //notice ian is between escaped quotes since inside json
         assertEquals("{\"statement\":\"SELECT * FROM tutorial WHERE fname = \\\"ian\\\"\"}", query.n1ql().toString());
@@ -59,7 +59,7 @@ public class QueryToN1qlTest {
 
     @Test
     public void rawSimpleQueryShouldJustProduceStatementAsIs() {
-        SimpleQuery query = Query.simple("Here goes anything even not \"JSON\"");
+        SimpleN1qlQuery query = N1qlQuery.simple("Here goes anything even not \"JSON\"");
 
         //notice JSON is between escaped quotes since inside json
         assertEquals("{\"statement\":\"Here goes anything even not \\\"JSON\\\"\"}", query.n1ql().toString());
@@ -67,7 +67,7 @@ public class QueryToN1qlTest {
 
     @Test
     public void parameterizedQueryWithArrayShouldProduceStatementAndArgs() {
-        ParameterizedQuery query = new ParameterizedQuery(select("*"), JsonArray.from("aString", 123, true), null);
+        ParameterizedN1qlQuery query = new ParameterizedN1qlQuery(select("*"), JsonArray.from("aString", 123, true), null);
 
         JsonObject expected = JsonObject.create()
             .put("statement", "SELECT *")
@@ -120,7 +120,7 @@ public class QueryToN1qlTest {
     public void preparedQueryWithArrayShouldProducePreparedAndArgs() {
         PreparedPayload fakePlan = new PreparedPayload(select("*"), "planName", "plan1234");
         JsonArray params =JsonArray.from("aString", 123, true);
-        PreparedQuery query = new PreparedQuery(fakePlan, params, null);
+        PreparedN1qlQuery query = new PreparedN1qlQuery(fakePlan, params, null);
 
         JsonObject expected = JsonObject.create()
             .put("prepared", "planName")
@@ -136,7 +136,7 @@ public class QueryToN1qlTest {
             .put("myParamString", "aString")
             .put("someInt", 123)
             .put("$fullN1qlParam", true);
-        ParameterizedQuery query = new ParameterizedQuery(select("*"), args, null);
+        ParameterizedN1qlQuery query = new ParameterizedN1qlQuery(select("*"), args, null);
 
         JsonObject expected = JsonObject.create()
             .put("statement", "SELECT *")
@@ -154,7 +154,7 @@ public class QueryToN1qlTest {
             .put("myParamString", "aString")
             .put("someInt", 123)
             .put("$fullN1qlParam", true);
-        PreparedQuery query = new PreparedQuery(fakePlan, args, null);
+        PreparedN1qlQuery query = new PreparedN1qlQuery(fakePlan, args, null);
 
         JsonObject expected = JsonObject.create()
             .put("prepared", "planName")
@@ -168,7 +168,7 @@ public class QueryToN1qlTest {
 
     @Test
     public void queryParamsShouldBeInjectedInQuery() {
-        QueryParams fullParams = QueryParams.build()
+        N1qlParams fullParams = N1qlParams.build()
                 .consistency(ScanConsistency.REQUEST_PLUS)
                 .scanWait(12, TimeUnit.SECONDS)
                 .serverSideTimeout(20, TimeUnit.SECONDS)
@@ -181,17 +181,17 @@ public class QueryToN1qlTest {
                 .put("timeout", "20s")
                 .put("client_context_id", "test");
 
-        SimpleQuery query1 = new SimpleQuery(select(x("*")).from("default"), fullParams);
+        SimpleN1qlQuery query1 = new SimpleN1qlQuery(select(x("*")).from("default"), fullParams);
         assertEquals(expected, query1.n1ql());
 
-        ParameterizedQuery query2 = new ParameterizedQuery(select(x("*")).from("default"), JsonObject.empty(), fullParams);
+        ParameterizedN1qlQuery query2 = new ParameterizedN1qlQuery(select(x("*")).from("default"), JsonObject.empty(), fullParams);
         assertEquals(expected, query2.n1ql());
 
         expected
             .removeKey("statement")
             .put("prepared", "planName")
             .put("encoded_plan", "plan1234");
-        PreparedQuery query3 = new PreparedQuery(new PreparedPayload(select("*"), "planName", "plan1234"), JsonArray.empty(), fullParams);
+        PreparedN1qlQuery query3 = new PreparedN1qlQuery(new PreparedPayload(select("*"), "planName", "plan1234"), JsonArray.empty(), fullParams);
         assertEquals(expected, query3.n1ql());
     }
 

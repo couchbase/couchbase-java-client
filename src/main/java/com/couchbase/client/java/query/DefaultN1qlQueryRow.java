@@ -2,11 +2,11 @@ package com.couchbase.client.java.query;
 
 import com.couchbase.client.java.document.json.JsonObject;
 
-public class DefaultAsyncQueryRow implements AsyncQueryRow {
+public class DefaultN1qlQueryRow implements N1qlQueryRow {
 
     private final JsonObject value;
 
-    public DefaultAsyncQueryRow(JsonObject value) {
+    public DefaultN1qlQueryRow(JsonObject value) {
         this.value = value;
     }
 
@@ -18,4 +18,5 @@ public class DefaultAsyncQueryRow implements AsyncQueryRow {
     public String toString() {
         return value.toString();
     }
+
 }

@@ -30,12 +30,12 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.query.AsyncQueryResult;
-import com.couchbase.client.java.query.AsyncQueryRow;
-import com.couchbase.client.java.query.DefaultQueryResult;
-import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryMetrics;
-import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.AsyncN1qlQueryRow;
+import com.couchbase.client.java.query.DefaultN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlMetrics;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.CouchbaseRepository;
 import com.couchbase.client.java.repository.Repository;
@@ -555,12 +555,12 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryResult query(Statement statement) {
+    public N1qlQueryResult query(Statement statement) {
         return query(statement, environment.queryTimeout(), TIMEOUT_UNIT);
     }
 
     @Override
-    public QueryResult query(Query query) {
+    public N1qlQueryResult query(N1qlQuery query) {
         return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
     }
 
@@ -613,42 +613,42 @@ public class CouchbaseBucket implements Bucket {
     }
 
     @Override
-    public QueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
-        return query(Query.simple(statement), timeout, timeUnit);
+    public N1qlQueryResult query(Statement statement, final long timeout, final TimeUnit timeUnit) {
+        return query(N1qlQuery.simple(statement), timeout, timeUnit);
     }
 
     @Override
-    public QueryResult query(Query query, final long timeout, final TimeUnit timeUnit) {
+    public N1qlQueryResult query(N1qlQuery query, final long timeout, final TimeUnit timeUnit) {
         if (!query.params().hasServerSideTimeout()) {
             query.params().serverSideTimeout(timeout, timeUnit);
         }
 
         return Blocking.blockForSingle(asyncBucket
-            .query(query)
-            .flatMap(new Func1<AsyncQueryResult, Observable<QueryResult>>() {
-                @Override
-                public Observable<QueryResult> call(AsyncQueryResult aqr) {
-                    final boolean parseSuccess = aqr.parseSuccess();
-                    final String requestId = aqr.requestId();
-                    final String clientContextId = aqr.clientContextId();
+                .query(query)
+                .flatMap(new Func1<AsyncN1qlQueryResult, Observable<N1qlQueryResult>>() {
+                    @Override
+                    public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {
+                        final boolean parseSuccess = aqr.parseSuccess();
+                        final String requestId = aqr.requestId();
+                        final String clientContextId = aqr.clientContextId();
 
-                    return Observable.zip(aqr.rows().toList(),
-                        aqr.signature().singleOrDefault(JsonObject.empty()),
-                        aqr.info().singleOrDefault(QueryMetrics.EMPTY_METRICS),
-                        aqr.errors().toList(),
-                        aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                        new Func5<List<AsyncQueryRow>, Object, QueryMetrics,
-                            List<JsonObject>, Boolean, QueryResult>() {
-                            @Override
-                            public QueryResult call(List<AsyncQueryRow> rows, Object signature,
-                                                    QueryMetrics info, List<JsonObject> errors, Boolean finalSuccess) {
-                                return new DefaultQueryResult(rows, signature, info, errors, finalSuccess,
-                                    parseSuccess, requestId, clientContextId);
-                            }
-                        });
-                }
-            })
-            .single(), timeout, timeUnit);
+                        return Observable.zip(aqr.rows().toList(),
+                                aqr.signature().singleOrDefault(JsonObject.empty()),
+                                aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
+                                aqr.errors().toList(),
+                                aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
+                                new Func5<List<AsyncN1qlQueryRow>, Object, N1qlMetrics,
+                                        List<JsonObject>, Boolean, N1qlQueryResult>() {
+                                    @Override
+                                    public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
+                                            N1qlMetrics info, List<JsonObject> errors, Boolean finalSuccess) {
+                                        return new DefaultN1qlQueryResult(rows, signature, info, errors, finalSuccess,
+                                                parseSuccess, requestId, clientContextId);
+                                    }
+                                });
+                    }
+                })
+                .single(), timeout, timeUnit);
     }
 
     @Override

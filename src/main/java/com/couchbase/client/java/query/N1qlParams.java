@@ -28,7 +28,7 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Parameter Object for {@link Query queries} that allows to fluently set most of the N1QL query parameters:
+ * Parameter Object for {@link N1qlQuery queries} that allows to fluently set most of the N1QL query parameters:
  *  - server side timeout
  *  - client context ID
  *  - scan consistency (with associated scan vector and/or scan wait if relevant)
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * @author Simon Baslé
  * @since 2.1
  */
-public class QueryParams implements Serializable {
+public class N1qlParams implements Serializable {
 
     private static final long serialVersionUID = 8888370260267213830L;
 
@@ -54,12 +54,12 @@ public class QueryParams implements Serializable {
      */
     private boolean adhoc;
 
-    private QueryParams() {
+    private N1qlParams() {
         adhoc = true;
     }
 
     /**
-     * Modifies the given N1QL query (as a {@link JsonObject}) to reflect these {@link QueryParams}.
+     * Modifies the given N1QL query (as a {@link JsonObject}) to reflect these {@link N1qlParams}.
      * @param queryJson the N1QL query
      */
     public void injectParams(JsonObject queryJson) {
@@ -103,12 +103,12 @@ public class QueryParams implements Serializable {
     }
 
     /**
-     * Start building a {@link QueryParams}, allowing to customize an N1QL request.
+     * Start building a {@link N1qlParams}, allowing to customize an N1QL request.
      *
-     * @return a new {@link QueryParams}
+     * @return a new {@link N1qlParams}
      */
-    public static QueryParams build() {
-        return new QueryParams();
+    public static N1qlParams build() {
+        return new N1qlParams();
     }
 
     /**
@@ -116,9 +116,9 @@ public class QueryParams implements Serializable {
      *
      * @param timeout the duration of the timeout.
      * @param unit the unit of the timeout, from nanoseconds to hours.
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams serverSideTimeout(long timeout, TimeUnit unit) {
+    public N1qlParams serverSideTimeout(long timeout, TimeUnit unit) {
         this.serverSideTimeout = durationToN1qlFormat(timeout, unit);
         return this;
     }
@@ -128,9 +128,9 @@ public class QueryParams implements Serializable {
      * to meaningfully trace requests/responses when many are exchanged.
      *
      * @param clientContextId the client context ID (null to send none)
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams withContextId(String clientContextId) {
+    public N1qlParams withContextId(String clientContextId) {
         this.clientContextId = clientContextId;
         return this;
     }
@@ -140,9 +140,9 @@ public class QueryParams implements Serializable {
      *
      * Note that {@link ScanConsistency#NOT_BOUNDED NOT_BOUNDED} will unset the {@link #scanWait} if it was set.
      *
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams consistency(ScanConsistency consistency) {
+    public N1qlParams consistency(ScanConsistency consistency) {
         this.consistency = consistency;
         if (consistency == ScanConsistency.NOT_BOUNDED) {
             this.scanWait = null;
@@ -158,9 +158,9 @@ public class QueryParams implements Serializable {
      *
      * @param wait the duration.
      * @param unit the unit for the duration.
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams scanWait(long wait, TimeUnit unit) {
+    public N1qlParams scanWait(long wait, TimeUnit unit) {
         if (this.consistency == ScanConsistency.NOT_BOUNDED) {
             this.scanWait = null;
         } else {
@@ -173,9 +173,9 @@ public class QueryParams implements Serializable {
      * Allows to override the default maximum parallelism for the query execution on the server side.
      *
      * @param maxParallelism the maximum parallelism for this query, 0 or negative values disable it.
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams maxParallelism(int maxParallelism) {
+    public N1qlParams maxParallelism(int maxParallelism) {
         this.maxParallelism = maxParallelism;
         return this;
     }
@@ -189,9 +189,9 @@ public class QueryParams implements Serializable {
      * then executing a query plan instead of the raw query.
      *
      * @param adhoc if the query is adhoc, default is true (plain execution).
-     * @return this {@link QueryParams} for chaining.
+     * @return this {@link N1qlParams} for chaining.
      */
-    public QueryParams adhoc(boolean adhoc) {
+    public N1qlParams adhoc(boolean adhoc) {
         this.adhoc = adhoc;
         return this;
     }
@@ -219,7 +219,7 @@ public class QueryParams implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        QueryParams that = (QueryParams) o;
+        N1qlParams that = (N1qlParams) o;
 
         if (adhoc != that.adhoc) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
@@ -246,7 +246,7 @@ public class QueryParams implements Serializable {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("QueryParams{");
+        final StringBuilder sb = new StringBuilder("N1qlParams{");
         sb.append("serverSideTimeout='").append(serverSideTimeout).append('\'');
         sb.append(", consistency=").append(consistency);
         sb.append(", scanWait='").append(scanWait).append('\'');

@@ -25,7 +25,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 
 /**
- * The payload necessary to perform a {@link PreparedQuery}, as returned when
+ * The payload necessary to perform a {@link PreparedN1qlQuery}, as returned when
  * issuing a {@link PrepareStatement}.
  *
  * @author Simon Baslé
@@ -44,7 +44,7 @@ public class PreparedPayload implements SerializableStatement {
     public PreparedPayload(Statement originalStatement, String preparedName, String encodedPlan) {
         this.originalStatement = originalStatement instanceof SerializableStatement
                 ? (SerializableStatement) originalStatement
-                : new Query.RawStatement(originalStatement.toString());
+                : new N1qlQuery.RawStatement(originalStatement.toString());
         this.preparedName = preparedName;
         this.encodedPlan = encodedPlan;
     }

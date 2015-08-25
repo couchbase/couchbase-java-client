@@ -34,13 +34,13 @@ public class StatementSerializationTest {
 
     @Test
     public void rawStatementShouldBeSerializable() throws Exception {
-        Query.RawStatement st = new Query.RawStatement("test");
+        N1qlQuery.RawStatement st = new N1qlQuery.RawStatement("test");
 
         byte[] bytes = SerializationHelper.serializeToBytes(st);
         assertNotNull(bytes);
 
-        Query.RawStatement deserialized = SerializationHelper.deserializeFromBytes(bytes,
-                Query.RawStatement.class);
+        N1qlQuery.RawStatement deserialized = SerializationHelper.deserializeFromBytes(bytes,
+                N1qlQuery.RawStatement.class);
         assertEquals(st.toString(), deserialized.toString());
     }
     @Test

@@ -44,8 +44,8 @@ import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
-import com.couchbase.client.java.query.Query;
-import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.transcoder.Transcoder;
@@ -2631,7 +2631,7 @@ public interface Bucket {
      * @param statement the statement in a DSL form (start with a static select() import)
      * @return a result containing all found rows and additional information.
      */
-    QueryResult query(Statement statement);
+    N1qlQueryResult query(Statement statement);
 
     /**
      * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
@@ -2649,7 +2649,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return a result containing all found rows and additional information.
      */
-    QueryResult query(Statement statement, long timeout, TimeUnit timeUnit);
+    N1qlQueryResult query(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
      * Experimental: Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
@@ -2662,10 +2662,10 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      *
-     * @param query the full {@link Query}, including statement and any other additional parameter.
+     * @param query the full {@link N1qlQuery}, including statement and any other additional parameter.
      * @return a result containing all found rows and additional information.
      */
-    QueryResult query(Query query);
+    N1qlQueryResult query(N1qlQuery query);
 
     /**
      * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
@@ -2678,12 +2678,12 @@ public interface Bucket {
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
      *
-     * @param query the full {@link Query}, including statement and any other additional parameter.
+     * @param query the full {@link N1qlQuery}, including statement and any other additional parameter.
      * @param timeout the custom full timeout, including the time to retrieve all rows, errors, etc...
      * @param timeUnit the unit for the timeout.
      * @return a result containing all found rows and additional information.
      */
-    QueryResult query(Query query, long timeout, TimeUnit timeUnit);
+    N1qlQueryResult query(N1qlQuery query, long timeout, TimeUnit timeUnit);
 
     /**
      * Unlocks a write-locked {@link Document} with the default key/value timeout.

@@ -6,25 +6,25 @@ import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
 
 /**
- * The default implementation of an {@link AsyncQueryResult}.
+ * The default implementation of an {@link AsyncN1qlQueryResult}.
  *
  * @author Michael Nitschinger
  */
 @InterfaceStability.Uncommitted
 @InterfaceAudience.Public
-public class DefaultAsyncQueryResult implements AsyncQueryResult {
+public class DefaultAsyncN1qlQueryResult implements AsyncN1qlQueryResult {
 
-    private final Observable<AsyncQueryRow> rows;
+    private final Observable<AsyncN1qlQueryRow> rows;
     private final Observable<Object> signature;
-    private final Observable<QueryMetrics> info;
+    private final Observable<N1qlMetrics> info;
     private final boolean parsingSuccess;
     private final Observable<JsonObject> errors;
     private final Observable<Boolean> finalSuccess;
     private final String requestId;
     private final String clientContextId;
 
-    public DefaultAsyncQueryResult(Observable<AsyncQueryRow> rows, Observable<Object> signature,
-            Observable<QueryMetrics> info, Observable<JsonObject> errors, Observable<Boolean> finalSuccess,
+    public DefaultAsyncN1qlQueryResult(Observable<AsyncN1qlQueryRow> rows, Observable<Object> signature,
+            Observable<N1qlMetrics> info, Observable<JsonObject> errors, Observable<Boolean> finalSuccess,
             boolean parsingSuccess, String requestId, String clientContextId) {
         this.rows = rows;
         this.signature = signature;
@@ -37,7 +37,7 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
     }
 
     @Override
-    public Observable<AsyncQueryRow> rows() {
+    public Observable<AsyncN1qlQueryRow> rows() {
         return rows;
     }
 
@@ -47,7 +47,7 @@ public class DefaultAsyncQueryResult implements AsyncQueryResult {
     }
 
     @Override
-    public Observable<QueryMetrics> info() {
+    public Observable<N1qlMetrics> info() {
         return info;
     }
 
