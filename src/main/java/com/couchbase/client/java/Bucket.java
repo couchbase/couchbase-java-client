@@ -2888,6 +2888,106 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta);
 
     /**
+     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, PersistTo persistTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo);
+
+    /**
      * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
@@ -2911,6 +3011,109 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit);
 
     /**
+     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
      * key/value timeout.
      *
@@ -2928,9 +3131,113 @@ public interface Bucket {
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
+     * @param initial the initial value.
      * @return a {@link Document} containing the resulting value.
      */
     JsonLongDocument counter(String id, long delta, long initial);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
+     * key/value timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param persistTo the persistence constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, PersistTo persistTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
+     * key/value timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
+     * key/value timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
@@ -2950,11 +3257,121 @@ public interface Bucket {
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
+     * @param initial the initial value.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a {@link Document} containing the resulting value.
      */
     JsonLongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the
@@ -2975,9 +3392,120 @@ public interface Bucket {
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
      * @return a {@link Document} containing the resulting value.
      */
     JsonLongDocument counter(String id, long delta, long initial, int expiry);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the
+     * default key/value timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param persistTo the persistence constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, PersistTo persistTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the
+     * default key/value timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with the
+     * default key/value timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
@@ -2998,6 +3526,8 @@ public interface Bucket {
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a {@link Document} containing the resulting value.
@@ -3005,7 +3535,122 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit);
 
     /**
-     * Append a {@link Document} to another one with the default key/value timeout.
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
+     * timeout.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value.
+     * @param expiry the new expiration time of the counter.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    JsonLongDocument counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Append a {@link Document}s content to an existing one with the default key/value timeout.
      *
      * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
      * does not return the appended result, so at this point the client does not know how the {@link Document} now
@@ -3033,13 +3678,149 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
-     * @param document the document to be appended.
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
      * @return a document which mirrors the one supplied as an argument.
      */
     <D extends Document<?>> D append(D document);
 
     /**
-     * Append a {@link Document} to another one with a custom timeout.
+     * Append a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, PersistTo persistTo);
+
+    /**
+     * Append a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param replicateTo the replication constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, ReplicateTo replicateTo);
+
+    /**
+     * Append a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    /**
+     * Append a {@link Document}s content to an existing one with a custom timeout.
      *
      * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
      * does not return the appended result, so at this point the client does not know how the {@link Document} now
@@ -3067,7 +3848,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
-     * @param document the document to be appended.
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a document which mirrors the one supplied as an argument.
@@ -3075,7 +3856,149 @@ public interface Bucket {
     <D extends Document<?>> D append(D document, long timeout, TimeUnit timeUnit);
 
     /**
-     * Prepend a {@link Document} to another one with the default key/value timeout.
+     * Append a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Append a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Append a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the appended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original append has already happened, so the actual
+     * append and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is appended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D append(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with the default key/value timeout.
      *
      * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
      * does not return the prepended result, so at this point the client does not know how the {@link Document} now
@@ -3103,13 +4026,149 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
-     * @param document the document to be prepended.
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
      * @return a document which mirrors the one supplied as an argument.
      */
     <D extends Document<?>> D prepend(D document);
 
     /**
-     * Prepend a {@link Document} to another one with a custom timeout.
+     * Prepend a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, PersistTo persistTo);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param replicateTo the replication constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, ReplicateTo replicateTo);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with the default key/value timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, PersistTo persistTo, ReplicateTo replicateTo);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with a custom timeout.
      *
      * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
      * does not return the prepended result, so at this point the client does not know how the {@link Document} now
@@ -3137,12 +4196,154 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
-     * @param document the document to be prepended.
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a document which mirrors the one supplied as an argument.
      */
     <D extends Document<?>> D prepend(D document, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Prepend a {@link Document}s content to an existing one with a custom timeout.
+     *
+     * The {@link Document} returned explicitly has the {@link Document#content()} set to null, because the server
+     * does not return the prepended result, so at this point the client does not know how the {@link Document} now
+     * looks like. A separate {@link Bucket#get(Document)} call needs to be issued in order to get the full
+     * current content.
+     *
+     * If the {@link Document} does not exist, it needs to be created upfront. Note that {@link JsonDocument}s in all
+     * forms are not supported, it is advised that the following ones are used:
+     *
+     * - {@link LegacyDocument}
+     * - {@link StringDocument}
+     * - {@link BinaryDocument}
+     *
+     * Note that this method does not support expiration on the {@link Document}. If set, it will be ignored.
+     *
+     * This method throws under the following conditions:
+     *
+     * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original prepend has already happened, so the actual
+     * prepend and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the document, identified by its id, from which the content is prepended to the existing one.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a document which mirrors the one supplied as an argument.
+     */
+    <D extends Document<?>> D prepend(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Invalidates and clears the internal query cache.
