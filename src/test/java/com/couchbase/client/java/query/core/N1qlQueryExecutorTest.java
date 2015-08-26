@@ -44,6 +44,7 @@ import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.DefaultAsyncN1qlQueryResult;
 import com.couchbase.client.java.query.N1qlMetrics;
 import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.PrepareStatement;
 import com.couchbase.client.java.query.PreparedN1qlQuery;
 import com.couchbase.client.java.query.PreparedPayload;
 import com.couchbase.client.java.query.N1qlParams;
@@ -114,6 +115,36 @@ public class N1qlQueryExecutorTest {
         verify(executor).prepareAndExecute(any(N1qlQuery.class));
         verify(executor, never()).retryPrepareAndExecuteOnce(any(QueryExecutionException.class), any(N1qlQuery.class));
         assertEquals(1, cache.size());
+
+        //also check how the plan is used in a PreparedN1qlQuery
+        PreparedPayload plan = cache.values().iterator().next();
+        PreparedN1qlQuery planQuery = new PreparedN1qlQuery(plan, N1qlParams.build());
+        JsonObject n1qlPlanQuery = planQuery.n1ql();
+        assertEquals("server", plan.payload());
+        assertEquals("server", n1qlPlanQuery.getString("prepared"));
+        assertEquals("encodedPlan", n1qlPlanQuery.getString("encoded_plan"));
+        assertFalse(n1qlPlanQuery.containsKey("statement"));
+    }
+
+    @Test
+    public void testExtractionOfPayloadFromPrepareResponse() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+        CouchbaseCore mockFacade = mock(CouchbaseCore.class);
+        N1qlQueryExecutor executor = new N1qlQueryExecutor(mockFacade, "default", "", cache);
+
+        JsonObject prepareResponse = JsonObject.create()
+                .put("encoded_plan", "encoded123")
+                .put("name", "UUID")
+                .put("prepared", "SomeLongVersionOfThePlan")
+                .put("text", "SELECT original FROM bucket");
+        PrepareStatement prepared = PrepareStatement.prepare("SELECT something");
+        PreparedPayload extracted = executor.extractPreparedPayloadFromResponse(prepared, prepareResponse);
+
+        assertEquals("SELECT something", extracted.originalStatement().toString());
+        assertEquals("UUID", extracted.payload());
+        assertEquals("UUID", extracted.preparedName());
+        assertEquals("encoded123", extracted.encodedPlan());
+
     }
 
     @Test

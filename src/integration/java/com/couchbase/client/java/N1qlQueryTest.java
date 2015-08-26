@@ -26,6 +26,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
@@ -36,6 +37,9 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.query.Index.createPrimaryIndex;
+import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -170,53 +174,30 @@ public class N1qlQueryTest extends ClusterDependentTest {
 //        assertFalse(result.allRows().isEmpty());
     }
 
-//    @Test
-//    public void shouldProduceAndExecutePlan() {
-//        String preparedName = "testPreparedNamed";
-//
-//        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
-//        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
-//        PreparedPayload payload = bucket().prepare(prepareStatement);
-//        assertNotNull(bucket().get("test2"));
-//
-//        assertNotNull(payload);
-//        assertNotNull(payload.originalStatement());
-//        assertNotNull(payload.preparedName());
-//        assertEquals(statement.toString(), payload.originalStatement().toString());
-//        assertEquals(preparedName, payload.preparedName());
-//
-//        PreparedN1qlQuery preparedQuery = N1qlQuery.prepared(payload,
-//                JsonArray.from(123),
-//                N1qlParams.build().withContextId("TEST").consistency(CONSISTENCY));
-//        N1qlQueryResult response = bucket().query(preparedQuery, 2, TimeUnit.MINUTES);
-//        assertTrue(response.errors().toString(), response.finalSuccess());
-//        List<N1qlQueryRow> rows = response.allRows();
-//        assertEquals("TEST", response.clientContextId());
-//        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
-//        assertEquals(1, rows.size());
-//        assertTrue(rows.get(0).value().toString().contains("123"));
-//    }
+    @Test
+    public void testNotAdhocPopulatesCache() {
+        Statement statement = select(x("*")).from(i(bucketName())).limit(10);
+        N1qlQuery query = N1qlQuery.simple(statement, N1qlParams.build().adhoc(false));
+        bucket().invalidateQueryCache();
+        N1qlQueryResult response = bucket().query(query);
+        N1qlQueryResult responseFromCache = bucket().query(query);
 
-//    @Test
-//    public void shouldManageToExecuteUnknownNamedPreparedStatement() {
-//        this test is expected to work on a single node cluster, will generate named prepared statements that
-//        should be new on each iteration. The underlying expected behavior is for it to retry once and succeed.
-//        SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMddHHmmss");
-//        String preparedName = "testPreparedNamed" + sdf.format(new Date());
-//
-//        Statement statement = select(x("*")).from(i(bucketName())).where(x("item").eq(x("$1")));
-//        PrepareStatement prepareStatement = PrepareStatement.prepare(statement, preparedName);
-//        PreparedPayload payload = new PreparedPayload(prepareStatement, preparedName);
-//        PreparedN1qlQuery preparedQuery = N1qlQuery.prepared(payload,
-//                JsonArray.from(123),
-//                N1qlParams.build().withContextId("TEST").consistency(CONSISTENCY));
-//        N1qlQueryResult response = bucket().query(preparedQuery);
-//
-//        assertTrue(response.errors().toString(), response.finalSuccess());
-//        assertEquals("TEST", response.clientContextId());
-//        TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
-//        List<N1qlQueryRow> rows = response.allRows();
-//        assertEquals(1, rows.size());
-//        assertTrue(rows.get(0).value().toString().contains("123"));
-//    }
+        assertTrue(response.finalSuccess());
+        assertTrue(responseFromCache.finalSuccess());
+        assertEquals(1, bucket().invalidateQueryCache());
+    }
+
+    @Test
+    public void testAdhocDoesntPopulateCache() {
+        Statement statement = select(x("*")).from(i(bucketName())).limit(10);
+        N1qlQuery query = N1qlQuery.simple(statement, N1qlParams.build().adhoc(true));
+
+        bucket().invalidateQueryCache();
+        N1qlQueryResult response = bucket().query(query);
+        N1qlQueryResult secondResponse = bucket().query(query);
+
+        assertTrue(response.finalSuccess());
+        assertTrue(secondResponse.finalSuccess());
+        assertEquals(0, bucket().invalidateQueryCache());
+    }
 }

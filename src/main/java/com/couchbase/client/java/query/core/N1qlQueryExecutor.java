@@ -302,6 +302,7 @@ public class N1qlQueryExecutor {
     protected Observable<AsyncN1qlQueryResult> retryPrepareAndExecuteOnce(Throwable error, N1qlQuery query) {
         if (error instanceof QueryExecutionException &&
                 shouldRetry(((QueryExecutionException) error).getN1qlError())) {
+            queryCache.remove(query.statement().toString());
             return prepareAndExecute(query);
         }
         return Observable.error(error);
@@ -381,11 +382,7 @@ public class N1qlQueryExecutor {
                         public PreparedPayload call(ByteBuf byteBuf) {
                             try {
                                 JsonObject value = JSON_OBJECT_TRANSCODER.byteBufToJsonObject(byteBuf);
-                                return new PreparedPayload(
-                                    prepared.originalStatement(),
-                                    value.getString("name"),
-                                    value.getString("encoded_plan")
-                                );
+                                return extractPreparedPayloadFromResponse(prepared, value);
                             } catch (Exception e) {
                                 throw new TranscodingException("Could not decode N1QL Query Plan.", e);
                             } finally {
@@ -434,6 +431,17 @@ public class N1qlQueryExecutor {
                 }
             }
         });
+    }
+
+    /**
+     * Extracts the {@link PreparedPayload} from the server's response during a PREPARE.
+     */
+    protected PreparedPayload extractPreparedPayloadFromResponse(PrepareStatement prepared, JsonObject response) {
+        return new PreparedPayload(
+                prepared.originalStatement(),
+                response.getString("name"),
+                response.getString("encoded_plan")
+        );
     }
 
     /**
