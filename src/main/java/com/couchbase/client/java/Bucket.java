@@ -2866,8 +2866,8 @@ public interface Bucket {
     <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
-     * timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with the default kvTimeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -2879,6 +2879,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
@@ -2888,8 +2889,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
-     * timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with the default kvTimeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -2903,6 +2904,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
@@ -2921,8 +2923,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, PersistTo persistTo);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
-     * timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with the default kvTimeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -2936,6 +2938,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
@@ -2954,8 +2957,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, ReplicateTo replicateTo);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with the default key/value
-     * timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with the default kvTimeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -2969,6 +2972,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
@@ -2988,7 +2992,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with a custom timeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3000,6 +3005,7 @@ public interface Bucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * @param id the id of the document.
@@ -3011,7 +3017,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with a custom timeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3025,6 +3032,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
@@ -3045,7 +3053,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with a custom timeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3059,6 +3068,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
@@ -3079,7 +3089,8 @@ public interface Bucket {
     JsonLongDocument counter(String id, long delta, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
-     * Increment or decrement a counter with the given value and a default value of 0 with a custom timeout.
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet with a custom timeout.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3093,6 +3104,7 @@ public interface Bucket {
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
      *
      * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
