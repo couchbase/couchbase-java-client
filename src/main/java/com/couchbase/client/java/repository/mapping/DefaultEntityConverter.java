@@ -52,6 +52,10 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
 
         JsonObject content = JsonObject.create();
         for (PropertyMetadata propertyMetadata : entityMetadata.properties()) {
+            if (propertyMetadata.isId()) {
+                continue;
+            }
+
             String name = propertyMetadata.name();
             Class<?> type = propertyMetadata.type();
             Object value = propertyMetadata.get(document);
