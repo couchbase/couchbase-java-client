@@ -21,11 +21,12 @@
  */
 package com.couchbase.client.java.repository;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.ReplicaMode;
 import com.couchbase.client.java.ReplicateTo;
 import com.couchbase.client.java.document.EntityDocument;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +36,8 @@ import java.util.concurrent.TimeUnit;
  * @author Michael Nitschinger
  * @since 2.2.0
  */
+@InterfaceAudience.Public
+@InterfaceStability.Experimental
 public interface Repository {
 
     AsyncRepository async();

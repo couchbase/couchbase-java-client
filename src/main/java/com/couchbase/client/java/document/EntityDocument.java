@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.kv.MutationToken;
 
 /**
@@ -29,6 +31,8 @@ import com.couchbase.client.core.message.kv.MutationToken;
  * @author Michael Nitschinger
  * @since 1.2.0
  */
+@InterfaceAudience.Public
+@InterfaceStability.Experimental
 public class EntityDocument<T> implements Document<T> {
 
     private String id;

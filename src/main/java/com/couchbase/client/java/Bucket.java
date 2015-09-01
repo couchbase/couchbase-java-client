@@ -4390,6 +4390,8 @@ public interface Bucket {
      *
      * @return the repository for ODM capabilities.
      */
+    @InterfaceAudience.Public
+    @InterfaceStability.Experimental
     Repository repository();
 
     /**

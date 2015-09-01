@@ -2012,6 +2012,8 @@ public interface AsyncBucket {
      *
      * @return the repository for ODM capabilities.
      */
+    @InterfaceAudience.Public
+    @InterfaceStability.Experimental
     Observable<AsyncRepository> repository();
 
     /**
