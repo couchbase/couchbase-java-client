@@ -1,0 +1,256 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Quickstart & Common Reference:
+
+     - run all tests (unit & int): mvn test
+     - run only unit tests: mvn test -Dunit
+     - compile and build: mvn package
+     - build and install into ~/.m2: mvn install
+     - skip tests on install or package add -Dmaven.test.skip
+     - stage & close (but not release) on maven central: mvn clean deploy
+       note that -SNAPSHOT is not allowed on deploy
+
+    -->
+
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>java-client</artifactId>
+    <version>2.2.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Couchbase Java SDK</name>
+    <description>The official Couchbase Java SDK</description>
+    <url>http://couchbase.com</url>
+
+    <properties>
+        <java-compat.version>1.6</java-compat.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <core.version>1.2.1-SNAPSHOT</core.version>
+        <junit.version>4.12</junit.version>
+        <mockito.version>1.10.19</mockito.version>
+        <slf4j.version>1.7.7</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
+        <commons-logging.version>1.1.3</commons-logging.version>
+    </properties>
+
+    <organization>
+        <name>Couchbase, Inc.</name>
+        <url>http://couchbase.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/couchbase/couchbase-java-client</url>
+        <connection>
+            scm:git:git://github.com/couchbase/couchbase-java-client
+        </connection>
+        <developerConnection>
+            scm:git:git://github.com/couchbase/couchbase-java-client
+        </developerConnection>
+    </scm>
+
+    <issueManagement>
+        <system>Couchbase JIRA</system>
+        <url>http://www.couchbase.com/issues/browse/JCBC</url>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <id>daschl</id>
+            <name>Michael Nitschinger</name>
+            <email>michael.nitschinger@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>simonbasle</id>
+            <name>Simon Baslé</name>
+            <email>simon@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>avsej</id>
+            <name>Sergey Avseyev</name>
+            <email>sergey@couchbase.com</email>
+        </developer>
+    </developers>
+
+    <dependencies>
+        <!-- Exposed, Required Dependencies -->
+        <dependency>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>core-io</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+
+        <!-- Exposed, Optional Dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons-logging.version}</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <links>
+                        <link>http://reactivex.io/RxJava/javadoc/</link>
+                    </links>
+                    <doclet>ch.raffael.doclets.pegdown.PegdownDoclet</doclet>
+                    <docletArtifact>
+                        <groupId>ch.raffael.pegdown-doclet</groupId>
+                        <artifactId>pegdown-doclet</artifactId>
+                        <version>1.1</version>
+                    </docletArtifact>
+                    <useStandardDocletOptions>true</useStandardDocletOptions>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <source>${java-compat.version}</source>
+                    <target>${java-compat.version}</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.9.1</version>
+                <executions>
+                    <execution>
+                        <id>add-integration-test-source-as-test-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <!-- add the following sources in addition to the unit tests -->
+                                <source>${test-source-directory}</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <!-- by default, add also the int tests -->
+                <test-source-directory>src/integration/java</test-source-directory>
+            </properties>
+        </profile>
+        <profile>
+            <id>unit</id>
+            <activation>
+                <property>
+                    <name>unit</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <!-- just adding the unit tests again, noop. -->
+                <test-source-directory>src/test/java</test-source-directory>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>
