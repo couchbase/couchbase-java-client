@@ -152,6 +152,10 @@ public interface AsyncBucketManager {
     /**
      * Upserts (inserts or replaces) a {@link DesignDocument} into production.
      *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
+     *
      * The {@link Observable} can error under the following conditions:
      *
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
@@ -163,6 +167,10 @@ public interface AsyncBucketManager {
 
     /**
      * Upserts (inserts or replaces) a {@link DesignDocument} into production or development.
+     *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
      *
      * The {@link Observable} can error under the following conditions:
      *

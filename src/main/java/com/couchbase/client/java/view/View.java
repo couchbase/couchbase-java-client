@@ -27,6 +27,9 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 /**
  * Represents a View definition to store and load.
  *
+ * Use {@link DefaultView} create methods to build "classic" views and
+ * {@link SpatialView} create methods to build spatial/dimensional views.
+ *
  * @author Michael Nitschinger
  * @since 2.0
  */
@@ -51,7 +54,7 @@ public interface View {
     /**
      * The reduce function.
      *
-     * @return reduce function.
+     * @return reduce function, or null if none is set.
      */
     String reduce();
 

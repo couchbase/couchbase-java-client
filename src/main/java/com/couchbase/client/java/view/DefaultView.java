@@ -38,10 +38,27 @@ public class DefaultView implements View {
         this.map = map;
         this.reduce = reduce;
     }
+
+    /**
+     * Create a new representation of a regular, non-spatial view.
+     *
+     * @param name the name of the view.
+     * @param map the map function (javascript) for the view.
+     * @param reduce the reduce function (prebuilt name or custom javascript) for the view.
+     *               Use {@link #create(String, String)} or null if you don't need one.
+     * @return the view object.
+     */
     public static View create(String name, String map, String reduce) {
         return new DefaultView(name, map, reduce);
     }
 
+    /**
+     * Create a new representation of a regular, non-spatial view without reduce function.
+     *
+     * @param name the name of the view.
+     * @param map the map function (javascript) for the view.
+     * @return the view object.
+     */
     public static View create(String name, String map) {
         return new DefaultView(name, map, null);
     }

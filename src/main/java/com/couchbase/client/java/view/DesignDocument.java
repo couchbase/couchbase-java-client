@@ -69,6 +69,15 @@ public class DesignDocument {
         return new DesignDocument(name, views, options);
     }
 
+    /**
+     * Create a design document from a JSON representation of it. The JSON is expected to contain 3 JSON objects:
+     * a "views" object with an entry for each raw view, a "spatial" object for spatial views and an "options" object
+     * for design document options (see {@link Option}).
+     *
+     * @param name the name of the design document.
+     * @param raw the raw JSON representing the design document.
+     * @return the corresponding DesignDocument object.
+     */
     public static DesignDocument from(final String name, final JsonObject raw) {
         final List<View> views = new ArrayList<View>();
 
@@ -101,14 +110,30 @@ public class DesignDocument {
         return new DesignDocument(name, views, options);
     }
 
+    /**
+     * @return the name of the DesignDocument.
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * Returns a list of the views (raw and spatial) contained in the design document.
+     *
+     * When you obtain this DesignDocument from the SDK, you can mutate the list. Once you upsert the DesignDocument
+     * again, this allows you to add a view or even replace an existing view definition (make sure the updated
+     * definition uses the same name as the original and is inserted last).
+     *
+     * @return the list of {@link View Views} in the design document.
+     *
+     */
     public List<View> views() {
         return views;
     }
 
+    /**
+     * @return the {@link Option Options} set on the design document and their values.
+     */
     public Map<Option, Long> options() {
         return options;
     }

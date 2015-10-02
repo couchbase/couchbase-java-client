@@ -37,6 +37,13 @@ public class SpatialView implements View {
         this.map = map;
     }
 
+    /**
+     * Create a new representation of a spatial view.
+     *
+     * @param name the name of the spatial view.
+     * @param map the map function (javascript) for the spatial view.
+     * @return the spatial view object.
+     */
     public static View create(String name, String map) {
         return new SpatialView(name, map);
     }

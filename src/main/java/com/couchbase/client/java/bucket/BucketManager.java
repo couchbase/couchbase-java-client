@@ -314,6 +314,10 @@ public interface BucketManager {
     /**
      * Upserts (inserts or replaces) a {@link DesignDocument} into production with the default management timeout.
      *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
+     *
      * This method throws:
      *
      * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
@@ -326,6 +330,10 @@ public interface BucketManager {
 
     /**
      * Upserts (inserts or replaces) a {@link DesignDocument} into production with a custom timeout.
+     *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
      *
      * This method throws:
      *
@@ -343,6 +351,10 @@ public interface BucketManager {
      * Upserts (inserts or replaces) a {@link DesignDocument} into production or development with the default management
      * timeout.
      *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
+     *
      * This method throws:
      *
      * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
@@ -356,6 +368,10 @@ public interface BucketManager {
 
     /**
      * Upserts (inserts or replaces) a {@link DesignDocument} into production or development with a custom timeout.
+     *
+     * If you want to add or update view definitions to an existing design document, you need to make sure you have
+     * all the views (including old ones) in the DesignDocument. Use {@link #getDesignDocument(String)} to get the
+     * old list and add your new view to it before calling this method.
      *
      * This method throws:
      *
