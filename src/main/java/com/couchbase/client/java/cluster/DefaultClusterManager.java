@@ -15,14 +15,14 @@ public class DefaultClusterManager implements ClusterManager {
     private final long timeout;
 
     DefaultClusterManager(final String username, final String password, final ConnectionString connectionString,
-        final CouchbaseEnvironment environment, final ClusterFacade core) {
+                          final CouchbaseEnvironment environment, final ClusterFacade core) {
         asyncClusterManager = DefaultAsyncClusterManager.create(username, password, connectionString, environment,
             core);
         this.timeout = environment.managementTimeout();
     }
 
     public static DefaultClusterManager create(final String username, final String password,
-        final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
+                                               final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
         return new DefaultClusterManager(username, password, connectionString, environment, core);
     }
 

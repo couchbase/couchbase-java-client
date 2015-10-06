@@ -136,5 +136,4 @@ public interface AsyncClusterManager {
      * @return true if the removal was successful, false otherwise.
      */
     Observable<Boolean> removeBucket(String name);
-
 }

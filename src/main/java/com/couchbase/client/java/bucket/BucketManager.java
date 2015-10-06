@@ -21,9 +21,6 @@
  */
 package com.couchbase.client.java.bucket;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
@@ -33,6 +30,8 @@ import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.view.DesignDocument;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides management capabilities for a {@link Bucket}.

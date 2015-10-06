@@ -58,6 +58,13 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
     long viewTimeout();
 
     /**
+     * The default timeout for search operations, set to {@link DefaultCouchbaseEnvironment#SEARCH_TIMEOUT}.
+     *
+     * @return the default search timeout.
+     */
+    long searchTimeout();
+
+    /**
      * The default timeout for binary (key/value) operations, set to {@link DefaultCouchbaseEnvironment#KV_TIMEOUT}.
      *
      * @return the default binary timeout.

@@ -62,6 +62,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long MANAGEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long VIEW_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
+    private static final long SEARCH_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     private static final long DISCONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(25);
@@ -70,6 +71,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long managementTimeout;
     private final long queryTimeout;
     private final long viewTimeout;
+    private final long searchTimeout;
     private final long kvTimeout;
     private final long connectTimeout;
     private final long disconnectTimeout;
@@ -127,6 +129,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         queryTimeout = longPropertyOr("queryTimeout", builder.queryTimeout);
         viewTimeout = longPropertyOr("viewTimeout", builder.viewTimeout);
         kvTimeout = longPropertyOr("kvTimeout", builder.kvTimeout);
+        searchTimeout = longPropertyOr("searchTimeout", builder.searchTimeout);
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout);
         disconnectTimeout = longPropertyOr("disconnectTimeout", builder.disconnectTimeout);
         dnsSrvEnabled = booleanPropertyOr("dnsSrvEnabled", builder.dnsSrvEnabled);
@@ -173,6 +176,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long queryTimeout = QUERY_TIMEOUT;
         private long viewTimeout = VIEW_TIMEOUT;
         private long kvTimeout = KV_TIMEOUT;
+        private long searchTimeout = SEARCH_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private long disconnectTimeout = DISCONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
@@ -197,6 +201,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
 
         public Builder kvTimeout(long kvTimeout) {
             this.kvTimeout = kvTimeout;
+            return this;
+        }
+
+        public Builder searchTimeout(long searchTimeout) {
+            this.searchTimeout = searchTimeout;
             return this;
         }
 
@@ -492,6 +501,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     @Override
     public long viewTimeout() {
         return viewTimeout;
+    }
+
+    @Override
+    public long searchTimeout() {
+        return searchTimeout;
     }
 
     @Override
