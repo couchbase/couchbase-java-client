@@ -26,7 +26,6 @@ import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.JsonDoubleDocument;
 import com.couchbase.client.java.error.TranscodingException;
@@ -69,8 +68,12 @@ public class JsonDoubleTranscoder extends AbstractTranscoder<JsonDoubleDocument,
 
     @Override
     protected Tuple2<ByteBuf, Integer> doEncode(final JsonDoubleDocument document) throws Exception {
-        return Tuple.create(Unpooled.copiedBuffer(JacksonTransformers.MAPPER.writeValueAsString(document.content())
-                , CharsetUtil.UTF_8), TranscoderUtils.DOUBLE_COMPAT_FLAGS);
+        return Tuple.create(
+            TranscoderUtils.encodeStringAsUtf8(
+                JacksonTransformers.MAPPER.writeValueAsString(document.content())
+            ),
+            TranscoderUtils.DOUBLE_COMPAT_FLAGS
+        );
     }
 
     @Override

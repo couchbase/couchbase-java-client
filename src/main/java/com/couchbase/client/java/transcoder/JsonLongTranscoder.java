@@ -26,7 +26,6 @@ import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.JsonDoubleDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
@@ -69,8 +68,10 @@ public class JsonLongTranscoder extends AbstractTranscoder<JsonLongDocument, Lon
 
     @Override
     protected Tuple2<ByteBuf, Integer> doEncode(final JsonLongDocument document) throws Exception {
-        return Tuple.create(Unpooled.copiedBuffer(String.valueOf(document.content()), CharsetUtil.UTF_8),
-            TranscoderUtils.LONG_COMPAT_FLAGS);
+        return Tuple.create(
+            TranscoderUtils.encodeStringAsUtf8(String.valueOf(document.content())),
+            TranscoderUtils.LONG_COMPAT_FLAGS
+        );
     }
 
     @Override

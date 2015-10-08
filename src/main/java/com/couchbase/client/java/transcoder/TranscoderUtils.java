@@ -22,6 +22,7 @@
 package com.couchbase.client.java.transcoder;
 
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.ByteBufUtil;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 
 import java.io.*;
@@ -227,6 +228,18 @@ public class TranscoderUtils {
         os.close();
         bos.close();
         return Unpooled.buffer().writeBytes(serialized);
+    }
+
+    /**
+     * Helper method to encode a String into UTF8 via fast-path methods.
+     *
+     * @param source the source document.
+     * @return the encoded byte buffer.
+     */
+    public static ByteBuf encodeStringAsUtf8(String source) {
+        ByteBuf target = Unpooled.buffer(source.length());
+        ByteBufUtil.writeUtf8(target, source);
+        return target;
     }
 
     /**
