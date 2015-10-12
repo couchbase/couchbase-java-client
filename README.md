@@ -1,36 +1,36 @@
 # Official Couchbase Java SDK
 
-Welcome to the official Couchbase Java client library. If you want to use Couchbase
-from the Java programming language, this is your one-stop-shop.
+This project is the official driver for Couchbase when working with Java (or on the JVM). It provides management, CRUD and query facilities through both asynchronous and synchronous APIs.
 
-## Getting Started
+## Features ##
 
-### Getting the Dependencies
-The package is available from Maven Central:
+* High-Performance Key/Value and Query (N1QL, Views) operations
+* Cluster-Awareness and automatic rebalance and failover handling
+* Asynchronous (through [RxJava](https://github.com/ReactiveX/RxJava)) and Synchronous APIs
+* Transparent Encryption Support
+* Cluster and Bucket level management facilities
+* Complete non-blocking stack through [RxJava](https://github.com/ReactiveX/RxJava) and [Netty](http://netty.io)
+
+## Getting Help ##
+This README, as well as the [reference documentation](http://developer.couchbase.com/documentation/server/4.0/sdks/java-2.2/java-intro.html) are the best places to get started and dig deeper into the Couchbase SDK. In addition, you might want to look at our [travel-sample application](https://github.com/couchbaselabs/try-cb-java).
+
+The primary way to ask questions is through our official [Forums](http://forums.couchbase.com), although there is also a [stackoverflow tag](http://stackoverflow.com/questions/tagged/couchbase). You can also ask questions on `#couchbase` or `#libcouchbase` on IRC (freenode). Please file any issues you find or enhancements you want to request against our [JIRA](http://issues.couchbase.com/browse/JCBC) which we use for universal issue tracking.
+
+## Quick Start ##
+The easiest way is to download the jar as well as its transitive dependencies (only 2) through maven:
+
 
 ```xml
-<dependencies>
-    <dependency>
-        <groupId>com.couchbase.client</groupId>
-        <artifactId>java-client</artifactId>
-        <version>2.2.0</version>
-    </dependency>
-</dependencies>
+<dependency>
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>java-client</artifactId>
+    <version>2.2.1</version>
+</dependency>
 ```
 
-You can also [go here](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.couchbase.client%22) and download
-the jars directly.
+You can find information to older versions as well as alternative downloads [here](http://developer.couchbase.com/documentation/server/4.0/sdks/java-2.2/download-links.html).
 
-## Staying Updated, Asking Questions
-Come by the [forums](https://forums.couchbase.com/c/java-sdk)! And be sure to check out our
-[blog](https://blog.couchbase.com).
-
-### Usage
-Both synchronous and asynchronous (reactive, through [RxJava](https://github.com/ReactiveX/RxJava)) are supported.
-The following code connects to `localhost`, opens the `default` bucket, stores a document, loads it again and prints
-its content.
-
-Here is the sync variation:
+The following code connects to the `Cluster`, opens a `Bucket`, stores a `Document`, retreives it and prints out parts of the content.
 
 ```java
 // Create a cluster reference
@@ -41,7 +41,7 @@ Bucket bucket = cluster.openBucket("default");
 
 // Create a JSON document and store it with the ID "helloworld"
 JsonObject content = JsonObject.create().put("hello", "world");
-JsonDocument inserted = bucket.insert(JsonDocument.create("helloworld", content));
+JsonDocument inserted = bucket.upsert(JsonDocument.create("helloworld", content));
 
 // Read the document and print the "hello" field
 JsonDocument found = bucket.get("helloworld");
@@ -51,86 +51,57 @@ System.out.println("Couchbase is the best database in the " + found.content().ge
 cluster.disconnect();
 ```
 
-
-And here (one of the possible) async ones:
-
-```java
-JsonObject content = JsonObject.create().put("hello", "world");
-bucket
-    .async()
-    .insert(JsonDocument.create("helloworld", content))
-    .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
-        @Override
-        public Observable<JsonDocument> call(JsonDocument document) {
-            return bucket.async().get(document);
-        }
-    })
-    .map(new Func1<JsonDocument, String>() {
-        @Override
-        public String call(JsonDocument doc) {
-            return doc.content().getString("hello");
-        }
-    })
-    .subscribe(new Action1<String>() {
-        @Override
-        public void call(String s) {
-            System.out.println("Couchbase is the best database in the " + s);
-        }
-    });
-```
-
-If you can already use Java 8, things get much nicer:
+If you want to perform a N1QL query against [Couchbase Server 4.0](http://www.couchbase.com/nosql-databases/couchbase-server) or later, you can do it like this:
 
 ```java
-JsonObject content = JsonObject.create().put("hello", "world");
-bucket
-    .async()
-    .insert(JsonDocument.create("helloworld", content))
-    .flatMap(document -> bucket.async().get(document))
-    .map(doc -> doc.content().getString("hello"))
-    .subscribe(s -> System.out.println("Couchbase is the best database in the " + s));
+N1qlQueryResult query = bucket.query(N1qlQuery.simple("SELECT DISTINCT(country) FROM `travel-sample` WHERE type = 'airline' LIMIT 10"));
 
+for (N1qlQueryRow row : result) {
+    System.out.println(row.value());
+}
 ```
 
-You can read more in the [documentation](http://docs.couchbase.com/).
+This prints out the distinct countries for all airlines stored in the `travel-sample` bucket that comes with the server.
 
-## Contributing
+If you want to learn more, check out the [Getting Started](http://developer.couchbase.com/documentation/server/4.0/sdks/java-2.2/hello-couchbase.html) section in the official documentation.
 
-### Building
-We are utilizing the `publish` gradle plugin:
+## Contributing ##
 
-```
-~/couchbase-java-client $ ./gradlew publishToMavenLocal
-```
+We've decided to use "gerrit" for our code review system, making it
+easier for all of us to contribute with code and comments.
 
-Make sure to do the same with [core-io](https://github.com/couchbase/couchbase-jvm-core) first!
+  1. Visit http://review.couchbase.org and "Register" for an account
+  2. Review http://review.couchbase.org/static/individual_agreement.html
+  3. Agree to agreement by visiting http://review.couchbase.org/#/settings/agreements
+  4. If you do not receive an email, please contact us
+  5. Check out the java client area http://review.couchbase.org/#/q/status:open+project:couchbase-java-client,n,z
+  6. Join us on IRC at #libcouchbase on Freenode :-)
 
-### Running the Tests
-The test suite is separated into unit, integration and performance tests. Each of those sets can and should be run
-individually, depending on the type of testing needed. While unit and integration tests can be run from both the
-command line and the IDE, it is recommend to run the performance tests from the command line only.
+Note that to build `SNAPSHOT` versions of the `java-client` you also need to build the `core-io` package on which it depends. Both use maven to package and install. The same process as above applies for the [core-io](https://github.com/couchbase/couchbase-jvm-core) package.
 
-### Unit Tests
-Unit tests do not need a Couchbase Server reachable, and they should complete within a very short time. They are
-located under the `src/test` namespace and can be run directly from the IDE or through the `gradle test` command line:
+After you've checked out both projects you can build and install them as follows:
 
 ```
-~/couchbase-java-client $ ./gradlew test
-...
-:test
-
-BUILD SUCCESSFUL
+┌─[michael@daschlbase]─[~/code/couchbase/couchbase-jvm-core]
+└──╼ mvn clean install
+**SNIP**
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ core-io ---
+[INFO] Installing /Users/michaelnitschinger/code/couchbase/couchbase-jvm-core/target/core-io-1.2.1-SNAPSHOT.jar to /Users/michaelnitschinger/.m2/repository/com/couchbase/client/core-io/1.2.1-SNAPSHOT/core-io-1.2.1-SNAPSHOT.jar
+[INFO] Installing /Users/michaelnitschinger/code/couchbase/couchbase-jvm-core/dependency-reduced-pom.xml to /Users/michaelnitschinger/.m2/repository/com/couchbase/client/core-io/1.2.1-SNAPSHOT/core-io-1.2.1-SNAPSHOT.pom
+[INFO] Installing /Users/michaelnitschinger/code/couchbase/couchbase-jvm-core/target/core-io-1.2.1-SNAPSHOT-sources.jar to /Users/michaelnitschinger/.m2/repository/com/couchbase/client/core-io/1.2.1-SNAPSHOT/core-io-1.2.1-SNAPSHOT-sources.jar
+[INFO] Installing /Users/michaelnitschinger/code/couchbase/couchbase-jvm-core/target/core-io-1.2.1-SNAPSHOT-javadoc.jar to /Users/michaelnitschinger/.m2/repository/com/couchbase/client/core-io/1.2.1-SNAPSHOT/core-io-1.2.1-SNAPSHOT-javadoc.jar
+[INFO] Installing /Users/michaelnitschinger/code/couchbase/couchbase-jvm-core/target/core-io-1.2.1-SNAPSHOT-sources.jar to /Users/michaelnitschinger/.m2/repository/com/couchbase/client/core-io/1.2.1-SNAPSHOT/core-io-1.2.1-SNAPSHOT-sources.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 52.676 s
+[INFO] Finished at: 2015-10-12T07:18:50+02:00
+[INFO] Final Memory: 36M/337M
+[INFO] ------------------------------------------------------------------------
 ```
 
-## Integration Tests
-Those tests interact with Couchbase Server instances and therefore need to be configured as such. If you do not want
-to change anything special, make sure you at least have one running on `localhost`. Then use the `gradle integrationTest`
-command:
+Next, the exact steps apply for the  `java-client`.
 
-```
-~/couchbase-java-client $ ./gradlew integrationTest
-...
-:integrationTest
+Note that installing includes running the tests, which require you to run a local Couchbase Server 4.0 or later instance. If you want to avoid building the tests over and over again, you can add the `-Dmaven.test.skip` flag to the command line. If you only want to run the unit tests (also no server required for them), use the `-Dunit` flag (recommended over skipping the tests entirely).
 
-BUILD SUCCESSFUL
-```
+Finally, feel free to reach out to the maintainers over the forums, IRC or email if you have further questions on contributing or get stuck along the way. We love contributions and want to help you get your change over the finish line - and you mentioned in the release notes!
