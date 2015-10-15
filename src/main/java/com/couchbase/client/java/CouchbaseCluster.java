@@ -1,6 +1,8 @@
 package com.couchbase.client.java;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultClusterManager;
@@ -9,20 +11,27 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
+import rx.functions.Action1;
 import rx.functions.Func1;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class CouchbaseCluster implements Cluster {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseCluster.class);
+
 
     private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
     private final CouchbaseAsyncCluster couchbaseAsyncCluster;
     private final CouchbaseEnvironment environment;
     private final ConnectionString connectionString;
+
+    private final Map<String, Bucket> bucketCache;
 
     public static CouchbaseCluster create() {
         return create(CouchbaseAsyncCluster.DEFAULT_HOST);
@@ -60,6 +69,7 @@ public class CouchbaseCluster implements Cluster {
         couchbaseAsyncCluster = new CouchbaseAsyncCluster(environment, connectionString, sharedEnvironment);
         this.environment = environment;
         this.connectionString = connectionString;
+        this.bucketCache = new ConcurrentHashMap<String, Bucket>();
     }
 
     @Override
@@ -99,6 +109,20 @@ public class CouchbaseCluster implements Cluster {
 
     @Override
     public Bucket openBucket(final String name, final String password, final List<Transcoder<? extends Document, ?>> transcoders, long timeout, TimeUnit timeUnit) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Bucket name is not allowed to be null or empty.");
+        }
+
+        Bucket cachedBucket = bucketCache.get(name);
+        if(cachedBucket != null) {
+            if (cachedBucket.isClosed()) {
+                LOGGER.debug("Not returning cached bucket \"{}\", because it is closed.", name);
+                bucketCache.remove(name);
+            } else {
+                LOGGER.debug("Returning still open, cached bucket \"{}\"", name);
+                return cachedBucket;
+            }
+        }
 
         final List<Transcoder<? extends Document, ?>> trans = transcoders == null
             ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
@@ -108,7 +132,9 @@ public class CouchbaseCluster implements Cluster {
             .map(new Func1<AsyncBucket, Bucket>() {
                 @Override
                 public Bucket call(AsyncBucket asyncBucket) {
-                    return new CouchbaseBucket(environment, core(), name, password, trans);
+                    CouchbaseBucket bucket = new CouchbaseBucket(environment, core(), name, password, trans);
+                    bucketCache.put(name, bucket);
+                    return bucket;
                 }
             }).single(), timeout, timeUnit);
     }
@@ -134,7 +160,18 @@ public class CouchbaseCluster implements Cluster {
 
     @Override
     public Boolean disconnect(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(couchbaseAsyncCluster.disconnect().single(), timeout, timeUnit);
+        return Blocking.blockForSingle(
+            couchbaseAsyncCluster
+                .disconnect()
+                .doOnNext(new Action1<Boolean>() {
+                    @Override
+                    public void call(Boolean aBoolean) {
+                        bucketCache.clear();
+                    }
+                }),
+            timeout,
+            timeUnit
+        );
     }
 
     @Override

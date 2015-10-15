@@ -125,6 +125,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     /** the bucket's {@link N1qlQueryExecutor}. Prefer using {@link #n1qlQueryExecutor()} since it allows mocking and testing */
     private final N1qlQueryExecutor n1qlQueryExecutor;
 
+    private volatile boolean closed;
+
 
     public CouchbaseAsyncBucket(final ClusterFacade core, final CouchbaseEnvironment environment, final String name,
         final String password, final List<Transcoder<? extends Document, ?>> customTranscoders) {
@@ -132,6 +134,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         this.password = password;
         this.core = core;
         this.environment = environment;
+        this.closed = false;
 
         transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
         transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);
@@ -1208,9 +1211,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         }).map(new Func1<CloseBucketResponse, Boolean>() {
             @Override
             public Boolean call(CloseBucketResponse response) {
+                closed = true;
                 return response.status().isSuccess();
             }
         });
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed;
     }
 
     @Override

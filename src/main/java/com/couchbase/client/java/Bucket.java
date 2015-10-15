@@ -4410,4 +4410,11 @@ public interface Bucket {
      */
     Boolean close(long timeout, TimeUnit timeUnit);
 
+    /**
+     * Returns true if this bucket is already closed, false if it is still open.
+     *
+     * @return true if closed, false otherwise.
+     */
+    boolean isClosed();
+
 }
