@@ -88,7 +88,7 @@ import java.util.concurrent.TimeUnit;
  * // Perform your work here...
  *
  * cluster.disconnect();
- * environment.shutdown().toBlocking().single();
+ * environment.shutdownAsync().toBlocking().single();
  * ```
  *
  * @since 2.0.0
