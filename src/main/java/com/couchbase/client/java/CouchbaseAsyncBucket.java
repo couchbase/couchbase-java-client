@@ -680,8 +680,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        return (Observable<D>) remove(document.id(), persistTo, replicateTo, document.getClass());
+    public <D extends Document<?>> Observable<D> remove(D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
+        return observeRemove(remove(document), persistTo, replicateTo);
     }
 
     @Override
@@ -692,8 +692,20 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
         final ReplicateTo replicateTo, Class<D> target) {
-        Observable<D> removeResult = remove(id, target);
+        return observeRemove(remove(id, target), persistTo, replicateTo);
+    }
 
+    /**
+     * Helper method to observe the result of a remove operation with the given durability
+     * requirements.
+     *
+     * @param removeResult the original result of the actual remove operation.
+     * @param persistTo the persistence requirement given.
+     * @param replicateTo the replication requirement given.
+     * @return an observable reporting success or error of the observe operation.
+     */
+    private <D extends Document<?>> Observable<D> observeRemove(Observable<D> removeResult,
+        final PersistTo persistTo, final ReplicateTo replicateTo) {
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return removeResult;
         }
@@ -702,7 +714,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), true, doc.mutationToken(), persistTo.value(), replicateTo.value(),
+                    .call(core, bucket, doc.id(), doc.cas(), true, doc.mutationToken(),
+                        persistTo.value(), replicateTo.value(),
                         environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, D>() {
                         @Override
