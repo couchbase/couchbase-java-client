@@ -143,9 +143,9 @@ public class Case {
                     .append(whens.get(i))
                     .append(" THEN ")
                     .append(thens.get(i))
-                    .append(", ");
+                    .append(' ');
             }
-            result.delete(result.length() - 2, result.length());
+            result.delete(result.length() - 1, result.length());
             if (elseResult != null) {
                 result.append(" ELSE ")
                         .append(elseResult.toString());

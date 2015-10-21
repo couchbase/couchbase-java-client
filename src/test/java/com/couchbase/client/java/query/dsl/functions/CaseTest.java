@@ -59,7 +59,7 @@ public class CaseTest {
                                     .when(x(30)).then(s("high"))
                 .end();
 
-        assertEquals("CASE abv WHEN 10 THEN \"low\", WHEN 20 THEN \"medium\", WHEN 30 THEN \"high\" END", caseSimple.toString());
+        assertEquals("CASE abv WHEN 10 THEN \"low\" WHEN 20 THEN \"medium\" WHEN 30 THEN \"high\" END", caseSimple.toString());
     }
 
     @Test
@@ -89,6 +89,6 @@ public class CaseTest {
                                     .when(x("abv").lt(20)).then(s("medium"))
                                     .elseReturn(s("high"));
 
-        assertEquals("CASE WHEN abv < 10 THEN \"low\", WHEN abv < 20 THEN \"medium\" ELSE \"high\" END", caseSimple.toString());
+        assertEquals("CASE WHEN abv < 10 THEN \"low\" WHEN abv < 20 THEN \"medium\" ELSE \"high\" END", caseSimple.toString());
     }
 }
