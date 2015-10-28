@@ -175,7 +175,9 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(final String name, final Object value) {
-        if (this == value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        } else if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         } else if (value == JsonValue.NULL) {
             putNull(name);
@@ -205,6 +207,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(final String name, final String value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -227,6 +233,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, int value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -259,6 +269,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, long value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -291,6 +305,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, double value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -323,6 +341,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, boolean value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -345,7 +367,9 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, JsonObject value) {
-        if (this == value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }else if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         }
         content.put(name, value);
@@ -382,6 +406,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, JsonArray value) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, value);
         return this;
     }
@@ -417,6 +445,10 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}
      */
     public JsonObject putNull(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Parameter 'name' cannot be null.");
+        }
+        
         content.put(name, null);
         return this;
     }
