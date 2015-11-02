@@ -298,8 +298,7 @@ public class CouchbaseCluster implements Cluster {
             .map(new Func1<AsyncBucket, Bucket>() {
                 @Override
                 public Bucket call(AsyncBucket asyncBucket) {
-                    CouchbaseBucket bucket = new CouchbaseBucket(environment, core(), name,
-                        password, trans);
+                    CouchbaseBucket bucket = new CouchbaseBucket(asyncBucket, environment, core(), name, password);
                     bucketCache.put(name, bucket);
                     return bucket;
                 }

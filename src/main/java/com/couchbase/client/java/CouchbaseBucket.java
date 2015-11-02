@@ -66,9 +66,20 @@ public class CouchbaseBucket implements Bucket {
     private final String password;
     private final ClusterFacade core;
 
+    /**
+     * Create a {@link CouchbaseBucket} that doesn't reuse an existing {@link AsyncBucket} but rather creates one internally. Prefer using the alternative constructor
+     * {@link #CouchbaseBucket(CouchbaseEnvironment, ClusterFacade, String, String, List)} if you can obtain an AsyncBucket externally.
+     */
     public CouchbaseBucket(final CouchbaseEnvironment env, final ClusterFacade core, final String name, final String password,
         final List<Transcoder<? extends Document, ?>> customTranscoders) {
-        asyncBucket = new CouchbaseAsyncBucket(core, env, name, password, customTranscoders);
+        this(new CouchbaseAsyncBucket(core, env, name, password, customTranscoders), env, core, name, password);
+    }
+
+    /**
+     * Create a {@link CouchbaseBucket} that relies on the provided {@link AsyncBucket}.
+     */
+    public CouchbaseBucket(AsyncBucket asyncBucket, final CouchbaseEnvironment env, final ClusterFacade core, final String name, final String password) {
+        this.asyncBucket = asyncBucket;
         this.environment = env;
         this.kvTimeout = env.kvTimeout();
         this.name = name;
