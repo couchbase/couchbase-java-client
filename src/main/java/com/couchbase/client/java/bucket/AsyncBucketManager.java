@@ -21,10 +21,18 @@
  */
 package com.couchbase.client.java.bucket;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.query.Index;
+import com.couchbase.client.java.query.dsl.Expression;
+import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.view.DesignDocument;
 import rx.Observable;
 
@@ -230,4 +238,126 @@ public interface AsyncBucketManager {
      * @return the published {@link DesignDocument} on success.
      */
     Observable<DesignDocument> publishDesignDocument(String name, boolean overwrite);
+
+    /**
+     * List all N1QL indexes that are registered for the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link TranscodingException} if the server response couldn't be parsed.
+     *
+     * @return an {@link Observable} that will get notified of each relevant {@link IndexInfo} (can be empty if no index
+     * is defined for this bucket).
+     */
+    @InterfaceStability.Experimental
+    Observable<IndexInfo> listIndexes();
+
+    /**
+     * Create a primary index for the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link CouchbaseException} if the index already exists and ignoreIfExist is set to false.
+     *
+     * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
+     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
+     * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> createPrimaryIndex(boolean ignoreIfExist, boolean defer);
+
+    /**
+     * Create a secondary index for the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link CouchbaseException} if the index already exists and ignoreIfExist is set to false.
+     *
+     * @param indexName the name of the index.
+     * @param ignoreIfExist if a secondary index already exists with that name, an exception will be thrown unless this
+     *                      is set to true.
+     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @param fields the JSON fields to index, in either {@link Expression} or {@link String} form.
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
+     * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> createIndex(String indexName, boolean ignoreIfExist, boolean defer, Object... fields);
+
+    /**
+     * Drop the primary index associated with the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link CouchbaseException} if the primary index doesn't exist and ignoreIfNoExist is set to false.
+     *
+     * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> dropPrimaryIndex(boolean ignoreIfNotExist);
+
+
+    /**
+     * Drop the given secondary index associated with the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link CouchbaseException} if the secondary index doesn't exist and ignoreIfNoExist is set to false.
+     *
+     * @param ignoreIfNotExist if true, attempting to drop on a bucket without the specified index won't cause an exception to be propagated.
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> dropIndex(String name, boolean ignoreIfNotExist);
+
+    /**
+     * Instruct the query engine to trigger the build of indexes that have been deferred.
+     *
+     * This process itself is asynchronous, meaning that the call will immediately return despite indexes still being
+     * in a "pending" state. This method will return a List of the names of indexes whose build has been triggered, in
+     * a single emission.
+     *
+     * @return an {@link Observable} that will get notified with a single List of index names, the names of the indexes that
+     * have been triggered.
+     * @see #watchIndex(String, long, TimeUnit) to poll for a specific index to become online.
+     * @see #watchIndexes(List, boolean, long, TimeUnit) to poll for a list of indexes to become online.
+     */
+    @InterfaceStability.Experimental
+    Observable<List<String>> buildDeferredIndexes();
+
+    /**
+     * Watches a specific index, polling the query service until the index becomes "online" or the watchTimeout has expired.
+     *
+     * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
+     * to see various stages of the polling.
+     *
+     * @param indexName the name of the index to watch. For primary indexes, use {@link Index#PRIMARY_NAME}.
+     * @param watchTimeout the maximum duration for which to poll for the index to become online.
+     * @param watchTimeUnit the time unit for the watchTimeout.
+     * @return an {@link Observable} that will get notified with a single {@link IndexInfo} on the observed index. If the
+     * index couldn't go online in the specified watchTimeout, the Observable is simply {@link Observable#isEmpty() empty}.
+     */
+    @InterfaceStability.Experimental
+    Observable<IndexInfo> watchIndex(String indexName, long watchTimeout, TimeUnit watchTimeUnit);
+
+    /**
+     * Watches all given indexes (possibly including the primary one), polling the query service until they become
+     * "online" or the watchTimeout has expired.
+     *
+     * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
+     * to see various stages of the polling.
+     *
+     * @param watchList the names of the SECONDARY indexes to watch (can be empty).
+     * @param watchPrimary true if the PRIMARY INDEX should be added to the watchList, false otherwise.
+     * @param watchTimeout the maximum duration for which to poll for the index to become online.
+     * @param watchTimeUnit the time unit for the watchTimeout.
+     * @return a stream of the {@link IndexInfo} for the indexes that went online during the watch period. Can be empty
+     * if all indexes where online, no index to watch or no index became online within the watchTimeout timeframe.
+     */
+    @InterfaceStability.Experimental
+    Observable<IndexInfo> watchIndexes(List<String> watchList, boolean watchPrimary, long watchTimeout, TimeUnit watchTimeUnit);
 }

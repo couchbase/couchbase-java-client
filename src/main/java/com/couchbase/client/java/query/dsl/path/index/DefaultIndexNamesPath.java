@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.query.dsl.path.index;
 
+import java.util.List;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.Index;
@@ -44,6 +46,21 @@ public class DefaultIndexNamesPath extends AbstractPath implements IndexNamesPat
     @Override
     public UsingPath indexes(String indexName, String... indexNames) {
         element(new IndexNamesElement(indexName, indexNames));
+        return new DefaultUsingPath(this);
+    }
+
+    @Override
+    public UsingPath indexes(List<String> indexNames) {
+        if (indexNames.isEmpty()) {
+            throw new IllegalArgumentException("indexNames must have at least one name");
+        }
+        String first = indexNames.get(0);
+        if (indexNames.size() > 1) {
+            String[] others = indexNames.subList(1, indexNames.size()).toArray(new String[indexNames.size() - 1]);
+            element(new IndexNamesElement(first, others));
+        } else {
+            element(new IndexNamesElement(first));
+        }
         return new DefaultUsingPath(this);
     }
 

@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.query.dsl.path.index;
 
+import java.util.List;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.Index;
@@ -43,6 +45,13 @@ public interface IndexNamesPath extends Path {
      * @param indexNames 0-n additional indexes to also build (names will be escaped).
      */
     UsingPath indexes(String indexName, String... indexNames);
+
+    /**
+     * Specify the indexes in a pending state that needs building, as a non-empty list.
+     *
+     * @param indexNames the {@link List} of indexes to build (names will be escaped).
+     */
+    UsingPath indexes(List<String> indexNames);
 
     /**
      * Build the primary index (using a name of {@link Index#PRIMARY_NAME}, must be in a pending state).
