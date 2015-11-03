@@ -587,10 +587,13 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo);
 
     /**
-     * Insert or replace a {@link Document}.
+     * Insert or overwrite a {@link Document}.
      *
      * If the given {@link Document} (identified by its unique ID) already exists, it will be overridden by the current
      * one. The returned {@link Document} contains original properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document)} method needs to be used.
      *
      * This operation will return successfully if the {@link Document} has been acknowledged in the managed cache layer
      * on the master server node. If increased data durability is a concern,
@@ -612,11 +615,14 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> upsert(D document);
 
     /**
-     * Insert or replace a {@link Document} and watch for durability constraints.
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
      *
      * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
      * durability constraints are met. If this is the case, a new document is returned which contains the original
      * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, PersistTo, ReplicateTo)} method needs to be used.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -646,11 +652,14 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo);
 
     /**
-     * Insert or replace a {@link Document} and watch for durability constraints.
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
      *
      * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
      * durability constraints are met. If this is the case, a new document is returned which contains the original
      * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, PersistTo)} method needs to be used.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -679,11 +688,14 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo);
 
     /**
-     * Insert or replace a {@link Document} and watch for durability constraints.
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
      *
      * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
      * durability constraints are met. If this is the case, a new document is returned which contains the original
      * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, ReplicateTo)} method needs to be used.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
