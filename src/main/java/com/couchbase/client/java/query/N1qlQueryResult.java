@@ -71,9 +71,17 @@ public interface N1qlQueryResult extends Iterable<N1qlQueryRow> {
     /**
      * Denotes the success or failure of the query. It could fail slower than with
      * {@link #parseSuccess()}, for example if a fatal error comes up while streaming the results
-     * to the client. Receiving a (single) value for finalSuccess means the query is over.
+     * to the client. This method blocks until the query is over and the success can be established.
      */
     boolean finalSuccess();
+
+    /**
+     * Returns the final status of the query. For example, a successful query will return "<code>success</code>"
+     * (which is equivalent to {@link #finalSuccess()} returning true). Other statuses include (but are not limited to)
+     * "<code>fatal</code>" when fatal errors occurred and "<code>timeout</code>" when the query timed out on the server
+     * side but not yet on the client side. This method blocks until the query is over and the status can be established.
+     */
+    String status();
 
     /**
      * @return A list of errors or warnings encountered while executing the query.

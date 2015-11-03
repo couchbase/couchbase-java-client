@@ -51,7 +51,8 @@ import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
 import rx.Observable;
 import rx.functions.Func1;
-import rx.functions.Func5;
+import rx.functions.Func6;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -647,13 +648,13 @@ public class CouchbaseBucket implements Bucket {
                                 aqr.signature().singleOrDefault(JsonObject.empty()),
                                 aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
                                 aqr.errors().toList(),
+                                aqr.status(),
                                 aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                                new Func5<List<AsyncN1qlQueryRow>, Object, N1qlMetrics,
-                                        List<JsonObject>, Boolean, N1qlQueryResult>() {
+                                new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
                                     @Override
                                     public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
-                                            N1qlMetrics info, List<JsonObject> errors, Boolean finalSuccess) {
-                                        return new DefaultN1qlQueryResult(rows, signature, info, errors, finalSuccess,
+                                            N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
+                                        return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
                                                 parseSuccess, requestId, clientContextId);
                                     }
                                 });

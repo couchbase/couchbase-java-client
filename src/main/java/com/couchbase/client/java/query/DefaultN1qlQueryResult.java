@@ -8,6 +8,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 
 public class DefaultN1qlQueryResult implements N1qlQueryResult {
 
+    private final String status;
     private final boolean finalSuccess;
     private final boolean parseSuccess;
     private final List<N1qlQueryRow> allRows;
@@ -25,18 +26,20 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
      * @param signature the signature for rows.
      * @param info the metrics.
      * @param errors the list of errors and warnings.
-     * @param finalSuccess the definitive (but potentially delayed) result of the query.
+     * @param finalStatus the definitive (but potentially delayed) status of the query.
+     * @param finalSuccess the definitive (but potentially delayed) success of the query.
      * @param parseSuccess the intermediate result of the query
      */
     public DefaultN1qlQueryResult(List<AsyncN1qlQueryRow> rows, Object signature,
             N1qlMetrics info, List<JsonObject> errors,
-            Boolean finalSuccess, boolean parseSuccess,
+            String finalStatus, Boolean finalSuccess, boolean parseSuccess,
             String requestId, String clientContextId) {
 
         this.requestId = requestId;
         this.clientContextId = clientContextId;
         this.parseSuccess = parseSuccess;
         this.finalSuccess = finalSuccess != null && finalSuccess;
+        this.status = finalStatus;
         this.allRows = new ArrayList<N1qlQueryRow>(rows.size());
         for (AsyncN1qlQueryRow row : rows) {
             this.allRows.add(new DefaultN1qlQueryRow(row.value()));
@@ -79,6 +82,11 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
     @Override
     public boolean finalSuccess() {
         return this.finalSuccess;
+    }
+
+    @Override
+    public String status() {
+        return status;
     }
 
     @Override

@@ -161,7 +161,7 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
-                Observable.just(false),
+                Observable.just("fatal"),
                 true, "req", "");
 
         cache.put(st.toString(), payloadFromCache);
@@ -200,14 +200,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
-                Observable.just(false),
+                Observable.just("fatal"),
                 true, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.<JsonObject>empty(),
-                Observable.just(true),
+                Observable.just("success"),
                 true, "req", ""));
 
         doAnswer(new ReturnsElementsOf(payloads)).when(executor).prepare(any(Statement.class));
@@ -250,14 +250,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
-                Observable.just(false),
+                Observable.just("fatal"),
                 true, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.<JsonObject>empty(),
-                Observable.just(true),
+                Observable.just("completed"),
                 true, "req", ""));
 
         doAnswer(new ReturnsElementsOf(
@@ -305,14 +305,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", code).put("msg", msg)),
-                Observable.just(false),
+                Observable.just("fatal"),
                 true, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.<JsonObject>empty(),
-                Observable.just(true),
+                Observable.just("success"),
                 true, "req", ""));
 
         doAnswer(new ReturnsElementsOf(
