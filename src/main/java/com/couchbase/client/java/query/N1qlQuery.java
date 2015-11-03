@@ -124,9 +124,32 @@ public abstract class N1qlQuery implements Serializable {
 
     //== PARAMETERIZED with Statement ==
     /**
-     * Create a new query with positionalParameters. Note that the {@link JsonArray}
+     * Create a new query with positional parameters. Note that the {@link JsonArray}
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
+     *
+     * Positional parameters have the form of `$n`, where the `n` represents the position, starting
+     * with 1. The following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the positional {@link #parameterized(Statement, JsonArray)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Positional Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $1 and name like $2",
+     *  JsonArray.from("airline", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
      *
      * @param statement the {@link Statement} to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
@@ -140,6 +163,31 @@ public abstract class N1qlQuery implements Serializable {
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
      *
+     * Named parameters have the form of `$name`, where the `name` represents the unique name. The
+     * following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the named {@link #parameterized(Statement, JsonObject)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Named Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $type and name like $name",
+     *  JsonObject.create()
+     *    .put("type", "airline")
+     *    .put("name", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
+     *
      * @param statement the {@link Statement} to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
      */
@@ -151,6 +199,29 @@ public abstract class N1qlQuery implements Serializable {
      * Create a new query with positionalParameters. Note that the {@link JsonArray}
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
+     *
+     * Positional parameters have the form of `$n`, where the `n` represents the position, starting
+     * with 1. The following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the positional {@link #parameterized(Statement, JsonArray)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Positional Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $1 and name like $2",
+     *  JsonArray.from("airline", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
      *
      * @param statement the {@link Statement} to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
@@ -164,6 +235,31 @@ public abstract class N1qlQuery implements Serializable {
      * Create a new query with named parameters. Note that the {@link JsonObject}
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
+     *
+     * Named parameters have the form of `$name`, where the `name` represents the unique name. The
+     * following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the named {@link #parameterized(Statement, JsonObject)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Named Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $type and name like $name",
+     *  JsonObject.create()
+     *    .put("type", "airline")
+     *    .put("name", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
      *
      * @param statement the {@link Statement} to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
@@ -179,6 +275,29 @@ public abstract class N1qlQuery implements Serializable {
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
      *
+     * Positional parameters have the form of `$n`, where the `n` represents the position, starting
+     * with 1. The following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the positional {@link #parameterized(Statement, JsonArray)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Positional Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $1 and name like $2",
+     *  JsonArray.from("airline", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
+     *
      * @param statement the raw statement to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      */
@@ -190,6 +309,31 @@ public abstract class N1qlQuery implements Serializable {
      * Create a new query with named parameters. Note that the {@link JsonObject}
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
+     *
+     * Named parameters have the form of `$name`, where the `name` represents the unique name. The
+     * following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the named {@link #parameterized(Statement, JsonObject)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Named Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $type and name like $name",
+     *  JsonObject.create()
+     *    .put("type", "airline")
+     *    .put("name", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
      *
      * @param statement the raw statement to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
@@ -203,6 +347,29 @@ public abstract class N1qlQuery implements Serializable {
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
      *
+     * Positional parameters have the form of `$n`, where the `n` represents the position, starting
+     * with 1. The following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the positional {@link #parameterized(Statement, JsonArray)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Positional Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $1 and name like $2",
+     *  JsonArray.from("airline", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
+     *
      * @param statement the raw statement to execute (containing positional placeholders)
      * @param positionalParams the values for the positional placeholders in statement
      * @param params the {@link N1qlParams query parameters}.
@@ -215,6 +382,31 @@ public abstract class N1qlQuery implements Serializable {
      * Create a new query with named parameters. Note that the {@link JsonObject}
      * should not be mutated until {@link #n1ql()} is called since it backs the
      * creation of the query string.
+     *
+     * Named parameters have the form of `$name`, where the `name` represents the unique name. The
+     * following two examples are equivalent and compare the {@link #simple(Statement)}
+     * vs the named {@link #parameterized(Statement, JsonObject)} approach:
+     *
+     * Simple:
+     *
+     * ```
+     * N1qlQuery.simple("SELECT * FROM `travel-sample` WHERE type = 'airline' and name like 'A%'")
+     * ```
+     *
+     * Named Params:
+     *
+     * ```
+     * N1qlQuery.parameterized(
+     *  "SELECT * FROM `travel-sample` WHERE type = $type and name like $name",
+     *  JsonObject.create()
+     *    .put("type", "airline")
+     *    .put("name", "A%")
+     * )
+     * ```
+     *
+     * Using parameterized statements combined with non-adhoc queries (which is configurable through
+     * the {@link N1qlParams}) can provide better performance even when the actual arguments change
+     * at execution time.
      *
      * @param statement the raw statement to execute (containing named placeholders)
      * @param namedParams the values for the named placeholders in statement
