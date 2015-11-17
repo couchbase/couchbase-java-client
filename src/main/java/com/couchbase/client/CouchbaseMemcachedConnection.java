@@ -157,7 +157,7 @@ public class CouchbaseMemcachedConnection extends MemcachedConnection implements
       // schedule shutdown for the oddNodes
       for(MemcachedNode shutDownNode : oddNodes) {
         getLogger().info("Scheduling Node "
-          + shutDownNode.getSocketAddress() + "for shutdown.");
+          + shutDownNode.getSocketAddress() + " for shutdown.");
       }
       nodesToShutdown.addAll(oddNodes);
     } catch (IOException e) {
