@@ -40,7 +40,7 @@ import com.couchbase.client.java.document.RawJsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
-import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.view.AsyncViewResult;
 import com.couchbase.client.java.view.AsyncViewRow;
 import com.couchbase.client.java.view.DefaultView;
@@ -49,6 +49,7 @@ import com.couchbase.client.java.view.Stale;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import rx.Observable;
@@ -60,15 +61,23 @@ import rx.functions.Func1;
  * @author Michael Nitschinger
  * @since 2.0.1
  */
-public class ViewQueryTest extends ClusterDependentTest {
+public class ViewQueryTest {
 
     public static final int STORED_DOCS = 1000;
+
+    private static CouchbaseTestContext ctx;
 
     /**
      * Populates th bucket with sample data and creates views for testing.
      */
     @BeforeClass
     public static void setupViews() {
+        ctx = CouchbaseTestContext.builder()
+            .adhoc(true)
+            .bucketQuota(100)
+            .bucketName("View")
+            .build();
+
         Observable
             .range(1, STORED_DOCS)
             .flatMap(new Func1<Integer, Observable<JsonDocument>>() {
@@ -79,7 +88,7 @@ public class ViewQueryTest extends ClusterDependentTest {
                         .put("name", "Mr. Foo Bar " + id)
                         .put("age", id % 100)
                         .put("active", (id % 2) == 0);
-                    return bucket().async().insert(JsonDocument.create("user-" + id, content));
+                    return ctx.bucket().async().insert(JsonDocument.create("user-" + id, content));
                 }
             })
             .last()
@@ -97,15 +106,20 @@ public class ViewQueryTest extends ClusterDependentTest {
             )
         );
 
-        DesignDocument stored = bucketManager().getDesignDocument("users");
+        DesignDocument stored = ctx.bucketManager().getDesignDocument("users");
         if (stored == null || !stored.equals(designDoc)) {
-            bucketManager().upsertDesignDocument(designDoc);
+            ctx.bucketManager().upsertDesignDocument(designDoc);
         }
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        ctx.destroyBucketAndDisconnect();
     }
 
     @Test
     public void shouldQueryNonReducedView() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_name").stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_name").stale(Stale.FALSE));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -125,7 +139,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldQueryViewWithIterator() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_name").stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_name").stale(Stale.FALSE));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -143,7 +157,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldQueryReducedView() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -155,7 +169,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldManuallyDisabledReduce() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE).reduce(false));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE).reduce(false));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -175,7 +189,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldReturnNoRowsWithNonMatchingQuery() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_name").key("foobar").stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_name").key("foobar").stale(Stale.FALSE));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -186,7 +200,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldLoadDocumentsWithMapOnly() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_name").limit(10).stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_name").limit(10).stale(Stale.FALSE));
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -213,7 +227,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldLoadDocumentsWithIncludeDocs() {
-        ViewResult result = bucket().query(
+        ViewResult result = ctx.bucket().query(
             ViewQuery.from("users", "by_name").limit(10).stale(Stale.FALSE).includeDocs()
         );
         assertNull(result.debug());
@@ -242,7 +256,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldIncludeDocsWithCustomTarget() {
-        ViewResult result = bucket().query(
+        ViewResult result = ctx.bucket().query(
             ViewQuery.from("users", "by_name").limit(20).stale(Stale.FALSE).includeDocs(RawJsonDocument.class)
         );
         assertNull(result.debug());
@@ -267,7 +281,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test(expected = ClassCastException.class)
     public void shouldFailWhenWrongCustomTargetOnIncludeDocs() {
-        ViewResult result = bucket().query(
+        ViewResult result = ctx.bucket().query(
             ViewQuery.from("users", "by_name").limit(20).stale(Stale.FALSE).includeDocs(RawJsonDocument.class)
         );
         assertNull(result.debug());
@@ -286,7 +300,7 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test
     public void shouldComposeAsyncWithDocuments() {
-        List<JsonDocument> documents = bucket()
+        List<JsonDocument> documents = ctx.bucket()
             .async()
             .query(ViewQuery.from("users", "by_name").limit(50).stale(Stale.FALSE))
             .flatMap(new Func1<AsyncViewResult, Observable<AsyncViewRow>>() {
@@ -318,17 +332,17 @@ public class ViewQueryTest extends ClusterDependentTest {
 
     @Test(expected = ViewDoesNotExistException.class)
     public void shouldFailWithInvalidViewName() {
-        bucket().query(ViewQuery.from("users", "foobar"));
+        ctx.bucket().query(ViewQuery.from("users", "foobar"));
     }
 
     @Test(expected = ViewDoesNotExistException.class)
     public void shouldFailWithInvalidDesignDocument() {
-        bucket().query(ViewQuery.from("foo", "bar"));
+        ctx.bucket().query(ViewQuery.from("foo", "bar"));
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void shouldFailToLoadDocumentWhenReduced() {
-        ViewResult result = bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE));
         List<ViewRow> rows = result.allRows();
 
         assertEquals(1, rows.size());
@@ -348,7 +362,7 @@ public class ViewQueryTest extends ClusterDependentTest {
         reader.close();
         JsonArray keysArray = JsonArray.from((Object[]) keys);
 
-        ViewResult result = bucket().query(
+        ViewResult result = ctx.bucket().query(
                 ViewQuery.from("users", "by_name")
                          .keys(keysArray)
         );

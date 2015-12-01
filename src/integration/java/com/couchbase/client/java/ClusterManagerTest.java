@@ -150,7 +150,6 @@ public class ClusterManagerTest {
     }
 
     @Test
-    @Ignore
     public void shouldUpdateBucket() {
         BucketSettings settings = DefaultBucketSettings
             .builder()
@@ -169,7 +168,12 @@ public class ClusterManagerTest {
             .build();
 
         clusterManager.updateBucket(settings);
-        assertEquals(256, clusterManager.getBucket(UPDATE_BUCKET).quota());
+        int size = clusterManager.getBucket(UPDATE_BUCKET).quota();
+
+        clusterManager.removeBucket(UPDATE_BUCKET);
+        assertEquals(256, size);
+
+
     }
 
 }

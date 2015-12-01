@@ -21,23 +21,23 @@
  */
 package com.couchbase.client.java;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
-import com.couchbase.client.java.util.ClusterDependentTest;
-import com.couchbase.client.java.util.features.CouchbaseFeature;
-import org.junit.Assume;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the functionality of various N1QL DML statements.
@@ -45,11 +45,23 @@ import static org.junit.Assert.assertTrue;
  * @author Michael Nitschinger
  * @since 2.2.2
  */
-public class N1qlDmlTest extends ClusterDependentTest {
+public class N1qlDmlTest {
+
+    public static CouchbaseTestContext ctx;
 
     @BeforeClass
-    public static void init() throws InterruptedException {
-        Assume.assumeTrue(clusterManager().info().checkAvailable(CouchbaseFeature.N1QL));
+    public static void init() {
+        ctx = CouchbaseTestContext.builder()
+                .bucketName("N1qlDml")
+                .adhoc(true)
+                .bucketQuota(100)
+                .build()
+            .ignoreIfNoN1ql();
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        ctx.destroyBucketAndDisconnect();
     }
 
     @Test
@@ -58,15 +70,15 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", true)
             .put("b", 1234);
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('insDoc1Simple', "
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('insDoc1Simple', "
             +  value.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verified = bucket().get("insDoc1Simple");
+        JsonDocument verified = ctx.bucket().get("insDoc1Simple");
         assertEquals(value, verified.content());
     }
 
@@ -76,18 +88,18 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", true)
             .put("b", 1234);
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('insDoc1Multi', "
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('insDoc1Multi', "
             +  value.toString() + "), ('insDoc2Multi', " + value.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verified1 = bucket().get("insDoc1Multi");
+        JsonDocument verified1 = ctx.bucket().get("insDoc1Multi");
         assertEquals(value, verified1.content());
 
-        JsonDocument verified2 = bucket().get("insDoc2Multi");
+        JsonDocument verified2 = ctx.bucket().get("insDoc2Multi");
         assertEquals(value, verified2.content());
     }
 
@@ -97,8 +109,8 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", "foobar")
             .put("b", -12);
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ($key, $value)";
-        N1qlQueryResult result = bucket().query(N1qlQuery.parameterized(
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ($key, $value)";
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.parameterized(
             query,
             JsonObject.create().put("key", "insParam1").put("value", value)
         ));
@@ -107,7 +119,7 @@ public class N1qlDmlTest extends ClusterDependentTest {
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verified1 = bucket().get("insParam1");
+        JsonDocument verified1 = ctx.bucket().get("insParam1");
         assertEquals(value, verified1.content());
     }
 
@@ -117,10 +129,10 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", "foobar")
             .put("b", -12);
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ($key, $value) RETURNING *";
-        N1qlQueryResult result = bucket().query(N1qlQuery.parameterized(
-            query,
-            JsonObject.create().put("key", "insRet1").put("value", value)
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ($key, $value) RETURNING *";
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.parameterized(
+                query,
+                JsonObject.create().put("key", "insRet1").put("value", value)
         ));
 
         assertTrue(result.finalSuccess());
@@ -128,9 +140,9 @@ public class N1qlDmlTest extends ClusterDependentTest {
 
         List<N1qlQueryRow> rows = result.allRows();
         assertEquals(1, rows.size());
-        assertEquals(value, rows.get(0).value().getObject(bucketName()));
+        assertEquals(value, rows.get(0).value().getObject(ctx.bucketName()));
 
-        JsonDocument verified1 = bucket().get("insRet1");
+        JsonDocument verified1 = ctx.bucket().get("insRet1");
         assertEquals(value, verified1.content());
     }
 
@@ -140,18 +152,18 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", true)
             .put("b", JsonObject.empty().put("foo", "bar"));
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('doubleIns1', "
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('doubleIns1', "
             +  value.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verified = bucket().get("doubleIns1");
+        JsonDocument verified = ctx.bucket().get("doubleIns1");
         assertEquals(value, verified.content());
 
-        result = bucket().query(N1qlQuery.simple(query));
+        result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertFalse(result.finalSuccess());
         assertTrue(result.allRows().isEmpty());
@@ -165,49 +177,49 @@ public class N1qlDmlTest extends ClusterDependentTest {
             .put("a", true)
             .put("b", JsonObject.empty().put("foo", "bar"));
 
-        String query = "UPSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('doubleUps1', "
+        String query = "UPSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('doubleUps1', "
             +  value.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verified = bucket().get("doubleUps1");
+        JsonDocument verified = ctx.bucket().get("doubleUps1");
         assertEquals(value, verified.content());
 
         value = JsonObject.create()
             .put("a", false)
             .put("b", JsonArray.from(1, 2, 3, 4));
 
-        query = "UPSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('doubleUps1', "
+        query = "UPSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('doubleUps1', "
             +  value.toString() + ")";
-        result = bucket().query(N1qlQuery.simple(query));
+        result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        verified = bucket().get("doubleUps1");
+        verified = ctx.bucket().get("doubleUps1");
         assertEquals(value, verified.content());
     }
 
     @Test
     public void shouldDeleteById() {
         String id = "n1qlDel1";
-        JsonDocument stored = bucket().upsert(JsonDocument.create(id, JsonObject.create()));
+        JsonDocument stored = ctx.bucket().upsert(JsonDocument.create(id, JsonObject.create()));
         assertTrue(stored.cas() != 0);
 
-        assertTrue(bucket().exists(id));
+        assertTrue(ctx.bucket().exists(id));
 
-        String query = "DELETE FROM `" + bucketName() + "` USE KEYS ['" + id + "']";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        String query = "DELETE FROM `" + ctx.bucketName() + "` USE KEYS ['" + id + "']";
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        assertFalse(bucket().exists(id));
+        assertFalse(ctx.bucket().exists(id));
     }
 
     @Test
@@ -219,44 +231,44 @@ public class N1qlDmlTest extends ClusterDependentTest {
         JsonObject doc1 = JsonObject.create().put("type", "abc");
         JsonObject doc2 = JsonObject.create().put("type", "def");
 
-        String query = "INSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('" + id1 + "', "
+        String query = "INSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('" + id1 + "', "
             +  doc1.toString() + "), ('" + id2 + "', " + doc2.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        assertTrue(bucket().exists(id1));
-        assertTrue(bucket().exists(id2));
+        assertTrue(ctx.bucket().exists(id1));
+        assertTrue(ctx.bucket().exists(id2));
 
-        query = "DELETE FROM `" + bucketName() + "` WHERE type = 'def'";
-        result = bucket().query(N1qlQuery.simple(query));
+        query = "DELETE FROM `" + ctx.bucketName() + "` WHERE type = 'def'";
+        result = ctx.bucket().query(N1qlQuery.simple(query));
 
-        assertTrue(result.finalSuccess());
+        assertTrue(ctx.errorMsg("Could not DELETE FROM", result), result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        assertTrue(bucket().exists(id1));
-        assertFalse(bucket().exists(id2));
+        assertTrue(ctx.bucket().exists(id1));
+        assertFalse(ctx.bucket().exists(id2));
     }
 
     @Test
     public void shouldUpateById() {
         String id = "n1qlUpdate1";
-        JsonDocument stored = bucket().upsert(JsonDocument.create(id, JsonObject.create()));
+        JsonDocument stored = ctx.bucket().upsert(JsonDocument.create(id, JsonObject.create()));
         assertTrue(stored.cas() != 0);
 
-        assertTrue(bucket().exists(id));
+        assertTrue(ctx.bucket().exists(id));
 
-        String query = "UPDATE `" + bucketName() + "` USE KEYS ['" + id + "'] SET updated = true";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        String query = "UPDATE `" + ctx.bucketName() + "` USE KEYS ['" + id + "'] SET updated = true";
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument updated = bucket().get(id);
+        JsonDocument updated = ctx.bucket().get(id);
         assertEquals(true, updated.content().getBoolean("updated"));
     }
 
@@ -269,30 +281,28 @@ public class N1qlDmlTest extends ClusterDependentTest {
         JsonObject doc1 = JsonObject.create().put("type", "abc");
         JsonObject doc2 = JsonObject.create().put("type", "def");
 
-        String query = "UPSERT INTO `" + bucketName() + "` (KEY, VALUE) VALUES ('" + id1 + "', "
+        String query = "UPSERT INTO `" + ctx.bucketName() + "` (KEY, VALUE) VALUES ('" + id1 + "', "
             +  doc1.toString() + "), ('" + id2 + "', " + doc2.toString() + ")";
-        N1qlQueryResult result = bucket().query(N1qlQuery.simple(query));
+        N1qlQueryResult result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        assertTrue(bucket().exists(id1));
-        assertTrue(bucket().exists(id2));
-        
-        query = "UPDATE `" + bucketName() + "` SET type = 'ghi' WHERE type = 'abc'";
-        result = bucket().query(N1qlQuery.simple(query));
+        assertTrue(ctx.bucket().exists(id1));
+        assertTrue(ctx.bucket().exists(id2));
+
+        query = "UPDATE `" + ctx.bucketName() + "` SET type = 'ghi' WHERE type = 'abc'";
+        result = ctx.bucket().query(N1qlQuery.simple(query));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
         assertTrue(result.allRows().isEmpty());
 
-        JsonDocument verify1 = bucket().get(id1);
+        JsonDocument verify1 = ctx.bucket().get(id1);
         assertEquals("ghi", verify1.content().getString("type"));
-        JsonDocument verify2 = bucket().get(id2);
+        JsonDocument verify2 = ctx.bucket().get(id2);
         assertEquals("def", verify2.content().getString("type"));
     }
-
-
 
 }
