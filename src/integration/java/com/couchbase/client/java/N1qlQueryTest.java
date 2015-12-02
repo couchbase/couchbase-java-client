@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
@@ -41,6 +42,7 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.CouchbaseTestContext;
+import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,8 +57,6 @@ public class N1qlQueryTest {
 
     private static CouchbaseTestContext ctx;
 
-    //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
-//    private static final ScanConsistency CONSISTENCY = ScanConsistency.NOT_BOUNDED;
     private static final ScanConsistency CONSISTENCY = ScanConsistency.REQUEST_PLUS;
     private static final N1qlParams WITH_CONSISTENCY = N1qlParams.build().consistency(CONSISTENCY);
 
@@ -67,13 +67,11 @@ public class N1qlQueryTest {
                 .adhoc(true)
                 .bucketQuota(100)
                 .build()
-                .ignoreIfNoN1ql();
+                .ignoreIfNoN1ql()
+        .ensurePrimaryIndex();
 
         ctx.bucket().upsert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
         ctx.bucket().upsert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
-
-        ctx.bucket().query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + ctx.bucketName() + "`",
-                N1qlParams.build().consistency(CONSISTENCY)), 2, TimeUnit.MINUTES);
     }
 
     @AfterClass
@@ -111,7 +109,6 @@ public class N1qlQueryTest {
         assertNotNull(result.requestId());
         assertTrue(result.requestId().length() > 0);
 
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
         assertFalse(result.allRows().isEmpty());
     }
 
@@ -133,7 +130,6 @@ public class N1qlQueryTest {
         assertNotNull(result.requestId());
         assertTrue(result.requestId().length() > 0);
 
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
         assertFalse(result.allRows().isEmpty());
     }
 
@@ -161,7 +157,6 @@ public class N1qlQueryTest {
         assertNotNull(result.requestId());
         assertTrue(result.requestId().length() > 0);
 
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
         assertFalse(result.allRows().isEmpty());
     }
 
@@ -181,7 +176,6 @@ public class N1qlQueryTest {
 
         assertEquals(JsonObject.create().put("*", "*"), result.signature());
 
-        //TODO once consistency/indexer/flush problems are resolved, reactivate REQUEST_PLUS and rows assertions
         assertFalse(result.allRows().isEmpty());
     }
 
@@ -210,5 +204,58 @@ public class N1qlQueryTest {
         assertTrue(response.finalSuccess());
         assertTrue(secondResponse.finalSuccess());
         assertEquals("query cache was unexpectedly populated", 0, ctx.bucket().invalidateQueryCache());
+    }
+
+    @Test
+    public void testPreparedSumWorks() {
+        ctx.ignoreIfClusterUnder(new Version(4, 1, 0));
+
+        String statement = "SELECT sum(c1) FROM `" + ctx.bucketName() + "`";
+        N1qlQuery query = N1qlQuery.simple(statement, N1qlParams.build().adhoc(false));
+
+        ctx.bucket().invalidateQueryCache();
+        N1qlQueryResult response = ctx.bucket().query(query);
+        N1qlQueryResult secondResponse = ctx.bucket().query(query);
+
+        assertTrue(response.finalSuccess());
+        assertTrue(secondResponse.finalSuccess());
+        assertEquals(1, ctx.bucket().invalidateQueryCache());
+    }
+
+    @Test
+    public void testPreparedWithPositionalPlaceholdersExecute() {
+        String statement = "SELECT * FROM `" + ctx.bucketName() + "` WHERE item = $1";
+        N1qlQuery query = N1qlQuery.parameterized(statement, JsonArray.from("value"), N1qlParams.build().adhoc(false));
+        N1qlQuery query2 = N1qlQuery.parameterized(statement, JsonArray.from(123), N1qlParams.build().adhoc(false));
+
+        ctx.bucket().invalidateQueryCache();
+        N1qlQueryResult response = ctx.bucket().query(query);
+        N1qlQueryResult secondResponse = ctx.bucket().query(query2);
+
+        assertTrue(response.finalSuccess());
+        assertTrue(secondResponse.finalSuccess());
+        assertEquals(1, ctx.bucket().invalidateQueryCache());
+
+        assertEquals(1, response.allRows().size());
+        assertEquals(1, secondResponse.allRows().size());
+    }
+
+    @Test
+    public void testPreparedWithNamedPlaceholdersExecute() {
+        String statement = "SELECT * FROM `" + ctx.bucketName() + "` WHERE item = $item";
+        N1qlQuery query = N1qlQuery
+                .parameterized(statement, JsonObject.create().put("item", "value"), N1qlParams.build().adhoc(false));
+        N1qlQuery query2 = N1qlQuery.parameterized(statement, JsonObject.create().put("item", 123), N1qlParams.build().adhoc(false));
+
+        ctx.bucket().invalidateQueryCache();
+        N1qlQueryResult response = ctx.bucket().query(query);
+        N1qlQueryResult secondResponse = ctx.bucket().query(query2);
+
+        assertTrue(response.finalSuccess());
+        assertTrue(secondResponse.finalSuccess());
+        assertEquals(1, ctx.bucket().invalidateQueryCache());
+
+        assertEquals(1, response.allRows().size());
+        assertEquals(1, secondResponse.allRows().size());
     }
 }

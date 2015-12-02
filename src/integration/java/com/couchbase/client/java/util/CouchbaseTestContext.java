@@ -21,6 +21,8 @@
  */
 package com.couchbase.client.java.util;
 
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.Bucket;
@@ -30,10 +32,14 @@ import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQueryRow;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
@@ -99,6 +105,29 @@ public class CouchbaseTestContext {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * If N1QL is available (detected or forced), this method will attempt to create a PRIMARY INDEX on the bucket.
+     * It will ignore an already existing primary index. If other N1QL errors arise, a {@link CouchbaseException} will
+     * be thrown (with the message containing the list of errors).
+     */
+    public CouchbaseTestContext ensurePrimaryIndex() {
+        //test for N1QL
+        if (env.queryEnabled() || clusterManager.info().checkAvailable(CouchbaseFeature.N1QL)) {
+            N1qlQueryResult result = bucket().query(
+                    N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + bucketName() + "`",
+                            N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)), 2, TimeUnit.MINUTES);
+            if (!result.finalSuccess()) {
+                //ignore "index already exist"
+                for (JsonObject error : result.errors()) {
+                    if (!error.getString("msg").contains("already exist")) {
+                        throw new CouchbaseException("Could not CREATE PRIMARY INDEX - " + result.errors().toString());
+                    }
+                }
+            }
+        }
+        return this;
     }
 
     /**
@@ -301,10 +330,12 @@ public class CouchbaseTestContext {
     }
 
     /**
-     * Remove the bucket and disconnect from the cluster.
+     * Remove the bucket (if it was adhoc) and disconnect from the cluster.
      */
     public void destroyBucketAndDisconnect() {
-        clusterManager.removeBucket(bucketName);
+        if (isAdHoc) {
+            clusterManager.removeBucket(bucketName);
+        }
         disconnect();
     }
 

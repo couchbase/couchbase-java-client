@@ -26,17 +26,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -56,7 +58,8 @@ public class N1qlDmlTest {
                 .adhoc(true)
                 .bucketQuota(100)
                 .build()
-            .ignoreIfNoN1ql();
+            .ignoreIfNoN1ql()
+            .ensurePrimaryIndex();
     }
 
     @AfterClass
@@ -223,7 +226,6 @@ public class N1qlDmlTest {
     }
 
     @Test
-    @Ignore("Ignored until MB-16732 is resolved") // TODO: re-enable once MB-16732 is resolved
     public void shouldDeleteWithClause() throws Exception {
         String id1 = "n1qlDelW1";
         String id2 = "n1qlDelW2";
@@ -243,7 +245,7 @@ public class N1qlDmlTest {
         assertTrue(ctx.bucket().exists(id2));
 
         query = "DELETE FROM `" + ctx.bucketName() + "` WHERE type = 'def'";
-        result = ctx.bucket().query(N1qlQuery.simple(query));
+        result = ctx.bucket().query(N1qlQuery.simple(query, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)));
 
         assertTrue(ctx.errorMsg("Could not DELETE FROM", result), result.finalSuccess());
         assertTrue(result.errors().isEmpty());
@@ -273,7 +275,6 @@ public class N1qlDmlTest {
     }
 
     @Test
-    @Ignore("Ignored until MB-16732 is resolved") // TODO: re-enable once MB-16732 is resolved
     public void shouldUpdateWithClause() throws Exception {
         String id1 = "n1qlUpW1";
         String id2 = "n1qlUpW2";
@@ -293,7 +294,7 @@ public class N1qlDmlTest {
         assertTrue(ctx.bucket().exists(id2));
 
         query = "UPDATE `" + ctx.bucketName() + "` SET type = 'ghi' WHERE type = 'abc'";
-        result = ctx.bucket().query(N1qlQuery.simple(query));
+        result = ctx.bucket().query(N1qlQuery.simple(query, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)));
 
         assertTrue(result.finalSuccess());
         assertTrue(result.errors().isEmpty());
