@@ -33,6 +33,7 @@ import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
 import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.QueryExecutionException;
@@ -136,7 +137,7 @@ public class N1qlQueryExecutor {
         return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
             @Override
             public Observable<GenericQueryResponse> call() {
-                return core.send(GenericQueryRequest.jsonQuery(query.n1ql().toString(), bucket, password));
+                return core.send(createN1qlRequest(query, bucket, password));
             }
         }).flatMap(new Func1<GenericQueryResponse, Observable<AsyncN1qlQueryResult>>() {
             @Override
@@ -363,7 +364,7 @@ public class N1qlQueryExecutor {
         return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
             @Override
             public Observable<GenericQueryResponse> call() {
-                return core.send(GenericQueryRequest.jsonQuery(query.n1ql().toString(), bucket, password));
+                return core.send(createN1qlRequest(query, bucket, password));
             }
         }).flatMap(new Func1<GenericQueryResponse, Observable<PreparedPayload>>() {
             @Override
@@ -426,6 +427,18 @@ public class N1qlQueryExecutor {
                 }
             }
         });
+    }
+
+  /**
+   * Creates the core query request and performs centralized string substitution.
+   */
+    private GenericQueryRequest createN1qlRequest(final N1qlQuery query, String bucket, String password) {
+        String rawQuery = query.n1ql().toString();
+        rawQuery = rawQuery.replaceAll(
+          CouchbaseAsyncBucket.CURRENT_BUCKET_IDENTIFIER,
+          "`" + bucket + "`"
+        );
+        return GenericQueryRequest.jsonQuery(rawQuery, bucket, password);
     }
 
     /**

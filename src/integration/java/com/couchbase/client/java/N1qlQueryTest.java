@@ -21,18 +21,6 @@
  */
 package com.couchbase.client.java;
 
-import static com.couchbase.client.java.query.Index.createPrimaryIndex;
-import static com.couchbase.client.java.query.Select.select;
-import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.x;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -46,6 +34,16 @@ import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import java.util.Arrays;
+
+import static com.couchbase.client.java.query.Index.createPrimaryIndex;
+import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.x;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests of the N1QL Query features.
@@ -257,5 +255,18 @@ public class N1qlQueryTest {
 
         assertEquals(1, response.allRows().size());
         assertEquals(1, secondResponse.allRows().size());
+    }
+
+    @Test
+    public void shouldSelectFromCurrentBucket() {
+        N1qlQuery query = N1qlQuery.simple(
+          select("*").fromCurrentBucket().limit(3),
+          WITH_CONSISTENCY
+        );
+
+        N1qlQueryResult result = ctx.bucket().query(query);
+        assertTrue(result.allRows().size() > 0);
+        assertTrue(result.errors().isEmpty());
+        assertTrue(result.finalSuccess());
     }
 }

@@ -103,6 +103,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     private static final int COUNTER_NOT_EXISTS_EXPIRY = 0xffffffff;
 
+    public static final String CURRENT_BUCKET_IDENTIFIER = "#CURRENT_BUCKET#";
+
     public static final JsonTranscoder JSON_OBJECT_TRANSCODER = new JsonTranscoder();
     public static final JsonArrayTranscoder JSON_ARRAY_TRANSCODER = new JsonArrayTranscoder();
     public static final JsonBooleanTranscoder JSON_BOOLEAN_TRANSCODER = new JsonBooleanTranscoder();
@@ -786,7 +788,6 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         if (!query.params().hasServerSideTimeout()) {
             query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
         }
-
         return n1qlQueryExecutor.execute(query);
     }
 

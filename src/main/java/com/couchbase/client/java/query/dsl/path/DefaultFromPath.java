@@ -1,5 +1,6 @@
 package com.couchbase.client.java.query.dsl.path;
 
+import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.dsl.element.FromElement;
 
@@ -23,6 +24,12 @@ public class DefaultFromPath extends DefaultLetPath implements FromPath {
     @Override
     public AsPath from(Expression from) {
         element(new FromElement(from.toString()));
+        return new DefaultAsPath(this);
+    }
+
+    @Override
+    public AsPath fromCurrentBucket() {
+        element(new FromElement(CouchbaseAsyncBucket.CURRENT_BUCKET_IDENTIFIER));
         return new DefaultAsPath(this);
     }
 }
