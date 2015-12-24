@@ -37,6 +37,7 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.java.error.CannotRetryException;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.TestScheduler;
@@ -105,5 +106,20 @@ public class RetryWithDelayHandlerTest {
 
         testScheduler.advanceTimeBy(8, TimeUnit.SECONDS);
         assertEquals(0L, atomicLong.longValue()); //0L is the value emitted by Observable.timer
+    }
+
+    @Test
+    public void shouldLimitMaxAttemptsToIntegerMaxValueMinusOne() {
+        int normal = 4000;
+        int underLimit = Integer.MAX_VALUE - 1;
+        int atLimit = Integer.MAX_VALUE;
+
+        RetryWithDelayHandler testNormal = new RetryWithDelayHandler(normal, Retry.DEFAULT_DELAY, null, null);
+        RetryWithDelayHandler testUnderLimit = new RetryWithDelayHandler(underLimit, Retry.DEFAULT_DELAY, null, null);
+        RetryWithDelayHandler testAtLimit = new RetryWithDelayHandler(atLimit, Retry.DEFAULT_DELAY, null, null);
+
+        assertEquals(normal, testNormal.maxAttempts);
+        assertEquals(underLimit, testUnderLimit.maxAttempts);
+        assertEquals(atLimit - 1, testAtLimit.maxAttempts);
     }
 }

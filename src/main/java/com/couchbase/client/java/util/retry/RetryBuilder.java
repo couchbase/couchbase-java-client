@@ -107,13 +107,18 @@ public class RetryBuilder {
         return this;
     }
 
-    /** Make at most maxAttempts retry attempts.
+    /**
+     * Make at most maxAttempts retry attempts.
+     *
+     * Note that the maximum accepted value is <code>{@link Integer#MAX_VALUE}
+     * - 1</code>, the internal retry mechanism will ensure a total of <code>maxAttempts + 1</code> total attempts,
+     * accounting for the original call.
      *
      * If an error that can trigger a retry occurs more that <i>maxAttempts</i>, it will be wrapped as the
      * cause inside a {@link CannotRetryException}, which will be emitted via the observable's onError method.
      */
     public RetryBuilder max(int maxAttempts) {
-        this.maxAttempts = maxAttempts;
+        this.maxAttempts = Math.min(maxAttempts, Integer.MAX_VALUE - 1);
         return this;
     }
 
