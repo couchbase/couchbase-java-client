@@ -48,7 +48,7 @@ public class Retry {
      * The retry is almost immediate (1ms delay).
      *
      * @param source the {@link Observable} to wrap.
-     * @param maxAttempts the maximum number of times to attempt a retry.
+     * @param maxAttempts the maximum number of times to attempt a retry. It will be capped at <code>{@link Integer#MAX_VALUE} - 1</code>.
      * @param <T> the type of items emitted by the source Observable.
      * @return the wrapped retrying Observable.
      */
@@ -61,7 +61,7 @@ public class Retry {
      * attempts and with a provided {@link Delay} between each attempt.
      *
      * @param source the {@link Observable} to wrap.
-     * @param maxAttempts the maximum number of times to attempt a retry.
+     * @param maxAttempts the maximum number of times to attempt a retry. It will be capped at <code>{@link Integer#MAX_VALUE} - 1</code>.
      * @param retryDelay the {@link Delay} between each attempt.
      * @param <T> the type of items emitted by the source Observable.
      * @return the wrapped retrying Observable.

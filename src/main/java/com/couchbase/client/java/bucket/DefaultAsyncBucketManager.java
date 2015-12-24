@@ -91,7 +91,8 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
 
     //index watching related constants
     private static final CouchbaseLogger INDEX_WATCH_LOG = CouchbaseLoggerFactory.getInstance(INDEX_WATCH_LOG_NAME);
-    private static final int INDEX_WATCH_MAX_ATTEMPTS = Integer.MAX_VALUE; //only really consider the timeout
+    //big enough as to only really consider the timeout, but without risk of overflowing
+    private static final int INDEX_WATCH_MAX_ATTEMPTS = Integer.MAX_VALUE - 5;
     private static final Delay INDEX_WATCH_DELAY = Delay.linear(TimeUnit.MILLISECONDS, 1000, 50, 500);
 
     private final ClusterFacade core;
@@ -632,7 +633,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                             }
                             return Observable.empty();
                         }
-                        //should not happen with the INDEX_WATCH_MAX_ATTEMPTS set to Integer.MAX_VALUE, but in case it is later tuned down...
+                        //should not happen with the INDEX_WATCH_MAX_ATTEMPTS set close to Integer.MAX_VALUE, but in case it is later tuned down...
                         if (t instanceof CannotRetryException && t.getCause() instanceof IndexesNotReadyException) {
                             INDEX_WATCH_LOG.debug("{} after {} attempts", INDEX_WATCH_MAX_ATTEMPTS, t.getCause().getMessage());
                             return Observable.empty();

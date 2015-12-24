@@ -65,6 +65,13 @@ public class RetryBuilderTest {
     }
 
     @Test
+    public void testRetryMaxIsCappedAtIntegerMaxValueMinusOne() {
+        RetryWhenFunction result = RetryBuilder.any().max(Integer.MAX_VALUE).build();
+
+        assertEquals(Integer.MAX_VALUE - 1, result.handler.maxAttempts);
+    }
+
+    @Test
     public void testEmptyErrorsListMakesNullStoppingErrorFilter() {
         RetryWhenFunction neverSet = RetryBuilder.any().build();
         RetryWhenFunction emptyInclusion = RetryBuilder.anyOf().build();
