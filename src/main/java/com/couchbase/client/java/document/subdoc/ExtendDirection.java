@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Couchbase, Inc.
+ * Copyright (C) 2016 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,38 +19,32 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.util.features;
+
+package com.couchbase.client.java.document.subdoc;
+
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.PersistTo;
+import com.couchbase.client.java.ReplicateTo;
 
 /**
- * Enumeration of all Couchbase Features supported by this SDK.
+ * The direction for a sub-document array extension operation.
+ * See {@link Bucket#extendIn(DocumentFragment, ExtendDirection, boolean, PersistTo, ReplicateTo)}.
  *
  * @author Simon Baslé
- * @since 2.1.0
+ * @author Michael Nitschinger
+ * @since 2.2
  */
-public enum CouchbaseFeature {
-
-    KV(1, 8, 0),
-    VIEW(2, 0, 0),
-    CCCP(2, 5, 0),
-    SSL(3, 0, 0),
-    DCP(3, 0, 0),
-    N1QL(3, 5, 0),
-    SPATIAL_VIEW(3, 5, 0),
-    SUBDOC(4, 5, 0);
-
-    private final Version availableFrom;
-
-    CouchbaseFeature(int major, int minor, int patch) {
-        this.availableFrom = new Version(major, minor, patch);
-    }
-
+@InterfaceStability.Experimental
+@InterfaceAudience.Public
+public enum ExtendDirection {
     /**
-     * Checks if this feature is available on the provided server version.
-     *
-     * @param serverVersion the server side version to check against
-     * @return true if this feature is available on the given version, false otherwise.
+     * Extend the array by placing the value at the front of the array (index 0).
      */
-    public boolean isAvailableOn(Version serverVersion) {
-        return serverVersion.compareTo(availableFrom) >= 0;
-    }
+    FRONT,
+    /**
+     * Extend the array by placing the value at the back of the array (largest index).
+     */
+    BACK
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Couchbase, Inc.
+ * Copyright (C) 2016 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,38 +19,27 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.util.features;
+
+package com.couchbase.client.java.error.subdoc;
+
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.error.TranscodingException;
 
 /**
- * Enumeration of all Couchbase Features supported by this SDK.
+ * Subdocument exception thrown when the provided value cannot be inserted at the given path.
+ *
+ * Note that since the SDK serializes data to JSON beforehand, this cannot happen because value is invalid JSON
+ * (a {@link TranscodingException} would be thrown instead in this case).
  *
  * @author Simon Baslé
- * @since 2.1.0
+ * @since 2.2
  */
-public enum CouchbaseFeature {
+@InterfaceStability.Experimental
+@InterfaceAudience.Public
+public class CannotInsertValueException extends SubDocumentException {
 
-    KV(1, 8, 0),
-    VIEW(2, 0, 0),
-    CCCP(2, 5, 0),
-    SSL(3, 0, 0),
-    DCP(3, 0, 0),
-    N1QL(3, 5, 0),
-    SPATIAL_VIEW(3, 5, 0),
-    SUBDOC(4, 5, 0);
-
-    private final Version availableFrom;
-
-    CouchbaseFeature(int major, int minor, int patch) {
-        this.availableFrom = new Version(major, minor, patch);
-    }
-
-    /**
-     * Checks if this feature is available on the provided server version.
-     *
-     * @param serverVersion the server side version to check against
-     * @return true if this feature is available on the given version, false otherwise.
-     */
-    public boolean isAvailableOn(Version serverVersion) {
-        return serverVersion.compareTo(availableFrom) >= 0;
+    public CannotInsertValueException(String reason) {
+        super(reason);
     }
 }
