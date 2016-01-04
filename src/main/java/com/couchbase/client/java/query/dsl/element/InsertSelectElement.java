@@ -21,9 +21,13 @@
  */
 package com.couchbase.client.java.query.dsl.element;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.Expression;
 
+@InterfaceStability.Experimental
+@InterfaceAudience.Private
 public class InsertSelectElement implements Element {
 
   private final Expression key;

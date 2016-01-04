@@ -113,7 +113,7 @@ public class InsertAndUpsertDslTest {
       .returning("fname");
 
     assertEquals(
-      "INSERT INTO default VALUES (\"user\", {\"fname\":\"michael\"," +
+      "INSERT INTO `default` VALUES (\"user\", {\"fname\":\"michael\"," +
         "\"age\":27}) , (\"doc2\", TRUE) RETURNING fname",
       statement.toString()
     );
@@ -155,7 +155,7 @@ public class InsertAndUpsertDslTest {
       .returning("fname");
 
     assertEquals(
-      "UPSERT INTO default VALUES (\"user\", {\"fname\":\"michael\"," +
+      "UPSERT INTO `default` VALUES (\"user\", {\"fname\":\"michael\"," +
         "\"age\":27}) , (\"doc2\", TRUE) RETURNING fname",
       statement.toString()
     );

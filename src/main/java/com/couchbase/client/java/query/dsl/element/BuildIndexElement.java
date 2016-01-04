@@ -31,7 +31,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
+@InterfaceAudience.Private
 public class BuildIndexElement implements Element {
 
     private final String fullKeyspace;

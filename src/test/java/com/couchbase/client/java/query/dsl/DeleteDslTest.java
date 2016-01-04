@@ -117,7 +117,7 @@ public class DeleteDslTest {
       .limit(10);
 
     assertEquals(
-      "DELETE FROM default USE KEYS [\"foo\",\"bar\",\"baz\"] WHERE name LIKE \"A%\" LIMIT 10",
+      "DELETE FROM `default` USE KEYS [\"foo\",\"bar\",\"baz\"] WHERE name LIKE \"A%\" LIMIT 10",
       statement.toString()
     );
 

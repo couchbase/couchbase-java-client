@@ -148,7 +148,7 @@ public class UpdateDslTest {
       .returning("product.type");
 
     assertEquals(
-      "UPDATE product USE KEYS \"odwalla-juice1\" SET type = \"product-juice\" RETURNING product.type",
+      "UPDATE `product` USE KEYS \"odwalla-juice1\" SET type = \"product-juice\" RETURNING product.type",
       statement.toString()
     );
 
@@ -159,12 +159,12 @@ public class UpdateDslTest {
       .returning("product.*");
 
     assertEquals(
-      "UPDATE product USE KEYS \"odwalla-juice1\" UNSET type RETURNING product.*",
+      "UPDATE `product` USE KEYS \"odwalla-juice1\" UNSET type RETURNING product.*",
       statement.toString()
     );
 
     statement = Update
-      .update("tutorial t")
+      .update(x("tutorial t"))
       .useKeysValues("dave")
       .unset("c.gender", x("FOR c IN children END"))
       .returning("t");

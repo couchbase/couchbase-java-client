@@ -36,7 +36,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
+@InterfaceAudience.Private
 public class WithIndexOptionElement implements Element {
 
     private final JsonObject options;
