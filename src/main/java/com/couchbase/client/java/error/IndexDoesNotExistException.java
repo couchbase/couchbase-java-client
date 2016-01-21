@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2015 Couchbase, Inc.
+/*
+ * Copyright (C) 2016 Couchbase, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,10 +19,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALING
  * IN THE SOFTWARE.
  */
-package com.couchbase.client.java.error;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+package com.couchbase.client.java.error;
 
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
@@ -30,21 +28,28 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.bucket.BucketManager;
 
 /**
- * An exception used to denote that a particular set of secondary N1QL indexes are not in a "online" state.
- *
- * Mainly used internally for the purpose of {@link BucketManager#watchIndexes(List, boolean, long, TimeUnit)}
- * and related methods.
+ * An exception indicating that an index does not exist, for instance
+ * when trying to delete one using {@link BucketManager#dropIndex(String, boolean)}.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Private
-public class IndexesNotReadyException extends CouchbaseException {
-    public IndexesNotReadyException() {
+@InterfaceAudience.Public
+public class IndexDoesNotExistException extends CouchbaseException {
+
+    public IndexDoesNotExistException() {
     }
 
-    public IndexesNotReadyException(String message) {
+    public IndexDoesNotExistException(String message) {
         super(message);
+    }
+
+    public IndexDoesNotExistException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public IndexDoesNotExistException(Throwable cause) {
+        super(cause);
     }
 }

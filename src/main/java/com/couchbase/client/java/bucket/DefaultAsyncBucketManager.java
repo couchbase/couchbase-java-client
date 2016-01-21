@@ -21,6 +21,19 @@
  */
 package com.couchbase.client.java.bucket;
 
+import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.s;
+import static com.couchbase.client.java.query.dsl.Expression.x;
+import static com.couchbase.client.java.util.retry.RetryBuilder.anyOf;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.logging.CouchbaseLogger;
@@ -43,6 +56,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CannotRetryException;
 import com.couchbase.client.java.error.DesignDocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DesignDocumentException;
+import com.couchbase.client.java.error.IndexAlreadyExistsException;
+import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.error.IndexesNotReadyException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
@@ -64,18 +79,6 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func0;
 import rx.functions.Func1;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static com.couchbase.client.java.query.Select.select;
-import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.s;
-import static com.couchbase.client.java.query.dsl.Expression.x;
-import static com.couchbase.client.java.util.retry.RetryBuilder.anyOf;
 
 /**
  * Default implementation of a {@link AsyncBucketManager}.
@@ -351,29 +354,29 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     @Override
     public Observable<IndexInfo> listIndexes() {
         Statement listIndexes = select("idx.*").from(x("system:indexes").as("idx")).where(x("keyspace_id").eq(s(bucket)))
-            .orderBy(Sort.desc("is_primary"), Sort.asc("name"));
+                .orderBy(Sort.desc("is_primary"), Sort.asc("name"));
 
         final Func1<List<JsonObject>, Observable<AsyncN1qlQueryRow>> errorHandler = errorsToThrowable(
-            "Error while listing indexes: ");
+                "Error while listing indexes: ");
 
         return queryExecutor.execute(
-            N1qlQuery.simple(listIndexes, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)))
-            .flatMap(new Func1<AsyncN1qlQueryResult, Observable<AsyncN1qlQueryRow>>() {
-                @Override
-                public Observable<AsyncN1qlQueryRow> call(final AsyncN1qlQueryResult aqr) {
-                    return aqr.finalSuccess()
-                        .flatMap(new Func1<Boolean, Observable<AsyncN1qlQueryRow>>() {
-                            @Override
-                            public Observable<AsyncN1qlQueryRow> call(Boolean success) {
-                                if (success) {
-                                    return aqr.rows();
-                                } else {
-                                    return aqr.errors().toList().flatMap(errorHandler);
+                N1qlQuery.simple(listIndexes, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)))
+                            .flatMap(new Func1<AsyncN1qlQueryResult, Observable<AsyncN1qlQueryRow>>() {
+                                @Override
+                                public Observable<AsyncN1qlQueryRow> call(final AsyncN1qlQueryResult aqr) {
+                                    return aqr.finalSuccess()
+                                            .flatMap(new Func1<Boolean, Observable<AsyncN1qlQueryRow>>() {
+                                                @Override
+                                                public Observable<AsyncN1qlQueryRow> call(Boolean success) {
+                                                    if (success) {
+                                                        return aqr.rows();
+                                                    } else {
+                                                        return aqr.errors().toList().flatMap(errorHandler);
+                                                    }
+                                                }
+                                            });
                                 }
-                            }
-                        });
-                }
-            }).map(ROW_VALUE_TO_INDEXINFO);
+                            }).map(ROW_VALUE_TO_INDEXINFO);
     }
 
     @Override
@@ -387,36 +390,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
         }
 
         return queryExecutor.execute(N1qlQuery.simple(createIndex))
-            .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
-                @Override
-                public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
-                    return aqr.finalSuccess()
-                        .flatMap(new Func1<Boolean, Observable<Boolean>>() {
-                            @Override
-                            public Observable<Boolean> call(Boolean success) {
-                                if (success) {
-                                    return Observable.just(true);
-                                } else {
-                                    return aqr.errors().toList()
-                                        .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
-                                            @Override
-                                            public Observable<Boolean> call(List<JsonObject> errors) {
-                                                if (ignoreIfExist && errors.size() == 1
-                                                    && errors.get(0)
-                                                    .getString("msg")
-                                                    .contains("already exist")) {
-                                                    return Observable.just(false);
-                                                } else {
-                                                    return Observable.error(new CouchbaseException(
-                                                        "Error creating primary index: " + errors));
-                                                }
-                                            }
-                                        });
-                                }
-                            }
-                        });
-                }
-            });
+            .compose(checkIndexCreation(ignoreIfExist, "Error creating primary index"));
     }
 
     private static Expression expressionOrIdentifier(Object o) {
@@ -450,13 +424,13 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
         }
 
         return queryExecutor.execute(N1qlQuery.simple(createIndex))
-            .compose(checkIndexCreation(ignoreIfExist, "Error creating secondary index " + indexName));
+                .compose(checkIndexCreation(ignoreIfExist, "Error creating secondary index " + indexName));
     }
 
 
     @Override
     public Observable<Boolean> dropPrimaryIndex(final boolean ignoreIfNotExist) {
-        return drop(ignoreIfNotExist, Index.dropPrimaryIndex(bucket).using(IndexType.GSI), "Error dropping primary index: ");
+        return drop(ignoreIfNotExist, Index.dropPrimaryIndex(bucket).using(IndexType.GSI), "Error dropping primary index");
     }
 
     @Override
@@ -466,33 +440,36 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
 
     private Observable<Boolean> drop(final boolean ignoreIfNotExist, Statement dropIndex, final String errorPrefix) {
         return queryExecutor.execute(N1qlQuery.simple(dropIndex))
-            .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
-                @Override
-                public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
-                    return aqr.finalSuccess()
-                        .flatMap(new Func1<Boolean, Observable<Boolean>>() {
-                            @Override
-                            public Observable<Boolean> call(Boolean success) {
-                                if (success) {
-                                    return Observable.just(true);
-                                } else {
-                                    return aqr.errors().toList()
-                                        .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
-                                            @Override
-                                            public Observable<Boolean> call(List<JsonObject> errors) {
-                                                if (ignoreIfNotExist && errors.size() == 1
-                                                    && errors.get(0).getString("msg").contains("not found")) {
-                                                    return Observable.just(false);
-                                                } else {
-                                                    return Observable.error(new CouchbaseException(errorPrefix + errors));
-                                                }
-                                            }
-                                        });
-                                }
-                            }
-                        });
-                }
-            });
+                .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
+                    @Override
+                    public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
+                        return aqr.finalSuccess()
+                                .flatMap(new Func1<Boolean, Observable<Boolean>>() {
+                                    @Override
+                                    public Observable<Boolean> call(Boolean success) {
+                                        if (success) {
+                                            return Observable.just(true);
+                                        } else {
+                                            return aqr.errors().toList()
+                                                .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
+                                                    @Override
+                                                    public Observable<Boolean> call(List<JsonObject> errors) {
+                                                        if (errors.size() == 1 && errors.get(0).getString("msg").contains("not found")) {
+                                                            if (ignoreIfNotExist) {
+                                                                return Observable.just(false);
+                                                            } else {
+                                                                return Observable.error(new IndexDoesNotExistException(errorPrefix));
+                                                            }
+                                                        } else {
+                                                            return Observable.error(new CouchbaseException(errorPrefix + ": " + errors));
+                                                        }
+                                                    }
+                                                });
+                                        }
+                                    }
+                                });
+                    }
+                });
     }
 
 
@@ -500,109 +477,99 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     public Observable<List<String>> buildDeferredIndexes() {
 
         final Func1<List<JsonObject>, Observable<List<String>>> errorHandler = errorsToThrowable(
-            "Error while triggering index build: ");
+                "Error while triggering index build: ");
 
         return listIndexes()
-            .filter(new Func1<IndexInfo, Boolean>() {
-                @Override
-                public Boolean call(IndexInfo indexInfo) {
-                    return indexInfo.state().equals("pending");
-                }
-            })
-            .map(new Func1<IndexInfo, String>() {
-                @Override
-                public String call(IndexInfo indexInfo) {
-                    return indexInfo.name();
-                }
-            })
-            .toList()
-            .flatMap(new Func1<List<String>, Observable<List<String>>>() {
-                @Override
-                public Observable<List<String>> call(final List<String> pendingIndexes) {
-                    if (pendingIndexes.isEmpty()) {
-                        return Observable.just(pendingIndexes);
+                .filter(new Func1<IndexInfo, Boolean>() {
+                    @Override
+                    public Boolean call(IndexInfo indexInfo) {
+                        //since 4.5, pending is split into deferred then building... (see MB-14679)
+                        //here we want to list the indexes that are currently deferred, build them and return that list
+                        return indexInfo.state().equals("pending") || indexInfo.state().equals("deferred");
                     }
-                    Statement buildStatement = Index.buildIndex().on(bucket)
-                        .indexes(pendingIndexes)
-                        .using(IndexType.GSI);
-
-                    return queryExecutor.execute(N1qlQuery.simple(buildStatement))
-                        .flatMap(new Func1<AsyncN1qlQueryResult, Observable<List<String>>>() {
-                            @Override
-                            public Observable<List<String>> call(final AsyncN1qlQueryResult aqr) {
-                                return aqr.finalSuccess()
-                                    .flatMap(new Func1<Boolean, Observable<List<String>>>() {
-                                        @Override
-                                        public Observable<List<String>> call(
-                                            Boolean success) {
-                                            if (success) {
-                                                return Observable.just(pendingIndexes);
-                                            } else {
-                                                return aqr.errors().toList().flatMap(errorHandler);
-                                            }
-                                        }
-                                    });
-                            }
-                        });
-                }
-            });
-    }
-
-    @Override
-    public Observable<IndexInfo> watchIndex(final String indexName, long watchTimeout, TimeUnit watchTimeUnit) {
-        return listIndexes()
-            .flatMap(new Func1<IndexInfo, Observable<IndexInfo>>() {
-                @Override
-                public Observable<IndexInfo> call(IndexInfo i) {
-                    if (!indexName.equals(i.name())) {
-                        return Observable.empty();
-                    } else if (!"online".equals(i.state()))
-                        return Observable.error(new IndexesNotReadyException("Index not ready: " + i.name()));
-                    else {
-                        return Observable.just(i);
+                })
+                .map(new Func1<IndexInfo, String>() {
+                    @Override
+                    public String call(IndexInfo indexInfo) {
+                        return indexInfo.name();
                     }
-                }
-            })
-            .doOnEach(new Action1<Notification<? super IndexInfo>>() {
-                @Override
-                public void call(Notification<? super IndexInfo> notification) {
-                    if (INDEX_WATCH_LOG.isDebugEnabled()) {
-                        if (notification.isOnNext()) {
-                            IndexInfo info = (IndexInfo) notification.getValue();
-                            String indexShortInfo = indexName + "(" + info.state() + ")";
-                            INDEX_WATCH_LOG.debug("Index ready: " + indexShortInfo);
-                        } else if (notification.isOnError()) {
-                            Throwable e = notification.getThrowable();
-                            if (e instanceof IndexesNotReadyException) {
-                                INDEX_WATCH_LOG.debug("Will retry: " + e.getMessage());
-                            }
+                })
+                .toList()
+                .flatMap(new Func1<List<String>, Observable<List<String>>>() {
+                    @Override
+                    public Observable<List<String>> call(final List<String> pendingIndexes) {
+                        if (pendingIndexes.isEmpty()) {
+                            return Observable.just(pendingIndexes);
                         }
+                        Statement buildStatement = Index.buildIndex().on(bucket)
+                                .indexes(pendingIndexes)
+                                .using(IndexType.GSI);
+
+                        return queryExecutor.execute(N1qlQuery.simple(buildStatement))
+                                .flatMap(new Func1<AsyncN1qlQueryResult, Observable<List<String>>>() {
+                                    @Override
+                                    public Observable<List<String>> call(final AsyncN1qlQueryResult aqr) {
+                                        return aqr.finalSuccess()
+                                                .flatMap(new Func1<Boolean, Observable<List<String>>>() {
+                                                    @Override
+                                                    public Observable<List<String>> call(
+                                                            Boolean success) {
+                                                        if (success) {
+                                                            return Observable.just(pendingIndexes);
+                                                        } else {
+                                                            return aqr.errors().toList().flatMap(errorHandler);
+                                                        }
+                                                    }
+                                                });
+                                    }
+                                });
                     }
-                }
-            })
-            .retryWhen(anyOf(IndexesNotReadyException.class)
-                .delay(INDEX_WATCH_DELAY)
-                .max(INDEX_WATCH_MAX_ATTEMPTS)
-                .build())
-            .compose(safeAbort(watchTimeout, watchTimeUnit, null));
+                });
     }
 
     @Override
     public Observable<IndexInfo> watchIndexes(List<String> watchList, boolean watchPrimary, final long watchTimeout,
-                                              final TimeUnit watchTimeUnit) {
-        Set<String> watchSet = new HashSet<String>(watchList);
+            final TimeUnit watchTimeUnit) {
+        final Set<String> watchSet = new HashSet<String>(watchList);
         if (watchPrimary) {
             watchSet.add(Index.PRIMARY_NAME);
         }
 
-        return Observable.from(watchSet)
-            .flatMap(new Func1<String, Observable<IndexInfo>>() {
-                @Override
-                public Observable<IndexInfo> call(String s) {
-                    return watchIndex(s, watchTimeout, watchTimeUnit);
-                }
-            })
-            .compose(safeAbort(watchTimeout, watchTimeUnit, null));
+        return listIndexes()
+                .flatMap(new Func1<IndexInfo, Observable<IndexInfo>>() {
+                    @Override
+                    public Observable<IndexInfo> call(IndexInfo i) {
+                        if (!watchSet.contains(i.name())) {
+                            return Observable.empty();
+                        } else if (!"online".equals(i.state()))
+                            return Observable.error(new IndexesNotReadyException("Index not ready: " + i.name()));
+                        else {
+                            return Observable.just(i);
+                        }
+                    }
+                })
+                .doOnEach(new Action1<Notification<? super IndexInfo>>() {
+                    @Override
+                    public void call(Notification<? super IndexInfo> notification) {
+                        if (INDEX_WATCH_LOG.isDebugEnabled()) {
+                            if (notification.isOnNext()) {
+                                IndexInfo info = (IndexInfo) notification.getValue();
+                                String indexShortInfo = info.name() + "(" + info.state() + ")";
+                                INDEX_WATCH_LOG.debug("Index ready: " + indexShortInfo);
+                            } else if (notification.isOnError()) {
+                                Throwable e = notification.getThrowable();
+                                if (e instanceof IndexesNotReadyException) {
+                                    INDEX_WATCH_LOG.debug("Will retry: " + e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                })
+                .retryWhen(anyOf(IndexesNotReadyException.class)
+                        .delay(INDEX_WATCH_DELAY)
+                        .max(INDEX_WATCH_MAX_ATTEMPTS)
+                        .build())
+                .compose(safeAbort(watchTimeout, watchTimeUnit, null));
     }
 
     /**
@@ -616,30 +583,30 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
      * @param indexName null for a global timeout, or the name of the single index being watched.
      */
     private static Observable.Transformer<IndexInfo, IndexInfo> safeAbort(final long watchTimeout, final TimeUnit watchTimeUnit,
-                                                                          final String indexName) {
+            final String indexName) {
         return new Observable.Transformer<IndexInfo, IndexInfo>() {
             @Override
             public Observable<IndexInfo> call(Observable<IndexInfo> source) {
                 return source.timeout(watchTimeout, watchTimeUnit)
-                    .onErrorResumeNext(new Func1<Throwable, rx.Observable<IndexInfo>>() {
-                        @Override
-                        public rx.Observable<IndexInfo> call(Throwable t) {
-                            if (t instanceof TimeoutException) {
-                                if (indexName == null) {
-                                    INDEX_WATCH_LOG.debug("Watched indexes were not all online after the given {} {}", watchTimeout, watchTimeUnit);
-                                } else {
-                                    INDEX_WATCH_LOG.debug("Index {} was not online after the given {} {}", indexName, watchTimeout, watchTimeUnit);
-                                }
-                                return Observable.empty();
+                .onErrorResumeNext(new Func1<Throwable, rx.Observable<IndexInfo>>() {
+                    @Override
+                    public rx.Observable<IndexInfo> call(Throwable t) {
+                        if (t instanceof TimeoutException) {
+                            if (indexName == null) {
+                                INDEX_WATCH_LOG.debug("Watched indexes were not all online after the given {} {}", watchTimeout, watchTimeUnit);
+                            } else {
+                                INDEX_WATCH_LOG.debug("Index {} was not online after the given {} {}", indexName, watchTimeout, watchTimeUnit);
                             }
-                            //should not happen with the INDEX_WATCH_MAX_ATTEMPTS set close to Integer.MAX_VALUE, but in case it is later tuned down...
-                            if (t instanceof CannotRetryException && t.getCause() instanceof IndexesNotReadyException) {
-                                INDEX_WATCH_LOG.debug("{} after {} attempts", INDEX_WATCH_MAX_ATTEMPTS, t.getCause().getMessage());
-                                return Observable.empty();
-                            }
-                            return rx.Observable.error(t);
+                            return Observable.empty();
                         }
-                    });
+                        //should not happen with the INDEX_WATCH_MAX_ATTEMPTS set close to Integer.MAX_VALUE, but in case it is later tuned down...
+                        if (t instanceof CannotRetryException && t.getCause() instanceof IndexesNotReadyException) {
+                            INDEX_WATCH_LOG.debug("{} after {} attempts", INDEX_WATCH_MAX_ATTEMPTS, t.getCause().getMessage());
+                            return Observable.empty();
+                        }
+                        return rx.Observable.error(t);
+                    }
+                });
             }
         };
     }
@@ -652,40 +619,42 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
      * is true, emits FALSE. Otherwise the error is propagated as a CouchbaseException.
      */
     private static Observable.Transformer<AsyncN1qlQueryResult, Boolean> checkIndexCreation(final boolean ignoreIfExist,
-                                                                                            final String prefixMsg) {
+            final String prefixMsg) {
         return new Observable.Transformer<AsyncN1qlQueryResult, Boolean>() {
             @Override
             public Observable<Boolean> call(Observable<AsyncN1qlQueryResult> sourceObservable) {
                 return sourceObservable
-                    .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
-                        @Override
-                        public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
-                            return aqr.finalSuccess()
-                                .flatMap(new Func1<Boolean, Observable<Boolean>>() {
-                                    @Override
-                                    public Observable<Boolean> call(Boolean success) {
-                                        if (success) {
-                                            return Observable.just(true);
-                                        } else {
-                                            return aqr.errors()
-                                                .toList()
-                                                .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
-                                                    @Override
-                                                    public Observable<Boolean> call(
-                                                        List<JsonObject> errors) {
-                                                        if (ignoreIfExist && errors.size() == 1
-                                                            && errors.get(0).getString("msg").contains("already exist")) {
-                                                            return Observable.just(false);
-                                                        } else {
-                                                            return Observable.error(new CouchbaseException(prefixMsg + ": " + errors));
+                        .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
+                            @Override
+                            public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
+                                return aqr.finalSuccess()
+                                        .flatMap(new Func1<Boolean, Observable<Boolean>>() {
+                                            @Override
+                                            public Observable<Boolean> call(Boolean success) {
+                                                if (success) {
+                                                    return Observable.just(true);
+                                                } else {
+                                                    return aqr.errors()
+                                                    .toList()
+                                                    .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
+                                                        @Override
+                                                        public Observable<Boolean> call(List<JsonObject> errors) {
+                                                            if (errors.size() == 1 && errors.get(0).getString("msg").contains("already exist")) {
+                                                                if (ignoreIfExist) {
+                                                                    return Observable.just(false);
+                                                                } else {
+                                                                    return Observable.error(new IndexAlreadyExistsException(prefixMsg));
+                                                                }
+                                                            } else {
+                                                                return Observable.error(new CouchbaseException(prefixMsg + ": " + errors));
+                                                            }
                                                         }
-                                                    }
-                                                });
-                                        }
-                                    }
-                                });
-                        }
-                    });
+                                                    });
+                                                }
+                                            }
+                                        });
+                            }
+                        });
             }
         };
     }
