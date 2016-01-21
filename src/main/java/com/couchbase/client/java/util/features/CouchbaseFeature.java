@@ -34,8 +34,8 @@ public enum CouchbaseFeature {
     CCCP(2, 5, 0),
     SSL(3, 0, 0),
     DCP(3, 0, 0),
-    N1QL(3, 5, 0),
-    SPATIAL_VIEW(3, 5, 0),
+    N1QL(4, 0, 0),
+    SPATIAL_VIEW(4, 0, 0),
     SUBDOC(4, 5, 0);
 
     private final Version availableFrom;
