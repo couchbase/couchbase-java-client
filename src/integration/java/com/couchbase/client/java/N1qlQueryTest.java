@@ -21,12 +21,15 @@
  */
 package com.couchbase.client.java;
 
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.DefaultAsyncN1qlQueryRow;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.CouchbaseTestContext;
@@ -34,6 +37,8 @@ import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import static com.couchbase.client.java.query.Index.createPrimaryIndex;
@@ -43,6 +48,7 @@ import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -268,5 +274,36 @@ public class N1qlQueryTest {
         assertTrue(result.allRows().size() > 0);
         assertTrue(result.errors().isEmpty());
         assertTrue(result.finalSuccess());
+    }
+
+    @Test
+    public void shouldSelectByteArrayEagerlyAndJsonObjectLazily() throws NoSuchFieldException, IllegalAccessException {
+        N1qlQuery query = N1qlQuery.simple(select("*").from(i(ctx.bucketName())).limit(3), WITH_CONSISTENCY);
+
+        N1qlQueryResult result = ctx.bucket().query(query);
+        assertTrue(result.allRows().size() > 0);
+        assertTrue(result.errors().isEmpty());
+        assertTrue(result.finalSuccess());
+
+        for (N1qlQueryRow row : result) {
+            assertNotNull(row.byteValue());
+
+            //sync row is based on async
+            Field asyncRowField = row.getClass().getDeclaredField("asyncRow");
+            asyncRowField.setAccessible(true);
+            DefaultAsyncN1qlQueryRow asyncRow = (DefaultAsyncN1qlQueryRow) asyncRowField.get(row);
+            assertNotNull(asyncRow);
+
+            //async row lazily initializes the JsonObject value, so initially null
+            Field valueField = asyncRow.getClass().getDeclaredField("value");
+            valueField.setAccessible(true);
+            Object valueBeforeGetterCall = valueField.get(asyncRow);
+            assertNull(valueBeforeGetterCall);
+
+            //calling the getter lazily initializes
+            assertNotNull(row.value());
+            assertEquals(new String(row.byteValue(), CharsetUtil.UTF_8).replaceAll("\\s", "")
+                    , row.value().toString().replaceAll("\\s", ""));
+        }
     }
 }

@@ -254,19 +254,30 @@ public class TranscoderUtils {
     }
 
     /**
-     * Decode a {@link ByteBuf} representing a valid JSON entity to the requested target class,
-     * using the {@link ObjectMapper} provided and without releasing the buffer.
-     *
-     * Mapper uses the byte[], performing the most straightforward conversion from ByteBuf to byte[] available.
-     *
-     * @param input the ByteBuf to decode.
-     * @param clazz the class to decode to.
-     * @param mapper the mapper to use for decoding.
-     * @param <T> the decoded type.
-     * @return the decoded value.
-     * @throws IOException in case decoding failed.
+     * A class that holds information from a {@link ByteBuf} that allows to
+     * read its corresponding byte array. Offset and length are needed in case
+     * the ByteBuf is directly backed by a byte[] but the size of the byte isn't
+     * representative of the actual size of the current content.
      */
-    public static <T> T byteBufToClass(ByteBuf input, Class<? extends T> clazz, ObjectMapper mapper) throws IOException {
+    public static class ByteBufToArray {
+        public final byte[] byteArray;
+        public final int offset;
+        public final int length;
+
+        public ByteBufToArray(byte[] byteArray, int offset, int length) {
+            this.byteArray = byteArray;
+            this.offset = offset;
+            this.length = length;
+        }
+    }
+
+    /**
+     * Converts a {@link ByteBuf} to a byte[] in the most straightforward manner available.
+     * @param input the ByteBuf to convert.
+     * @return a {@link ByteBufToArray} containing the byte[] array, as well as the offset and length to use (in case
+     * the actual array is longer than the data the ByteBuf represents for instance).
+     */
+    public static ByteBufToArray byteBufToByteArray(ByteBuf input) {
         byte[] inputBytes;
         int offset = 0;
         int length = input.readableBytes();
@@ -277,7 +288,26 @@ public class TranscoderUtils {
             inputBytes = new byte[length];
             input.getBytes(input.readerIndex(), inputBytes);
         }
-        return mapper.readValue(inputBytes, offset, length, clazz);
+        return new ByteBufToArray(inputBytes, offset, length);
+    }
+
+    /**
+     * Decode a {@link ByteBuf} representing a valid JSON entity to the requested target class,
+     * using the {@link ObjectMapper} provided and without releasing the buffer.
+     *
+     * Mapper uses the byte[], performing the most straightforward conversion from ByteBuf to byte[] available. (see
+     * {@link #byteBufToByteArray(ByteBuf)}).
+     *
+     * @param input the ByteBuf to decode.
+     * @param clazz the class to decode to.
+     * @param mapper the mapper to use for decoding.
+     * @param <T> the decoded type.
+     * @return the decoded value.
+     * @throws IOException in case decoding failed.
+     */
+    public static <T> T byteBufToClass(ByteBuf input, Class<? extends T> clazz, ObjectMapper mapper) throws IOException {
+        ByteBufToArray toArray = byteBufToByteArray(input);
+        return mapper.readValue(toArray.byteArray, toArray.offset, toArray.length, clazz);
     }
 
     /**

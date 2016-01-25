@@ -42,7 +42,7 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
         this.status = finalStatus;
         this.allRows = new ArrayList<N1qlQueryRow>(rows.size());
         for (AsyncN1qlQueryRow row : rows) {
-            this.allRows.add(new DefaultN1qlQueryRow(row.value()));
+            this.allRows.add(new DefaultN1qlQueryRow(row));
         }
         this.signature = signature;
         this.errors = errors;
