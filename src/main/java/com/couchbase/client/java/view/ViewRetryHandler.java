@@ -179,6 +179,10 @@ public class ViewRetryHandler {
             LOGGER.debug("Design document not found, error is {}", content);
             return false;
         }
+        if (content.contains("error") && content.contains("\"badarg\"")) {
+            LOGGER.debug("Malformed view query");
+            return false;
+        }
         return true;
     }
 

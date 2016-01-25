@@ -34,7 +34,9 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.RawJsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -169,7 +171,7 @@ public class ViewQueryTest {
 
     @Test
     public void shouldManuallyDisabledReduce() {
-        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE).reduce(false));
+        ViewResult result = ctx.bucket().query(ViewQuery.from("users", "by_age").stale(Stale.FALSE).reduce(false), 3, TimeUnit.SECONDS);
         assertNull(result.debug());
         assertNull(result.error());
         assertTrue(result.success());
@@ -306,7 +308,12 @@ public class ViewQueryTest {
             .flatMap(new Func1<AsyncViewResult, Observable<AsyncViewRow>>() {
                 @Override
                 public Observable<AsyncViewRow> call(AsyncViewResult result) {
-                    return result.rows();
+                    return result.error().flatMap(new Func1<JsonObject, Observable<? extends AsyncViewRow>>() {
+                        @Override
+                        public Observable<? extends AsyncViewRow> call(JsonObject e) {
+                            return Observable.error(new CouchbaseException(e.toString()));
+                        }
+                    }).switchIfEmpty(result.rows());
                 }
             })
             .flatMap(new Func1<AsyncViewRow, Observable<JsonDocument>>() {
@@ -316,6 +323,7 @@ public class ViewQueryTest {
                 }
             })
             .toList()
+            .timeout(10, TimeUnit.SECONDS)
             .toBlocking()
             .single();
 
