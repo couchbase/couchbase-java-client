@@ -42,6 +42,11 @@ public class LookupSpec extends LookupCommand {
         super(type, path);
     }
 
+    @Override
+    public String toString() {
+        return "{" + lookup() + ":" + path() + "}";
+    }
+
     /**
      * Create a GET lookup specification.
      */

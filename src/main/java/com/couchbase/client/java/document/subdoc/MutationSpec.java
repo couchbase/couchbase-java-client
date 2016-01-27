@@ -80,6 +80,16 @@ public class MutationSpec<T> {
         return createParents;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{").append(type());
+        if (createParents) {
+            sb.append(", createParents");
+        }
+        sb.append(':').append(path()).append('}');
+        return sb.toString();
+    }
+
     /**
      * Creates a {@link MutationSpec} to replace an existing value by the fragment.
      *
