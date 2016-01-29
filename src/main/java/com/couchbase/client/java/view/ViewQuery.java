@@ -71,6 +71,7 @@ public class ViewQuery implements Serializable {
 
     private boolean development;
     private boolean includeDocs;
+    private boolean retainOrder;
     private Class<? extends Document<?>> includeDocsTarget;
     private String keysJson;
 
@@ -79,6 +80,7 @@ public class ViewQuery implements Serializable {
         this.view = view;
         params = new String[NUM_PARAMS * 2];
         includeDocs = false;
+        retainOrder = false;
         includeDocsTarget = null;
     }
 
@@ -103,9 +105,60 @@ public class ViewQuery implements Serializable {
     }
 
     /**
+     * Proactively load the full document for the row returned, while strictly retaining view row order.
+     *
+     * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     * @return the {@link ViewQuery} DSL.
+     */
+    public ViewQuery includeDocsOrdered() {
+        return includeDocsOrdered(true, JsonDocument.class);
+    }
+
+    /**
+     * Proactively load the full document for the row returned, while strictly retaining view row order.
+     *
+     * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     * @param target the custom document type target.
+     * @return the {@link ViewQuery} DSL.
+     */
+    public ViewQuery includeDocsOrdered(Class<? extends Document<?>> target) {
+        return includeDocsOrdered(true, target);
+    }
+
+    /**
+     * Proactively load the full document for the row returned, while strictly retaining view row order.
+     *
+     * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     * @param includeDocs if it should be enabled or not.
+     * @return the {@link ViewQuery} DSL.
+     */
+    public ViewQuery includeDocsOrdered(boolean includeDocs) {
+        return includeDocsOrdered(includeDocs, JsonDocument.class);
+    }
+
+    /**
+     * Proactively load the full document for the row returned, while strictly retaining view row order.
+     *
+     * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     * @param includeDocs if it should be enabled or not.
+     * @param target the custom document type target.
+     * @return the {@link ViewQuery} DSL.
+     */
+    public ViewQuery includeDocsOrdered(boolean includeDocs, Class<? extends Document<?>> target) {
+        this.includeDocs = includeDocs;
+        this.retainOrder = includeDocs; //deactivate if includeDocs is deactivated
+        this.includeDocsTarget = target;
+        return this;
+    }
+
+    /**
      * Proactively load the full document for the row returned.
      *
      * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     *
+     * The order could be changed if one of the document takes longer to load than the others
+     * (see {@link #includeDocsOrdered()} )} if you want to enforce the row order).
+     *
      * @return the {@link ViewQuery} DSL.
      */
     public ViewQuery includeDocs() {
@@ -116,6 +169,10 @@ public class ViewQuery implements Serializable {
      * Proactively load the full document for the row returned.
      *
      * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     *
+     * The order could be changed if one of the document takes longer to load than the others
+     * (see {@link #includeDocsOrdered(Class)} )} if you want to enforce the row order).
+     *
      * @param target the custom document type target.
      * @return the {@link ViewQuery} DSL.
      */
@@ -127,6 +184,10 @@ public class ViewQuery implements Serializable {
      * Proactively load the full document for the row returned.
      *
      * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     *
+     * The order could be changed if one of the document takes longer to load than the others
+     * (see {@link #includeDocsOrdered(boolean)} if you want to enforce the row order).
+     *
      * @param includeDocs if it should be enabled or not.
      * @return the {@link ViewQuery} DSL.
      */
@@ -138,12 +199,17 @@ public class ViewQuery implements Serializable {
      * Proactively load the full document for the row returned.
      *
      * This only works if reduce is false, since with reduce the original document ID is not included anymore.
+     *
+     * The order could be changed if one of the document takes longer to load than the others
+     * (see {@link #includeDocsOrdered(boolean, Class)} if you want to enforce the row order).
+     *
      * @param includeDocs if it should be enabled or not.
      * @param target the custom document type target.
      * @return the {@link ViewQuery} DSL.
      */
     public ViewQuery includeDocs(boolean includeDocs, Class<? extends Document<?>> target) {
         this.includeDocs = includeDocs;
+        this.retainOrder = false;
         this.includeDocsTarget = target;
         return this;
     }
@@ -511,6 +577,13 @@ public class ViewQuery implements Serializable {
      */
     public String getKeys() {
         return this.keysJson;
+    }
+
+    /**
+     * @return true if row order, as returned by the view, should be kept while also {@link #includeDocs() including docs}.
+     */
+    boolean isOrderRetained() {
+        return this.retainOrder;
     }
 
     public boolean isDevelopment() {
