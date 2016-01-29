@@ -343,6 +343,10 @@ public class CouchbaseConnection extends MemcachedConnection  implements
 
   @Override
   protected void handleRetryInformation(byte[] retryMessage) {
+    if (retryMessage == null) {
+      return;
+    }
+
     String message = new String(retryMessage).trim();
     if (message.startsWith("{")) {
       cf.getConfigurationProvider().setConfig(
