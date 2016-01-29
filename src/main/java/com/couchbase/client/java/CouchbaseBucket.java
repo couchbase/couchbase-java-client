@@ -33,8 +33,6 @@ import com.couchbase.client.java.document.subdoc.DocumentFragment;
 import com.couchbase.client.java.document.subdoc.ExtendDirection;
 import com.couchbase.client.java.document.subdoc.LookupSpec;
 import com.couchbase.client.java.document.subdoc.MultiLookupResult;
-import com.couchbase.client.java.document.subdoc.MultiMutationResult;
-import com.couchbase.client.java.document.subdoc.MutationSpec;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
@@ -1067,29 +1065,30 @@ public class CouchbaseBucket implements Bucket {
         return Blocking.blockForSingle(asyncBucket.lookupIn(id, lookupSpecs), timeout, timeUnit);
     }
 
-    @Override
-    public MultiMutationResult mutateIn(JsonDocument doc, PersistTo persistTo, ReplicateTo replicateTo,
-                                        MutationSpec... mutationSpecs) {
-        return mutateIn(doc, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT, mutationSpecs);
-    }
-
-    @Override
-    public MultiMutationResult mutateIn(JsonDocument doc, PersistTo persistTo, ReplicateTo replicateTo, long timeout,
-                                        TimeUnit timeUnit, MutationSpec... mutationSpecs) {
-        return Blocking.blockForSingle(asyncBucket.mutateIn(doc, persistTo, replicateTo, mutationSpecs), timeout, timeUnit);
-    }
-
-    @Override
-    public MultiMutationResult mutateIn(String docId, PersistTo persistTo, ReplicateTo replicateTo,
-                                        MutationSpec... mutationSpecs) {
-        return mutateIn(docId, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT, mutationSpecs);
-    }
-
-    @Override
-    public MultiMutationResult mutateIn(String docId, PersistTo persistTo, ReplicateTo replicateTo, long timeout,
-                                        TimeUnit timeUnit, MutationSpec... mutationSpecs) {
-        return Blocking.blockForSingle(asyncBucket.mutateIn(docId, persistTo, replicateTo, mutationSpecs), timeout, timeUnit);
-    }
+    //TODO reintroduce mutateIn once the protocol has been stabilized
+//    @Override
+//    public MultiMutationResult mutateIn(JsonDocument doc, PersistTo persistTo, ReplicateTo replicateTo,
+//                                        MutationSpec... mutationSpecs) {
+//        return mutateIn(doc, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT, mutationSpecs);
+//    }
+//
+//    @Override
+//    public MultiMutationResult mutateIn(JsonDocument doc, PersistTo persistTo, ReplicateTo replicateTo, long timeout,
+//                                        TimeUnit timeUnit, MutationSpec... mutationSpecs) {
+//        return Blocking.blockForSingle(asyncBucket.mutateIn(doc, persistTo, replicateTo, mutationSpecs), timeout, timeUnit);
+//    }
+//
+//    @Override
+//    public MultiMutationResult mutateIn(String docId, PersistTo persistTo, ReplicateTo replicateTo,
+//                                        MutationSpec... mutationSpecs) {
+//        return mutateIn(docId, persistTo, replicateTo, kvTimeout, TIMEOUT_UNIT, mutationSpecs);
+//    }
+//
+//    @Override
+//    public MultiMutationResult mutateIn(String docId, PersistTo persistTo, ReplicateTo replicateTo, long timeout,
+//                                        TimeUnit timeUnit, MutationSpec... mutationSpecs) {
+//        return Blocking.blockForSingle(asyncBucket.mutateIn(docId, persistTo, replicateTo, mutationSpecs), timeout, timeUnit);
+//    }
 
     /*-------------------------*
      * END OF SUB-DOCUMENT API *
