@@ -69,11 +69,15 @@ public class SearchQueryRow {
         StringBuilder sb = new StringBuilder();
         sb.append("SearchQueryHit{id='" + id + "', score=" + score + ", fragments={");
         if (fragments != null) {
-            List<String> entries = new ArrayList<String>(fragments.size());
+            boolean addDelim = false;
             for (Map.Entry<String, String[]> fragment : fragments.entrySet()) {
-                entries.add("\"" + fragment.getKey() + "\":" + JsonArray.from(fragment.getValue()).toString());
+                if (addDelim) {
+                    sb.append(", ");
+                } else {
+                    addDelim = true;
+                }
+                sb.append("\"" + fragment.getKey() + "\":" + JsonArray.from(fragment.getValue()).toString());
             }
-            sb.append(String.join(", ", entries));
         }
         return sb.append("}}").toString();
     }
