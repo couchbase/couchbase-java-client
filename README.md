@@ -56,7 +56,7 @@ If you want to perform a N1QL query against [Couchbase Server 4.0](http://www.co
 ```java
 N1qlQueryResult query = bucket.query(N1qlQuery.simple("SELECT DISTINCT(country) FROM `travel-sample` WHERE type = 'airline' LIMIT 10"));
 
-for (N1qlQueryRow row : result) {
+for (N1qlQueryRow row : query) {
     System.out.println(row.value());
 }
 ```
