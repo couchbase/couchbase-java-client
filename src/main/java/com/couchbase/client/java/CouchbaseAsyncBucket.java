@@ -1920,9 +1920,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             @Override
             public Observable<MultiLookupResult> call(final MultiLookupResponse multiLookupResponse) {
                 return Observable.from(multiLookupResponse.responses())
-                        .map(new Func1<com.couchbase.client.core.message.kv.subdoc.multi.LookupResult, LookupResult>() {
+                        .map(new Func1<com.couchbase.client.core.message.kv.subdoc.multi.MultiResult<Lookup>, LookupResult>() {
                             @Override
-                            public LookupResult call(com.couchbase.client.core.message.kv.subdoc.multi.LookupResult lookupResult) {
+                            public LookupResult call(com.couchbase.client.core.message.kv.subdoc.multi.MultiResult<Lookup> lookupResult) {
                                 String path = lookupResult.path();
                                 boolean isExist = lookupResult.operation() == Lookup.EXIST;
                                 boolean success = lookupResult.status().isSuccess();
