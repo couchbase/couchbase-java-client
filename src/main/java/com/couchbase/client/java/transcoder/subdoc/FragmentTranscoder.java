@@ -28,7 +28,7 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.document.subdoc.DocumentFragment;
+import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.error.TranscodingException;
 
 /**

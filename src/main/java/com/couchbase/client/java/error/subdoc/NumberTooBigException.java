@@ -39,6 +39,6 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 public class NumberTooBigException extends SubDocumentException {
 
     public NumberTooBigException() {
-        super();
+        super("Current stored numeric value is too big");
     }
 }

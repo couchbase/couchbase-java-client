@@ -24,14 +24,11 @@ package com.couchbase.client.java.error.subdoc;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.PersistTo;
-import com.couchbase.client.java.ReplicateTo;
-import com.couchbase.client.java.document.subdoc.DocumentFragment;
+import com.couchbase.client.java.subdoc.MutateInBuilder;
 
 /**
  * Subdocument exception thrown when a path already exists and it shouldn't
- * (for example, when using {@link Bucket#insertIn(DocumentFragment, boolean, PersistTo, ReplicateTo) insertIn}).
+ * (for example, when using {@link MutateInBuilder#insert(String, Object, boolean)} subdoc insert}).
  *
  * @author Simon Baslé
  * @since 2.2

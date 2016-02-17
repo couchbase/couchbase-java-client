@@ -33,9 +33,9 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public class ZeroDeltaException extends SubDocumentException {
+public class ZeroDeltaException extends BadDeltaException {
 
     public ZeroDeltaException() {
-        super();
+        super("Delta must not be zero");
     }
 }

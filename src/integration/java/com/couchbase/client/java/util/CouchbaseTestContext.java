@@ -257,6 +257,14 @@ public class CouchbaseTestContext {
         }
 
         /**
+         * Changes the configured number of replicas if the bucket needs to be created (it doesn't exist or adhoc was used).
+         */
+        public Builder bucketReplicas(int replicas) {
+            this.bucketSettingsBuilder.replicas(replicas);
+            return this;
+        }
+
+        /**
          * Set to true to activate a flush upon building the context, unless the bucket was not previously existing
          * or flush is disabled on the bucket.
          */

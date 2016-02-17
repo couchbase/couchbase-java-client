@@ -20,42 +20,32 @@
  * IN THE SOFTWARE.
  */
 
-package com.couchbase.client.java.document.subdoc;
+package com.couchbase.client.java.error.subdoc;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.message.kv.MutationToken;
 
 /**
- * Represents a successful multi-mutation. This object allows to retrieve the CAS
- * and, if available, the {@link MutationToken} of the mutated document, post-mutation.
+ * Subdocument exception thrown when the delta in an arithmetic operation (eg counter) is invalid:
+ *
+ *  * the delta is zero (this exception is specialized in a {@link ZeroDeltaException} in that case).
+ *  * applying the delta would result in an out-of-range number (over {@link Long#MAX_VALUE} or under {@link Long#MIN_VALUE}).
+ *
+ * Note that the server also returns the corresponding error code when the delta value itself is too big,
+ * or not a number, but since the SDK enforces deltas to be of type long, these cases shouldn't come up.
  *
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public class MultiMutationResult {
+public class BadDeltaException extends SubDocumentException {
 
-    private final String docId;
-    private final long cas;
-    private final MutationToken mutationToken;
-
-    public MultiMutationResult(String docId, long cas, MutationToken mutationToken) {
-        this.docId = docId;
-        this.cas = cas;
-        this.mutationToken = mutationToken;
+    public BadDeltaException(String message) {
+        super(message);
     }
 
-    public String id() {
-        return docId;
-    }
-
-    public long cas() {
-        return cas;
-    }
-
-    public MutationToken mutationToken() {
-        return mutationToken;
+    public BadDeltaException() {
+        super("Cannot apply the delta without resulting in out of range number");
     }
 }

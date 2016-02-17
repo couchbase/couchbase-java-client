@@ -37,9 +37,6 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 @InterfaceAudience.Public
 public abstract class SubDocumentException extends CouchbaseException {
 
-    protected SubDocumentException() {
-    }
-
     protected SubDocumentException(String message) {
         super(message);
     }

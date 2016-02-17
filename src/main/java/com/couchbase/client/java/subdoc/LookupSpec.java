@@ -20,26 +20,30 @@
  * IN THE SOFTWARE.
  */
 
-package com.couchbase.client.java.error.subdoc;
+package com.couchbase.client.java.subdoc;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.message.kv.subdoc.multi.Lookup;
+import com.couchbase.client.core.message.kv.subdoc.multi.LookupCommand;
 
 /**
- * Subdocument exception thrown when the delta in an arithmetic operation (eg counter)
- * would result in an out-of-range number (over {@link Long#MAX_VALUE} or under {@link Long#MIN_VALUE}).
+ * Internally represents a single lookup operation in a batch of subdocument operations.
  *
- * Note that the server also returns the corresponding error code when the delta value itself is too big,
- * but since the SDK enforces deltas to be of type long, this case shouldn't come up.
- *
+ * @author Michael Nitschinger
  * @author Simon Baslé
  * @since 2.2
  */
 @InterfaceStability.Experimental
-@InterfaceAudience.Public
-public class DeltaTooBigException extends SubDocumentException {
+@InterfaceAudience.Private
+public class LookupSpec extends LookupCommand {
 
-    public DeltaTooBigException() {
-        super();
+    public LookupSpec(Lookup type, String path) {
+        super(type, path);
+    }
+
+    @Override
+    public String toString() {
+        return "{" + lookup() + ":" + path() + "}";
     }
 }
