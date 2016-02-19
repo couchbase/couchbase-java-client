@@ -22,7 +22,6 @@
 package com.couchbase.client.java.query;
 
 import com.couchbase.client.core.message.kv.MutationToken;
-import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.SerializationHelper;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -35,8 +34,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests on {@link N1qlParams}.
@@ -243,13 +240,10 @@ public class N1qlParamsTest {
 
     @Test
     public void shouldInjectMutationTokenOnAtPlusWithDocument() throws Exception {
-        Bucket mockBucket = mock(Bucket.class);
-        when(mockBucket.name()).thenReturn("travel-sample");
-
         JsonDocument doc = JsonDocument.create("doc", 0, JsonObject.empty(), 0,
             new MutationToken(1, 2345, 567, "travel-sample"));
         N1qlParams source = N1qlParams.build()
-            .consistentWith(mockBucket, doc);
+            .consistentWith(doc);
 
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
@@ -264,11 +258,6 @@ public class N1qlParamsTest {
 
     @Test
     public void shouldInjectMutationTokensOnAtPlusWithDocument() throws Exception {
-        Bucket mockBucket1 = mock(Bucket.class);
-        when(mockBucket1.name()).thenReturn("bucket1");
-        Bucket mockBucket2 = mock(Bucket.class);
-        when(mockBucket2.name()).thenReturn("bucket2");
-
         JsonDocument doc1 = JsonDocument.create("doc1", 0, JsonObject.empty(), 0,
             new MutationToken(1, 2345, 567, "bucket1"));
 
@@ -278,8 +267,7 @@ public class N1qlParamsTest {
             new MutationToken(8, 1, 4, "bucket2"));
 
         N1qlParams source = N1qlParams.build()
-            .consistentWith(mockBucket1, doc1, doc2)
-            .consistentWith(mockBucket2, doc3);
+            .consistentWith(doc1, doc2, doc3);
 
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
@@ -299,17 +287,13 @@ public class N1qlParamsTest {
 
     @Test
     public void shouldOnlyUseHighestSeqnoTokenWithDocument() throws Exception {
-        Bucket mockBucket = mock(Bucket.class);
-        when(mockBucket.name()).thenReturn("travel-sample");
-
         JsonDocument doc1 = JsonDocument.create("doc", 0, JsonObject.empty(), 0,
             new MutationToken(1, 2345, 567, "travel-sample"));
         JsonDocument doc2 = JsonDocument.create("doc", 0, JsonObject.empty(), 0,
             new MutationToken(1, 2345, 600, "travel-sample"));
 
         N1qlParams source = N1qlParams.build()
-            .consistentWith(mockBucket, doc1)
-            .consistentWith(mockBucket, doc2);
+            .consistentWith(doc1, doc2);
 
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
@@ -324,27 +308,10 @@ public class N1qlParamsTest {
 
     @Test(expected =  IllegalArgumentException.class)
     public void shouldFailIfConsistentWithAndConsistency() throws Exception {
-        Bucket mockBucket = mock(Bucket.class);
-        when(mockBucket.name()).thenReturn("bucket");
-
         N1qlParams source = N1qlParams.build()
             .consistency(ScanConsistency.REQUEST_PLUS)
-            .consistentWith(mockBucket, JsonDocument.create("doc2", 0, JsonObject.empty(), 0,
+            .consistentWith(JsonDocument.create("doc2", 0, JsonObject.empty(), 0,
                 new MutationToken(1, 2345, 567, "bucket")));
-
-        JsonObject actual = JsonObject.empty();
-        source.injectParams(actual);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldFailIfTokenDoesNotMatchBucket() throws Exception {
-        Bucket mockBucket = mock(Bucket.class);
-        when(mockBucket.name()).thenReturn("travel-sample");
-
-        JsonDocument doc = JsonDocument.create("doc", 0, JsonObject.empty(), 0,
-            new MutationToken(1, 2345, 567, "bucket"));
-        N1qlParams source = N1qlParams.build()
-            .consistentWith(mockBucket, doc);
 
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
