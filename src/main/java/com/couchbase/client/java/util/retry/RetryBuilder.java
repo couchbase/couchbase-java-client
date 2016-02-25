@@ -23,12 +23,14 @@ package com.couchbase.client.java.util.retry;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.java.error.CannotRetryException;
 import rx.Scheduler;
+import rx.functions.Action4;
 import rx.functions.Func1;
 
 /**
@@ -54,10 +56,13 @@ public class RetryBuilder {
     private Delay delay;
 
     private List<Class<? extends Throwable>> errorsStoppingRetry;
+    private Action4<Integer, Throwable, Long, TimeUnit> doOnRetryAction;
+    private Func1<Throwable, Boolean> retryErrorPredicate;
 
     private boolean inverse;
 
     private Scheduler scheduler;
+
 
     private RetryBuilder() {
         this.maxAttempts = 1; //one attempt
@@ -65,6 +70,8 @@ public class RetryBuilder {
         this.errorsStoppingRetry = null; //retry on any error
         this.inverse = false; //list above is indeed list of errors that can stop retry (none)
         this.scheduler = null; //operate on default Scheduler for timer delay
+        this.doOnRetryAction = null; //no retry side effect
+        this.retryErrorPredicate = null; //retry purely on the instanceOf
     }
 
     /** Only errors that are instanceOf the specified types will trigger a retry */
@@ -93,6 +100,15 @@ public class RetryBuilder {
     public static RetryBuilder any() {
         RetryBuilder retryBuilder = new RetryBuilder();
         retryBuilder.maxAttempts = 1;
+        return retryBuilder;
+    }
+
+    /** Any error that pass the predicate will trigger a retry */
+    public static RetryBuilder anyMatches(Func1<Throwable, Boolean> retryErrorPredicate) {
+        RetryBuilder retryBuilder = new RetryBuilder();
+        retryBuilder.maxAttempts = 1;
+
+        retryBuilder.retryErrorPredicate = retryErrorPredicate;
         return retryBuilder;
     }
 
@@ -142,23 +158,61 @@ public class RetryBuilder {
         return this;
     }
 
+    /**
+     * Execute some code each time a retry is scheduled (at the moment the retriable exception
+     * is caught, but before the retry delay is applied). Only quick executing code should be
+     * performed, do not block in this action.
+     *
+     * The action receives the retry attempt number (1-n), the exception that caused the retry,
+     * the delay duration and timeunit for the scheduled retry.
+     *
+     * @param doOnRetryAction the side-effect action to perform whenever a retry is scheduled.
+     * @see OnRetryAction if you want a shorter signature.
+     */
+    public RetryBuilder doOnRetry(Action4<Integer, Throwable, Long, TimeUnit> doOnRetryAction) {
+        this.doOnRetryAction = doOnRetryAction;
+        return this;
+    }
+
     /** Construct the resulting {@link RetryWhenFunction} */
     public RetryWhenFunction build() {
         RetryWithDelayHandler handler;
-        ShouldStopOnError filter;
-        if (errorsStoppingRetry == null || errorsStoppingRetry.isEmpty()) {
+        Func1<Throwable, Boolean> filter;
+        if ((errorsStoppingRetry == null || errorsStoppingRetry.isEmpty()) && retryErrorPredicate == null) {
             //always retry on any error
             filter = null;
+        } else if (retryErrorPredicate != null) {
+            filter = new InversePredicate(retryErrorPredicate);
         } else {
             filter = new ShouldStopOnError(errorsStoppingRetry, inverse);
         }
 
         if (scheduler == null) {
-            handler = new RetryWithDelayHandler(maxAttempts, delay, filter);
+            handler = new RetryWithDelayHandler(maxAttempts, delay, filter, doOnRetryAction);
         } else {
-            handler = new RetryWithDelayHandler(maxAttempts, delay, filter, scheduler);
+            handler = new RetryWithDelayHandler(maxAttempts, delay, filter, doOnRetryAction, scheduler);
         }
         return new RetryWhenFunction(handler);
+    }
+
+    protected static class InversePredicate implements Func1<Throwable, Boolean> {
+
+        private final Func1<Throwable, Boolean> predicate;
+
+        public InversePredicate(final Func1<Throwable, Boolean> predicate) {
+            this.predicate = predicate;
+        }
+
+        @Override
+        public Boolean call(Throwable throwable) {
+            Boolean toInvert = predicate.call(throwable);
+            if (toInvert == null) {
+                return null;
+            } else if (Boolean.TRUE.equals(toInvert)) {
+                return Boolean.FALSE;
+            }
+            return Boolean.TRUE;
+        }
     }
 
     protected static class ShouldStopOnError implements Func1<Throwable, Boolean> {
@@ -182,5 +236,13 @@ public class RetryBuilder {
             }
             return inverse;
         }
+    }
+
+    /**
+     * An interface alias for <code>Action4&lt;Integer, Throwable, Long, TimeUnit&gt;</code>, suitable
+     * for {@link RetryBuilder#doOnRetry(Action4)}.
+     */
+    public interface OnRetryAction extends Action4<Integer, Throwable, Long, TimeUnit> {
+
     }
 }
