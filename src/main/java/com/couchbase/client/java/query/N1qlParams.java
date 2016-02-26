@@ -26,7 +26,7 @@ import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.document.subdoc.DocumentFragment;
+import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import java.io.Serializable;
 import java.util.ArrayList;
