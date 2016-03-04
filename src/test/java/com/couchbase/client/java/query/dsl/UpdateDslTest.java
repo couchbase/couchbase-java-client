@@ -1,17 +1,23 @@
 package com.couchbase.client.java.query.dsl;
 
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.Update;
+import com.couchbase.client.java.query.dsl.clause.UpdateForClause;
 import com.couchbase.client.java.query.dsl.path.DefaultMutateLimitPath;
 import com.couchbase.client.java.query.dsl.path.DefaultMutateWherePath;
 import com.couchbase.client.java.query.dsl.path.DefaultReturningPath;
 import com.couchbase.client.java.query.dsl.path.DefaultUpdateSetOrUnsetPath;
 import com.couchbase.client.java.query.dsl.path.DefaultUpdateUsePath;
 import org.junit.Test;
+import org.omg.PortableInterceptor.ACTIVE;
 
+import static com.couchbase.client.java.query.dsl.Expression.i;
 import static com.couchbase.client.java.query.dsl.Expression.s;
 import static com.couchbase.client.java.query.dsl.Expression.x;
+import static com.couchbase.client.java.query.dsl.clause.UpdateForClause.forIn;
+import static com.couchbase.client.java.query.dsl.clause.UpdateForClause.forWithin;
 import static com.couchbase.client.java.query.dsl.functions.StringFunctions.upper;
 import static org.junit.Assert.assertEquals;
 
@@ -173,6 +179,63 @@ public class UpdateDslTest {
       "UPDATE tutorial t USE KEYS \"dave\" UNSET c.gender FOR c IN children END RETURNING t",
       statement.toString()
     );
+  }
+
+  @Test
+  public void shouldConvertUpdateWithUpdateForClauseSingleIn() {
+    String expected = "UPDATE `bucket1` USE KEYS \"abc123\" SET version.description = \"blabla\" FOR version IN versions" +
+            " WHEN version.status = \"ACTIVE\" END RETURNING versions";
+
+    Statement statement = Update
+            .update(i("bucket1"))
+            .useKeysValues("abc123")
+            .set(x("version.description"), s("blabla"), forIn("version", "versions").when(x("version.status").eq(s("ACTIVE"))))
+            .returning("versions");
+
+    assertEquals(expected, statement.toString());
+  }
+
+  @Test
+  public void shouldConvertUpdateWithUpdateForClauseSingleWithin() {
+    String expected = "UPDATE `bucket1` USE KEYS \"abc123\" SET version.description = \"blabla\" FOR version WITHIN versions" +
+            " WHEN version.status = \"ACTIVE\" END RETURNING versions";
+
+    Statement statement = Update
+            .update(i("bucket1"))
+            .useKeysValues("abc123")
+            .set(x("version.description"), s("blabla"), forWithin("version", "versions").when(x("version.status").eq(s("ACTIVE"))))
+            .returning("versions");
+
+    assertEquals(expected, statement.toString());
+  }
+
+  @Test
+  public void shouldConvertUpdateWithUpdateForClauseBothInAndWithin() {
+    String expected = "UPDATE `bucket1` USE KEYS \"abc123\" SET version.description = \"blabla\" FOR version IN versions" +
+            ", version2 WITHIN altVersions WHEN version.status = \"ACTIVE\" END RETURNING versions";
+
+    Statement statement = Update
+            .update(i("bucket1"))
+            .useKeysValues("abc123")
+            .set(x("version.description"), s("blabla"), forIn("version", "versions")
+                    .within("version2", "altVersions").when(x("version.status").eq(s("ACTIVE"))))
+            .returning("versions");
+
+    assertEquals(expected, statement.toString());
+  }
+
+  @Test
+  public void shouldConvertUpdateWithUpdateForClauseNoCondition() {
+    String expected = "UPDATE `bucket1` USE KEYS \"abc123\" SET version.description = \"blabla\" FOR version IN versions" +
+            ", version2 WITHIN altVersions END RETURNING versions";
+
+    Statement statement = Update
+            .update(i("bucket1"))
+            .useKeysValues("abc123")
+            .set(x("version.description"), s("blabla"), forIn("version", "versions").within("version2", "altVersions").end())
+            .returning("versions");
+
+    assertEquals(expected, statement.toString());
   }
 
 }
