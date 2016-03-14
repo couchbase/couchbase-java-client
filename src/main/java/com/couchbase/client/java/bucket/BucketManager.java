@@ -571,6 +571,38 @@ public interface BucketManager {
     boolean createPrimaryIndex(boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit);
 
     /**
+     * Create a custom-named primary index for the current bucket, within the default management timeout.
+     *
+     * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
+     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @param customName the custom name for the primary index.
+     * @return true if the index was effectively created, (even in deferred mode) or false if the index existed and
+     * ignoreIfExist is true.
+     * @throws IndexAlreadyExistsException if the index already exists and ignoreIfExist is set to false.
+     * @throws CouchbaseException if another error occurs during index creation.
+     */
+    @InterfaceStability.Experimental
+    boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
+
+    /**
+     * Create a custom-named primary index for the current bucket, within a custom timeout.
+     *
+     * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
+     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @param customName the custom name for the primary index.
+     * @return true if the index was effectively created, (even in deferred mode) or false if the index existed and
+     * ignoreIfExist is true.
+     * @throws IndexAlreadyExistsException if the index already exists and ignoreIfExist is set to false.
+     * @throws CouchbaseException if another error occurs during index creation.
+     */
+    @InterfaceStability.Experimental
+    boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit);
+
+    /**
      * Create a secondary index for the current bucket, with the default management timeout.
      *
      * This method allows to define fields of the index as a vararg, for convenience (actually accepting
@@ -653,6 +685,32 @@ public interface BucketManager {
      */
     @InterfaceStability.Experimental
     boolean dropPrimaryIndex(boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Drop the custom-named primary index associated with the current bucket, within the default management timeout.
+     *
+     * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
+     * @param customName the custom name for the primary index.
+     * @return true if the index was effectively dropped, false if it didn't exist and ignoreIfNotExist is set to true.
+     * @throws IndexDoesNotExistException if the primary index doesn't exist and ignoreIfNotExist is set to false.
+     * @throws CouchbaseException if another error occurs during index drop.
+     */
+    @InterfaceStability.Experimental
+    boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist);
+
+    /**
+     * Drop the custom-named primary index associated with the current bucket, within a custom timeout.
+     *
+     * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the custom timeout.
+     * @param customName the custom name for the primary index.
+     * @return true if the index was effectively dropped, false if it didn't exist and ignoreIfNotExist is set to true.
+     * @throws IndexDoesNotExistException if the primary index doesn't exist and ignoreIfNotExist is set to false.
+     * @throws CouchbaseException if another error occurs during index drop.
+     */
+    @InterfaceStability.Experimental
+    boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit);
 
     /**
      * Drop the given secondary index associated with the current bucket, within the default management timeout.

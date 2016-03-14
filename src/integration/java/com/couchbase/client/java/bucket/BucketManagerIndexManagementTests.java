@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.java.Bucket;
@@ -194,6 +193,18 @@ public class BucketManagerIndexManagementTests {
         List<IndexInfo> indexes = indexedBucket.bucketManager().listIndexes();
 
         assertEquals(1, indexes.size());
+        assertEquals(Index.PRIMARY_NAME, indexes.get(0).name());
+        assertTrue(indexes.get(0).isPrimary());
+    }
+
+    @Test
+    public void testCreatePrimaryIndexWithCustomName() {
+        indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary", false, false);
+        List<IndexInfo> indexes = indexedBucket.bucketManager().listIndexes();
+
+        assertEquals(1, indexes.size());
+        assertEquals("def_primary", indexes.get(0).name());
+        assertTrue(indexes.get(0).isPrimary());
     }
 
     @Test
@@ -213,6 +224,19 @@ public class BucketManagerIndexManagementTests {
         assertEquals(1, indexes.size());
         assertNotNull(indexes.get(0).indexKey());
         assertTrue(indexes.get(0).isPrimary());
+    }
+
+    @Test
+    public void testCreatePrimaryIndexesWithDifferentNames() {
+        boolean namedAttempt1 = indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary", false, false);
+        boolean namedAttempt2 = indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary2", false, false);
+        boolean unamedAttempt = indexedBucket.bucketManager().createPrimaryIndex(false, false);
+
+        assertTrue(namedAttempt1);
+        assertTrue(namedAttempt2);
+        assertTrue(unamedAttempt);
+
+        assertEquals(3, indexedBucket.bucketManager().listIndexes().size());
     }
 
     @Test
@@ -236,7 +260,6 @@ public class BucketManagerIndexManagementTests {
         assertFalse(dropped);
     }
 
-
     @Test
     public void testDropPrimaryIndex() {
         BucketManager mgr = indexedBucket.bucketManager();
@@ -255,6 +278,45 @@ public class BucketManagerIndexManagementTests {
     @Test
     public void testDropIgnorePrimaryIndexThatDoesntExistSucceeds() {
         boolean dropped = indexedBucket.bucketManager().dropPrimaryIndex(true);
+        assertFalse(dropped);
+    }
+
+    @Test
+    public void testDropNamedPrimaryIndex() {
+        BucketManager mgr = indexedBucket.bucketManager();
+        mgr.createNamedPrimaryIndex("def_primary", true, false);
+        assertEquals(1, mgr.listIndexes().size());
+
+        mgr.dropNamedPrimaryIndex("def_primary", false);
+        assertEquals(0, mgr.listIndexes().size());
+    }
+
+    @Test
+    public void testDropPrimaryIndexWithNameFailsIfNameNotProvided() {
+        BucketManager mgr = indexedBucket.bucketManager();
+        mgr.createNamedPrimaryIndex("def_primary", true, false);
+        assertEquals(1, mgr.listIndexes().size());
+
+        boolean dropped = mgr.dropPrimaryIndex(true);
+        assertEquals(false, dropped);
+        assertEquals(1, mgr.listIndexes().size());
+
+        try {
+            mgr.dropPrimaryIndex(false);
+            fail("Expected IndexDoesNotExistException");
+        } catch (IndexDoesNotExistException e) {
+            //OK
+        }
+    }
+
+    @Test(expected = IndexDoesNotExistException.class)
+    public void testDropNamedPrimaryIndexThatDoesntExistFails() {
+        indexedBucket.bucketManager().dropNamedPrimaryIndex("invalidPrimaryIndex", false);
+    }
+
+    @Test
+    public void testDropIgnoreNamedPrimaryIndexThatDoesntExistSucceeds() {
+        boolean dropped = indexedBucket.bucketManager().dropNamedPrimaryIndex("invalidPrimaryIndex", true);
         assertFalse(dropped);
     }
 

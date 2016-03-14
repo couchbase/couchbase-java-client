@@ -270,6 +270,24 @@ public interface AsyncBucketManager {
     Observable<Boolean> createPrimaryIndex(boolean ignoreIfExist, boolean defer);
 
     /**
+     * Create a custom-named primary index for the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link IndexAlreadyExistsException} if the index already exists and ignoreIfExist is set to false.
+     *  - {@link CouchbaseException} if another error occurs during index creation.
+     *
+     * @param customName the custom name for the primary index.
+     * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
+     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
+     * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
+
+    /**
      * Create a secondary index for the current bucket.
      *
      * The {@link Observable} can error under the following conditions:
@@ -303,6 +321,20 @@ public interface AsyncBucketManager {
     @InterfaceStability.Experimental
     Observable<Boolean> dropPrimaryIndex(boolean ignoreIfNotExist);
 
+    /**
+     * Drop the custom-named primary index associated with the current bucket.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link IndexDoesNotExistException} if the primary index doesn't exist and ignoreIfNoExist is set to false.
+     *  - {@link CouchbaseException} if another error occurs during index drop.
+     *
+     * @param customName the custom name of the primary index.
+     * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
      * Drop the given secondary index associated with the current bucket.

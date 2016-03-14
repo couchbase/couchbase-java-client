@@ -240,6 +240,16 @@ public class DefaultBucketManager implements BucketManager {
         return Blocking.blockForSingle(asyncBucketManager.createPrimaryIndex(ignoreIfExist, defer), timeout, timeUnit);
     }
 
+    @Override
+    public boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer) {
+        return createNamedPrimaryIndex(customName, ignoreIfExist, defer, timeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucketManager.createNamedPrimaryIndex(customName, ignoreIfExist, defer), timeout, timeUnit);
+    }
+
     private boolean createIndex(String indexName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit, Object... fields) {
         return Blocking.blockForSingle(asyncBucketManager.createIndex(indexName, ignoreIfExist, defer, fields),
                 timeout, timeUnit);
@@ -269,6 +279,16 @@ public class DefaultBucketManager implements BucketManager {
     @Override
     public boolean dropPrimaryIndex(boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucketManager.dropPrimaryIndex(ignoreIfNotExist), timeout, timeUnit);
+    }
+
+    @Override
+    public boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist) {
+        return dropNamedPrimaryIndex(customName, ignoreIfNotExist, timeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucketManager.dropNamedPrimaryIndex(customName, ignoreIfNotExist), timeout, timeUnit);
     }
 
     @Override
