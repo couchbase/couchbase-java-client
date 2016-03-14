@@ -51,4 +51,10 @@ public class DefaultCreateIndexPath extends AbstractPath implements CreateIndexP
         element(new IndexElement());
         return new DefaultOnPrimaryPath(this);
     }
+
+    @Override
+    public OnPrimaryPath createPrimary(String customPrimaryName) {
+        element(new IndexElement(customPrimaryName, true));
+        return new DefaultOnPrimaryPath(this);
+    }
 }

@@ -45,4 +45,11 @@ public interface CreateIndexPath extends Path {
      * Create a primary index.
      */
     OnPrimaryPath createPrimary();
+
+    /**
+     * Create a primary index with a custom name.
+     * @param customPrimaryName the custom name for the primary index.
+     */
+    OnPrimaryPath createPrimary(String customPrimaryName);
+
 }

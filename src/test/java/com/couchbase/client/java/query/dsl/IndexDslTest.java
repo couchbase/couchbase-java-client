@@ -24,6 +24,7 @@ package com.couchbase.client.java.query.dsl;
 
 import static com.couchbase.client.java.query.Index.buildIndex;
 import static com.couchbase.client.java.query.Index.dropIndex;
+import static com.couchbase.client.java.query.Index.dropNamedPrimaryIndex;
 import static com.couchbase.client.java.query.Index.dropPrimaryIndex;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
@@ -33,7 +34,6 @@ import static org.junit.Assert.assertTrue;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.Statement;
-import com.couchbase.client.java.query.dsl.path.index.DefaultBuildIndexPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultOnPrimaryPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultWithPath;
@@ -80,6 +80,23 @@ public class IndexDslTest {
             .withDefer();
 
         assertEquals("CREATE PRIMARY INDEX ON `beer-sample` " +
+                "USING GSI WITH {\"defer_build\":true}", fullIndex.toString());
+    }
+
+    @Test
+    public void testCreatePrimaryIndexWithCustomName() throws Exception {
+        OnPrimaryPath idx1 = Index.createNamedPrimaryIndex("a");
+        assertFalse(idx1 instanceof Statement);
+
+        UsingWithPath idx2 = idx1.on("beer-sample");
+        assertTrue(idx2 instanceof Statement);
+
+        Statement fullIndex = Index.createNamedPrimaryIndex("def_primary")
+            .on("beer-sample")
+            .using(IndexType.GSI)
+            .withDefer();
+
+        assertEquals("CREATE PRIMARY INDEX `def_primary` ON `beer-sample` " +
                 "USING GSI WITH {\"defer_build\":true}", fullIndex.toString());
     }
 
@@ -140,6 +157,15 @@ public class IndexDslTest {
         assertEquals("DROP INDEX `b`.`c`", drop2.toString());
         assertEquals("DROP PRIMARY INDEX ON `a`:`b`", drop3.toString());
         assertEquals("DROP PRIMARY INDEX ON `b`", drop4.toString());
+    }
+
+    @Test
+    public void testDropPrimaryIndexWithCustomNameIsASimpleDrop() {
+        Statement dropCustom1 = dropNamedPrimaryIndex("a", "b", "c");
+        Statement dropCustom2 = dropNamedPrimaryIndex("b", "c");
+
+        assertEquals("DROP INDEX `a`:`b`.`c`", dropCustom1.toString());
+        assertEquals("DROP INDEX `b`.`c`", dropCustom2.toString());
     }
 
     @Test

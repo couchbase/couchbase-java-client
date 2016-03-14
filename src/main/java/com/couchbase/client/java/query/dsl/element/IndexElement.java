@@ -35,19 +35,27 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 public class IndexElement implements Element {
 
     private final String name;
+    private final boolean primary;
+
+    public IndexElement(String indexName, boolean forcePrimary) {
+        this.name = indexName;
+        this.primary = forcePrimary;
+    }
 
     public IndexElement(String indexName) {
-        this.name = indexName;
+        this(indexName, false);
     }
 
     public IndexElement() {
-        this(null);
+        this(null, true);
     }
 
     @Override
     public String export() {
-        if (name == null) {
+        if (primary && name == null) {
             return "CREATE PRIMARY INDEX";
+        } else if (primary) {
+            return "CREATE PRIMARY INDEX `" + name + "`";
         } else {
             return "CREATE INDEX `" + name + "`";
         }

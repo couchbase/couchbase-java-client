@@ -23,7 +23,6 @@ package com.couchbase.client.java.query;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.query.dsl.element.BuildIndexElement;
 import com.couchbase.client.java.query.dsl.path.index.BuildIndexPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultBuildIndexPath;
 import com.couchbase.client.java.query.dsl.path.index.DefaultCreateIndexPath;
@@ -32,7 +31,6 @@ import com.couchbase.client.java.query.dsl.path.index.IndexType;
 import com.couchbase.client.java.query.dsl.path.index.OnPath;
 import com.couchbase.client.java.query.dsl.path.index.OnPrimaryPath;
 import com.couchbase.client.java.query.dsl.path.index.UsingPath;
-import com.couchbase.client.java.query.dsl.path.index.UsingWithPath;
 
 /**
  * DSL starting point for creating and managing N1QL indexes.
@@ -63,6 +61,13 @@ public class Index {
      */
     public static OnPrimaryPath createPrimaryIndex() {
         return new DefaultCreateIndexPath().createPrimary();
+    }
+
+    /**
+     * Create a new primary index with a custom name.
+     */
+    public static OnPrimaryPath createNamedPrimaryIndex(String customPrimaryName) {
+        return new DefaultCreateIndexPath().createPrimary(customPrimaryName);
     }
 
     /**
@@ -100,6 +105,7 @@ public class Index {
      *
      * @param namespace the namespace prefix (will be escaped).
      * @param keyspace the keyspace (bucket, will be escaped).
+     * @see #dropNamedPrimaryIndex(String, String, String) if the primary index name has been customized.
      */
     public static UsingPath dropPrimaryIndex(String namespace, String keyspace) {
         return new DefaultDropPath().dropPrimary(namespace, keyspace);
@@ -109,8 +115,33 @@ public class Index {
      * Drop the primary index in the given keyspace.
      *
      * @param keyspace the keyspace (bucket, will be escaped).
+     * @see #dropNamedPrimaryIndex(String, String) if the primary index name has been customized.
      */
     public static UsingPath dropPrimaryIndex(String keyspace) {
         return new DefaultDropPath().dropPrimary(keyspace);
+    }
+
+
+    /**
+     * Drop the primary index of the given namespace:keyspace that has a custom name.
+     *
+     * @param namespace the namespace prefix (will be escaped).
+     * @param keyspace the keyspace (bucket, will be escaped).
+     * @param customPrimaryName the custom name for the primary index (will be escaped).
+     */
+    public static UsingPath dropNamedPrimaryIndex(String namespace, String keyspace, String customPrimaryName) {
+        //N1QL syntax for dropping a primary with a name is actually similar to dropping secondary index
+        return new DefaultDropPath().drop(namespace, keyspace, customPrimaryName);
+    }
+
+    /**
+     * Drop the primary index in the given keyspace that has a custom name.
+     *
+     * @param keyspace the keyspace (bucket, will be escaped).
+     * @param customPrimaryName the custom name for the primary index (will be escaped).
+     */
+    public static UsingPath dropNamedPrimaryIndex(String keyspace, String customPrimaryName) {
+        //N1QL syntax for dropping a primary with a name is actually similar to dropping secondary index
+        return new DefaultDropPath().drop(keyspace, customPrimaryName);
     }
 }
