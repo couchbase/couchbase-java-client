@@ -47,6 +47,8 @@ import com.couchbase.client.java.error.IndexAlreadyExistsException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.query.dsl.path.index.IndexType;
 import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.util.TestProperties;
@@ -127,8 +129,8 @@ public class BucketManagerIndexManagementTests {
         assertEquals("online", first.state());
         assertEquals(JsonArray.empty(), first.indexKey());
 
-        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `aIndex` ON `" + indexedBucketName + "` (tata, toto)"));
-        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `bIndex` ON `" + indexedBucketName + "` (tata) USING VIEW"));
+        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `bIndex` ON `" + indexedBucketName + "` (tata, toto)"));
+        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `aIndex` ON `" + indexedBucketName + "` (tata)"));
         indexes = indexedBucket.bucketManager().listIndexes();
 
         assertEquals(indexes.toString(), 3, indexes.size());
@@ -137,14 +139,52 @@ public class BucketManagerIndexManagementTests {
         IndexInfo third = indexes.get(2);
         assertEquals("aIndex", second.name());
         assertEquals("bIndex", third.name()); //indexes are then listed alphabetically
-        assertEquals(JsonArray.create().add("`tata`").add("`toto`"), second.indexKey());
-        assertEquals(JsonArray.create().add("`tata`"), third.indexKey());
+        assertEquals(JsonArray.create().add("`tata`"), second.indexKey());
+        assertEquals(JsonArray.create().add("`tata`").add("`toto`"), third.indexKey());
         assertEquals("online", second.state());
         assertEquals("online", third.state());
         assertFalse(second.isPrimary());
         assertFalse(third.isPrimary());
         assertEquals(IndexType.GSI, second.type());
-        assertEquals(IndexType.VIEW, third.type());
+        assertEquals(IndexType.GSI, third.type());
+    }
+
+    @Test
+    public void testListIndexesIgnoresNonGsi() {
+        List<IndexInfo> indexes = indexedBucket.bucketManager().listIndexes();
+        assertEquals(indexes.toString(), 0, indexes.size());
+
+        indexedBucket.query(N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + indexedBucketName + "`"));
+        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `ambiguousIndex` ON `" + indexedBucketName + "` (tata, toto)"));
+        indexedBucket.query(N1qlQuery.simple("CREATE INDEX `ambiguousIndex` ON `" + indexedBucketName + "` (tata) USING VIEW"));
+        indexes = indexedBucket.bucketManager().listIndexes();
+
+        assertEquals(indexes.toString(), 2, indexes.size());
+        IndexInfo first = indexes.get(0);
+        IndexInfo second = indexes.get(1);
+
+        //make sure the view index was created
+        N1qlQueryResult countResult = indexedBucket.query(N1qlQuery
+                .simple("SELECT COUNT(*) AS cnt FROM system:indexes WHERE keyspace_id = '" + indexedBucketName + "'"));
+        List<N1qlQueryRow> rows = countResult.allRows();
+        Long count = rows.get(0).value().getLong("cnt");
+        assertEquals("" + rows, (Long) 3L, count);
+
+        //assert found indexes
+        assertTrue(first.isPrimary());
+        assertEquals(IndexInfo.PRIMARY_DEFAULT_NAME, first.name());
+        assertEquals("gsi", first.rawType());
+        assertNotNull(first.type());
+        assertEquals(IndexType.GSI, first.type());
+        assertEquals("online", first.state());
+        assertEquals(JsonArray.empty(), first.indexKey());
+
+        assertEquals("ambiguousIndex", second.name());
+        assertEquals(JsonArray.create().add("`tata`").add("`toto`"), second.indexKey());
+        assertEquals("online", second.state());
+        assertFalse(second.isPrimary());
+        assertEquals(IndexType.GSI, second.type());
+
     }
 
     @Test

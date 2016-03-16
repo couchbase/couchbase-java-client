@@ -29,6 +29,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.error.IndexAlreadyExistsException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.view.DesignDocument;
@@ -240,20 +241,26 @@ public interface AsyncBucketManager {
     Observable<DesignDocument> publishDesignDocument(String name, boolean overwrite);
 
     /**
-     * List all N1QL indexes that are registered for the current bucket.
+     * List all N1QL GSI indexes that are registered for the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * The {@link Observable} can error under the following conditions:
      *
      *  - {@link TranscodingException} if the server response couldn't be parsed.
      *
-     * @return an {@link Observable} that will get notified of each relevant {@link IndexInfo} (can be empty if no index
-     * is defined for this bucket).
+     * @return an {@link Observable} that will get notified of each relevant {@link IndexInfo} (can be empty if no
+     * relevant index is defined for this bucket).
      */
     @InterfaceStability.Experimental
     Observable<IndexInfo> listIndexes();
 
     /**
      * Create a primary index for the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * The {@link Observable} can error under the following conditions:
      *
@@ -271,6 +278,9 @@ public interface AsyncBucketManager {
 
     /**
      * Create a custom-named primary index for the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * The {@link Observable} can error under the following conditions:
      *
@@ -290,6 +300,9 @@ public interface AsyncBucketManager {
     /**
      * Create a secondary index for the current bucket.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * The {@link Observable} can error under the following conditions:
      *
      *  - {@link IndexAlreadyExistsException} if the index already exists and ignoreIfExist is set to false.
@@ -308,7 +321,10 @@ public interface AsyncBucketManager {
     Observable<Boolean> createIndex(String indexName, boolean ignoreIfExist, boolean defer, Object... fields);
 
     /**
-     * Drop the primary index associated with the current bucket.
+     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * The {@link Observable} can error under the following conditions:
      *
@@ -322,7 +338,10 @@ public interface AsyncBucketManager {
     Observable<Boolean> dropPrimaryIndex(boolean ignoreIfNotExist);
 
     /**
-     * Drop the custom-named primary index associated with the current bucket.
+     * Drop the given custom-named primary index associated with the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * The {@link Observable} can error under the following conditions:
      *
@@ -339,6 +358,9 @@ public interface AsyncBucketManager {
     /**
      * Drop the given secondary index associated with the current bucket.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * The {@link Observable} can error under the following conditions:
      *
      *  - {@link IndexDoesNotExistException} if the secondary index doesn't exist and ignoreIfNoExist is set to false.
@@ -351,7 +373,8 @@ public interface AsyncBucketManager {
     Observable<Boolean> dropIndex(String name, boolean ignoreIfNotExist);
 
     /**
-     * Instruct the query engine to trigger the build of indexes that have been deferred.
+     * Instruct the query engine to trigger the build of indexes that have been deferred. This only considers GSI
+     * indexes, as the index management API only deals with this type of indexes.
      *
      * This process itself is asynchronous, meaning that the call will immediately return despite indexes still being
      * in a "pending" or "building" state. This method will return a List of the names of indexes whose build has been
@@ -366,7 +389,8 @@ public interface AsyncBucketManager {
 
     /**
      * Watches all given indexes (possibly including the primary one), polling the query service until they become
-     * "online" or the watchTimeout has expired.
+     * "online" or the watchTimeout has expired.. This only considers GSI indexes, as the index management API only
+     * deals with this type of indexes.
      *
      * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
      * to see various stages of the polling.

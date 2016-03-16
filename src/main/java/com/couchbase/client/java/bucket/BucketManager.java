@@ -28,6 +28,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.error.IndexAlreadyExistsException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.view.DesignDocument;
@@ -518,7 +519,10 @@ public interface BucketManager {
     DesignDocument publishDesignDocument(String name, boolean overwrite, long timeout, TimeUnit timeUnit);
 
     /**
-     * List all N1QL indexes that are registered for the current bucket, with the default management timeout.
+     * List all N1QL GSI indexes that are registered for the current bucket, with the default management timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @return a List containing each relevant {@link IndexInfo} (can be empty if no index
      * is defined for this bucket).
@@ -528,7 +532,10 @@ public interface BucketManager {
     List<IndexInfo> listIndexes();
 
     /**
-     * List all N1QL indexes that are registered for the current bucket, with a custom timeout.
+     * List all N1QL GSI indexes that are registered for the current bucket, with a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
@@ -543,6 +550,9 @@ public interface BucketManager {
     /**
      * Create a primary index for the current bucket, within the default management timeout.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
      * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
      *              to the corresponding query service API).
@@ -556,6 +566,9 @@ public interface BucketManager {
 
     /**
      * Create a primary index for the current bucket, within a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
      * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
@@ -573,6 +586,9 @@ public interface BucketManager {
     /**
      * Create a custom-named primary index for the current bucket, within the default management timeout.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
      * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
      *              to the corresponding query service API).
@@ -587,6 +603,9 @@ public interface BucketManager {
 
     /**
      * Create a custom-named primary index for the current bucket, within a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
      * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
@@ -604,6 +623,9 @@ public interface BucketManager {
 
     /**
      * Create a secondary index for the current bucket, with the default management timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * This method allows to define fields of the index as a vararg, for convenience (actually accepting
      * {@link Expression} or {@link String}).
@@ -625,6 +647,9 @@ public interface BucketManager {
     /**
      * Create a secondary index for the current bucket, with the default management timeout.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * This method allows to define fields of the index as a List, for consistency with the overload where a custom
      * timeout can be defined (see {@link #createIndex(String, List, boolean, boolean, long, TimeUnit)}).
      *
@@ -645,6 +670,9 @@ public interface BucketManager {
     /**
      * Create a secondary index for the current bucket, with a custom timeout.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * @param indexName the name of the index.
      * @param fields the List of JSON fields to index, in either {@link Expression} or {@link String} form.
      * @param ignoreIfExist if a secondary index already exists with that name, an exception will be thrown unless this
@@ -663,7 +691,10 @@ public interface BucketManager {
             TimeUnit timeUnit);
 
     /**
-     * Drop the primary index associated with the current bucket, within the default management timeout.
+     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket, within the default management timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @return true if the index was effectively dropped, false if it didn't exist and ignoreIfNotExist is set to true.
@@ -674,7 +705,10 @@ public interface BucketManager {
     boolean dropPrimaryIndex(boolean ignoreIfNotExist);
 
     /**
-     * Drop the primary index associated with the current bucket, within a custom timeout.
+     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket, within a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @param timeout the custom timeout.
@@ -687,7 +721,10 @@ public interface BucketManager {
     boolean dropPrimaryIndex(boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit);
 
     /**
-     * Drop the custom-named primary index associated with the current bucket, within the default management timeout.
+     * Drop the given custom-named primary index associated with the current bucket, within the default management timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @param customName the custom name for the primary index.
@@ -699,7 +736,10 @@ public interface BucketManager {
     boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
-     * Drop the custom-named primary index associated with the current bucket, within a custom timeout.
+     * Drop the given custom-named primary index associated with the current bucket, within a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @param timeout the custom timeout.
@@ -715,6 +755,9 @@ public interface BucketManager {
     /**
      * Drop the given secondary index associated with the current bucket, within the default management timeout.
      *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without the specified index won't cause an exception to be propagated.
      * @return true if the index was effectively dropped, false if it didn't exist and ignoreIfNotExist is set to true.
      * @throws IndexDoesNotExistException if the secondary index doesn't exist and ignoreIfNotExist is set to false.
@@ -725,6 +768,9 @@ public interface BucketManager {
 
     /**
      * Drop the given secondary index associated with the current bucket, within a custom timeout.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
      *
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without the specified index won't cause an exception to be propagated.
      * @param timeout the custom timeout.
@@ -738,7 +784,7 @@ public interface BucketManager {
 
     /**
      * Instruct the query engine to trigger the build of indexes that have been deferred, within the default management
-     * timeout.
+     * timeout. This only considers GSI indexes, as the index management API only deals with this type of indexes.
      *
      * This process itself is asynchronous, meaning that the call will immediately return despite indexes still being
      * in a "pending" or "building" state. This method will return a List of the names of indexes whose build has been
@@ -752,6 +798,7 @@ public interface BucketManager {
 
     /**
      * Instruct the query engine to trigger the build of indexes that have been deferred, within a custom timeout.
+     * This only considers GSI indexes, as the index management API only deals with this type of indexes.
      *
      * This process itself is asynchronous, meaning that the call will immediately return despite indexes still being
      * in a "pending" or "building" state. This method will return a List of the names of indexes whose build has been
@@ -767,7 +814,8 @@ public interface BucketManager {
 
     /**
      * Watches all given indexes (possibly including the primary one), polling the query service until they become
-     * "online" or the watchTimeout has expired.
+     * "online" or the watchTimeout has expired. This only considers GSI indexes, as the index management API only
+     * deals with this type of indexes.
      *
      * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
      * to see various stages of the polling.
