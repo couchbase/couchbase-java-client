@@ -55,9 +55,18 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Private constructor to create the object.
+     *
+     * The internal map is initialized with the default capacity.
      */
     private JsonObject() {
         content = new HashMap<String, Object>();
+    }
+
+    /**
+     * Private constructor to create the object with a custom initial capacity.
+     */
+    private JsonObject(int initialCapacity) {
+        content = new HashMap<String, Object>(initialCapacity);
     }
 
     /**
@@ -107,7 +116,7 @@ public class JsonObject extends JsonValue implements Serializable {
             return JsonObject.empty();
         }
 
-        JsonObject result = new JsonObject();
+        JsonObject result = new JsonObject(mapData.size());
         for (Map.Entry<String, ?> entry : mapData.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();

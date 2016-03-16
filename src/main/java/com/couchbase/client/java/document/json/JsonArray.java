@@ -54,10 +54,17 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     private final List<Object> content;
 
     /**
-     * Creates a new {@link JsonArray}.
+     * Creates a new {@link JsonArray} with the default capacity.
      */
     private JsonArray() {
         content = new ArrayList<Object>();
+    }
+
+    /**
+     * Creates a new {@link JsonArray} with a custom capacity.
+     */
+    private JsonArray(int initialCapacity) {
+        content = new ArrayList<Object>(initialCapacity);
     }
 
     /**
@@ -86,7 +93,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
      * @return a populated {@link JsonArray}.
      */
     public static JsonArray from(Object... items) {
-        JsonArray array = new JsonArray();
+        JsonArray array = new JsonArray(items.length);
         for (Object item : items) {
             if (checkType(item)) {
                 array.add(item);
@@ -121,7 +128,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
             return JsonArray.empty();
         }
 
-        JsonArray array = new JsonArray();
+        JsonArray array = new JsonArray(items.size());
         ListIterator<?> iter = items.listIterator();
         while (iter.hasNext()) {
             int i = iter.nextIndex();
