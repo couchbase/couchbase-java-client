@@ -58,7 +58,9 @@ public abstract class AbstractDocument<T> implements Document<T> {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("The Document ID must not be null or empty.");
         }
-        if (id.getBytes().length > 250) {
+        // Quick sanity check, but not 100% accurate. UTF-8 encoding avoided because of double
+        // allocations, it is done in core with proper exact error handling anyways.
+        if (id.length() > 250) {
             throw new IllegalArgumentException("The Document ID must not be larger than 250 bytes");
         }
         if (expiry < 0) {
