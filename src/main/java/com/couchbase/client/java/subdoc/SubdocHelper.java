@@ -99,4 +99,38 @@ public class SubdocHelper {
                 return new CouchbaseException(status.toString());
         }
     }
+
+    /**
+     * Check whether a {@link ResponseStatus} is subdocument-level or not. That is to say an error code which,
+     * if received in the context of a multi-operation, would not prevent the successful execution of other
+     * operations in that packet.
+     *
+     * For instance, {@link ResponseStatus#SUBDOC_PATH_NOT_FOUND} is a subdoc error code that would not prevent
+     * the execution of other operations whereas {@link ResponseStatus#NOT_EXISTS} is a document access error code
+     * and would inherently invalidate any other operation within the theoretical packet.
+     *
+     * @param responseStatus the status code to check.
+     * @return true if the status code denotes a subdocument-level error, false otherwise.
+     */
+    public static boolean isSubdocLevelError(ResponseStatus responseStatus) {
+        switch(responseStatus) {
+            case SUBDOC_PATH_NOT_FOUND:
+            case SUBDOC_PATH_EXISTS:
+            case SUBDOC_DELTA_RANGE:
+            case SUBDOC_NUM_RANGE:
+            case SUBDOC_VALUE_TOO_DEEP:
+            case SUBDOC_PATH_TOO_BIG:
+            case SUBDOC_PATH_INVALID:
+            case SUBDOC_PATH_MISMATCH:
+            case SUBDOC_VALUE_CANTINSERT:
+                return true;
+            case SUBDOC_DOC_NOT_JSON:
+            case SUBDOC_DOC_TOO_DEEP:
+            case SUBDOC_INVALID_COMBO:
+            case SUBDOC_MULTI_PATH_FAILURE:
+                return false;
+            default:
+                return false;
+        }
+    }
 }

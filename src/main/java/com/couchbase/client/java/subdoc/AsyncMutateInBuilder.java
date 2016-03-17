@@ -61,6 +61,7 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.error.subdoc.BadDeltaException;
 import com.couchbase.client.java.error.subdoc.CannotInsertValueException;
 import com.couchbase.client.java.error.subdoc.DocumentNotJsonException;
 import com.couchbase.client.java.error.subdoc.MultiMutationException;
@@ -68,7 +69,7 @@ import com.couchbase.client.java.error.subdoc.PathExistsException;
 import com.couchbase.client.java.error.subdoc.PathInvalidException;
 import com.couchbase.client.java.error.subdoc.PathMismatchException;
 import com.couchbase.client.java.error.subdoc.PathNotFoundException;
-import com.couchbase.client.java.error.subdoc.ZeroDeltaException;
+import com.couchbase.client.java.error.subdoc.SubDocumentException;
 import com.couchbase.client.java.transcoder.subdoc.FragmentTranscoder;
 import rx.Observable;
 import rx.functions.Func0;
@@ -308,32 +309,34 @@ public class AsyncMutateInBuilder {
         }
         // shortcircuit if delta is zero
         if (delta == 0L) {
-            throw new ZeroDeltaException();
+            throw new BadDeltaException("Delta must not be 0");
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.COUNTER, path, delta, createParents));
         return this;
     }
 
     /**
-     * Push to the front of an existing array, prepending the value.
+     * Prepend to an existing array, pushing the value to the front/first position in
+     * the array.
      *
      * @param path the path of the array.
      * @param value the value to insert at the front of the array.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> AsyncMutateInBuilder pushFront(String path, T value, boolean createParents) {
+    public <T> AsyncMutateInBuilder arrayPrepend(String path, T value, boolean createParents) {
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, value, createParents));
         return this;
     }
 
     /**
-     * Push to the back of an existing array, appending the value.
+     * Append to an existing array, pushing the value to the back/last position in
+     * the array.
      *
      * @param path the path of the array.
      * @param value the value to insert at the back of the array.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> AsyncMutateInBuilder pushBack(String path, T value, boolean createParents) {
+    public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createParents) {
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, value, createParents));
         return this;
     }
@@ -361,7 +364,7 @@ public class AsyncMutateInBuilder {
      * @param value the value to insert.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> AsyncMutateInBuilder addUnique(String path, T value, boolean createParents) {
+    public <T> AsyncMutateInBuilder arrayAddUnique(String path, T value, boolean createParents) {
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_ADD_UNIQUE, path, value, createParents));
         return this;
     }
@@ -438,14 +441,15 @@ public class AsyncMutateInBuilder {
 
                 switch(response.status()) {
                     case SUBDOC_MULTI_PATH_FAILURE:
-                        int index = response.firstErrorIndex();
-                        ResponseStatus errorStatus = response.firstErrorStatus();
-                        String errorPath = mutationSpecs.get(index).path();
-                        CouchbaseException errorException = SubdocHelper.commonSubdocErrors(errorStatus, docId, errorPath);
+                    int index = response.firstErrorIndex();
+                    ResponseStatus errorStatus = response.firstErrorStatus();
+                    String errorPath = mutationSpecs.get(index).path();
+                    CouchbaseException errorException = SubdocHelper.commonSubdocErrors(errorStatus, docId, errorPath);
 
-                        return Observable.error(new MultiMutationException(index, errorStatus, mutationSpecs, errorException));
+                    return Observable
+                            .error(new MultiMutationException(index, errorStatus, mutationSpecs, errorException));
                     default:
-                        return Observable.error(SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-MUTATION"));
+                    return Observable.error(SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-MUTATION"));
                 }
             }
         });
@@ -506,14 +510,14 @@ public class AsyncMutateInBuilder {
                 public Object call(ResponseStatus status, String docId, String path) {
                     switch(status) {
                         case SUCCESS:
-                            return null;
-                        case SUBDOC_PATH_INVALID:
+                        return null;
+                            case SUBDOC_PATH_INVALID:
                             throw new PathInvalidException("Path " + path + " ends in an array index in "
-                                    + docId + ", expected dictionary");
-                        case SUBDOC_PATH_MISMATCH:
+                                                + docId + ", expected dictionary");
+                            case SUBDOC_PATH_MISMATCH:
                             throw new PathMismatchException("Path " + path + " ends in a scalar value in "
-                                    + docId + ", expected dictionary");
-                        default:
+                                                + docId + ", expected dictionary");
+                            default:
                             throw SubdocHelper.commonSubdocErrors(status, docId, path);
                     }
                 }
@@ -689,10 +693,19 @@ public class AsyncMutateInBuilder {
                     response.content().release();
                 }
 
-                Object value = responseStatusDocIdAndPathToValueEvaluator.call(response.status(), docId, spec.path());
-                SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
+                ResponseStatus responseStatus = response.status();
+                try {
+                    Object value = responseStatusDocIdAndPathToValueEvaluator.call(responseStatus, docId, spec.path());
+                    SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
                         .createResult(spec.path(), spec.type(), response.status(), value);
-                return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
+                    return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
+                } catch (SubDocumentException e) {
+                    if (SubdocHelper.isSubdocLevelError(responseStatus)) {
+                        throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), e);
+                    } else {
+                        throw e;
+                    }
+                }
             }
         });
     }
@@ -714,8 +727,15 @@ public class AsyncMutateInBuilder {
                             response.content().release();
                         }
 
-                        if (!response.status().isSuccess()) {
-                            throw SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                        ResponseStatus responseStatus = response.status();
+                        if (!responseStatus.isSuccess()) {
+                            //propagate subdocument level error inside a MultiMutationException
+                            CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                            if (SubdocHelper.isSubdocLevelError(responseStatus)) {
+                                throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), subdocError);
+                            } else {
+                                throw subdocError;
+                            }
                         }
 
                         SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
@@ -734,7 +754,7 @@ public class AsyncMutateInBuilder {
         Number fragment = (Number) spec.fragment();
         // shortcircuit if delta is zero
         if (fragment == null || fragment.longValue() == 0L) {
-            return Observable.error(new ZeroDeltaException());
+            return Observable.error(new BadDeltaException());
         }
 
         final long delta = fragment.longValue();
@@ -771,9 +791,15 @@ public class AsyncMutateInBuilder {
                             if (response.content() != null) {
                                 response.content().release();
                             }
-                            throw SubdocHelper.commonSubdocErrors(status, docId, spec.path());
-                        }
 
+                            //propagate errors that are subdocument level in a MultiMutationException
+                            CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                            if (SubdocHelper.isSubdocLevelError(status)) {
+                                throw new MultiMutationException(0, status, Collections.singletonList(spec), subdocError);
+                            } else {
+                                throw subdocError;
+                            }
+                        }
                     }
                 });
     }

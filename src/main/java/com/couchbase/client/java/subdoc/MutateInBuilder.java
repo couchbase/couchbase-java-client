@@ -266,26 +266,28 @@ public class MutateInBuilder {
     }
 
     /**
-     * Push to the front of an existing array, prepending the value.
+     * Prepend to an existing array, pushing the value to the front/first position in
+     * the array.
      *
      * @param path the path of the array.
      * @param value the value to insert at the front of the array.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> MutateInBuilder pushFront(String path, T value, boolean createParents) {
-        asyncBuilder.pushFront(path, value, createParents);
+    public <T> MutateInBuilder arrayPrepend(String path, T value, boolean createParents) {
+        asyncBuilder.arrayPrepend(path, value, createParents);
         return this;
     }
 
     /**
-     * Push to the back of an existing array, appending the value.
+     * Append to an existing array, pushing the value to the back/last position in
+     * the array.
      *
      * @param path the path of the array.
      * @param value the value to insert at the back of the array.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> MutateInBuilder pushBack(String path, T value, boolean createParents) {
-        asyncBuilder.pushBack(path, value, createParents);
+    public <T> MutateInBuilder arrayAppend(String path, T value, boolean createParents) {
+        asyncBuilder.arrayAppend(path, value, createParents);
         return this;
     }
 
@@ -309,8 +311,8 @@ public class MutateInBuilder {
      * @param value the value to insert.
      * @param createParents true to create missing intermediary nodes.
      */
-    public <T> MutateInBuilder addUnique(String path, T value, boolean createParents) {
-        asyncBuilder.addUnique(path, value, createParents);
+    public <T> MutateInBuilder arrayAddUnique(String path, T value, boolean createParents) {
+        asyncBuilder.arrayAddUnique(path, value, createParents);
         return this;
     }
 
