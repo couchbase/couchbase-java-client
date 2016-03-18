@@ -25,17 +25,19 @@ package com.couchbase.client.java.transcoder.subdoc;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
-import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.subdoc.DocumentFragment;
+import com.couchbase.client.java.subdoc.LookupInBuilder;
+import com.couchbase.client.java.subdoc.MutateInBuilder;
 
 /**
- * An interface for transcoding sub-document fragments (as found in and used by {@link DocumentFragment#fragment()}).
+ * An interface for transcoding sub-document fragments (as read and written by the subdocument API, eg. in
+ * {@link MutateInBuilder} or {@link LookupInBuilder}).
  *
  * This is used internally by the bucket to encode fragments (for mutations) or decode fragments returned by the server
- * (eg. during a {@link Bucket#getIn(String, String, Class)}).
+ * in order to instantiate a {@link DocumentFragment}.
  *
  * @author Simon Baslé
  * @since 2.2
@@ -73,8 +75,7 @@ public interface FragmentTranscoder {
     <T> T decodeWithMessage(ByteBuf encoded, Class<? extends T> clazz, String transcodingErrorMessage) throws TranscodingException;
 
     /**
-     * Encode a value (usually from a {@link DocumentFragment}) to a {@link ByteBuf} suitable for use in the
-     * sub-document protocol.
+     * Encode a value to a {@link ByteBuf} suitable for use in the sub-document protocol.
      *
      * @param value the value to encode.
      * @param <T> the type of the fragment being encoded.
@@ -83,9 +84,9 @@ public interface FragmentTranscoder {
      */
     <T> ByteBuf encode(T value) throws TranscodingException;
 
+
     /**
-     * Encode a value (usually from a {@link DocumentFragment}) to a {@link ByteBuf} suitable for use in the
-     * sub-document protocol.
+     * Encode a value to a {@link ByteBuf} suitable for use in the sub-document protocol.
      *
      * @param value the value to encode.
      * @param transcodingErrorMessage the error message to be used in the thrown {@link TranscodingException} if the

@@ -23,6 +23,7 @@
 package com.couchbase.client.java.subdoc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -329,6 +330,55 @@ public class AsyncMutateInBuilder {
     }
 
     /**
+     * Prepend multiple values at once in an existing array, pushing all values in the collection's iteration order to
+     * the front/start of the array.
+     *
+     * First value becomes the first element of the array, second value the second, etc... All existing values
+     * are shifted right in the array, by the number of inserted elements.
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayPrepend(String, Object, boolean)} (String, Object)} by grouping
+     * mutations in a single packet.
+     *
+     * For example given an array [ A, B, C ], prepending the values X and Y yields [ X, Y, A, B, C ]
+     * and not [ [ X, Y ], A, B, C ].
+     *
+     * @param path the path of the array.
+     * @param values the collection of values to insert at the front of the array as individual elements.
+     * @param createParents true to create missing intermediary nodes.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     */
+    public <T> AsyncMutateInBuilder arrayPrependAll(String path, Collection<T> values, boolean createParents) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, new MultiValue<T>(values), createParents));
+        return this;
+    }
+
+    /**
+     * Prepend multiple values at once in an existing array, pushing all values to the front/start of the array.
+     * This is provided as a convenience alternative to {@link #arrayPrependAll(String, Collection, boolean)}. Note
+     * that parent nodes are not created when using this method (ie. createParents = false).
+     *
+     * First value becomes the first element of the array, second value the second, etc... All existing values
+     * are shifted right in the array, by the number of inserted elements.
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayPrepend(String, Object, boolean)} (String, Object)} by grouping
+     * mutations in a single packet.
+     *
+     * For example given an array [ A, B, C ], prepending the values X and Y yields [ X, Y, A, B, C ]
+     * and not [ [ X, Y ], A, B, C ].
+     *
+     * @param path the path of the array.
+     * @param values the values to insert at the front of the array as individual elements.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     * @see #arrayPrependAll(String, Collection, boolean) if you need to create missing intermediary nodes.
+     */
+    public <T> AsyncMutateInBuilder arrayPrependAll(String path, T... values) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, new MultiValue<T>(values), false));
+        return this;
+    }
+
+    /**
      * Append to an existing array, pushing the value to the back/last position in
      * the array.
      *
@@ -338,6 +388,49 @@ public class AsyncMutateInBuilder {
      */
     public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createParents) {
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, value, createParents));
+        return this;
+    }
+
+    /**
+     * Append multiple values at once in an existing array, pushing all values in the collection's iteration order to
+     * the back/end of the array.
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayAppend(String, Object, boolean)} by grouping mutations in
+     * a single packet.
+     *
+     * For example given an array [ A, B, C ], appending the values X and Y yields [ A, B, C, X, Y ]
+     * and not [ A, B, C, [ X, Y ] ].
+     *
+     * @param path the path of the array.
+     * @param values the collection of values to individually insert at the back of the array.
+     * @param createParents true to create missing intermediary nodes.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     */
+    public <T> AsyncMutateInBuilder arrayAppendAll(String path, Collection<T> values, boolean createParents) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, new MultiValue<T>(values), createParents));
+                return this;
+    }
+
+    /**
+     * Append multiple values at once in an existing array, pushing all values to the back/end of the array.
+     * This is provided as a convenience alternative to {@link #arrayAppendAll(String, Collection, boolean)}.
+     * Note that parent nodes are not created when using this method (ie. createParents = false).
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayAppend(String, Object, boolean)} by grouping mutations in
+     * a single packet.
+     *
+     * For example given an array [ A, B, C ], appending the values X and Y yields [ A, B, C, X, Y ]
+     * and not [ A, B, C, [ X, Y ] ].
+     *
+     * @param path the path of the array.
+     * @param values the values to individually insert at the back of the array.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     * @see #arrayAppendAll(String, Collection, boolean) if you need to create missing intermediary nodes.
+     */
+    public <T> AsyncMutateInBuilder arrayAppendAll(String path, T... values) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, new MultiValue<T>(values), false));
         return this;
     }
 
@@ -353,6 +446,57 @@ public class AsyncMutateInBuilder {
             throw new IllegalArgumentException("Path must not be empty for arrayInsert");
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, value, false));
+        return this;
+    }
+
+    /**
+     * Insert multiple values at once in an existing array at a specified position (denoted in the
+     * path, eg. "sub.array[2]"), inserting all values in the collection's iteration order at the given
+     * position and shifting existing values beyond the position by the number of elements in the collection.
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayInsert(String, Object)} by grouping mutations in a single packet.
+     *
+     * For example given an array [ A, B, C ], inserting the values X and Y at position 1 yields [ A, B, X, Y, C ]
+     * and not [ A, B, [ X, Y ], C ].
+     *
+     * @param path the path of the array.
+     * @param values the values to insert at the specified position of the array, each value becoming an entry at or
+     *               after the insert position.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     */
+    public <T> AsyncMutateInBuilder arrayInsertAll(String path, Collection<T> values) {
+        if (StringUtil.isNullOrEmpty(path)) {
+            throw new IllegalArgumentException("Path must not be empty for arrayInsert");
+        }
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, new MultiValue<T>(values), false));
+        return this;
+    }
+
+    /**
+     * Insert multiple values at once in an existing array at a specified position (denoted in the
+     * path, eg. "sub.array[2]"), inserting all values at the given position and shifting existing values
+     * beyond the position by the number of elements in the collection. This is provided as a convenience
+     * alternative to {@link #arrayInsertAll(String, Collection)}. Note that parent nodes are not created
+     * when using this method (ie. createParents = false).
+     *
+     * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
+     * is saved compared to individual {@link #arrayInsert(String, Object)} by grouping mutations in a single packet.
+     *
+     * For example given an array [ A, B, C ], inserting the values X and Y at position 1 yields [ A, B, X, Y, C ]
+     * and not [ A, B, [ X, Y ], C ].
+     *
+     * @param path the path of the array.
+     * @param values the values to insert at the specified position of the array, each value becoming an entry at or
+     *               after the insert position.
+     * @param <T> the type of data in the collection (must be JSON serializable).
+     * @see #arrayPrependAll(String, Collection, boolean) if you need to create missing intermediary nodes.
+     */
+    public <T> AsyncMutateInBuilder arrayInsertAll(String path, T... values) {
+        if (StringUtil.isNullOrEmpty(path)) {
+            throw new IllegalArgumentException("Path must not be empty for arrayInsert");
+        }
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, new MultiValue<T>(values), false));
         return this;
     }
 
