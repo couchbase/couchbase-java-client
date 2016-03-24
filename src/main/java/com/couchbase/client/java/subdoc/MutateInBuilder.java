@@ -45,7 +45,7 @@ import com.couchbase.client.java.util.Blocking;
 
 /**
  * A builder for subdocument mutations. In order to perform the final set of operations, use the
- * {@link #doMutate()} method. Operations are performed synchronously (see {@link AsyncMutateInBuilder} for an
+ * {@link #execute()} method. Operations are performed synchronously (see {@link AsyncMutateInBuilder} for an
  * asynchronous version).
  *
  * Instances of this builder should be obtained through {@link Bucket#mutateIn(String)} rather than directly
@@ -105,8 +105,8 @@ public class MutateInBuilder {
      * @return a {@link DocumentFragment} (if successful) containing updated cas metadata. Note that some individual
      * results could also bear a value, like counter operations.
      */
-    public DocumentFragment<Mutation> doMutate() {
-        return doMutate(defaultTimeout, defaultTimeUnit);
+    public DocumentFragment<Mutation> execute() {
+        return execute(defaultTimeout, defaultTimeUnit);
     }
 
     /**
@@ -144,8 +144,8 @@ public class MutateInBuilder {
      * @return a {@link DocumentFragment} (if successful) containing updated cas metadata. Note that some individual
      * results could also bear a value, like counter operations.
      */
-    public DocumentFragment<Mutation> doMutate(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBuilder.doMutate(), timeout, timeUnit);
+    public DocumentFragment<Mutation> execute(long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBuilder.execute(), timeout, timeUnit);
     }
 
     //==== DOCUMENT level modifiers ====

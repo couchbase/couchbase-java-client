@@ -54,7 +54,7 @@ import rx.functions.Func1;
 
 /**
  * A builder for subdocument lookups. In order to perform the final set of operations, use the
- * {@link #doLookup()} method. Operations are performed asynchronously (see {@link LookupInBuilder} for a synchronous
+ * {@link #execute()} method. Operations are performed asynchronously (see {@link LookupInBuilder} for a synchronous
  * version).
  *
  * Instances of this builder should be obtained through {@link AsyncBucket#lookupIn(String)} rather than directly
@@ -140,7 +140,7 @@ public class AsyncLookupInBuilder {
      * @return an {@link Observable} of a single {@link DocumentFragment} representing the whole list of results (1 for
      *        each spec), unless a document-level error happened (in which case an exception is propagated).
      */
-    public Observable<DocumentFragment<Lookup>> doLookup() {
+    public Observable<DocumentFragment<Lookup>> execute() {
         if (specs.isEmpty()) {
             throw new IllegalArgumentException("Execution of a subdoc lookup requires at least one operation");
         } else if (specs.size() == 1) {

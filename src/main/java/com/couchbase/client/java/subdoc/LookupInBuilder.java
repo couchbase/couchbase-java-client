@@ -28,7 +28,6 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.kv.subdoc.multi.Lookup;
-import com.couchbase.client.deps.io.netty.util.internal.StringUtil;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
@@ -40,7 +39,7 @@ import com.couchbase.client.java.util.Blocking;
 
 /**
  * A builder for subdocument lookups. In order to perform the final set of operations, use the
- * {@link #doLookup()} method. Operations are performed synchronously (see {@link AsyncLookupInBuilder} for an asynchronous
+ * {@link #execute()} method. Operations are performed synchronously (see {@link AsyncLookupInBuilder} for an asynchronous
  * version).
  *
  * Instances of this builder should be obtained through {@link Bucket#lookupIn(String)} rather than directly
@@ -109,8 +108,8 @@ public class LookupInBuilder {
      * @return a single {@link DocumentFragment} representing the whole list of results (1 for each spec), unless a
      * document-level error happened (in which case an exception is thrown).
      */
-    public DocumentFragment<Lookup> doLookup() {
-        return doLookup(defaultTimeout, defaultTimeUnit);
+    public DocumentFragment<Lookup> execute() {
+        return execute(defaultTimeout, defaultTimeUnit);
     }
 
     /**
@@ -156,8 +155,8 @@ public class LookupInBuilder {
      * @return a single {@link DocumentFragment} representing the whole list of results (1 for each spec), unless a
      * document-level error happened (in which case an exception is thrown).
      */
-    public DocumentFragment<Lookup> doLookup(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(this.async.doLookup(), timeout, timeUnit);
+    public DocumentFragment<Lookup> execute(long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(this.async.execute(), timeout, timeUnit);
     }
 
     /**

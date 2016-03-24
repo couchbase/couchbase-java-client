@@ -81,7 +81,7 @@ import rx.functions.Func3;
 
 /**
  * A builder for subdocument mutations. In order to perform the final set of operations, use the
- * {@link #doMutate()} method. Operations are performed asynchronously (see {@link MutateInBuilder} for a synchronous
+ * {@link #execute()} method. Operations are performed asynchronously (see {@link MutateInBuilder} for a synchronous
  * version).
  *
  * Instances of this builder should be obtained through {@link AsyncBucket#mutateIn(String)} rather than directly
@@ -168,7 +168,7 @@ public class AsyncMutateInBuilder {
      * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
      * Note that some individual results could also bear a value, like counter operations.
      */
-    public Observable<DocumentFragment<Mutation>> doMutate() {
+    public Observable<DocumentFragment<Mutation>> execute() {
         if (mutationSpecs.isEmpty()) {
             throw new IllegalArgumentException("Execution of a subdoc mutation requires at least one operation");
         } else if (mutationSpecs.size() == 1) { //FIXME implement single path optim

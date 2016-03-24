@@ -4421,12 +4421,12 @@ public interface Bucket {
     /**
      * Prepare a sub-document lookup through a {@link LookupInBuilder builder API}. You can use the builder to
      * describe one or several lookup operations inside an existing {@link JsonDocument}, then execute the lookup
-     * synchronously by calling the {@link LookupInBuilder#doLookup()} method. Only the paths that you looked up
+     * synchronously by calling the {@link LookupInBuilder#execute()} method. Only the paths that you looked up
      * inside the document will be transferred over the wire, limiting the network overhead for large documents.
      *
      * @param docId the id of the JSON document to lookup in.
      * @return a builder to describe the lookup(s) to perform.
-     * @see LookupInBuilder#doLookup()
+     * @see LookupInBuilder#execute()
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
@@ -4435,7 +4435,7 @@ public interface Bucket {
     /**
      * Prepare a sub-document mutation through a {@link MutateInBuilder builder API}. You can use the builder to
      * describe one or several mutation operations inside an existing {@link JsonDocument}, then execute them
-     * synchronously by calling the {@link MutateInBuilder#doMutate()} method. Only the values that you want
+     * synchronously by calling the {@link MutateInBuilder#execute()} method. Only the values that you want
      * mutated inside the document will be transferred over the wire, limiting the network overhead for large documents.
      * A get followed by a replace of the whole document isn't needed anymore.
      *
@@ -4446,7 +4446,7 @@ public interface Bucket {
      *
      * @param docId the id of the JSON document to mutate in.
      * @return a builder to describe the mutation(s) to perform.
-     * @see MutateInBuilder#doMutate()
+     * @see MutateInBuilder#execute()
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
