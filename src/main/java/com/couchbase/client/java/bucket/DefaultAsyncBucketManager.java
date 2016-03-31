@@ -397,7 +397,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     }
 
     @Override
-    public Observable<Boolean> createNamedPrimaryIndex(final String customName, final boolean ignoreIfExist, boolean defer) {
+    public Observable<Boolean> createPrimaryIndex(final String customName, final boolean ignoreIfExist, boolean defer) {
         Statement createIndex;
         UsingWithPath usingWithPath = Index.createNamedPrimaryIndex(customName).on(bucket);
         if (defer) {
@@ -451,7 +451,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     }
 
     @Override
-    public Observable<Boolean> dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist) {
+    public Observable<Boolean> dropPrimaryIndex(String customName, boolean ignoreIfNotExist) {
         return drop(ignoreIfNotExist, Index.dropNamedPrimaryIndex(bucket, customName).using(IndexType.GSI),
                 "Error dropping custom primary index \"" + customName + "\"");
     }

@@ -241,13 +241,13 @@ public class DefaultBucketManager implements BucketManager {
     }
 
     @Override
-    public boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer) {
-        return createNamedPrimaryIndex(customName, ignoreIfExist, defer, timeout, TIMEOUT_UNIT);
+    public boolean createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer) {
+        return createPrimaryIndex(customName, ignoreIfExist, defer, timeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucketManager.createNamedPrimaryIndex(customName, ignoreIfExist, defer), timeout, timeUnit);
+    public boolean createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucketManager.createPrimaryIndex(customName, ignoreIfExist, defer), timeout, timeUnit);
     }
 
     private boolean createIndex(String indexName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit, Object... fields) {
@@ -282,13 +282,13 @@ public class DefaultBucketManager implements BucketManager {
     }
 
     @Override
-    public boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist) {
-        return dropNamedPrimaryIndex(customName, ignoreIfNotExist, timeout, TIMEOUT_UNIT);
+    public boolean dropPrimaryIndex(String customName, boolean ignoreIfNotExist) {
+        return dropPrimaryIndex(customName, ignoreIfNotExist, timeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucketManager.dropNamedPrimaryIndex(customName, ignoreIfNotExist), timeout, timeUnit);
+    public boolean dropPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucketManager.dropPrimaryIndex(customName, ignoreIfNotExist), timeout, timeUnit);
     }
 
     @Override

@@ -295,7 +295,7 @@ public interface AsyncBucketManager {
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
+    Observable<Boolean> createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
 
     /**
      * Create a secondary index for the current bucket.
@@ -353,7 +353,7 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist);
+    Observable<Boolean> dropPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
      * Drop the given secondary index associated with the current bucket.

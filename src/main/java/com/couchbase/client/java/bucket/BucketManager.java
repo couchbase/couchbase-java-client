@@ -599,7 +599,7 @@ public interface BucketManager {
      * @throws CouchbaseException if another error occurs during index creation.
      */
     @InterfaceStability.Experimental
-    boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
+    boolean createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
 
     /**
      * Create a custom-named primary index for the current bucket, within a custom timeout.
@@ -619,7 +619,7 @@ public interface BucketManager {
      * @throws CouchbaseException if another error occurs during index creation.
      */
     @InterfaceStability.Experimental
-    boolean createNamedPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit);
+    boolean createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer, long timeout, TimeUnit timeUnit);
 
     /**
      * Create a secondary index for the current bucket, with the default management timeout.
@@ -733,7 +733,7 @@ public interface BucketManager {
      * @throws CouchbaseException if another error occurs during index drop.
      */
     @InterfaceStability.Experimental
-    boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist);
+    boolean dropPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
      * Drop the given custom-named primary index associated with the current bucket, within a custom timeout.
@@ -750,7 +750,7 @@ public interface BucketManager {
      * @throws CouchbaseException if another error occurs during index drop.
      */
     @InterfaceStability.Experimental
-    boolean dropNamedPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit);
+    boolean dropPrimaryIndex(String customName, boolean ignoreIfNotExist, long timeout, TimeUnit timeUnit);
 
     /**
      * Drop the given secondary index associated with the current bucket, within the default management timeout.

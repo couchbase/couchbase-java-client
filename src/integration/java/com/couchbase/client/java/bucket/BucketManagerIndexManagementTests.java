@@ -239,7 +239,7 @@ public class BucketManagerIndexManagementTests {
 
     @Test
     public void testCreatePrimaryIndexWithCustomName() {
-        indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary", false, false);
+        indexedBucket.bucketManager().createPrimaryIndex("def_primary", false, false);
         List<IndexInfo> indexes = indexedBucket.bucketManager().listIndexes();
 
         assertEquals(1, indexes.size());
@@ -268,8 +268,8 @@ public class BucketManagerIndexManagementTests {
 
     @Test
     public void testCreatePrimaryIndexesWithDifferentNames() {
-        boolean namedAttempt1 = indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary", false, false);
-        boolean namedAttempt2 = indexedBucket.bucketManager().createNamedPrimaryIndex("def_primary2", false, false);
+        boolean namedAttempt1 = indexedBucket.bucketManager().createPrimaryIndex("def_primary", false, false);
+        boolean namedAttempt2 = indexedBucket.bucketManager().createPrimaryIndex("def_primary2", false, false);
         boolean unamedAttempt = indexedBucket.bucketManager().createPrimaryIndex(false, false);
 
         assertTrue(namedAttempt1);
@@ -324,17 +324,17 @@ public class BucketManagerIndexManagementTests {
     @Test
     public void testDropNamedPrimaryIndex() {
         BucketManager mgr = indexedBucket.bucketManager();
-        mgr.createNamedPrimaryIndex("def_primary", true, false);
+        mgr.createPrimaryIndex("def_primary", true, false);
         assertEquals(1, mgr.listIndexes().size());
 
-        mgr.dropNamedPrimaryIndex("def_primary", false);
+        mgr.dropPrimaryIndex("def_primary", false);
         assertEquals(0, mgr.listIndexes().size());
     }
 
     @Test
     public void testDropPrimaryIndexWithNameFailsIfNameNotProvided() {
         BucketManager mgr = indexedBucket.bucketManager();
-        mgr.createNamedPrimaryIndex("def_primary", true, false);
+        mgr.createPrimaryIndex("def_primary", true, false);
         assertEquals(1, mgr.listIndexes().size());
 
         boolean dropped = mgr.dropPrimaryIndex(true);
@@ -351,12 +351,12 @@ public class BucketManagerIndexManagementTests {
 
     @Test(expected = IndexDoesNotExistException.class)
     public void testDropNamedPrimaryIndexThatDoesntExistFails() {
-        indexedBucket.bucketManager().dropNamedPrimaryIndex("invalidPrimaryIndex", false);
+        indexedBucket.bucketManager().dropPrimaryIndex("invalidPrimaryIndex", false);
     }
 
     @Test
     public void testDropIgnoreNamedPrimaryIndexThatDoesntExistSucceeds() {
-        boolean dropped = indexedBucket.bucketManager().dropNamedPrimaryIndex("invalidPrimaryIndex", true);
+        boolean dropped = indexedBucket.bucketManager().dropPrimaryIndex("invalidPrimaryIndex", true);
         assertFalse(dropped);
     }
 
