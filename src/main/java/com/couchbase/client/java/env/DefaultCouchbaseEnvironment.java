@@ -77,9 +77,14 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long disconnectTimeout;
     private final boolean dnsSrvEnabled;
 
+    protected static String CLIENT_VERSION;
+    protected static String CLIENT_GIT_VERSION;
+
     public static String SDK_PACKAGE_NAME_AND_VERSION = "couchbase-java-client";
+    public static String SDK_USER_AGENT = SDK_PACKAGE_NAME_AND_VERSION;
 
     private static final String VERSION_PROPERTIES = "com.couchbase.client.java.properties";
+
 
 
     /**
@@ -99,18 +104,22 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
             String gitVersion = null;
             try {
                 Properties versionProp = new Properties();
-                versionProp.load(DefaultCoreEnvironment.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES));
+                versionProp.load(DefaultCouchbaseEnvironment.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES));
                 version = versionProp.getProperty("specificationVersion");
                 gitVersion = versionProp.getProperty("implementationVersion");
             } catch (Exception e) {
-                LOGGER.info("Could not retrieve version properties, defaulting.", e);
+                LOGGER.info("Could not retrieve java-client version properties, defaulting.", e);
             }
-            SDK_PACKAGE_NAME_AND_VERSION = String.format("couchbase-java-client/%s (git: %s)",
-                version == null ? "unknown" : version, gitVersion == null ? "unknown" : gitVersion);
 
-            //this will overwrite the USER_AGENT in Core
-            // making core send user_agent with java client version information
-            USER_AGENT = String.format("%s (%s/%s %s; %s %s)",
+            CLIENT_VERSION = version == null ? "unknown" : version;
+            CLIENT_GIT_VERSION = gitVersion == null ? "unknown" : gitVersion;
+
+            SDK_PACKAGE_NAME_AND_VERSION = String.format("couchbase-java-client/%s (git: %s, core: %s)",
+                    CLIENT_VERSION,
+                    CLIENT_GIT_VERSION,
+                    CORE_GIT_VERSION);
+
+            SDK_USER_AGENT = String.format("%s (%s/%s %s; %s %s)",
                 SDK_PACKAGE_NAME_AND_VERSION,
                 System.getProperty("os.name"),
                 System.getProperty("os.version"),
@@ -181,8 +190,13 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long disconnectTimeout = DISCONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
 
-        private String userAgent = USER_AGENT; //this is from Core
-        private String packageNameAndVersion = SDK_PACKAGE_NAME_AND_VERSION;
+        public Builder() {
+            super();
+            //this ensures default values are the ones relative to the client
+            //while still making it possible to override.
+            packageNameAndVersion(SDK_PACKAGE_NAME_AND_VERSION);
+            userAgent(SDK_USER_AGENT);
+        }
 
         public Builder managementTimeout(long managementTimeout) {
             this.managementTimeout = managementTimeout;
@@ -538,6 +552,16 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     @Override
     public boolean dnsSrvEnabled() {
         return dnsSrvEnabled;
+    }
+
+    @Override
+    public String clientVersion() {
+        return CLIENT_VERSION;
+    }
+
+    @Override
+    public String clientBuild() {
+        return CLIENT_GIT_VERSION;
     }
 
     @Override

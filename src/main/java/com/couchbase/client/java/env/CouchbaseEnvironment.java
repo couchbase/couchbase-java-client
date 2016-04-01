@@ -91,4 +91,28 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
      * @return true if enabled, false otherwise.
      */
     boolean dnsSrvEnabled();
+
+    /**
+     * Returns version information on the Couchbase Java SDK client. Version number
+     * is in the form MAJOR.MINOR.PATCH, and is the one for the java-client layer.
+     *
+     * @return the version string for the Java client.
+     * @see #clientBuild() for a more specific build information (relevant for tracking
+     * the exact version of the code the client was built from)
+     * @see #coreVersion() for the same information but relative to the core layer.
+     */
+    String clientVersion();
+
+    /**
+     * Returns build information on the Couchbase Java SDK client. This has a better
+     * granularity than {@link #clientVersion()} and thus is more relevant to track
+     * the exact version of the code the client was built from.
+     *
+     * Build information can contain VCS information like commit numbers, tags, etc...
+     *
+     * @return the build string for the Java client.
+     * @see #clientVersion() for more generic version information.
+     * @see #coreBuild() for the same information but relative to the core layer.
+     */
+    String clientBuild();
 }
