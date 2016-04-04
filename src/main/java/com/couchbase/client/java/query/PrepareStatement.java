@@ -60,7 +60,7 @@ public class PrepareStatement implements SerializableStatement {
     @Override
     public String toString() {
         if (preparedName != null) {
-            return PREPARE_PREFIX + preparedName + " FROM " + toPrepare.toString();
+            return PREPARE_PREFIX + "`" + preparedName + "` FROM " + toPrepare.toString();
         }
         return PREPARE_PREFIX + toPrepare.toString();
     }
