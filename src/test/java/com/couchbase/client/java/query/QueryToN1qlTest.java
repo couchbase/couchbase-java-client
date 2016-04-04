@@ -106,7 +106,7 @@ public class QueryToN1qlTest {
         PrepareStatement prepare = PrepareStatement.prepare(toPrepare);
         PrepareStatement prepareFromString = PrepareStatement.prepare("SELECT * FROM default");
 
-        Pattern p = Pattern.compile("PREPARE \\w+ FROM ");
+        Pattern p = Pattern.compile("PREPARE `\\w+` FROM ");
         Matcher prepareMatcher = p.matcher(prepare.toString());
         Matcher prepareFromStringMatcher = p.matcher(prepareFromString.toString());
 
