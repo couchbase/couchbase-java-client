@@ -44,6 +44,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 @InterfaceAudience.Private
 public class PreparedN1qlQuery extends ParameterizedN1qlQuery {
 
+    private boolean encodedPlanEnabled = true;
+
     public PreparedN1qlQuery(PreparedPayload plan, JsonArray positionalParams, N1qlParams params) {
         super(plan, positionalParams, params);
     }
@@ -71,11 +73,29 @@ public class PreparedN1qlQuery extends ParameterizedN1qlQuery {
         return (PreparedPayload) super.statement();
     }
 
+    /**
+     * Toggle whether or not the encodedPlan part of the payload should be made part of the N1QL statement.
+     *
+     * @param enabled true to activate encodedPlan in the N1QL statement, false to avoid including it.
+     */
+    public void setEncodedPlanEnabled(boolean enabled) {
+        this.encodedPlanEnabled = enabled;
+    }
+
+    /**
+     * Returns whether or not the encodedPlan part of the payload will be made part of the N1QL statement.
+     *
+     * @return true if encodedPlan is to be used in statement, false otherwise.
+     */
+    public boolean isEncodedPlanEnabled() {
+        return this.encodedPlanEnabled;
+    }
+
     @Override
     public JsonObject n1ql() {
         JsonObject n1ql = super.n1ql();
         String encodedPlan = statement().encodedPlan();
-        if (encodedPlan != null) {
+        if (encodedPlan != null && encodedPlanEnabled) {
             n1ql.put("encoded_plan", encodedPlan);
         }
         return n1ql;

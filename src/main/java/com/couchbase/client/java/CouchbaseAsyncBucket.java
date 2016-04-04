@@ -177,7 +177,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         }
 
         bucketManager = DefaultAsyncBucketManager.create(bucket, password, core);
-        n1qlQueryExecutor = new N1qlQueryExecutor(core, bucket, password);
+
+        boolean n1qlPreparedEncodedPlanEnabled = "true".equalsIgnoreCase(System.getProperty(N1qlQueryExecutor.ENCODED_PLAN_ENABLED_PROPERTY, "true")); //active by default
+        n1qlQueryExecutor = new N1qlQueryExecutor(core, bucket, password, n1qlPreparedEncodedPlanEnabled);
     }
 
     @Override

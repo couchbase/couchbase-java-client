@@ -67,7 +67,7 @@ public class N1qlQueryExecutorTest {
     public void testPreparedStatementInCacheBypassesPreparation() throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
@@ -96,7 +96,7 @@ public class N1qlQueryExecutorTest {
     public void testPreparedStatementNotInCacheTriggersPreparation() throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
@@ -130,7 +130,7 @@ public class N1qlQueryExecutorTest {
     public void testExtractionOfPayloadFromPrepareResponse() {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = new N1qlQueryExecutor(mockFacade, "default", "", cache);
+        N1qlQueryExecutor executor = new N1qlQueryExecutor(mockFacade, "default", "", cache, true);
 
         JsonObject prepareResponse = JsonObject.create()
                 .put("encoded_plan", "encoded123")
@@ -151,7 +151,7 @@ public class N1qlQueryExecutorTest {
     public void testCachedPlanExecutionErrorTriggersRetry() throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
@@ -186,7 +186,7 @@ public class N1qlQueryExecutorTest {
     public void testUncachedPlanExecutionErrorTriggersRetry() throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
@@ -236,7 +236,7 @@ public class N1qlQueryExecutorTest {
     public void testUncachedPlanExecutionDoubleErrorTriggersRetryThenFails() throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
@@ -290,7 +290,7 @@ public class N1qlQueryExecutorTest {
     private void testRetryCondition(int code, String msg, boolean retryExpected) throws Exception {
         LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
-        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache));
+        N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", cache, true));
 
         Statement st = Select.select("*");
         N1qlQuery q = N1qlQuery.simple(st, N1qlParams.build().adhoc(false));
