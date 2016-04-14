@@ -21,7 +21,7 @@
     <url>http://www.couchbase.com/develop/java/current</url>
 
     <properties>
-        <spymemcached>2.11.3</spymemcached>
+        <spymemcached>2.12.1</spymemcached>
     </properties>
 
     <licenses>
