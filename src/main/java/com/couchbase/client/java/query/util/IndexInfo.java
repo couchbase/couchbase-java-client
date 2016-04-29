@@ -48,6 +48,7 @@ public class IndexInfo {
     private final String keyspace;
     private final String namespace;
     private final JsonArray indexKey;
+    private final String condition;
 
     private final JsonObject raw;
 
@@ -59,6 +60,9 @@ public class IndexInfo {
         this.keyspace = raw.getString("keyspace_id");
         this.namespace = raw.getString("namespace_id");
         this.indexKey = raw.getArray("index_key");
+
+        String rawCondition = raw.getString("condition");
+        this.condition = rawCondition == null ? "" : rawCondition;
 
         this.rawType = raw.getString("using");
         if (rawType == null) {
@@ -134,6 +138,20 @@ public class IndexInfo {
     }
 
     /**
+     * Return the {@link String} representation of the index's condition (the WHERE clause of the index), or an empty
+     * String if no condition was set.
+     *
+     * Note that the query service can present the condition in a slightly different manner from when you declared the index:
+     * for instance it will wrap expressions with parentheses and show the fields in an escaped format (surrounded by
+     * backticks).
+     *
+     * @return the condition/WHERE clause of the index or empty string if none.
+     */
+    public String condition() {
+        return this.condition;
+    }
+
+    /**
      * @return the raw JSON representation of the index information, as returned by the query service.
      */
     public JsonObject raw() {
@@ -169,6 +187,9 @@ public class IndexInfo {
         if (!namespace.equals(indexInfo.namespace)) {
             return false;
         }
+        if (!condition.equals(indexInfo.condition)) {
+            return false;
+        }
         return indexKey.equals(indexInfo.indexKey);
 
     }
@@ -182,6 +203,7 @@ public class IndexInfo {
         result = 31 * result + keyspace.hashCode();
         result = 31 * result + namespace.hashCode();
         result = 31 * result + indexKey.hashCode();
+        result = 31 * result + condition.hashCode();
         return result;
     }
 

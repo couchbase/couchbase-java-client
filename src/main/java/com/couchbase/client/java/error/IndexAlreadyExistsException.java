@@ -28,10 +28,11 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.query.dsl.Expression;
 
 /**
  * An exception indicating that an index already exists, for instance
- * when trying to create one using {@link BucketManager#createIndex(String, List, boolean, boolean)}.
+ * when trying to create one using {@link BucketManager#createN1qlIndex(String, List, Expression, boolean, boolean)}.
  *
  * @author Simon Baslé
  * @since 2.2

@@ -29,7 +29,7 @@ import com.couchbase.client.java.bucket.BucketManager;
 
 /**
  * An exception indicating that an index does not exist, for instance
- * when trying to delete one using {@link BucketManager#dropIndex(String, boolean)}.
+ * when trying to delete one using {@link BucketManager#dropN1qlIndex(String, boolean)}.
  *
  * @author Simon Baslé
  * @since 2.2

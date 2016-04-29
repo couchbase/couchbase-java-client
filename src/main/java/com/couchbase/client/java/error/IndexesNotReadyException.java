@@ -32,7 +32,7 @@ import com.couchbase.client.java.bucket.BucketManager;
 /**
  * An exception used to denote that a particular set of secondary N1QL indexes are not in a "online" state.
  *
- * Mainly used internally for the purpose of {@link BucketManager#watchIndexes(List, boolean, long, TimeUnit)}
+ * Mainly used internally for the purpose of {@link BucketManager#watchN1qlIndexes(List, long, TimeUnit)}
  * and related methods.
  *
  * @author Simon Baslé
