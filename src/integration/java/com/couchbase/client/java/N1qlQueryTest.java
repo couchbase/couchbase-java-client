@@ -21,6 +21,21 @@
  */
 package com.couchbase.client.java;
 
+import static com.couchbase.client.java.query.Index.createPrimaryIndex;
+import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.x;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -37,19 +52,6 @@ import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
-import static com.couchbase.client.java.query.Index.createPrimaryIndex;
-import static com.couchbase.client.java.query.Select.select;
-import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.x;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests of the N1QL Query features.
@@ -93,8 +95,8 @@ public class N1qlQueryTest {
         //having two calls to errors() here validates that there's not a reference to the async stream
         //each time the method is called.
         assertEquals(1, indexResult.errors().size());
-        assertEquals("GSI CreatePrimaryIndex() - cause: Index #primary already exist.",
-                indexResult.errors().get(0).getString("msg"));
+        assertThat(indexResult.errors().get(0).getString("msg"),
+                containsString("GSI CreatePrimaryIndex() - cause: Index #primary already exist"));
     }
 
     @Test
