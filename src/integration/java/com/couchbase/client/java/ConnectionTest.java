@@ -21,15 +21,19 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.error.BucketDoesNotExistException;
-import com.couchbase.client.java.error.InvalidPasswordException;
-import com.couchbase.client.java.util.TestProperties;
-import org.junit.Test;
-
+import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
+
+import com.couchbase.client.java.cluster.ClusterManager;
+import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.util.TestProperties;
+import com.couchbase.client.java.util.features.Version;
+import org.junit.Test;
 
 /**
  * Basic test cases which verify functionality not bound to a {@link Bucket}.
@@ -51,10 +55,24 @@ public class ConnectionTest  {
         cluster.openBucket("");
     }
 
-    @Test(expected = BucketDoesNotExistException.class)
-    public void shouldThrowConfigurationExceptionForWrongBucketName() {
+    @Test
+    public void shouldThrowBucketDoesNotExistExceptionForWrongBucketName() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
-        cluster.openBucket("someWrongBucketName");
+        ClusterManager clusterManager = cluster.clusterManager(TestProperties.adminName(), TestProperties.adminPassword());
+        assumeTrue("Server after 4.5.0 throw an IllegalArgumentException, see other test",
+                clusterManager.info().getMinVersion().compareTo(new Version(4, 5, 0)) < 0);
+
+        verifyException(cluster, BucketDoesNotExistException.class).openBucket("someWrongBucketName");
+    }
+
+    @Test
+    public void shouldThrowInvalidPasswordExceptionForWrongBucketNameAfterWatson() {
+        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        ClusterManager clusterManager = cluster.clusterManager(TestProperties.adminName(), TestProperties.adminPassword());
+        assumeTrue("Server before 4.5.0 throw a BucketDoesNotExistException, see other test",
+                clusterManager.info().getMinVersion().compareTo(new Version(4, 5, 0)) >= 0);
+
+        verifyException(cluster, InvalidPasswordException.class).openBucket("someWrongBucketName");
     }
 
     @Test(expected = InvalidPasswordException.class)
