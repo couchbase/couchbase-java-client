@@ -254,7 +254,7 @@ public interface AsyncBucketManager {
      * relevant index is defined for this bucket).
      */
     @InterfaceStability.Experimental
-    Observable<IndexInfo> listIndexes();
+    Observable<IndexInfo> listN1qlIndexes();
 
     /**
      * Create a primary index for the current bucket.
@@ -268,13 +268,13 @@ public interface AsyncBucketManager {
      *  - {@link CouchbaseException} if another error occurs during index creation.
      *
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
-     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     * @param defer true to defer building of the index until {@link #buildN1qlDeferredIndexes()} is called (or a direct call
      *              to the corresponding query service API).
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> createPrimaryIndex(boolean ignoreIfExist, boolean defer);
+    Observable<Boolean> createN1qlPrimaryIndex(boolean ignoreIfExist, boolean defer);
 
     /**
      * Create a custom-named primary index for the current bucket.
@@ -289,16 +289,44 @@ public interface AsyncBucketManager {
      *
      * @param customName the custom name for the primary index.
      * @param ignoreIfExist if a primary index already exists, an exception will be thrown unless this is set to true.
-     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     * @param defer true to defer building of the index until {@link #buildN1qlDeferredIndexes()} is called (or a direct call
      *              to the corresponding query service API).
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> createPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
+    Observable<Boolean> createN1qlPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
 
     /**
      * Create a secondary index for the current bucket.
+     *
+     * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
+     * by name.
+     *
+     * The convenience of providing fields as a vararg of either String or Expression comes with the limitation that
+     * a WHERE clause cannot be provided. See {@link #createN1qlIndex(String, List, Expression, boolean, boolean)} for
+     * that.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - {@link IndexAlreadyExistsException} if the index already exists and ignoreIfExist is set to false.
+     *  - {@link CouchbaseException} if another error occurs during index creation.
+     *
+     * @param indexName the name of the index.
+     * @param ignoreIfExist if a secondary index already exists with that name, an exception will be thrown unless this
+     *                      is set to true.
+     * @param defer true to defer building of the index until {@link #buildN1qlDeferredIndexes()} is called (or a direct call
+     *              to the corresponding query service API).
+     * @param fields the JSON fields to index, in either {@link Expression} or {@link String} form.
+     * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
+     * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
+     * @see #createN1qlIndex(String, List, Expression, boolean, boolean)
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> createN1qlIndex(String indexName, boolean ignoreIfExist, boolean defer, Object... fields);
+
+    /**
+     * Create a secondary index for the current bucket, with a WHERE clause.
      *
      * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
      * by name.
@@ -309,16 +337,18 @@ public interface AsyncBucketManager {
      *  - {@link CouchbaseException} if another error occurs during index creation.
      *
      * @param indexName the name of the index.
+     * @param fields the JSON fields to index, in the form of a {@link List} containing a mix of {@link Expression} or {@link String}.
+     * @param whereClause the {@link Expression} to use in the WHERE clause of the index.
      * @param ignoreIfExist if a secondary index already exists with that name, an exception will be thrown unless this
      *                      is set to true.
-     * @param defer true to defer building of the index until {@link #buildDeferredIndexes()} is called (or a direct call
+     * @param defer true to defer building of the index until {@link #buildN1qlDeferredIndexes()} is called (or a direct call
      *              to the corresponding query service API).
-     * @param fields the JSON fields to index, in either {@link Expression} or {@link String} form.
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> createIndex(String indexName, boolean ignoreIfExist, boolean defer, Object... fields);
+    Observable<Boolean> createN1qlIndex(final String indexName, List<Object> fields, Expression whereClause,
+            final boolean ignoreIfExist, boolean defer);
 
     /**
      * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket.
@@ -335,7 +365,7 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> dropPrimaryIndex(boolean ignoreIfNotExist);
+    Observable<Boolean> dropN1qlPrimaryIndex(boolean ignoreIfNotExist);
 
     /**
      * Drop the given custom-named primary index associated with the current bucket.
@@ -353,7 +383,7 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> dropPrimaryIndex(String customName, boolean ignoreIfNotExist);
+    Observable<Boolean> dropN1qlPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
      * Drop the given secondary index associated with the current bucket.
@@ -370,7 +400,7 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> dropIndex(String name, boolean ignoreIfNotExist);
+    Observable<Boolean> dropN1qlIndex(String name, boolean ignoreIfNotExist);
 
     /**
      * Instruct the query engine to trigger the build of indexes that have been deferred. This only considers GSI
@@ -382,10 +412,10 @@ public interface AsyncBucketManager {
      *
      * @return an {@link Observable} that will get notified with a single List of index names, the names of the indexes that
      * have been triggered.
-     * @see #watchIndexes(List, boolean, long, TimeUnit) to poll for a list of indexes to become online.
+     * @see #watchN1qlIndexes(List, long, TimeUnit) to poll for a list of indexes to become online.
      */
     @InterfaceStability.Experimental
-    Observable<List<String>> buildDeferredIndexes();
+    Observable<List<String>> buildN1qlDeferredIndexes();
 
     /**
      * Watches all given indexes (possibly including the primary one), polling the query service until they become
@@ -395,13 +425,14 @@ public interface AsyncBucketManager {
      * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
      * to see various stages of the polling.
      *
+     * You can also watch a primary index by using the {@link Index#PRIMARY_NAME} constant.
+     *
      * @param watchList the names of the SECONDARY indexes to watch (can be empty).
-     * @param watchPrimary true if the PRIMARY INDEX should be added to the watchList, false otherwise.
      * @param watchTimeout the maximum duration for which to poll for the index to become online.
      * @param watchTimeUnit the time unit for the watchTimeout.
      * @return a stream of the {@link IndexInfo} for the indexes that went online during the watch period. Can be empty
      * if all indexes where online, no index to watch or no index became online within the watchTimeout timeframe.
      */
     @InterfaceStability.Experimental
-    Observable<IndexInfo> watchIndexes(List<String> watchList, boolean watchPrimary, long watchTimeout, TimeUnit watchTimeUnit);
+    Observable<IndexInfo> watchN1qlIndexes(List<String> watchList, long watchTimeout, TimeUnit watchTimeUnit);
 }
