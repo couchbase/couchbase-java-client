@@ -23,6 +23,7 @@ package com.couchbase.client.java.query;
 
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.kv.MutationToken;
+import com.couchbase.client.java.MutationState;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -56,7 +57,7 @@ public class N1qlParams implements Serializable {
     private String clientContextId;
     private Integer maxParallelism;
 
-    private List<MutationToken> mutationTokens;
+    private MutationState mutationState;
 
     /**
      * If adhoc, the query should never be prepared.
@@ -89,26 +90,13 @@ public class N1qlParams implements Serializable {
         if (this.maxParallelism != null) {
             queryJson.put("max_parallelism", this.maxParallelism.toString());
         }
-        if (this.mutationTokens != null) {
+
+        if (this.mutationState != null) {
             if (this.consistency != null) {
                 throw new IllegalArgumentException("`consistency(...)` cannot be used "
                     + "together with `consistentWith(...)`");
             }
-            JsonObject vectors = JsonObject.create();
-            for (MutationToken token : mutationTokens) {
-                JsonObject bucket = vectors.getObject(token.bucket());
-                if (bucket == null) {
-                    bucket = JsonObject.create();
-                    vectors.put(token.bucket(), bucket);
-                }
-
-                bucket.put(String.valueOf(token.vbucketID()), JsonArray.from(
-                    token.sequenceNumber(),
-                    String.valueOf(token.vbucketUUID())
-                ));
-            }
-
-            queryJson.put("scan_vectors", vectors);
+            queryJson.put("scan_vectors", mutationState.export());
             queryJson.put("scan_consistency", "at_plus");
         }
     }
@@ -185,69 +173,34 @@ public class N1qlParams implements Serializable {
      * Sets the {@link Document}s resulting of a mutation this query should be consistent with.
      *
      * @param documents the documents returned from a mutation.
-     *
      * @return this {@link N1qlParams} for chaining.
      */
     @InterfaceStability.Experimental
     public N1qlParams consistentWith(Document... documents) {
-        if (documents == null || documents.length == 0) {
-            throw new IllegalArgumentException("At least one Document needs to be provided.");
-        }
-
-        for (Document doc : documents) {
-            storeToken(doc.mutationToken());
-        }
-
-        return this;
+        return consistentWith(MutationState.from(documents));
     }
 
     /**
      * Sets the {@link DocumentFragment}s resulting of a mutation this query should be consistent with.
      *
      * @param fragments the fragments returned from a mutation.
-     *
      * @return this {@link N1qlParams} for chaining.
      */
     @InterfaceStability.Experimental
     public N1qlParams consistentWith(DocumentFragment... fragments) {
-        if (fragments == null || fragments.length == 0) {
-            throw new IllegalArgumentException("At least one DocumentFragment needs to be provided.");
-        }
-
-        for (DocumentFragment doc : fragments) {
-            storeToken(doc.mutationToken());
-        }
-
-        return this;
+        return consistentWith(MutationState.from(fragments));
     }
 
     /**
-     * Helper method to build up the token array and store it for later processing.
+     * Sets the {@link MutationState} this query should be consistent with.
+     *
+     * @param mutationState the mutation state which accumulates tokens from one or more mutation results.
+     * @return this {@link N1qlParams} for chaining.
      */
-    private void storeToken(MutationToken token) {
-        if (token == null) {
-            throw new IllegalArgumentException("No MutationToken provided (must be enabled on the Environment).");
-        }
-
-        if (mutationTokens == null) {
-            mutationTokens = new ArrayList<MutationToken>();
-            mutationTokens.add(token);
-            return;
-        }
-
-        Iterator<MutationToken> tokenIterator = mutationTokens.iterator();
-        while(tokenIterator.hasNext()) {
-            MutationToken t = tokenIterator.next();
-            if (t.vbucketID() == token.vbucketID() && t.bucket().equals(token.bucket())) {
-                if (token.sequenceNumber() > t.sequenceNumber()) {
-                    tokenIterator.remove();
-                    mutationTokens.add(token);
-                }
-                return;
-            }
-        }
-
-        mutationTokens.add(token);
+    @InterfaceStability.Experimental
+    public N1qlParams consistentWith(MutationState mutationState) {
+        this.mutationState = mutationState;
+        return this;
     }
 
     /**
