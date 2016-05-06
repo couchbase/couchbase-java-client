@@ -24,13 +24,13 @@ The easiest way is to download the jar as well as its transitive dependencies (o
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.2.6</version>
+    <version>2.2.7</version>
 </dependency>
 ```
 
 You can find information to older versions as well as alternative downloads [here](http://developer.couchbase.com/documentation/server/4.0/sdks/java-2.2/download-links.html).
 
-The following code connects to the `Cluster`, opens a `Bucket`, stores a `Document`, retreives it and prints out parts of the content.
+The following code connects to the `Cluster`, opens a `Bucket`, stores a `Document`, retrieves it and prints out parts of the content.
 
 ```java
 // Create a cluster reference
