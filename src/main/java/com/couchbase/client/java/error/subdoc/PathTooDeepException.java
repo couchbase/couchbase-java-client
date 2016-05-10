@@ -36,7 +36,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class PathTooDeepException extends SubDocumentException {
 

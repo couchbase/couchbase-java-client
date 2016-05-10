@@ -4428,7 +4428,7 @@ public interface Bucket {
      * @return a builder to describe the lookup(s) to perform.
      * @see LookupInBuilder#execute()
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     LookupInBuilder lookupIn(String docId);
 
@@ -4448,7 +4448,7 @@ public interface Bucket {
      * @return a builder to describe the mutation(s) to perform.
      * @see MutateInBuilder#execute()
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     MutateInBuilder mutateIn(String docId);
 

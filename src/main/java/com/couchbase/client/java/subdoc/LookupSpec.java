@@ -34,7 +34,7 @@ import com.couchbase.client.core.message.kv.subdoc.multi.LookupCommand;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Private
 public class LookupSpec extends LookupCommand {
 

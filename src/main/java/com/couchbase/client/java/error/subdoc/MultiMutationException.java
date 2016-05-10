@@ -39,7 +39,7 @@ import com.couchbase.client.java.subdoc.MutationSpec;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class MultiMutationException extends SubDocumentException {
 

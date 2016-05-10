@@ -42,7 +42,7 @@ import com.couchbase.client.java.subdoc.MutateInBuilder;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public interface FragmentTranscoder {
 

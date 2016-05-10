@@ -46,7 +46,7 @@ import com.couchbase.client.java.error.subdoc.SubDocumentException;
  * @since 2.2
  * @param <OPERATION> the broad type of subdocument operation, either {@link Lookup} or {@link Mutation}.
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class DocumentFragment<OPERATION> {
 

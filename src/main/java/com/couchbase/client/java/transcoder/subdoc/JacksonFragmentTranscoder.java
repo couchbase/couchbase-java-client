@@ -45,7 +45,7 @@ import com.couchbase.client.java.transcoder.TranscoderUtils;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Private
 public class JacksonFragmentTranscoder extends AbstractFragmentTranscoder {
 

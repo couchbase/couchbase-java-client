@@ -35,7 +35,7 @@ import com.couchbase.client.java.subdoc.MultiValue;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public abstract class AbstractFragmentTranscoder implements FragmentTranscoder {
 

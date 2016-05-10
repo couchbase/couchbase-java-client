@@ -48,7 +48,7 @@ import com.couchbase.client.java.util.Blocking;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class LookupInBuilder {
 

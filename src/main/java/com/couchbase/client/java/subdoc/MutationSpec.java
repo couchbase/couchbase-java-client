@@ -33,7 +33,7 @@ import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Private
 public class MutationSpec {
     private final Mutation type;

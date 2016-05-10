@@ -34,9 +34,9 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  *
  * @author Simon Baslé
  * @since 2.2
- * @see WouldOverflowException if the delta is valid but applying it to the current value would cause an overflow.
+ * @see ValueTooDeepException if the delta is valid but applying it to the current value would cause an overflow.
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class BadDeltaException extends SubDocumentException {
 
