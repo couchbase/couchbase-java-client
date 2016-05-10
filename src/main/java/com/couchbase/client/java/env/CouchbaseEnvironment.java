@@ -79,13 +79,6 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
     long connectTimeout();
 
     /**
-     * The default timeout for disconnect operations, set to {@link DefaultCouchbaseEnvironment#DISCONNECT_TIMEOUT}.
-     *
-     * @return the default disconnect timeout.
-     */
-    long disconnectTimeout();
-
-    /**
      * Returns whether DNS SRV lookup for the bootstrap nodes is enabled or not.
      *
      * @return true if enabled, false otherwise.
