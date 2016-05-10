@@ -37,6 +37,7 @@ import com.couchbase.client.java.AsyncCluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import rx.Scheduler;
 
+import java.security.KeyStore;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -487,6 +488,18 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         @Override
         public Builder searchEndpoints(int searchEndpoints) {
             super.searchEndpoints(searchEndpoints);
+            return this;
+        }
+
+        @Override
+        public Builder sslKeystore(KeyStore sslKeystore) {
+            super.sslKeystore(sslKeystore);
+            return this;
+        }
+
+        @Override
+        public Builder dcpConnectionName(String dcpConnectionName) {
+            super.dcpConnectionName(dcpConnectionName);
             return this;
         }
 
