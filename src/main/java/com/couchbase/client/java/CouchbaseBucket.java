@@ -33,11 +33,10 @@ import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
-import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
-import com.couchbase.client.java.subdoc.LookupInBuilder;
-import com.couchbase.client.java.subdoc.MutateInBuilder;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.fts.SearchQuery;
+import com.couchbase.client.java.fts.result.SearchQueryResult;
+import com.couchbase.client.java.fts.result.impl.DefaultSearchQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.DefaultN1qlQueryResult;
@@ -47,8 +46,10 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.CouchbaseRepository;
 import com.couchbase.client.java.repository.Repository;
-import com.couchbase.client.java.search.SearchQueryResult;
-import com.couchbase.client.java.search.query.SearchQuery;
+import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
+import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
+import com.couchbase.client.java.subdoc.LookupInBuilder;
+import com.couchbase.client.java.subdoc.MutateInBuilder;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
 import com.couchbase.client.java.view.AsyncSpatialViewResult;
@@ -591,6 +592,7 @@ public class CouchbaseBucket implements Bucket {
     public SearchQueryResult query(SearchQuery query, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncBucket
             .query(query)
+            .flatMap(DefaultSearchQueryResult.FROM_ASYNC)
             .single(), timeout, timeUnit);
     }
 

@@ -1,0 +1,424 @@
+{
+  "status": {
+    "total": 2,
+    "failed": 0,
+    "successful": 2
+  },
+  "request": {
+    "query": {
+      "match": "beer",
+      "boost": 1,
+      "prefix_length": 0,
+      "fuzziness": 1
+    },
+    "size": 5,
+    "from": 0,
+    "highlight": {
+      "style": "html",
+      "fields": null
+    },
+    "fields": [
+      "name"
+    ],
+    "facets": {
+      "category": {
+        "size": 2,
+        "field": "style"
+      },
+      "strength": {
+        "size": 4,
+        "field": "abv",
+        "numeric_ranges": [
+          {
+            "name": "light",
+            "min": 0,
+            "max": 3
+          },
+          {
+            "name": "strong",
+            "min": 3,
+            "max": 5
+          },
+          {
+            "name": "extra-strong",
+            "min": 5
+          }
+        ]
+      },
+      "updateRange": {
+        "size": 3,
+        "field": "updated",
+        "date_ranges": [
+          {
+            "name": "old",
+            "start": "2010-01-01T00:00:00Z",
+            "end": "2011-01-01T00:00:00Z"
+          },
+          {
+            "name": "middle",
+            "start": "2011-01-01T00:00:00Z",
+            "end": "2012-09-27T00:36:14Z"
+          },
+          {
+            "name": "new",
+            "start": "2011-09-27T00:36:14Z",
+            "end": "0001-01-01T00:00:00Z"
+          }
+        ]
+      }
+    },
+    "explain": true
+  },
+  "hits": [
+    {
+      "index": "beer-search_5cb0396d1a98fa15_b7ff6b68",
+      "id": "beer_cricket_hill",
+      "score": 0.19801861346523805,
+      "explanation": { "fake": true },
+      "locations": {
+        "description": {
+          "beef": [
+            {
+              "pos": 94,
+              "start": 535,
+              "end": 539,
+              "array_positions": [1, 3, 4]
+            }
+          ],
+          "beer": [
+            {
+              "pos": 32,
+              "start": 172,
+              "end": 176,
+              "array_positions": null
+            },
+            {
+              "pos": 69,
+              "start": 404,
+              "end": 408,
+              "array_positions": null
+            },
+            {
+              "pos": 80,
+              "start": 463,
+              "end": 467,
+              "array_positions": null
+            },
+            {
+              "pos": 154,
+              "start": 869,
+              "end": 873,
+              "array_positions": null
+            }
+          ],
+          "beers": [
+            {
+              "pos": 26,
+              "start": 135,
+              "end": 140,
+              "array_positions": null
+            },
+            {
+              "pos": 55,
+              "start": 316,
+              "end": 321,
+              "array_positions": null
+            },
+            {
+              "pos": 111,
+              "start": 634,
+              "end": 639,
+              "array_positions": null
+            },
+            {
+              "pos": 119,
+              "start": 674,
+              "end": 679,
+              "array_positions": null
+            },
+            {
+              "pos": 128,
+              "start": 727,
+              "end": 732,
+              "array_positions": null
+            }
+          ]
+        }
+      },
+      "fields": { "name": "cricket hill" },
+      "fragments": {
+        "description": [
+          "fake <mark>Beer</mark> description fragment"
+        ],
+        "name": [
+          "fake <mark>beer</mark> name fragment"
+        ]
+      }
+    },
+    {
+      "index": "beer-search_5cb0396d1a98fa15_b7ff6b68",
+      "id": "beer_magic_hat-wacko",
+      "score": 0.11602427306967941,
+      "explanation": { "fake": true },
+      "locations": {
+        "description": {
+          "beer": [
+            {
+              "pos": 2,
+              "start": 5,
+              "end": 9,
+              "array_positions": null
+            },
+            {
+              "pos": 16,
+              "start": 84,
+              "end": 88,
+              "array_positions": null
+            },
+            {
+              "pos": 29,
+              "start": 153,
+              "end": 157,
+              "array_positions": null
+            }
+          ],
+          "beet": [
+            {
+              "pos": 19,
+              "start": 99,
+              "end": 103,
+              "array_positions": null
+            },
+            {
+              "pos": 22,
+              "start": 116,
+              "end": 120,
+              "array_positions": null
+            }
+          ]
+        },
+        "style": {
+          "beer": [
+            {
+              "pos": 2,
+              "start": 6,
+              "end": 10,
+              "array_positions": null
+            }
+          ]
+        },
+        "type": {
+          "beer": [
+            {
+              "pos": 1,
+              "start": 0,
+              "end": 4,
+              "array_positions": null
+            }
+          ]
+        }
+      },
+      "fragments": {
+        "description": [
+          "…s <mark>beer</mark> truly defies style. A portion of the fermentable sugars that make up this <mark>beer</mark> come from <mark>beet</mark> sugar. Real <mark>beet</mark> extract is used which gives the <mark>beer</mark> a beautiful light red color. It’s body is inv…"
+        ],
+        "style": [
+          "Fruit <mark>Beer</mark>"
+        ]
+      },
+      "fields": {
+        "name": "Wacko"
+      }
+    },
+    {
+      "index": "beer-search_5cb0396d1a98fa15_8b80958a",
+      "id": "beer_orlando_brewing-orange_blossom_pilsner",
+      "score": 0.10069077225277363,
+      "explanation": { "fake": true },
+      "locations": {
+        "description": {
+          "bee": [
+            {
+              "pos": 77,
+              "start": 410,
+              "end": 413,
+              "array_positions": null
+            }
+          ],
+          "beers": [
+            {
+              "pos": 79,
+              "start": 417,
+              "end": 422,
+              "array_positions": null
+            }
+          ]
+        },
+        "style": {
+          "beer": [
+            {
+              "pos": 2,
+              "start": 6,
+              "end": 10,
+              "array_positions": null
+            }
+          ]
+        },
+        "type": {
+          "beer": [
+            {
+              "pos": 1,
+              "start": 0,
+              "end": 4,
+              "array_positions": null
+            }
+          ]
+        }
+      },
+      "fragments": {
+        "description": [
+          "…iginal OBP.\r\n\r\nThe result is a bold, distinct taste of its own. Made with twice as much real orange blossom honey, all-natural ingredients and no refined sugar, it really is the new king <mark>bee</mark> of <mark>beers</mark>."
+        ],
+        "style": [
+          "Fruit <mark>Beer</mark>"
+        ]
+      },
+      "fields": {
+        "name": "Orange Blossom Pilsner ²"
+      }
+    },
+    {
+      "index": "beer-search_5cb0396d1a98fa15_b7ff6b68",
+      "id": "beer_big_buck_brewery",
+      "score": 0.08281195155175233,
+      "explanation": {"fake": true },
+      "locations": {
+        "description": {
+          "beef": [
+            {
+              "pos": 18,
+              "start": 97,
+              "end": 101,
+              "array_positions": null
+            }
+          ],
+          "beers": [
+            {
+              "pos": 99,
+              "start": 602,
+              "end": 607,
+              "array_positions": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "index": "beer-search_5cb0396d1a98fa15_b7ff6b68",
+      "id": "beer_traquair_house_brewery-bear_ale",
+      "score": 0.07978707065848387,
+      "explanation": { "fake": true },
+      "locations": {
+        "name": {
+          "bear": [
+            {
+              "pos": 1,
+              "start": 0,
+              "end": 4,
+              "array_positions": null
+            }
+          ]
+        },
+        "type": {
+          "beer": [
+            {
+              "pos": 1,
+              "start": 0,
+              "end": 4,
+              "array_positions": null
+            }
+          ]
+        }
+      },
+      "fragments": {
+        "name": [
+          "<mark>Bear</mark> Ale"
+        ]
+      },
+      "fields": {
+        "name": "Bear Ale"
+      }
+    }
+  ],
+  "total_hits": 6083,
+  "max_score": 0.19801861346523805,
+  "took": 632150621,
+  "facets": {
+    "category": {
+      "field": "style",
+      "total": 15942,
+      "missing": 1660,
+      "other": 9864,
+      "terms": [
+        {
+          "term": "style",
+          "count": 3509
+        },
+        {
+          "term": "american",
+          "count": 2569
+        }
+      ]
+    },
+    "strength": {
+      "field": "abv",
+      "total": 5891,
+      "missing": 192,
+      "other": 0,
+      "numeric_ranges": [
+        {
+          "name": "light",
+          "min": 0,
+          "max": 3,
+          "count": 2861
+        },
+        {
+          "name": "extra-strong",
+          "min": 5,
+          "count": 2429
+        },
+        {
+          "name": "strong",
+          "min": 3,
+          "max": 5,
+          "count": 601
+        }
+      ]
+    },
+    "updateRange": {
+      "field": "updated",
+      "total": 6085,
+      "missing": 0,
+      "other": 0,
+      "date_ranges": [
+        {
+          "name": "old",
+          "start": "2010-01-01T00:00:00Z",
+          "end": "2011-01-01T00:00:00Z",
+          "count": 6035
+        },
+        {
+          "name": "middle",
+          "start": "2011-01-01T00:00:00Z",
+          "end": "2012-09-27T00:36:14Z",
+          "count": 48
+        },
+        {
+          "name": "new",
+          "start": "2011-09-27T00:36:14Z",
+          "count": 2
+        }
+      ]
+    }
+  }
+}

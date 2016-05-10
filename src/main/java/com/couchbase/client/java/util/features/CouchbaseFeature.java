@@ -36,7 +36,13 @@ public enum CouchbaseFeature {
     DCP(3, 0, 0),
     N1QL(4, 0, 0),
     SPATIAL_VIEW(4, 0, 0),
-    SUBDOC(4, 5, 0);
+    SUBDOC(4, 5, 0),
+
+    /**
+     * @deprecated FTS is still in BETA in 4.5.0, likely to get major changes when switching to GA.
+     */
+    @Deprecated
+    FTS_BETA(4, 5, 0);
 
     private final Version availableFrom;
 
