@@ -246,18 +246,6 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
-        public Builder queryEnabled(final boolean queryEnabled) {
-            super.queryEnabled(queryEnabled);
-            return this;
-        }
-
-        @Override
-        public Builder queryPort(final int queryPort) {
-            super.queryPort(queryPort);
-            return this;
-        }
-
-        @Override
         public Builder bootstrapHttpEnabled(final boolean bootstrapHttpEnabled) {
             super.bootstrapHttpEnabled(bootstrapHttpEnabled);
             return this;
