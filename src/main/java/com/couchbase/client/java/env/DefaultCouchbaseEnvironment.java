@@ -32,6 +32,7 @@ import com.couchbase.client.core.metrics.LatencyMetricsCollectorConfig;
 import com.couchbase.client.core.metrics.MetricsCollectorConfig;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.time.Delay;
+import com.couchbase.client.deps.com.lmax.disruptor.WaitStrategy;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
 import com.couchbase.client.java.AsyncCluster;
 import com.couchbase.client.java.CouchbaseCluster;
@@ -500,6 +501,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         @Override
         public Builder dcpConnectionName(String dcpConnectionName) {
             super.dcpConnectionName(dcpConnectionName);
+            return this;
+        }
+
+        @Override
+        public Builder requestBufferWaitStrategy(WaitStrategy waitStrategy) {
+            super.requestBufferWaitStrategy(waitStrategy);
             return this;
         }
 
