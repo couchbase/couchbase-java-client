@@ -35,11 +35,13 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Contains various utility methods related to blocking operations.
  *
+ * @deprecated this class has been moved into core ({@link com.couchbase.client.core.utils.Blocking}
  * @author Michael Nitschinger
  * @since 2.0.2
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Private
+@Deprecated
 public class Blocking {
 
     /**
