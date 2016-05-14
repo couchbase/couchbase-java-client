@@ -39,8 +39,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 @InterfaceStability.Experimental
 public class BooleanQuery extends SearchQuery {
     private final ConjunctionQuery must;
-    private final ConjunctionQuery mustNot;
-    private final ConjunctionQuery should;
+    private final DisjunctionQuery mustNot;
+    private final DisjunctionQuery should;
 
     protected BooleanQuery(Builder builder) {
         super(builder);
@@ -57,11 +57,11 @@ public class BooleanQuery extends SearchQuery {
         return must;
     }
 
-    public ConjunctionQuery mustNot() {
+    public DisjunctionQuery mustNot() {
         return mustNot;
     }
 
-    public ConjunctionQuery should() {
+    public DisjunctionQuery should() {
         return should;
     }
 
@@ -74,7 +74,7 @@ public class BooleanQuery extends SearchQuery {
         }
 
         if (mustNot != null) {
-            json.put("mustNot", mustNot.queryJson());
+            json.put("must_not", mustNot.queryJson());
         }
 
         if (should != null) {
@@ -85,8 +85,8 @@ public class BooleanQuery extends SearchQuery {
 
     public static class Builder extends SearchQuery.Builder {
         private ConjunctionQuery must;
-        private ConjunctionQuery mustNot;
-        private ConjunctionQuery should;
+        private DisjunctionQuery mustNot;
+        private DisjunctionQuery should;
 
         protected Builder(String index) {
             super(index);
@@ -106,23 +106,23 @@ public class BooleanQuery extends SearchQuery {
             return this;
         }
 
-        public Builder mustNot(ConjunctionQuery mustNot) {
+        public Builder mustNot(DisjunctionQuery mustNot) {
             this.mustNot = mustNot;
             return this;
         }
 
         public Builder mustNot(SearchQuery ...mustNot) {
-            this.mustNot = ConjunctionQuery.on(index).conjuncts(mustNot).build();
+            this.mustNot = DisjunctionQuery.on(index).disjuncts(mustNot).build();
             return this;
         }
 
-        public Builder should(ConjunctionQuery should) {
+        public Builder should(DisjunctionQuery should) {
             this.should = should;
             return this;
         }
 
         public Builder should(SearchQuery ...should) {
-            this.should = ConjunctionQuery.on(index).conjuncts(should).build();
+            this.should = DisjunctionQuery.on(index).disjuncts(should).build();
             return this;
         }
     }
