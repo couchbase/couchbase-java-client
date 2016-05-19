@@ -22,6 +22,7 @@ import com.couchbase.client.java.query.Statement;
 import org.junit.Test;
 
 import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.par;
 import static com.couchbase.client.java.query.dsl.Expression.s;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static org.junit.Assert.assertEquals;
@@ -195,6 +196,13 @@ public class ExpressionTest {
         Expression divide = x(1).divide(x("user.id")).divide("user.age").divide(1).divide(100L)
         .divide(2.3).divide(4.5f);
         assertEquals("1 / user.id / user.age / 1 / 100 / 2.3 / 4.5", divide.toString());
+    }
+
+    @Test
+    public void shouldWrapExpressionInParenthesis() {
+        Expression base = x("foo").eq(x("bar"));
+
+        assertEquals("( foo = bar )", par(base).toString());
     }
 
 }

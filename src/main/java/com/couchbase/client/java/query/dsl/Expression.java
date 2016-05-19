@@ -174,6 +174,16 @@ public class Expression {
     }
 
     /**
+     * Puts an {@link Expression} in parenthesis.
+     *
+     * @param expression the expression to wrap in parenthesis.
+     * @return the expression, wrapped in parenthesis.
+     */
+    public static Expression par(final Expression expression) {
+        return infix(expression.toString(), "(", ")");
+    }
+
+    /**
      * Construct a path ("a.b.c") from Expressions or values. Strings are considered identifiers
      * (so they won't be quoted).
      *
