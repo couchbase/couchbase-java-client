@@ -611,7 +611,7 @@ public class ViewQuery implements Serializable {
     /**
      * @return true if row order, as returned by the view, should be kept while also {@link #includeDocs() including docs}.
      */
-    boolean isOrderRetained() {
+    public boolean isOrderRetained() {
         return this.retainOrder;
     }
 
