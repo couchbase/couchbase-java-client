@@ -15,9 +15,9 @@
  */
 package com.couchbase.client.java;
 
-import static com.couchbase.client.java.fts.facet.SearchFacet.date;
-import static com.couchbase.client.java.fts.facet.SearchFacet.numeric;
-import static com.couchbase.client.java.fts.facet.SearchFacet.term;
+import static com.couchbase.client.java.search.facet.SearchFacet.date;
+import static com.couchbase.client.java.search.facet.SearchFacet.numeric;
+import static com.couchbase.client.java.search.facet.SearchFacet.term;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -25,20 +25,20 @@ import java.util.Map;
 
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import com.couchbase.client.java.fts.HighlightStyle;
-import com.couchbase.client.java.fts.SearchParams;
-import com.couchbase.client.java.fts.SearchQuery;
-import com.couchbase.client.java.fts.facet.SearchFacet;
-import com.couchbase.client.java.fts.queries.AbstractFtsQuery;
-import com.couchbase.client.java.fts.result.SearchQueryResult;
-import com.couchbase.client.java.fts.result.SearchQueryRow;
-import com.couchbase.client.java.fts.result.facets.DateRange;
-import com.couchbase.client.java.fts.result.facets.DateRangeFacetResult;
-import com.couchbase.client.java.fts.result.facets.FacetResult;
-import com.couchbase.client.java.fts.result.facets.NumericRange;
-import com.couchbase.client.java.fts.result.facets.NumericRangeFacetResult;
-import com.couchbase.client.java.fts.result.facets.TermFacetResult;
-import com.couchbase.client.java.fts.result.facets.TermRange;
+import com.couchbase.client.java.search.HighlightStyle;
+import com.couchbase.client.java.search.SearchParams;
+import com.couchbase.client.java.search.SearchQuery;
+import com.couchbase.client.java.search.facet.SearchFacet;
+import com.couchbase.client.java.search.queries.AbstractFtsQuery;
+import com.couchbase.client.java.search.result.SearchQueryResult;
+import com.couchbase.client.java.search.result.SearchQueryRow;
+import com.couchbase.client.java.search.result.facets.DateRange;
+import com.couchbase.client.java.search.result.facets.DateRangeFacetResult;
+import com.couchbase.client.java.search.result.facets.FacetResult;
+import com.couchbase.client.java.search.result.facets.NumericRange;
+import com.couchbase.client.java.search.result.facets.NumericRangeFacetResult;
+import com.couchbase.client.java.search.result.facets.TermFacetResult;
+import com.couchbase.client.java.search.result.facets.TermRange;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.AfterClass;
