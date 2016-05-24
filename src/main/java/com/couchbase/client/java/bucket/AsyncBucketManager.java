@@ -15,6 +15,9 @@
  */
 package com.couchbase.client.java.bucket;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
@@ -28,8 +31,6 @@ import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.util.IndexInfo;
 import com.couchbase.client.java.view.DesignDocument;
 import rx.Observable;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Provides management capabilities for a {@link AsyncBucket}.
@@ -247,7 +248,6 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified of each relevant {@link IndexInfo} (can be empty if no
      * relevant index is defined for this bucket).
      */
-    @InterfaceStability.Experimental
     Observable<IndexInfo> listN1qlIndexes();
 
     /**
@@ -267,7 +267,6 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> createN1qlPrimaryIndex(boolean ignoreIfExist, boolean defer);
 
     /**
@@ -288,7 +287,6 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> createN1qlPrimaryIndex(String customName, boolean ignoreIfExist, boolean defer);
 
     /**
@@ -316,7 +314,6 @@ public interface AsyncBucketManager {
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      * @see #createN1qlIndex(String, List, Expression, boolean, boolean)
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> createN1qlIndex(String indexName, boolean ignoreIfExist, boolean defer, Object... fields);
 
     /**
@@ -340,7 +337,6 @@ public interface AsyncBucketManager {
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively created
      * (even in deferred mode), Boolean.FALSE if the index existed and ignoreIfExist is true.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> createN1qlIndex(final String indexName, List<Object> fields, Expression whereClause,
             final boolean ignoreIfExist, boolean defer);
 
@@ -358,7 +354,6 @@ public interface AsyncBucketManager {
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> dropN1qlPrimaryIndex(boolean ignoreIfNotExist);
 
     /**
@@ -376,7 +371,6 @@ public interface AsyncBucketManager {
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without any primary index won't cause an exception to be propagated.
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> dropN1qlPrimaryIndex(String customName, boolean ignoreIfNotExist);
 
     /**
@@ -393,7 +387,6 @@ public interface AsyncBucketManager {
      * @param ignoreIfNotExist if true, attempting to drop on a bucket without the specified index won't cause an exception to be propagated.
      * @return an {@link Observable} that will get notified with a single Boolean.TRUE if the index was effectively dropped.
      */
-    @InterfaceStability.Experimental
     Observable<Boolean> dropN1qlIndex(String name, boolean ignoreIfNotExist);
 
     /**
@@ -408,7 +401,6 @@ public interface AsyncBucketManager {
      * have been triggered.
      * @see #watchN1qlIndexes(List, long, TimeUnit) to poll for a list of indexes to become online.
      */
-    @InterfaceStability.Experimental
     Observable<List<String>> buildN1qlDeferredIndexes();
 
     /**
@@ -427,6 +419,5 @@ public interface AsyncBucketManager {
      * @return a stream of the {@link IndexInfo} for the indexes that went online during the watch period. Can be empty
      * if all indexes where online, no index to watch or no index became online within the watchTimeout timeframe.
      */
-    @InterfaceStability.Experimental
     Observable<IndexInfo> watchN1qlIndexes(List<String> watchList, long watchTimeout, TimeUnit watchTimeUnit);
 }
