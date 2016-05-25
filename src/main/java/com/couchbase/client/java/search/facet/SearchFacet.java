@@ -31,30 +31,24 @@ import com.couchbase.client.java.document.json.JsonObject;
 @InterfaceAudience.Public
 public abstract class SearchFacet {
 
-    private final String name;
     private final String field;
     private final int limit;
 
-    protected SearchFacet(String name, String field, int limit) {
-        this.name = name;
+    protected SearchFacet(String field, int limit) {
         this.field = field;
         this.limit = limit;
     }
 
-    public static TermFacet term(String name, String field, int limit) {
-        return new TermFacet(name, field, limit);
+    public static TermFacet term(String field, int limit) {
+        return new TermFacet(field, limit);
     }
 
-    public static NumericRangeFacet numeric(String name, String field, int limit) {
-        return new NumericRangeFacet(name, field, limit);
+    public static NumericRangeFacet numeric(String field, int limit) {
+        return new NumericRangeFacet(field, limit);
     }
 
-    public static DateRangeFacet date(String name, String field, int limit) {
-        return new DateRangeFacet(name, field, limit);
-    }
-
-    public String name() {
-        return name;
+    public static DateRangeFacet date(String field, int limit) {
+        return new DateRangeFacet(field, limit);
     }
 
     public void injectParams(JsonObject queryJson) {

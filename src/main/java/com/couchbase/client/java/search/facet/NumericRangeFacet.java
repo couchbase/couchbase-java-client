@@ -46,8 +46,8 @@ public class NumericRangeFacet extends SearchFacet {
 
     private final Map<String, NumericRange> numericRanges;
 
-    protected NumericRangeFacet(String name, String field, int limit) {
-        super(name, field, limit);
+    protected NumericRangeFacet(String field, int limit) {
+        super(field, limit);
         this.numericRanges = new HashMap<String, NumericRange>();
     }
 

@@ -97,7 +97,7 @@ public class SearchQueryTest {
                 //will have max 3 hits
                 .limit(3)
                 //will have a "strength" facet on the abv with 2 strength categories
-                .addFacets(SearchFacet.numeric("strength", "abv", 2)
+                .addFacet("strength", SearchFacet.numeric("abv", 2)
                         .addRange("light", null, 5.0)
                         .addRange("strong", 5.0, null));
 
@@ -144,7 +144,7 @@ public class SearchQueryTest {
                 //will have max 3 hits
                 .limit(3)
                 //will have a "countries" facet on the top 5 countries having landmarks
-                .addFacets(SearchFacet.term("countries", "country", 5));
+                .addFacet("countries", SearchFacet.term("country", 5));
 
         //execute the FTS search on the "travel-search" index
         SearchQueryResult result = bucket.query(query);
@@ -290,10 +290,9 @@ public class SearchQueryTest {
     public void shouldSearchWithFacets() {
         AbstractFtsQuery fts = SearchQuery.match("beer");
         SearchQuery query = new SearchQuery(INDEX, fts)
-                .addFacets(term("foo", "name", 3),
-                        date("bar", "updated", 1).addRange("old", null, "2014-01-01T00:00:00"),
-                        numeric("baz", "abv", 2).addRange("strong", 4.9, null).addRange("light", null, 4.89)
-                );
+                .addFacet("foo", term("name", 3))
+                .addFacet("bar", date("updated", 1).addRange("old", null, "2014-01-01T00:00:00"))
+                .addFacet("baz", numeric("abv", 2).addRange("strong", 4.9, null).addRange("light", null, 4.89));
 
         SearchQueryResult result = ctx.bucket().query(query);
 

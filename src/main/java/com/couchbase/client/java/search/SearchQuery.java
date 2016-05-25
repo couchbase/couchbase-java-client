@@ -147,10 +147,10 @@ public class SearchQuery {
         }
         if (!this.facets.isEmpty()) {
             JsonObject facets = JsonObject.create();
-            for (SearchFacet f : this.facets.values()) {
-                JsonObject facet = JsonObject.create();
-                f.injectParams(facet);
-                facets.put(f.name(), facet);
+            for (Map.Entry<String, SearchFacet> entry : this.facets.entrySet()) {
+                JsonObject facetJson = JsonObject.create();
+                entry.getValue().injectParams(facetJson);
+                facets.put(entry.getKey(), facetJson);
             }
             queryJson.put("facets", facets);
         }
@@ -258,7 +258,7 @@ public class SearchQuery {
     }
 
     /**
-     * Adds one or more {@link SearchFacet} to the query.
+     * Adds one {@link SearchFacet} to the query.
      *
      * This is an additive operation (the given facets are added to any facet previously requested),
      * but if an existing facet has the same name it will be replaced.
@@ -266,13 +266,15 @@ public class SearchQuery {
      * This drives the inclusion of the {@link SearchQueryResult#facets()} facets} in the {@link SearchQueryResult}.
      *
      * Note that to be faceted, a field's value must be stored in the FTS index.
+     *
+     * @param facetName the name of the facet to add (or replace if one already exists with same name).
+     * @param facet the facet to add.
      */
-    public SearchQuery addFacets(SearchFacet... facets) {
-        if (facets != null) {
-            for (SearchFacet facet : facets) {
-                this.facets.put(facet.name(), facet);
-            }
+    public SearchQuery addFacet(String facetName, SearchFacet facet) {
+        if (facet == null || facetName == null) {
+            throw new NullPointerException("Facet name and description must not be null");
         }
+        this.facets.put(facetName,  facet);
         return this;
     }
 
@@ -280,7 +282,7 @@ public class SearchQuery {
      * Clears all previously added {@link SearchFacet}.
      *
      * @return this SearchQuery for chaining.
-     * @see #addFacets(SearchFacet...)
+     * @see #addFacet(String, SearchFacet)
      */
     public SearchQuery clearFacets() {
         this.facets.clear();
@@ -338,7 +340,7 @@ public class SearchQuery {
     }
 
     /**
-     * @return the Map of {@link #addFacets(SearchFacet...) facets}, or an empty Map if it was not set.
+     * @return the Map of {@link #addFacet(String, SearchFacet) facets (by name)}, or an empty Map if it was not set.
      */
     public Map<String, SearchFacet> getFacets() {
         return facets;
