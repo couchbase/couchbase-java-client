@@ -15,18 +15,18 @@
  */
 package com.couchbase.client.java.search.queries;
 
+import static org.junit.Assert.assertEquals;
+
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class StringQueryTest {
 
     @Test
     public void shouldBuildStringQueryWithoutParams() {
-        StringQuery query = SearchQuery.string("description:water and some other stuff");
+        StringQuery fts = SearchQuery.string("description:water and some other stuff");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("query", "description:water and some other stuff"));
         assertEquals(expected, query.export());
@@ -34,15 +34,17 @@ public class StringQueryTest {
 
     @Test
     public void shouldBuildStringQueryWithParamsAndBoost() {
-        SearchParams params = SearchParams.build().explain().limit(10);
-        StringQuery query = SearchQuery.string("q*ry").boost(2.0);
+        StringQuery fts = SearchQuery.string("q*ry").boost(2.0);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .explain()
+            .limit(10);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
                 .put("query", "q*ry")
                 .put("boost", 2.0))
             .put("explain", true)
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

@@ -18,7 +18,6 @@ package com.couchbase.client.java.search.queries;
 import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -26,7 +25,8 @@ public class WildcardQueryTest {
 
     @Test
     public void shouldExportWildcardQuery() {
-        WildcardQuery query = SearchQuery.wildcard("some*term?");
+        WildcardQuery fts = SearchQuery.wildcard("some*term?");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("wildcard", "some*term?"));
         assertEquals(expected, query.export());
@@ -34,10 +34,11 @@ public class WildcardQueryTest {
 
     @Test
     public void shouldExportWildcardQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        WildcardQuery query = SearchQuery.wildcard("some*term?")
+        WildcardQuery fts = SearchQuery.wildcard("some*term?")
             .boost(1.5)
             .field("field");
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -45,7 +46,7 @@ public class WildcardQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field"))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

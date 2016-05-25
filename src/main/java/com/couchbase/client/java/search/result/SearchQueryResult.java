@@ -22,7 +22,7 @@ import java.util.Map;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
+import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.facet.SearchFacet;
 import com.couchbase.client.java.search.result.facets.FacetResult;
 import rx.exceptions.CompositeException;
@@ -73,7 +73,7 @@ public interface SearchQueryResult extends Iterable<SearchQueryRow> {
     List<String> errors();
 
     /**
-     * If one or more facet were requested via the {@link SearchParams#addFacets(SearchFacet...)} method when querying,
+     * If one or more facet were requested via the {@link SearchQuery#addFacets(SearchFacet...)} method when querying,
      * contains the result of each facet. The map keys are the names given to each requested facet.
      */
     Map<String, FacetResult> facets();

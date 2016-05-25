@@ -18,7 +18,6 @@ package com.couchbase.client.java.search.queries;
 import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -26,7 +25,8 @@ public class TermQueryTest {
 
     @Test
     public void shouldExportTermQuery() {
-        TermQuery query = SearchQuery.term("salty");
+        TermQuery fts = SearchQuery.term("salty");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("term", "salty"));
         assertEquals(expected, query.export());
@@ -34,11 +34,12 @@ public class TermQueryTest {
 
     @Test
     public void shouldOmitPrefixLengthWhenNoFuzziness() {
-        SearchParams params = SearchParams.build().limit(10);
-        TermQuery query = SearchQuery.term("salty")
+        TermQuery fts = SearchQuery.term("salty")
             .boost(1.5)
             .field("field")
             .prefixLength(12);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -46,17 +47,18 @@ public class TermQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field")) //no prefix_length
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
     @Test
     public void shouldOmitPrefixLengthUnderOne() {
-        SearchParams params = SearchParams.build().limit(10);
-        TermQuery query = SearchQuery.term("salty")
+        TermQuery fts = SearchQuery.term("salty")
             .boost(1.5)
             .field("field")
             .fuzziness(23)
             .prefixLength(-1);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -65,17 +67,18 @@ public class TermQueryTest {
                 .put("field", "field")
                 .put("fuzziness", 23))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
     @Test
     public void shouldExportTermQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        TermQuery query = SearchQuery.term("salty")
+        TermQuery fts = SearchQuery.term("salty")
             .boost(1.5)
             .field("field")
             .fuzziness(23)
             .prefixLength(12);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -85,7 +88,7 @@ public class TermQueryTest {
                 .put("fuzziness", 23)
                 .put("prefix_length", 12))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

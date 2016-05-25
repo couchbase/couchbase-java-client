@@ -22,7 +22,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.search.HighlightStyle;
-import com.couchbase.client.java.search.SearchParams;
+import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.result.hits.HitLocations;
 
 /**
@@ -52,7 +52,7 @@ public interface SearchQueryRow {
     double score();
 
     /**
-     * If {@link SearchParams#explain() requested in the query}, an explanation of the match, in JSON form.
+     * If {@link SearchQuery#explain() requested in the query}, an explanation of the match, in JSON form.
      * @return
      */
     JsonObject explanation();
@@ -64,7 +64,7 @@ public interface SearchQueryRow {
 
     /**
      * The fragments for each field that was requested as highlighted
-     * (as defined in the {@link SearchParams#highlight(HighlightStyle, String...) SearchParams}).
+     * (as defined in the {@link SearchQuery#highlight(HighlightStyle, String...) SearchParams}).
      *
      * A fragment is an extract of the field's value where the matching terms occur.
      * Matching terms are surrounded by a <code>&lt;match&gt;</code> tag.
@@ -74,7 +74,7 @@ public interface SearchQueryRow {
     Map<String, List<String>> fragments();
 
     /**
-     *The value of each requested field (as defined in the {@link SearchParams}.
+     *The value of each requested field (as defined in the {@link SearchQuery}.
      * @return the fields values as a {@link Map}. Keys are the fields.
      */
     Map<String, String> fields();

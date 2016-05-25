@@ -18,15 +18,13 @@ package com.couchbase.client.java;
 import static com.couchbase.client.java.search.facet.SearchFacet.date;
 import static com.couchbase.client.java.search.facet.SearchFacet.numeric;
 import static com.couchbase.client.java.search.facet.SearchFacet.term;
-
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.search.HighlightStyle;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.facet.SearchFacet;
 import com.couchbase.client.java.search.queries.AbstractFtsQuery;
@@ -92,8 +90,8 @@ public class SearchQueryTest {
                 SearchQuery.match("hop").field("description").fuzziness(1)
         );
 
-        //set parameters for the whole request
-        SearchParams params = SearchParams.build()
+        //set index "beer-search" and parameters for the whole request
+        SearchQuery query = new SearchQuery("beer-search", cq)
                 //will include name & desc fragments
                 .highlight(HighlightStyle.HTML, "name", "description")
                 //will have max 3 hits
@@ -104,7 +102,7 @@ public class SearchQueryTest {
                         .addRange("strong", 5.0, null));
 
         //execute the FTS search on the "beer-search" index
-        SearchQueryResult result = ctx.bucket().query(new SearchQuery("beer-search", cq, params));
+        SearchQueryResult result = ctx.bucket().query(query);
 
         //prints the hits
         for (SearchQueryRow hit : result.hitsOrFail()) {
@@ -137,19 +135,19 @@ public class SearchQueryTest {
                         SearchQuery.matchPhrase("fast food").field("content")
                 );
 
-        //set parameters for the whole request
-        SearchParams params = SearchParams.build()
+        //set index "travel-search" and parameters for the whole request
+        SearchQuery query = new SearchQuery("travel-search", cq)
                 //will show value for activity and country fields
                 .fields("activity", "country")
                 //will include name & content fragments
                 .highlight(HighlightStyle.HTML, "name", "content")
                 //will have max 3 hits
                 .limit(3)
-                //will have a "category" facet on the top 5 categories of landmarks
+                //will have a "countries" facet on the top 5 countries having landmarks
                 .addFacets(SearchFacet.term("countries", "country", 5));
 
         //execute the FTS search on the "travel-search" index
-        SearchQueryResult result = bucket.query(new SearchQuery("travel-search", cq, params));
+        SearchQueryResult result = bucket.query(query);
 
         //prints the hits
         for (SearchQueryRow hit : result.hitsOrFail()) {
@@ -168,10 +166,11 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSearchWithLimit() {
-        AbstractFtsQuery query = SearchQuery.matchPhrase("hop beer");
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("hop beer");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .limit(3);
 
-        SearchQueryResult result = ctx.bucket().query(
-                new SearchQuery(INDEX, query, SearchParams.build().limit(3)));
+        SearchQueryResult result = ctx.bucket().query(query);
 
         assertThat(result).as("result").isNotNull();
         assertThat(result.metrics()).as("metrics").isNotNull();
@@ -194,12 +193,12 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSearchWithFields() {
-        AbstractFtsQuery query = SearchQuery.matchPhrase("hop beer");
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("hop beer");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .limit(3)
+                .fields("name");
 
-        SearchQueryResult result = ctx.bucket().query(
-                new SearchQuery(INDEX, query, SearchParams.build()
-                        .limit(3)
-                        .fields("name")));
+        SearchQueryResult result = ctx.bucket().query(query);
 
         for (SearchQueryRow row : result.hits()) {
             final Map<String, String> fields = row.fields();
@@ -228,12 +227,12 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSearchWithFragments() {
-        AbstractFtsQuery query = SearchQuery.matchPhrase("hop beer");
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("hop beer");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .limit(3)
+                .highlight(HighlightStyle.HTML, "name");
 
-        SearchQueryResult result = ctx.bucket().query(
-                new SearchQuery(INDEX, query, SearchParams.build()
-                        .limit(3)
-                        .highlight(HighlightStyle.HTML, "name")));
+        SearchQueryResult result = ctx.bucket().query(query);
 
         for (SearchQueryRow row : result.hits()) {
             assertThat(row.fragments()).as("row fragments").isNotEmpty();
@@ -258,14 +257,13 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSearchWithExplanation() {
-        AbstractFtsQuery query = SearchQuery.matchPhrase("hop beer");
-        SearchParams params = SearchParams.build()
-                        .limit(3)
-                        .explain();
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("hop beer");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .limit(3)
+                .explain();
 
-        SearchQueryResult result = ctx.bucket().query(
-                new SearchQuery(INDEX, query, params));
-        System.out.println(query.export(params));
+        SearchQueryResult result = ctx.bucket().query(query);
+        System.out.println(query.export());
 
         for (SearchQueryRow row : result.hits()) {
             assertThat(row.explanation()).isNotEqualTo(JsonObject.empty());
@@ -290,16 +288,16 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSearchWithFacets() {
-        AbstractFtsQuery query = SearchQuery.match("beer");
-        SearchParams searchParams = SearchParams.build()
-                        .addFacets(term("foo", "name", 3),
-                                date("bar", "updated", 1).addRange("old", null, "2014-01-01T00:00:00"),
-                                numeric("baz", "abv", 2).addRange("strong", 4.9, null).addRange("light", null, 4.89)
-                        );
+        AbstractFtsQuery fts = SearchQuery.match("beer");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .addFacets(term("foo", "name", 3),
+                        date("bar", "updated", 1).addRange("old", null, "2014-01-01T00:00:00"),
+                        numeric("baz", "abv", 2).addRange("strong", 4.9, null).addRange("light", null, 4.89)
+                );
 
-        SearchQueryResult result = ctx.bucket().query(new SearchQuery(INDEX, query, searchParams));
+        SearchQueryResult result = ctx.bucket().query(query);
 
-        System.out.println(query.export(searchParams));
+        System.out.println(query.export());
         System.out.println(result.facets());
 
         FacetResult f = result.facets().get("foo");
@@ -346,14 +344,14 @@ public class SearchQueryTest {
 
     @Test
     public void shouldSetServerSideTimeoutInParamsBeforeExecuting() {
-        AbstractFtsQuery query = SearchQuery.matchPhrase("salty beer");
-        SearchParams searchParams = SearchParams.build();
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("salty beer");
+        SearchQuery query = new SearchQuery(INDEX, fts);
 
-        SearchQueryResult result = ctx.bucket().query(new SearchQuery(INDEX, query, searchParams));
+        SearchQueryResult result = ctx.bucket().query(query);
 
         assertThat(result.status().isSuccess()).isTrue();
-        assertThat(searchParams.getServerSideTimeout()).isNotNull();
-        assertThat(searchParams.getServerSideTimeout()).isEqualTo(ctx.env().searchTimeout());
+        assertThat(query.getServerSideTimeout()).isNotNull();
+        assertThat(query.getServerSideTimeout()).isEqualTo(ctx.env().searchTimeout());
     }
 
 }

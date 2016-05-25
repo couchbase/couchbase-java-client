@@ -24,7 +24,6 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -32,7 +31,8 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldFailIfNoBounds() {
-        DateRangeQuery query = SearchQuery.dateRange();
+        DateRangeQuery fts = SearchQuery.dateRange();
+        SearchQuery query = new SearchQuery("foo", fts);
         catchException(query).export();
 
         assertTrue(caughtException() instanceof NullPointerException);
@@ -41,7 +41,8 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldAcceptEndOnly() {
-        DateRangeQuery query = SearchQuery.dateRange().end("theEnd");
+        DateRangeQuery fts = SearchQuery.dateRange().end("theEnd");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
                 .put("end", "theEnd"));
@@ -50,7 +51,8 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldAcceptStartOnly() {
-        DateRangeQuery query = SearchQuery.dateRange().start("theStart");
+        DateRangeQuery fts = SearchQuery.dateRange().start("theStart");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
                 .put("start", "theStart"));
@@ -59,13 +61,14 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldNotImplicitlySetDefaultsForInclusiveStartAndEnd() {
-        SearchParams params = SearchParams.build().explain();
-        DateRangeQuery query = SearchQuery.dateRange()
+        DateRangeQuery fts = SearchQuery.dateRange()
             .boost(1.5)
             .field("field")
             .start("a")
             .end("b")
             .dateTimeParser("parser");
+        SearchQuery query = new SearchQuery("foo", fts)
+            .explain();
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -75,14 +78,15 @@ public class DateRangeQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field"))
             .put("explain", true);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
     @Test
     public void shouldIgnoreInclusiveStartWithNullStart() {
-        DateRangeQuery query = SearchQuery.dateRange()
+        DateRangeQuery fts = SearchQuery.dateRange()
             .start((String) null, true)
             .end("b");
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -92,9 +96,10 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldIgnoreInclusiveEndWithNullEnd() {
-        DateRangeQuery query = SearchQuery.dateRange()
+        DateRangeQuery fts = SearchQuery.dateRange()
             .start("a")
             .end((String) null, true);
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -114,9 +119,10 @@ public class DateRangeQueryTest {
         String expectedStart = "2016-02-03T16:45:01Z";
         String expectedEnd = "2016-02-03T16:46:01Z";
 
-        DateRangeQuery query = SearchQuery.dateRange()
+        DateRangeQuery fts = SearchQuery.dateRange()
             .start(start.getTime(), false)
             .end(end.getTime());
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -128,13 +134,14 @@ public class DateRangeQueryTest {
 
     @Test
     public void shouldExportDateRangeQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().explain();
-        DateRangeQuery query = SearchQuery.dateRange()
+        DateRangeQuery fts = SearchQuery.dateRange()
             .boost(1.5)
             .field("field")
             .start("a", false)
             .end("b", true)
             .dateTimeParser("parser");
+        SearchQuery query = new SearchQuery("foo", fts)
+            .explain();
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -146,7 +153,7 @@ public class DateRangeQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field"))
             .put("explain", true);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

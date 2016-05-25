@@ -15,18 +15,19 @@
  */
 package com.couchbase.client.java.search.queries;
 
+import static org.junit.Assert.assertEquals;
+
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class MatchQueryTest {
 
     @Test
     public void shouldExportMatchQuery() {
-        MatchQuery query = SearchQuery.match("salty beers");
+        MatchQuery fts = SearchQuery.match("salty beers");
+        SearchQuery query = new SearchQuery("foo", fts);
+
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("match", "salty beers"));
         assertEquals(expected, query.export());
@@ -34,13 +35,14 @@ public class MatchQueryTest {
 
     @Test
     public void shouldExportMatchQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        MatchQuery query = SearchQuery.match("salty beers")
+        MatchQuery fts = SearchQuery.match("salty beers")
             .boost(1.5)
             .field("field")
             .analyzer("analyzer")
             .fuzziness(1234)
             .prefixLength(4);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -51,7 +53,7 @@ public class MatchQueryTest {
                 .put("fuzziness", 1234)
                 .put("prefix_length", 4))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

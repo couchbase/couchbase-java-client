@@ -29,12 +29,14 @@ import com.couchbase.client.java.search.facet.SearchFacet;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-
+/**
+ * Tests the global parameter part of a {@link SearchQuery}.
+ */
 public class SearchParamsTest {
 
     @Test
     public void shouldBeEmptyByDefault() {
-        SearchParams p = SearchParams.build();
+        SearchQuery p = new SearchQuery(null, null);
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
 
@@ -44,7 +46,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectLimit() {
-        SearchParams p = SearchParams.build().limit(10);
+        SearchQuery p = new SearchQuery(null, null).limit(10);
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
 
@@ -54,7 +56,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectSkip() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .skip(100);
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
@@ -65,7 +67,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectLimitAndSkip() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .limit(500)
             .skip(100);
         JsonObject result = JsonObject.empty();
@@ -77,7 +79,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectExplain() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .explain();
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
@@ -88,7 +90,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectHighlightStyle() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .highlight(HighlightStyle.HTML);
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
@@ -100,7 +102,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectHighlightStyleWithFields() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .highlight(HighlightStyle.ANSI, "foo", "bar");
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
@@ -112,7 +114,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldClearHighlightStyle() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .highlight(HighlightStyle.ANSI, "foo", "bar")
             .clearHighlight();
         JsonObject result = JsonObject.empty();
@@ -124,7 +126,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectFields() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .fields("foo", "bar", "baz");
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
@@ -136,7 +138,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldReplaceFieldsWhenCalledTwice() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .fields("foo", "bar", "baz")
             .fields("bingo");
         JsonObject result = JsonObject.empty();
@@ -149,7 +151,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldClearFieldsWhenCalledEmpty() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .fields("foo", "bar", "baz")
             .fields();
         JsonObject result = JsonObject.empty();
@@ -161,7 +163,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectFacets() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .addFacets(
                 SearchFacet.term("term", "somefield", 10),
                 SearchFacet.date("dr", "datefield", 1).addRange("name", "start", "end"),
@@ -194,7 +196,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldAddFacetsToExistingFacets() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
                 .addFacets(SearchFacet.term("A", "field1", 1))
                 .addFacets(SearchFacet.term("B", "field2", 2));
 
@@ -211,7 +213,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldReplaceExistingFacetWithSameName() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
                 .addFacets(SearchFacet.term("A", "field1", 1))
                 .addFacets(SearchFacet.term("A", "field2", 2));
 
@@ -228,7 +230,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldClearExistingFacets() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
                 .addFacets(SearchFacet.term("A", "field1", 1))
                 .clearFacets()
                 .addFacets(SearchFacet.term("B", "field2", 2));
@@ -298,7 +300,7 @@ public class SearchParamsTest {
         Calendar end = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         end.clear();
         end.set(2016, Calendar.FEBRUARY, 3, 16, 46, 1);
-        SearchParams params = SearchParams.build().addFacets(
+        SearchQuery params = new SearchQuery(null, null).addFacets(
                 SearchFacet.date("facet", "field", 1).addRange("date", start.getTime(), end.getTime()));
         JsonObject json = JsonObject.create();
         params.injectParams(json);
@@ -320,7 +322,7 @@ public class SearchParamsTest {
 
     @Test
     public void shouldInjectServerSideTimeout() {
-        SearchParams p = SearchParams.build()
+        SearchQuery p = new SearchQuery(null, null)
             .serverSideTimeout(3, TimeUnit.SECONDS);
         JsonObject result = JsonObject.empty();
         p.injectParams(result);

@@ -15,11 +15,10 @@
  */
 package com.couchbase.client.java.search.queries;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -27,14 +26,15 @@ public class DocIdQueryTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailAtExecutionOnEmptyIds() throws Exception {
-        SearchQuery.docId().export();
+        new SearchQuery("foo", SearchQuery.docId()).export();
     }
 
     @Test
     public void shouldAddIdsToExistingList() throws Exception {
-        DocIdQuery query = SearchQuery.docId("id1", "id2")
+        DocIdQuery fts = SearchQuery.docId("id1", "id2")
             .boost(1.5)
             .docIds("id3");
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -45,16 +45,17 @@ public class DocIdQueryTest {
 
     @Test
     public void shouldExportDocIdQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        DocIdQuery query = SearchQuery.docId("id1", "id2")
+        DocIdQuery fts = SearchQuery.docId("id1", "id2")
             .boost(1.5)
             .docIds("id3");
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
                 .put("ids", JsonArray.from("id1", "id2", "id3"))
                 .put("boost", 1.5))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 }

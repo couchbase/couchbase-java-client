@@ -18,7 +18,6 @@ package com.couchbase.client.java.search.queries;
 import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -26,7 +25,8 @@ public class RegexpQueryTest {
 
     @Test
     public void shouldExportRegexpQuery() {
-        RegexpQuery query = SearchQuery.regexp("someregexp");
+        RegexpQuery fts = SearchQuery.regexp("someregexp");
+        SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("regexp", "someregexp"));
         assertEquals(expected, query.export());
@@ -34,10 +34,11 @@ public class RegexpQueryTest {
 
     @Test
     public void shouldExportRegexpQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().explain();
-        RegexpQuery query = SearchQuery.regexp("someregexp")
+        RegexpQuery fts = SearchQuery.regexp("someregexp")
             .field("field")
             .boost(1.5);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .explain();
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -45,7 +46,7 @@ public class RegexpQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field"))
             .put("explain", true);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 
 }

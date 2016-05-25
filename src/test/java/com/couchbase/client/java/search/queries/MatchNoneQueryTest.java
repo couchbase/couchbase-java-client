@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonNull;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -27,7 +26,8 @@ public class MatchNoneQueryTest {
 
     @Test
     public void shouldExportMatchNoneQuery() throws Exception {
-        MatchNoneQuery query = SearchQuery.matchNone();
+        MatchNoneQuery fts = SearchQuery.matchNone();
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -37,15 +37,16 @@ public class MatchNoneQueryTest {
 
     @Test
     public void shouldExportMatchNoneQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        MatchNoneQuery query = SearchQuery.matchNone()
+        MatchNoneQuery fts = SearchQuery.matchNone()
             .boost(1.5);
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
                 .put("match_none", JsonNull.INSTANCE)
                 .put("boost", 1.5))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 }

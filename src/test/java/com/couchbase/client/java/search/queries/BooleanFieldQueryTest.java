@@ -18,7 +18,6 @@ package com.couchbase.client.java.search.queries;
 import static org.junit.Assert.assertEquals;
 
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.search.SearchParams;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
@@ -26,7 +25,8 @@ public class BooleanFieldQueryTest {
 
     @Test
     public void shouldExportBooleanFieldQuery() throws Exception {
-        BooleanFieldQuery query = SearchQuery.booleanField(true);
+        BooleanFieldQuery fts = SearchQuery.booleanField(true);
+        SearchQuery query = new SearchQuery("foo", fts);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -36,10 +36,11 @@ public class BooleanFieldQueryTest {
 
     @Test
     public void shouldExportBooleanFieldQueryWithAllOptions() {
-        SearchParams params = SearchParams.build().limit(10);
-        BooleanFieldQuery query = SearchQuery.booleanField(true)
+        BooleanFieldQuery fts = SearchQuery.booleanField(true)
             .boost(1.5)
             .field("field");
+        SearchQuery query = new SearchQuery("foo", fts)
+            .limit(10);
 
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create()
@@ -47,6 +48,6 @@ public class BooleanFieldQueryTest {
                 .put("boost", 1.5)
                 .put("field", "field"))
             .put("size", 10);
-        assertEquals(expected, query.export(params));
+        assertEquals(expected, query.export());
     }
 }
