@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.MutationState;
+import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
@@ -46,6 +48,7 @@ import com.couchbase.client.java.search.queries.TermQuery;
 import com.couchbase.client.java.search.queries.WildcardQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
+import com.couchbase.client.java.subdoc.DocumentFragment;
 
 /**
  * The FTS API entry point. Describes an FTS query entirely (index, query body and parameters) and can
@@ -72,6 +75,8 @@ public class SearchQuery {
     private String[] fields;
     private Map<String, SearchFacet> facets;
     private Long serverSideTimeout;
+    private ScanConsistency consistency;
+    private MutationState mutationState;
 
     /**
      * Prepare an FTS {@link SearchQuery} on an index. Top level query parameters can be set after that
@@ -87,6 +92,9 @@ public class SearchQuery {
         this.highlightFields = new String[0];
         this.fields = new String[0];
         this.facets = new HashMap<String, SearchFacet>();
+
+        this.consistency = null;
+        this.mutationState = null;
     }
 
     /**
@@ -154,9 +162,26 @@ public class SearchQuery {
             }
             queryJson.put("facets", facets);
         }
+
+        JsonObject control = JsonObject.empty();
+        //check need for timeout
         if(serverSideTimeout != null) {
-            JsonObject control = JsonObject.empty();
             control.put("timeout", serverSideTimeout);
+        }
+        //check need for consistency
+        if (consistency != null || mutationState != null) {
+            JsonObject consistencyJson = JsonObject.create();
+
+            if (consistency == ScanConsistency.NOT_BOUNDED) {
+                consistencyJson.put("level", "");
+            } else if (mutationState != null) {
+                consistencyJson.put("level", "at_plus");
+                consistencyJson.put("vectors", JsonObject.create().put(this.indexName, mutationState.exportForFts()));
+            }
+            control.put("consistency", consistencyJson);
+        }
+        //if any control was set, inject it
+        if (!control.isEmpty()) {
             queryJson.put("ctl", control);
         }
     }
@@ -299,6 +324,61 @@ public class SearchQuery {
      */
     public SearchQuery serverSideTimeout(long timeout, TimeUnit unit) {
         this.serverSideTimeout = unit.toMillis(timeout);
+        return this;
+    }
+
+    /**
+     * Sets the unparameterized consistency to consider for this FTS query. This replaces any
+     * consistency tuning previously set.
+     *
+     * @param consistency the simple consistency to use.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery scanConsistency(ScanConsistency consistency) {
+        this.consistency = consistency;
+        this.mutationState = null;
+        return this;
+    }
+
+    /**
+     * Sets the consistency to consider for this FTS query to AT_PLUS and
+     * uses the mutation information from the given documents to parameterize
+     * the consistency. This replaces any consistency tuning previously set.
+     *
+     * @param docs one or mode {@link Document} to get mutation state information from.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery consistentWith(Document... docs) {
+        this.consistency = null;
+        this.mutationState = MutationState.from(docs);
+        return this;
+    }
+
+    /**
+     * Sets the consistency to consider for this FTS query to AT_PLUS and
+     * uses the mutation information from the given document fragments to parameterize
+     * the consistency. This replaces any consistency tuning previously set.
+     *
+     * @param fragments one or mode {@link DocumentFragment} to get mutation state information from.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery consistentWith(DocumentFragment... fragments) {
+        this.consistency = null;
+        this.mutationState = MutationState.from(fragments);
+        return this;
+    }
+
+    /**
+     * Sets the consistency to consider for this FTS query to AT_PLUS and
+     * uses the {@link MutationState} directly to parameterize the consistency.
+     * This replaces any consistency tuning previously set.
+     *
+     * @param mutationState the {@link MutationState} information to work with.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery consistentWith(MutationState mutationState) {
+        this.consistency = null;
+        this.mutationState = mutationState;
         return this;
     }
 

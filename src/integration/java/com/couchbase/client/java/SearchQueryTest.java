@@ -22,12 +22,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
+import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.search.HighlightStyle;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.facet.SearchFacet;
 import com.couchbase.client.java.search.queries.AbstractFtsQuery;
+import com.couchbase.client.java.search.queries.MatchQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
 import com.couchbase.client.java.search.result.facets.DateRange;
@@ -37,6 +39,7 @@ import com.couchbase.client.java.search.result.facets.NumericRange;
 import com.couchbase.client.java.search.result.facets.NumericRangeFacetResult;
 import com.couchbase.client.java.search.result.facets.TermFacetResult;
 import com.couchbase.client.java.search.result.facets.TermRange;
+import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.AfterClass;
@@ -351,6 +354,36 @@ public class SearchQueryTest {
         assertThat(result.status().isSuccess()).isTrue();
         assertThat(query.getServerSideTimeout()).isNotNull();
         assertThat(query.getServerSideTimeout()).isEqualTo(ctx.env().searchTimeout());
+    }
+
+    @Test
+    public void shouldAcceptAtPlusConsistencyVector() {
+        String key = "21st_amendment_brewery_cafe-21a_ipa";
+        String category = "North American Ale";
+
+        //this test essentially validates that the query service accepts the tokens
+        //but we'll still attempt to throw the indexer off by doing a first dummy mutation
+        ctx.bucket().mutateIn(key)
+                .replace("category", "batman")
+                .execute();
+
+        //this is the mutation we want to be consistent with
+        DocumentFragment<Mutation> mutation = ctx
+                .bucket().mutateIn(key)
+                .replace("category", "superman")
+                .execute();
+
+        SearchQuery query = new SearchQuery("beer-search",
+                SearchQuery.match("superman").field("category"))
+                .consistentWith(mutation)
+                .limit(3);
+        SearchQueryResult result = ctx.bucket().query(query);
+
+        //restore old value before asserts
+        ctx.bucket().mutateIn(key).replace("category", category).execute();
+
+        assertThat(result.hits()).hasSize(1);
+        assertThat(result.hits().get(0).id()).isEqualToIgnoringCase(key);
     }
 
 }
