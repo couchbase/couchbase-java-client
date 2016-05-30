@@ -44,6 +44,7 @@ import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -124,7 +125,15 @@ public class SearchQueryTest {
         }
     }
 
+    /*
+     Index travel-search:
+        content | text | index | include in _all field | include term vectors
+        name | text | index | store | include in _all field | include term vectors
+        country | text | index | store | include in _all field | include term vectors
+        activity | text | index | store | include in _all field | include term vectors
+     */
     @Test
+    @Ignore("Only beer-search is required for SearchQueryTest")
     public void demoTravelSearch() {
         //use the travel sample bucket
         Bucket bucket = ctx.cluster().openBucket("travel-sample");
