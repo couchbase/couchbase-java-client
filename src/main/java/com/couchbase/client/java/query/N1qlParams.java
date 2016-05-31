@@ -50,7 +50,7 @@ public class N1qlParams implements Serializable {
     private String scanWait;
     private String clientContextId;
     private Integer maxParallelism;
-
+    private boolean disableMetrics;
     private MutationState mutationState;
 
     /**
@@ -60,6 +60,7 @@ public class N1qlParams implements Serializable {
 
     private N1qlParams() {
         adhoc = true;
+        disableMetrics = false;
     }
 
     /**
@@ -83,6 +84,9 @@ public class N1qlParams implements Serializable {
         }
         if (this.maxParallelism != null) {
             queryJson.put("max_parallelism", this.maxParallelism.toString());
+        }
+        if (this.disableMetrics) {
+            queryJson.put("metrics", false);
         }
 
         if (this.mutationState != null) {
@@ -145,6 +149,19 @@ public class N1qlParams implements Serializable {
      */
     public N1qlParams withContextId(String clientContextId) {
         this.clientContextId = clientContextId;
+        return this;
+    }
+
+    /**
+     * If set to true (false being the default), the metrics object will not be returned from N1QL and
+     * as a result be more efficient. Note that if metrics are disabled you are loosing information
+     * to diagnose problems - so use with care!
+     *
+     * @param disableMetrics true if disabled, false otherwise (false = default).
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams disableMetrics(boolean disableMetrics) {
+        this.disableMetrics = disableMetrics;
         return this;
     }
 
@@ -269,6 +286,7 @@ public class N1qlParams implements Serializable {
         N1qlParams that = (N1qlParams) o;
 
         if (adhoc != that.adhoc) return false;
+        if (disableMetrics != that.disableMetrics) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
         if (consistency != that.consistency) return false;
@@ -288,6 +306,7 @@ public class N1qlParams implements Serializable {
         result = 31 * result + (clientContextId != null ? clientContextId.hashCode() : 0);
         result = 31 * result + (maxParallelism != null ? maxParallelism.hashCode() : 0);
         result = 31 * result + (adhoc ? 1 : 0);
+        result = 31 * result + (disableMetrics ? 1 : 0);
         return result;
     }
 
@@ -300,6 +319,7 @@ public class N1qlParams implements Serializable {
         sb.append(", clientContextId='").append(clientContextId).append('\'');
         sb.append(", maxParallelism=").append(maxParallelism);
         sb.append(", adhoc=").append(adhoc);
+        sb.append(", disableMetrics=").append(disableMetrics);
         sb.append('}');
         return sb.toString();
     }

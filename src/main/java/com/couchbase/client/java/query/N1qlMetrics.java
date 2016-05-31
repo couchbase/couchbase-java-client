@@ -171,7 +171,7 @@ public class N1qlMetrics implements Serializable{
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("N1qlMetrics{");
-        sb.append(", resultCount=").append(resultCount);
+        sb.append("resultCount=").append(resultCount);
         sb.append(", errorCount=").append(errorCount);
         sb.append(", warningCount=").append(warningCount);
         sb.append(", mutationCount=").append(mutationCount);

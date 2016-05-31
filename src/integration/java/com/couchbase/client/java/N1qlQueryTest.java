@@ -34,12 +34,7 @@ import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.DefaultAsyncN1qlQueryRow;
-import com.couchbase.client.java.query.N1qlParams;
-import com.couchbase.client.java.query.N1qlQuery;
-import com.couchbase.client.java.query.N1qlQueryResult;
-import com.couchbase.client.java.query.N1qlQueryRow;
-import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.query.*;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.Version;
@@ -270,6 +265,17 @@ public class N1qlQueryTest {
         assertTrue(result.allRows().size() > 0);
         assertTrue(result.errors().isEmpty());
         assertTrue(result.finalSuccess());
+    }
+
+    @Test
+    public void shouldDisableMetrics() {
+        N1qlQuery query = N1qlQuery.simple(
+            select("*").fromCurrentBucket().limit(1),
+            N1qlParams.build().disableMetrics(true)
+        );
+
+        N1qlQueryResult result = ctx.bucket().query(query);
+        assertEquals(N1qlMetrics.EMPTY_METRICS, result.info());
     }
 
     @Test
