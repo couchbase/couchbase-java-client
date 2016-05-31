@@ -1519,6 +1519,7 @@ public class SubDocumentTest {
         assertEquals(true, results.exists(4));
         assertEquals(false, results.exists(5));
         assertEquals(false, results.exists(6));
+        assertTrue(results.cas() != 0);
 
         //assert the type of value that content() returns
         assertTrue(results.content(0) instanceof Boolean);
@@ -1547,6 +1548,7 @@ public class SubDocumentTest {
                 .execute();
 
         assertNotNull(results);
+        assertTrue(results.cas() != 0);
         assertEquals(3, results.size());
 
         //errors throw an exception when calling content
@@ -1584,6 +1586,7 @@ public class SubDocumentTest {
                 .execute();
 
         assertNotNull(results);
+        assertTrue(results.cas() != 0);
         assertEquals(3, results.size());
 
         assertNotNull(results.content(0));
