@@ -64,8 +64,8 @@ public class LookupInBuilder {
     /**
      * Perform several {@link Lookup lookup} operations inside a single existing {@link JsonDocument JSON document},
      * using the default key/value timeout.
-     * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String)} and
-     * {@link #exists(String)}.
+     * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String...)} and
+     * {@link #exists(String...)}.
      *
      * The subdocument API has the benefit of only transmitting the fragment of the document you work with
      * on the wire, instead of the whole document.
@@ -109,8 +109,8 @@ public class LookupInBuilder {
     /**
      * Perform several {@link Lookup lookup} operations inside a single existing {@link JsonDocument JSON document},
      * using a specific timeout.
-     * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String)} and
-     * {@link #exists(String)}.
+     * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String...)} and
+     * {@link #exists(String...)}.
      *
      * The subdocument API has the benefit of only transmitting the fragment of the document you work with
      * on the wire, instead of the whole document.
@@ -156,11 +156,11 @@ public class LookupInBuilder {
     /**
      * Get a value inside the JSON document.
      *
-     * @param path the path inside the document where to get the value from.
+     * @param paths the paths inside the document where to get the value from.
      * @return this builder for chaining.
      */
-    public LookupInBuilder get(String path) {
-        this.async.get(path);
+    public LookupInBuilder get(String... paths) {
+        this.async.get(paths);
         return this;
     }
 
@@ -169,11 +169,11 @@ public class LookupInBuilder {
      * {@link DocumentFragment#content(int)} will raise an error).
      * This doesn't transmit the value on the wire if it exists, saving the corresponding byte overhead.
      *
-     * @param path the path inside the document to check for existence.
+     * @param paths the paths inside the document to check for existence.
      * @return this builder for chaining.
      */
-    public LookupInBuilder exists(String path) {
-        this.async.exists(path);
+    public LookupInBuilder exists(String... paths) {
+        this.async.exists(paths);
         return this;
     }
 
