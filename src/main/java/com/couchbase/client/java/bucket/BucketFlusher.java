@@ -140,7 +140,7 @@ public class BucketFlusher {
             .map(new Func1<FlushResponse, Boolean>() {
                 @Override
                 public Boolean call(FlushResponse flushResponse) {
-                    if (flushResponse.status() == ResponseStatus.FAILURE) {
+                    if (!flushResponse.status().isSuccess()) {
                         if (flushResponse.content().contains("disabled")) {
                             throw new FlushDisabledException("Flush is disabled for this bucket.");
                         } else {
