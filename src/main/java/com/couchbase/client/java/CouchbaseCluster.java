@@ -103,6 +103,28 @@ public class CouchbaseCluster implements Cluster {
     private final Map<String, Bucket> bucketCache;
 
     /**
+     * Package private constructor to create the {@link CouchbaseCluster}.
+     *
+     * This method should not be called directly, but rather through the many factory methods
+     * available on this class.
+     *
+     * @param environment the custom environment to use for this cluster reference.
+     * @param connectionString the connection string to identify the remote cluster.
+     * @param sharedEnvironment if the environment is managed by this class or not.
+     */
+    CouchbaseCluster(final CouchbaseEnvironment environment,
+                     final ConnectionString connectionString, final boolean sharedEnvironment) {
+        couchbaseAsyncCluster = new CouchbaseAsyncCluster(
+                environment,
+                connectionString,
+                sharedEnvironment
+        );
+        this.environment = environment;
+        this.connectionString = connectionString;
+        this.bucketCache = new ConcurrentHashMap<String, Bucket>();
+    }
+
+    /**
      * Creates a new {@link CouchbaseCluster} reference against the
      * {@link CouchbaseAsyncCluster#DEFAULT_HOST}.
      *
@@ -211,28 +233,6 @@ public class CouchbaseCluster implements Cluster {
     public static CouchbaseCluster fromConnectionString(final CouchbaseEnvironment environment,
         final String connectionString) {
         return new CouchbaseCluster(environment, ConnectionString.create(connectionString), true);
-    }
-
-    /**
-     * Package private constructor to create the {@link CouchbaseCluster}.
-     *
-     * This method should not be called directly, but rather through the many factory methods
-     * available on this class.
-     *
-     * @param environment the custom environment to use for this cluster reference.
-     * @param connectionString the connection string to identify the remote cluster.
-     * @param sharedEnvironment if the environment is managed by this class or not.
-     */
-    CouchbaseCluster(final CouchbaseEnvironment environment,
-        final ConnectionString connectionString, final boolean sharedEnvironment) {
-        couchbaseAsyncCluster = new CouchbaseAsyncCluster(
-            environment,
-            connectionString,
-            sharedEnvironment
-        );
-        this.environment = environment;
-        this.connectionString = connectionString;
-        this.bucketCache = new ConcurrentHashMap<String, Bucket>();
     }
 
     @Override

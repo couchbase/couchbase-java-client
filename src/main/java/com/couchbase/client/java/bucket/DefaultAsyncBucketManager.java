@@ -92,6 +92,14 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     private static final int INDEX_WATCH_MAX_ATTEMPTS = Integer.MAX_VALUE - 5;
     private static final Delay INDEX_WATCH_DELAY = Delay.linear(TimeUnit.MILLISECONDS, 1000, 50, 500);
 
+    private static Func1<AsyncN1qlQueryRow, IndexInfo> ROW_VALUE_TO_INDEXINFO =
+            new Func1<AsyncN1qlQueryRow, IndexInfo>() {
+                @Override
+                public IndexInfo call(AsyncN1qlQueryRow asyncN1qlQueryRow) {
+                    return new IndexInfo(asyncN1qlQueryRow.value());
+                }
+            };
+
     private final ClusterFacade core;
     private final String bucket;
     private final String password;
@@ -337,14 +345,6 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             }
         };
     }
-
-    private static Func1<AsyncN1qlQueryRow, IndexInfo> ROW_VALUE_TO_INDEXINFO =
-        new Func1<AsyncN1qlQueryRow, IndexInfo>() {
-            @Override
-            public IndexInfo call(AsyncN1qlQueryRow asyncN1qlQueryRow) {
-                return new IndexInfo(asyncN1qlQueryRow.value());
-            }
-        };
 
     @Override
     public Observable<IndexInfo> listN1qlIndexes() {

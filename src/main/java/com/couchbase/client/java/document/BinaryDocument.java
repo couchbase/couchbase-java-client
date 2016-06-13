@@ -27,6 +27,18 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 public class BinaryDocument extends AbstractDocument<ByteBuf> {
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     */
+    private BinaryDocument(String id, int expiry, ByteBuf content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link BinaryDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -127,18 +139,6 @@ public class BinaryDocument extends AbstractDocument<ByteBuf> {
      */
     public static BinaryDocument from(BinaryDocument doc, long cas) {
         return BinaryDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     */
-    private BinaryDocument(String id, int expiry, ByteBuf content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
 }

@@ -128,6 +128,29 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     private final boolean sharedEnvironment;
 
     /**
+     * Package private constructor to create the {@link CouchbaseAsyncCluster}.
+     *
+     * This method should not be called directly, but rather through the many factory methods
+     * available on this class.
+     *
+     * @param environment the custom environment to use for this cluster reference.
+     * @param connectionString the connection string to identify the remote cluster.
+     * @param sharedEnvironment if the environment is managed by this class or not.
+     */
+    CouchbaseAsyncCluster(final CouchbaseEnvironment environment,
+                          final ConnectionString connectionString, final boolean sharedEnvironment) {
+        this.sharedEnvironment = sharedEnvironment;
+        core = new CouchbaseCore(environment);
+        SeedNodesRequest request = new SeedNodesRequest(
+                assembleSeedNodes(connectionString, environment)
+        );
+        core.send(request).toBlocking().single();
+        this.environment = environment;
+        this.connectionString = connectionString;
+        this.bucketCache = new ConcurrentHashMap<String, AsyncBucket>();
+    }
+
+    /**
      * Creates a new {@link CouchbaseAsyncCluster} reference against the {@link #DEFAULT_HOST}.
      *
      * **Note:** It is recommended to use this method only during development, since it does not
@@ -238,29 +261,6 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             ConnectionString.create(connectionString),
             true
         );
-    }
-
-    /**
-     * Package private constructor to create the {@link CouchbaseAsyncCluster}.
-     *
-     * This method should not be called directly, but rather through the many factory methods
-     * available on this class.
-     *
-     * @param environment the custom environment to use for this cluster reference.
-     * @param connectionString the connection string to identify the remote cluster.
-     * @param sharedEnvironment if the environment is managed by this class or not.
-     */
-    CouchbaseAsyncCluster(final CouchbaseEnvironment environment,
-        final ConnectionString connectionString, final boolean sharedEnvironment) {
-        this.sharedEnvironment = sharedEnvironment;
-        core = new CouchbaseCore(environment);
-        SeedNodesRequest request = new SeedNodesRequest(
-            assembleSeedNodes(connectionString, environment)
-        );
-        core.send(request).toBlocking().single();
-        this.environment = environment;
-        this.connectionString = connectionString;
-        this.bucketCache = new ConcurrentHashMap<String, AsyncBucket>();
     }
 
     /**
