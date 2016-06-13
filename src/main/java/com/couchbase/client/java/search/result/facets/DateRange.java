@@ -64,7 +64,7 @@ public class DateRange {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("{");
+        final StringBuilder sb = new StringBuilder("{");
         sb.append("name='").append(name).append('\'');
         if (start != null) {
             sb.append(", start='").append(start).append('\'');
