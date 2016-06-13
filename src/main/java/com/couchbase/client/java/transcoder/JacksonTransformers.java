@@ -29,6 +29,8 @@ public class JacksonTransformers {
     public static final SimpleModule JSON_VALUE_MODULE = new SimpleModule("JsonValueModule",
         new Version(1, 0, 0, null, null, null));
 
+    private JacksonTransformers() {}
+
     static {
         JSON_VALUE_MODULE.addSerializer(JsonObject.class, new JacksonTransformers.JsonObjectSerializer());
         JSON_VALUE_MODULE.addSerializer(JsonArray.class, new JacksonTransformers.JsonArraySerializer());

@@ -80,6 +80,8 @@ public class TranscoderUtils {
     public static final int DOUBLE_COMPAT_FLAGS     = JSON_COMMON_FLAGS     | DOUBLE_LEGACY_FLAGS;
     public static final int STRING_COMPAT_FLAGS     = STRING_COMMON_FLAGS   | STRING_LEGACY_FLAGS;
 
+    private TranscoderUtils() {}
+
     /**
      * Checks whether the upper 8 bits are set, indicating common flags presence.
      *

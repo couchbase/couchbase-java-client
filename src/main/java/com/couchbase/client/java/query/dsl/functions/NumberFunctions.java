@@ -33,6 +33,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class NumberFunctions {
 
+    private NumberFunctions() {}
+
     /**
      * Returned expression results in the absolute value of the number.
      */

@@ -37,6 +37,8 @@ public class Retry {
 
     public static final Delay DEFAULT_DELAY = Delay.fixed(1, TimeUnit.MILLISECONDS);
 
+    private Retry() {}
+
     /**
      * Wrap an {@link Observable} so that it will retry on all errors for a maximum number of times.
      * The retry is almost immediate (1ms delay).
