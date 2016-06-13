@@ -37,6 +37,19 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
     private static final long serialVersionUID = -2300114084316366873L;
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     * @param mutationToken the optional mutation token.
+     */
+    private JsonArrayDocument(String id, int expiry, JsonArray content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link JsonDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -159,19 +172,6 @@ public class JsonArrayDocument extends AbstractDocument<JsonArray> implements Se
      */
     public static JsonArrayDocument from(JsonArrayDocument doc, long cas) {
         return JsonArrayDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     * @param mutationToken the optional mutation token.
-     */
-    private JsonArrayDocument(String id, int expiry, JsonArray content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

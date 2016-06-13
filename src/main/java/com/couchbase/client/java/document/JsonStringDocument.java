@@ -35,6 +35,18 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
     private static final long serialVersionUID = -2404431009274846282L;
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     */
+    private JsonStringDocument(String id, int expiry, String content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link JsonStringDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -134,18 +146,6 @@ public class JsonStringDocument extends AbstractDocument<String> implements Seri
      */
     public static JsonStringDocument from(JsonStringDocument doc, long cas) {
         return JsonStringDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     */
-    private JsonStringDocument(String id, int expiry, String content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

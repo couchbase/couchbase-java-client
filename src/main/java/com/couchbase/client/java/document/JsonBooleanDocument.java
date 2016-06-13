@@ -26,6 +26,18 @@ public class JsonBooleanDocument extends AbstractDocument<Boolean> implements Se
     private static final long serialVersionUID = -6187394630378336834L;
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     */
+    private JsonBooleanDocument(String id, int expiry, Boolean content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link JsonBooleanDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -147,18 +159,6 @@ public class JsonBooleanDocument extends AbstractDocument<Boolean> implements Se
      */
     public static JsonBooleanDocument from(JsonBooleanDocument doc, long cas) {
         return JsonBooleanDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     */
-    private JsonBooleanDocument(String id, int expiry, Boolean content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

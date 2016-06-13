@@ -35,6 +35,18 @@ public class JsonDoubleDocument extends AbstractDocument<Double> implements Seri
     private static final long serialVersionUID = 4684741457536669224L;
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     */
+    private JsonDoubleDocument(String id, int expiry, Double content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link JsonDoubleDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -156,18 +168,6 @@ public class JsonDoubleDocument extends AbstractDocument<Double> implements Seri
      */
     public static JsonDoubleDocument from(JsonDoubleDocument doc, long cas) {
         return JsonDoubleDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     */
-    private JsonDoubleDocument(String id, int expiry, Double content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {

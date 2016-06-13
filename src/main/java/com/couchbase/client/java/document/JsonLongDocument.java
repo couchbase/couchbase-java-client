@@ -35,6 +35,18 @@ public class JsonLongDocument extends AbstractDocument<Long> implements Serializ
     private static final long serialVersionUID = -7530990234756339564L;
 
     /**
+     * Private constructor which is called by the static factory methods eventually.
+     *
+     * @param id the per-bucket unique document id.
+     * @param content the content of the document.
+     * @param cas the CAS (compare and swap) value for optimistic concurrency.
+     * @param expiry the expiration time of the document.
+     */
+    private JsonLongDocument(String id, int expiry, Long content, long cas, MutationToken mutationToken) {
+        super(id, expiry, content, cas, mutationToken);
+    }
+
+    /**
      * Creates a {@link JsonLongDocument} which the document id.
      *
      * @param id the per-bucket unique document id.
@@ -156,18 +168,6 @@ public class JsonLongDocument extends AbstractDocument<Long> implements Serializ
      */
     public static JsonLongDocument from(JsonLongDocument doc, long cas) {
         return JsonLongDocument.create(doc.id(), doc.expiry(), doc.content(), cas, doc.mutationToken());
-    }
-
-    /**
-     * Private constructor which is called by the static factory methods eventually.
-     *
-     * @param id the per-bucket unique document id.
-     * @param content the content of the document.
-     * @param cas the CAS (compare and swap) value for optimistic concurrency.
-     * @param expiry the expiration time of the document.
-     */
-    private JsonLongDocument(String id, int expiry, Long content, long cas, MutationToken mutationToken) {
-        super(id, expiry, content, cas, mutationToken);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
