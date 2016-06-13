@@ -60,7 +60,7 @@ public class NumericRange {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("{");
+        final StringBuilder sb = new StringBuilder("{");
         sb.append("name='").append(name).append('\'');
         if (min != null) {
             sb.append(", min=").append(min);

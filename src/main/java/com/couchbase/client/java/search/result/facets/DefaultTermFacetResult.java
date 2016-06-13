@@ -46,7 +46,7 @@ public class DefaultTermFacetResult extends AbstractFacetResult implements TermF
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("TermFacetResult{")
+        final StringBuilder sb = new StringBuilder("TermFacetResult{")
                 .append("name='").append(name).append('\'')
                 .append(", field='").append(field).append('\'')
                 .append(", total=").append(total)

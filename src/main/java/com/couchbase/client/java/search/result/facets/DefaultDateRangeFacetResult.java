@@ -46,7 +46,7 @@ public class DefaultDateRangeFacetResult extends  AbstractFacetResult implements
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("DateRangeFacetResult{")
+        final StringBuilder sb = new StringBuilder("DateRangeFacetResult{")
                 .append("name='").append(name).append('\'')
                 .append(", field='").append(field).append('\'')
                 .append(", total=").append(total)
