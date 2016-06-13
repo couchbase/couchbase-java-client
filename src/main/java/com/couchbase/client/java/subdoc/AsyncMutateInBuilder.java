@@ -89,6 +89,7 @@ import rx.functions.Func3;
 public class AsyncMutateInBuilder {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(AsyncMutateInBuilder.class);
+    private static final String PATH_MUST_NOT_BE_EMPTY_FOR_ARRAY_INSERT = "Path must not be empty for arrayInsert";
 
     private final ClusterFacade core;
     private final CouchbaseEnvironment environment;
@@ -437,7 +438,7 @@ public class AsyncMutateInBuilder {
      */
     public <T> AsyncMutateInBuilder arrayInsert(String path, T value) {
         if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for arrayInsert");
+            throw new IllegalArgumentException(PATH_MUST_NOT_BE_EMPTY_FOR_ARRAY_INSERT);
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, value, false));
         return this;
@@ -461,7 +462,7 @@ public class AsyncMutateInBuilder {
      */
     public <T> AsyncMutateInBuilder arrayInsertAll(String path, Collection<T> values) {
         if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for arrayInsert");
+            throw new IllegalArgumentException(PATH_MUST_NOT_BE_EMPTY_FOR_ARRAY_INSERT);
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, new MultiValue<T>(values), false));
         return this;
@@ -488,7 +489,7 @@ public class AsyncMutateInBuilder {
      */
     public <T> AsyncMutateInBuilder arrayInsertAll(String path, T... values) {
         if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for arrayInsert");
+            throw new IllegalArgumentException(PATH_MUST_NOT_BE_EMPTY_FOR_ARRAY_INSERT);
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_INSERT, path, new MultiValue<T>(values), false));
         return this;
@@ -642,6 +643,9 @@ public class AsyncMutateInBuilder {
                     return request;
                 }
             };
+    public static final String PATH = "Path ";
+    public static final String EXPECTED_DICTIONARY = ", expected dictionary";
+    public static final String ENDS_IN_A_SCALAR_VALUE_IN = " ends in a scalar value in ";
     private static final Func3<ResponseStatus, String, String, Object> DICT_UPSERT_EVALUATOR =
             new Func3<ResponseStatus, String, String, Object>() {
                 @Override
@@ -650,11 +654,11 @@ public class AsyncMutateInBuilder {
                         case SUCCESS:
                         return null;
                             case SUBDOC_PATH_INVALID:
-                            throw new PathInvalidException("Path " + path + " ends in an array index in "
-                                                + docId + ", expected dictionary");
+                            throw new PathInvalidException(PATH + path + " ends in an array index in "
+                                                + docId + EXPECTED_DICTIONARY);
                             case SUBDOC_PATH_MISMATCH:
-                            throw new PathMismatchException("Path " + path + " ends in a scalar value in "
-                                                + docId + ", expected dictionary");
+                            throw new PathMismatchException(PATH + path + ENDS_IN_A_SCALAR_VALUE_IN
+                                                + docId + EXPECTED_DICTIONARY);
                             default:
                             throw SubdocHelper.commonSubdocErrors(status, docId, path);
                     }
@@ -678,11 +682,11 @@ public class AsyncMutateInBuilder {
                         case SUCCESS:
                             return null;
                         case SUBDOC_PATH_INVALID:
-                            throw new PathInvalidException("Path " + path + " ends in an array index in "
-                                    + docId + ", expected dictionary");
+                            throw new PathInvalidException(PATH + path + " ends in an array index in "
+                                    + docId + EXPECTED_DICTIONARY);
                         case SUBDOC_PATH_MISMATCH:
-                            throw new PathMismatchException("Path " + path + " ends in a scalar value in "
-                                    + docId + ", expected dictionary");
+                            throw new PathMismatchException(PATH + path + ENDS_IN_A_SCALAR_VALUE_IN
+                                    + docId + EXPECTED_DICTIONARY);
                         case SUBDOC_PATH_EXISTS:
                             throw new PathExistsException(docId, path);
                         default:
@@ -710,8 +714,8 @@ public class AsyncMutateInBuilder {
                         case SUBDOC_PATH_NOT_FOUND:
                             throw new PathNotFoundException("Path to be replaced " + path + " not found in " + docId);
                         case SUBDOC_PATH_MISMATCH:
-                            throw new PathMismatchException("Path " + path + " ends in a scalar value in "
-                                    + docId + ", expected dictionary");
+                            throw new PathMismatchException(PATH + path + ENDS_IN_A_SCALAR_VALUE_IN
+                                    + docId + EXPECTED_DICTIONARY);
                         default:
                             throw SubdocHelper.commonSubdocErrors(status, docId, path);
                     }

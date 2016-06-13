@@ -129,6 +129,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public static final BinaryTranscoder BINARY_TRANSCODER = new BinaryTranscoder();
     public static final StringTranscoder STRING_TRANSCODER = new StringTranscoder();
     public static final SerializableTranscoder SERIALIZABLE_TRANSCODER = new SerializableTranscoder();
+    public static final String DURABILITY_REQUIREMENT_FAILED = "Durability requirement failed: ";
 
     private final String bucket;
     private final String password;
@@ -497,7 +498,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -570,7 +571,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -644,7 +645,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -749,7 +750,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -1180,7 +1181,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends JsonLongDocument> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -1221,7 +1222,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });
@@ -1262,7 +1263,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         @Override
                         public Observable<? extends D> call(Throwable throwable) {
                             return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
+                                DURABILITY_REQUIREMENT_FAILED + throwable.getMessage(),
                                 throwable));
                         }
                     });

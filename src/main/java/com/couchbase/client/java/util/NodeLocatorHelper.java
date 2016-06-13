@@ -53,6 +53,7 @@ import java.util.zip.CRC32;
 @InterfaceAudience.Public
 public class NodeLocatorHelper {
 
+    private static final String BUCKET_TYPE_NOT_SUPPORTED = "Bucket type not supported: ";
     private final ConfigurationProvider configProvider;
     private final AtomicReference<BucketConfig> bucketConfig;
 
@@ -105,7 +106,7 @@ public class NodeLocatorHelper {
         } else if (config instanceof MemcachedBucketConfig) {
             return nodeForIdOnMemcachedBucket(id, (MemcachedBucketConfig) config);
         } else {
-            throw new UnsupportedOperationException("Bucket type not supported: " + config.getClass().getName());
+            throw new UnsupportedOperationException(BUCKET_TYPE_NOT_SUPPORTED + config.getClass().getName());
         }
     }
 
@@ -126,7 +127,7 @@ public class NodeLocatorHelper {
             }
             return replicas;
         } else {
-            throw new UnsupportedOperationException("Bucket type not supported: " + config.getClass().getName());
+            throw new UnsupportedOperationException(BUCKET_TYPE_NOT_SUPPORTED + config.getClass().getName());
         }
     }
 
@@ -156,7 +157,7 @@ public class NodeLocatorHelper {
             }
             return cbc.nodeAtIndex(nodeId).hostname();
         }  else {
-            throw new UnsupportedOperationException("Bucket type not supported: " + config.getClass().getName());
+            throw new UnsupportedOperationException(BUCKET_TYPE_NOT_SUPPORTED + config.getClass().getName());
         }
     }
 

@@ -41,6 +41,7 @@ import java.util.Map;
 public class JsonArray extends JsonValue implements Iterable<Object>, Serializable {
 
     private static final long serialVersionUID = 456072884048969058L;
+    private static final String UNSUPPORTED_TYPE_FOR_JSON_ARRAY = "Unsupported type for JsonArray: ";
 
     /**
      * The backing list of the array.
@@ -92,7 +93,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
             if (checkType(item)) {
                 array.add(item);
             } else {
-                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
+                throw new IllegalArgumentException(UNSUPPORTED_TYPE_FOR_JSON_ARRAY + item.getClass());
             }
         }
         return array;
@@ -157,7 +158,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
             } else if (checkType(item)) {
                 array.add(item);
             } else {
-                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
+                throw new IllegalArgumentException(UNSUPPORTED_TYPE_FOR_JSON_ARRAY + item.getClass());
             }
         }
         return array;
@@ -209,7 +210,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
         } else if (checkType(value)) {
             content.add(value);
         } else {
-            throw new IllegalArgumentException("Unsupported type for JsonArray: " + value.getClass());
+            throw new IllegalArgumentException(UNSUPPORTED_TYPE_FOR_JSON_ARRAY + value.getClass());
         }
         return this;
     }

@@ -54,6 +54,8 @@ public class ViewQuery implements Serializable {
      * Number of supported possible params for a query.
      */
     private static final int NUM_PARAMS = 15;
+    private static final String ENDKEY = "endkey";
+    private static final String STARTKEY = "startkey";
 
     /**
      * Contains all stored params.
@@ -430,87 +432,87 @@ public class ViewQuery implements Serializable {
     }
 
     public ViewQuery endKey(String key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = encode("\"" + key + "\"");
         return this;
     }
 
     public ViewQuery endKey(int key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = Integer.toString(key);
         return this;
     }
 
     public ViewQuery endKey(long key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = Long.toString(key);
         return this;
     }
 
     public ViewQuery endKey(double key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = Double.toString(key);
         return this;
     }
 
 
     public ViewQuery endKey(boolean key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = Boolean.toString(key);
         return this;
     }
 
     public ViewQuery endKey(JsonObject key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = encode(key.toString());
         return this;
     }
 
     public ViewQuery endKey(JsonArray key) {
-        params[PARAM_ENDKEY_OFFSET] = "endkey";
+        params[PARAM_ENDKEY_OFFSET] = ENDKEY;
         params[PARAM_ENDKEY_OFFSET+1] = encode(key.toString());
         return this;
     }
 
     public ViewQuery startKey(String key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = encode("\"" + key + "\"");
         return this;
     }
 
     public ViewQuery startKey(int key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = Integer.toString(key);
         return this;
     }
 
     public ViewQuery startKey(long key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = Long.toString(key);
         return this;
     }
 
     public ViewQuery startKey(double key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = Double.toString(key);
         return this;
     }
 
 
     public ViewQuery startKey(boolean key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = Boolean.toString(key);
         return this;
     }
 
     public ViewQuery startKey(JsonObject key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = encode(key.toString());
         return this;
     }
 
     public ViewQuery startKey(JsonArray key) {
-        params[PARAM_STARTKEY_OFFSET] = "startkey";
+        params[PARAM_STARTKEY_OFFSET] = STARTKEY;
         params[PARAM_STARTKEY_OFFSET+1] = encode(key.toString());
         return this;
     }
