@@ -15,8 +15,11 @@
  */
 package com.couchbase.client.java.query.dsl.path.index;
 
+import java.util.Collection;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.element.WithIndexOptionElement;
@@ -36,13 +39,13 @@ public class DefaultWithPath extends AbstractPath implements WithPath {
         super(parent);
     }
 
-    private Statement with(boolean defer, String nodeName) {
+    private Statement with(boolean defer, String... nodeNames) {
         JsonObject options = JsonObject.create();
         if (defer) {
             options.put("defer_build", true);
         }
-        if (nodeName != null) {
-            options.put("nodes", nodeName);
+        if (nodeNames != null && nodeNames.length > 0) {
+            options.put("nodes", JsonArray.from(nodeNames));
         }
         element(new WithIndexOptionElement(options));
         return this;
@@ -50,16 +53,55 @@ public class DefaultWithPath extends AbstractPath implements WithPath {
 
     @Override
     public Statement withNode(String nodeName) {
+        if (nodeName == null) {
+            return with(false, (String[]) null);
+        }
         return with(false, nodeName);
     }
 
     @Override
+    public Statement withNodes(String... nodeNames) {
+        return with(false, nodeNames);
+    }
+
+    @Override
+    public Statement withNodes(Collection<String> nodeNames) {
+        String[] nodeNamesArray;
+        if (nodeNames == null || nodeNames.isEmpty()) {
+            nodeNamesArray = null;
+        } else {
+            nodeNamesArray = nodeNames.toArray(new String[nodeNames.size()]);
+        }
+        return with(false, nodeNamesArray);
+    }
+
+    @Override
     public Statement withDefer() {
-        return with(true, null);
+        return with(true, (String[]) null);
     }
 
     @Override
     public Statement withDeferAndNode(String nodeName) {
+        if (nodeName == null) {
+            return with(true, (String[]) null);
+        }
         return with(true, nodeName);
     }
+
+    @Override
+    public Statement withDeferAndNodes(String... nodeNames) {
+        return with(true, nodeNames);
+    }
+
+    @Override
+    public Statement withDeferAndNodes(Collection<String> nodeNames) {
+        String[] nodeNamesArray;
+        if (nodeNames == null || nodeNames.isEmpty()) {
+            nodeNamesArray = null;
+        } else {
+            nodeNamesArray = nodeNames.toArray(new String[nodeNames.size()]);
+        }
+        return with(true, nodeNamesArray);
+    }
+
 }

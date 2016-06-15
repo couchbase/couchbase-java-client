@@ -15,9 +15,10 @@
  */
 package com.couchbase.client.java.query.dsl.path.index;
 
+import java.util.Collection;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.query.dsl.element.WithIndexOptionElement;
 import com.couchbase.client.java.query.dsl.path.Path;
@@ -36,9 +37,25 @@ public interface WithPath extends Path, Statement {
     /**
      * Specify on which node to create a GSI index.
      *
-     * @param nodeName the name of the node on which to create an index.
+     * @param nodeName the name of a single node on which to create an index.
+     * @deprecated you can call {@link #withNodes(String...)} with a single entry instead.
      */
+    @Deprecated
     Statement withNode(String nodeName);
+
+    /**
+     * Specify on which node(s) to create a GSI index.
+     *
+     * @param nodeNames one or more node names on which to create an index (at least one should be provided).
+     */
+    Statement withNodes(String... nodeNames);
+
+    /**
+     * Specify on which node(s) to create a GSI index.
+     *
+     * @param nodeNames a collection of one or more node names on which to create an index (should not be empty).
+     */
+    Statement withNodes(Collection<String> nodeNames);
 
     /**
      * Specify that the index creation should be deferred to later, allowing to create multiple index and then build
@@ -51,7 +68,26 @@ public interface WithPath extends Path, Statement {
      * name of the node on which to create a GSI index.
      *
      * @param nodeName the name of the node on which to create an index.
+     * @deprecated you can call {@link #withDeferAndNodes(String...)} with a single entry instead.
      */
     Statement withDeferAndNode(String nodeName);
+
+    /**
+     * Sets both index creation supported options : specify that the index creation should be deferred and give the
+     * name of the node(s) on which to create a GSI index.
+     *
+     * @param nodeNames one or more node names on which to create an index (at least one should be provided).
+     */
+    Statement withDeferAndNodes(String... nodeNames);
+
+    /**
+     * Sets both index creation supported options : specify that the index creation should be deferred and give the
+     * name of the node(s) on which to create a GSI index.
+     *
+     * @param nodeNames a collection of one or more node names on which to create an index (should not be empty).
+     */
+
+    Statement withDeferAndNodes(Collection<String> nodeNames);
+
 
 }

@@ -25,6 +25,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.Statement;
@@ -99,12 +104,38 @@ public class IndexDslTest {
         WithPath path = new DefaultWithPath(null);
 
         String expectedDefer = "WITH " + JsonObject.create().put("defer_build", true);
-        String expectedDeferAndNode = "WITH " + JsonObject.create().put("defer_build", true).put("nodes", "test");
-        String expectedNode = "WITH " + JsonObject.create().put("nodes", "test");
+        String expectedDeferAndNode = "WITH " + JsonObject.create().put("defer_build", true).put("nodes", JsonArray.from("test"));
+        String expectedDeferAndNodes = "WITH " + JsonObject.create().put("defer_build", true).put("nodes", JsonArray.from("test1", "test2"));
+        String expectedNode = "WITH " + JsonObject.create().put("nodes", JsonArray.from("test"));
+        String expectedNodes = "WITH " + JsonObject.create().put("nodes", JsonArray.from("test1", "test2"));
 
         assertEquals(expectedDefer, path.withDefer().toString());
         assertEquals(expectedDeferAndNode, path.withDeferAndNode("test").toString());
         assertEquals(expectedNode, path.withNode("test").toString());
+        assertEquals(expectedNodes, path.withNodes("test1", "test2").toString());
+        assertEquals(expectedNodes, path.withNodes(Arrays.asList("test1", "test2")).toString());
+        assertEquals(expectedDeferAndNodes, path.withDeferAndNodes("test1", "test2").toString());
+        assertEquals(expectedDeferAndNodes, path.withDeferAndNodes(Arrays.asList("test1", "test2")).toString());
+    }
+
+    @Test
+    public void testWithEmptyNodesVariants() {
+        WithPath path = new DefaultWithPath(null);
+
+        String expected = "WITH {}";
+        String expectedDefer = "WITH " + JsonObject.create().put("defer_build", true);
+
+        assertEquals(expected, path.withNode(null).toString());
+        assertEquals(expected, path.withNodes().toString());
+        assertEquals(expected, path.withNodes(Collections.<String>emptyList()).toString());
+        assertEquals(expected, path.withNodes((Collection<String>) null).toString());
+        assertEquals(expected, path.withNodes((String[]) null).toString());
+
+        assertEquals(expectedDefer, path.withDeferAndNode(null).toString());
+        assertEquals(expectedDefer, path.withDeferAndNodes().toString());
+        assertEquals(expectedDefer, path.withDeferAndNodes(Collections.<String>emptyList()).toString());
+        assertEquals(expectedDefer, path.withDeferAndNodes((Collection<String>) null).toString());
+        assertEquals(expectedDefer, path.withDeferAndNodes((String[]) null).toString());
     }
 
     @Test
