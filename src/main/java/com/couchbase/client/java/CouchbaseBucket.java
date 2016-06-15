@@ -590,16 +590,6 @@ public class CouchbaseBucket implements Bucket {
             .single(), timeout, timeUnit);
     }
 
-//    @Override
-//    public PreparedPayload prepare(String statement) {
-//        return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
-//    }
-
-//    @Override
-//    public PreparedPayload prepare(Statement statement) {
-//        return prepare(statement, environment.queryTimeout(), TIMEOUT_UNIT);
-//    }
-
     @Override
     public SpatialViewResult query(SpatialViewQuery query) {
         return query(query, environment.viewTimeout(), TIMEOUT_UNIT);
