@@ -54,6 +54,8 @@ public class ReplicaReader {
      */
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(ReplicaReader.class);
 
+    private ReplicaReader() {}
+
     /**
      * Perform replica reads to as many nodes a possible based on the given {@link ReplicaMode}.
      *
@@ -131,7 +133,7 @@ public class ReplicaReader {
      */
     private static class GetResponseFilter implements Func1<GetResponse, Boolean> {
 
-        public static GetResponseFilter INSTANCE = new GetResponseFilter();
+        public static final GetResponseFilter INSTANCE = new GetResponseFilter();
 
         @Override
         public Boolean call(GetResponse response) {
@@ -162,7 +164,7 @@ public class ReplicaReader {
      */
     private static class GetResponseErrorHandler implements Func1<Throwable, Observable<? extends GetResponse>> {
 
-        public static GetResponseErrorHandler INSTANCE = new GetResponseErrorHandler();
+        public static final GetResponseErrorHandler INSTANCE = new GetResponseErrorHandler();
 
         @Override
         public Observable<? extends GetResponse> call(Throwable throwable) {

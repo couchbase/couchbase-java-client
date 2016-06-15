@@ -120,7 +120,7 @@ public class ConnectionString {
         return params;
     }
 
-    public static enum Scheme {
+    public enum Scheme {
         HTTP,
         COUCHBASE,
         COUCHBASES

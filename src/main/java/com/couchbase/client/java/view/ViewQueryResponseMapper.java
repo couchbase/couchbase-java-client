@@ -47,6 +47,8 @@ public class ViewQueryResponseMapper {
      */
     private static final JsonTranscoder TRANSCODER = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
 
+    private ViewQueryResponseMapper() {}
+
     /**
      * Maps a raw {@link ViewQueryResponse} into a {@link AsyncViewResult}.
      *

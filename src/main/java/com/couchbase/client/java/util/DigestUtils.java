@@ -31,6 +31,8 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 @InterfaceAudience.Private
 public class DigestUtils {
 
+    private DigestUtils() {}
+
     /**
      * Hashes the source with SHA1 and returns the resulting hash as an hexadecimal string.
      *

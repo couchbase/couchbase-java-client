@@ -781,7 +781,6 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public Observable<AsyncSearchQueryResult> query(final SearchQuery query) {
         final String indexName = query.indexName();
-        final AbstractFtsQuery queryPart = query.query();
 
         //always set a server side timeout. if not explicit, set it to the client side timeout
         if (query.getServerSideTimeout() == null) {

@@ -41,6 +41,8 @@ public class ViewRetryHandler {
         SHOULD_RETRY.setStackTrace(new StackTraceElement[]{});
     }
 
+    private ViewRetryHandler() {}
+
     /**
      * Takes a {@link ViewQueryResponse}, verifies their status based on fixed criteria and resubscribes if needed.
      *

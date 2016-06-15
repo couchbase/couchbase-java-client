@@ -304,9 +304,6 @@ public class CouchbaseCluster implements Cluster {
             return cachedBucket;
         }
 
-        final List<Transcoder<? extends Document, ?>> trans = transcoders == null
-            ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
-
         return Blocking.blockForSingle(couchbaseAsyncCluster
             .openBucket(name, password, transcoders)
             .map(new Func1<AsyncBucket, Bucket>() {

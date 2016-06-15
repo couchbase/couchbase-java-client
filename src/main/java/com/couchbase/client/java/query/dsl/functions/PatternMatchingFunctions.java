@@ -34,6 +34,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class PatternMatchingFunctions {
 
+    private PatternMatchingFunctions() {}
+
     /**
      * Returned expression results in True if the string value contains the regular expression pattern.
      */

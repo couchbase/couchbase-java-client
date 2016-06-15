@@ -32,6 +32,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
 public class ComparisonFunctions {
+    private ComparisonFunctions() {}
+
     /**
      * Returned expression results in the largest non-NULL, non-MISSING value if the values are
      * of the same type, otherwise NULL. At least two expressions are necessary.

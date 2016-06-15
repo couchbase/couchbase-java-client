@@ -24,11 +24,8 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Utility classes for bootstrapping.
@@ -62,6 +59,8 @@ public class Bootstrap {
     public static final void setDnsEnvParameter(String key, String value) {
         DNS_ENV.put(key, value);
     }
+
+    private Bootstrap() {}
 
     /**
      * Fetch a bootstrap list from DNS SRV using default OS name resolution.

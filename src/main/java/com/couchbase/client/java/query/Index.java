@@ -41,6 +41,8 @@ public class Index {
      */
     public static final String PRIMARY_NAME = "#primary";
 
+    private Index() {}
+
     /**
      * Create a new secondary index.
      *

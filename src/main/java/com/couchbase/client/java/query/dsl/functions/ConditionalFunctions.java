@@ -34,6 +34,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class ConditionalFunctions {
 
+    private ConditionalFunctions() {}
+
     protected static Expression build(String operator, Expression expression1, Expression expression2,
             Expression... others) {
         StringBuilder result = new StringBuilder(operator);
