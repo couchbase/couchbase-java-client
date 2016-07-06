@@ -28,6 +28,7 @@ import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
 import com.couchbase.client.core.message.query.GenericQueryResponse;
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
@@ -405,6 +406,12 @@ public class N1qlQueryExecutor {
                     return Observable.from(getClusterConfigResponse.config()
                             .bucketConfig(bucket)
                             .nodes());
+                }
+            }).filter(new Func1<NodeInfo, Boolean>() {
+                @Override
+                public Boolean call(NodeInfo nodeInfo) {
+                    return nodeInfo.services().containsKey(ServiceType.QUERY)
+                        || nodeInfo.sslServices().containsKey(ServiceType.QUERY);
                 }
             }).flatMap(new Func1<NodeInfo, Observable<GenericQueryResponse>>() {
                 @Override
