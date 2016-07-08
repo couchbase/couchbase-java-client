@@ -18,18 +18,22 @@ package com.couchbase.client.java;
 import static com.couchbase.client.java.search.facet.SearchFacet.date;
 import static com.couchbase.client.java.search.facet.SearchFacet.numeric;
 import static com.couchbase.client.java.search.facet.SearchFacet.term;
+import static com.googlecode.catchexception.CatchException.catchException;
+import static com.googlecode.catchexception.CatchException.caughtException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
+import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.FtsConsistencyTimeoutException;
 import com.couchbase.client.java.search.HighlightStyle;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.facet.SearchFacet;
 import com.couchbase.client.java.search.queries.AbstractFtsQuery;
-import com.couchbase.client.java.search.queries.MatchQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
 import com.couchbase.client.java.search.result.facets.DateRange;
@@ -46,6 +50,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import rx.exceptions.CompositeException;
 
 /**
  * Integration tests of the Search Query / FTS features.
@@ -201,6 +206,24 @@ public class SearchQueryTest {
             assertThat(row.fields()).as("row fields").isEmpty();
             assertThat(row.fragments()).as("row fragments").isEmpty();
         }
+    }
+
+    @Test
+    public void shouldSearchWithNoHits() {
+        AbstractFtsQuery fts = SearchQuery.matchPhrase("noabfaobf nnda");
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .limit(3);
+
+        SearchQueryResult result = ctx.bucket().query(query);
+
+        assertThat(result).as("result").isNotNull();
+        assertThat(result.metrics()).as("metrics").isNotNull();
+        assertThat(result.hits()).as("hits").isEmpty();
+        assertThat(result.hitsOrFail()).as("hitsOrFail").isEmpty();
+        assertThat(result.hits()).as("hits == hitsOrFail").isEqualTo(result.hitsOrFail());
+        assertThat(result.hits().size()).as("hits size").isEqualTo((int) result.metrics().totalHits());
+        assertThat(result.metrics().totalHits()).as("totalHits").isEqualTo(0L);
+        assertThat(result.errors()).as("errors").isEmpty();
     }
 
     @Test
@@ -370,29 +393,72 @@ public class SearchQueryTest {
         String key = "21st_amendment_brewery_cafe-21a_ipa";
         String category = "North American Ale";
 
-        //this test essentially validates that the query service accepts the tokens
-        //but we'll still attempt to throw the indexer off by doing a first dummy mutation
-        ctx.bucket().mutateIn(key)
-                .replace("category", "batman")
-                .execute();
+        SearchQueryResult result = null;
+        try {
+            //this test essentially validates that the query service accepts the tokens
+            //but we'll still attempt to throw the indexer off by doing a first dummy mutation
+            ctx.bucket().mutateIn(key)
+                    .replace("category", "batman")
+                    .execute();
 
-        //this is the mutation we want to be consistent with
-        DocumentFragment<Mutation> mutation = ctx
-                .bucket().mutateIn(key)
-                .replace("category", "superman")
-                .execute();
+            //this is the mutation we want to be consistent with
+            DocumentFragment<Mutation> mutation = ctx
+                    .bucket().mutateIn(key)
+                    .replace("category", "superman")
+                    .execute();
 
-        SearchQuery query = new SearchQuery("beer-search",
-                SearchQuery.match("superman").field("category"))
-                .consistentWith(mutation)
-                .limit(3);
-        SearchQueryResult result = ctx.bucket().query(query);
+            SearchQuery query = new SearchQuery("beer-search",
+                    SearchQuery.match("superman").field("category"))
+                    .consistentWith(mutation)
+                    .limit(3);
+            result = ctx.bucket().query(query);
+        } finally {
+            //restore old values
+            ctx.bucket().mutateIn(key).replace("category", category).execute();
+        }
 
-        //restore old value before asserts
-        ctx.bucket().mutateIn(key).replace("category", category).execute();
-
+        assertThat(result).isNotNull();
         assertThat(result.hits()).hasSize(1);
         assertThat(result.hits().get(0).id()).isEqualToIgnoringCase(key);
+    }
+
+    @Test
+    @Ignore("FTS 412 error case is hard to trigger, test too brittle")
+    public void shouldThrowFtsConsistencyTimeoutException() {
+        //FIXME WARNING test is brittle, won't cause the expected error all the time on server side :(
+
+        //artificially generate and get a mutation token by identity-upserting a doc
+        Document d = ctx.bucket().get("21st_amendment_brewery_cafe-21a_ipa");
+        d = ctx.bucket().upsert(d);
+        AbstractFtsQuery fts = SearchQuery.match("beer");
+        //trigger 412 by setting a consistency and a very fast timeout
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .consistentWith(d)
+                .serverSideTimeout(1, TimeUnit.MILLISECONDS);
+
+        SearchQueryResult result = ctx.bucket().query(query);
+
+        assertThat(result.status().isSuccess()).isFalse();
+        catchException(result).hitsOrFail();
+        assertThat(caughtException()).isInstanceOf(FtsConsistencyTimeoutException.class);
+    }
+
+    @Test
+    public void shouldThrowCouchbaseExceptionWhenTimeout() {
+        AbstractFtsQuery fts = SearchQuery.match("beer");
+        //set a very fast timeout
+        SearchQuery query = new SearchQuery(INDEX, fts)
+                .serverSideTimeout(3, TimeUnit.MILLISECONDS);
+
+        SearchQueryResult result = ctx.bucket().query(query);
+
+        assertThat(result.status().isSuccess()).isFalse();
+        catchException(result).hitsOrFail();
+        assertThat(caughtException())
+                .isInstanceOf(CompositeException.class);
+        CompositeException compositeException = caughtException();
+        Throwable inner = compositeException.getExceptions().get(0);
+        assertThat(inner).hasMessageContaining("context deadline exceeded");
     }
 
 }

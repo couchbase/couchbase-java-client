@@ -21,11 +21,11 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.search.SearchQuery;
 import org.junit.Test;
 
-public class StringQueryTest {
+public class QueryStringQueryTest {
 
     @Test
     public void shouldBuildStringQueryWithoutParams() {
-        StringQuery fts = SearchQuery.string("description:water and some other stuff");
+        QueryStringQuery fts = SearchQuery.queryString("description:water and some other stuff");
         SearchQuery query = new SearchQuery("foo", fts);
         JsonObject expected = JsonObject.create()
             .put("query", JsonObject.create().put("query", "description:water and some other stuff"));
@@ -34,7 +34,7 @@ public class StringQueryTest {
 
     @Test
     public void shouldBuildStringQueryWithParamsAndBoost() {
-        StringQuery fts = SearchQuery.string("q*ry").boost(2.0);
+        QueryStringQuery fts = SearchQuery.queryString("q*ry").boost(2.0);
         SearchQuery query = new SearchQuery("foo", fts)
             .explain()
             .limit(10);

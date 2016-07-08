@@ -43,7 +43,7 @@ import com.couchbase.client.java.search.queries.NumericRangeQuery;
 import com.couchbase.client.java.search.queries.PhraseQuery;
 import com.couchbase.client.java.search.queries.PrefixQuery;
 import com.couchbase.client.java.search.queries.RegexpQuery;
-import com.couchbase.client.java.search.queries.StringQuery;
+import com.couchbase.client.java.search.queries.QueryStringQuery;
 import com.couchbase.client.java.search.queries.TermQuery;
 import com.couchbase.client.java.search.queries.WildcardQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
@@ -144,7 +144,9 @@ public class SearchQuery {
         }
         if (highlightStyle != null) {
             JsonObject highlight = JsonObject.create();
-            highlight.put("style", highlightStyle.name().toLowerCase());
+            if (highlightStyle != HighlightStyle.SERVER_DEFAULT) {
+                highlight.put("style", highlightStyle.name().toLowerCase());
+            }
             if (highlightFields != null && highlightFields.length > 0) {
                 highlight.put("fields", JsonArray.from(highlightFields));
             }
@@ -250,6 +252,35 @@ public class SearchQuery {
             highlightFields = fields;
         }
         return this;
+    }
+
+    /**
+     * Configures the highlighting of matches in the response, for the specified fields and using the server's default
+     * highlighting style.
+     *
+     * This drives the inclusion of the {@link SearchQueryRow#fragments() fragments} in each {@link SearchQueryRow hit}.
+     *
+     * Note that to be highlighted, the fields must be stored in the FTS index.
+     *
+     * @param fields the optional fields on which to highlight. If none, all fields where there is a match are highlighted.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery highlight(String... fields) {
+        return highlight(HighlightStyle.SERVER_DEFAULT, fields);
+    }
+
+    /**
+     * Configures the highlighting of matches in the response for all fields, using the server's default highlighting
+     * style.
+     *
+     * This drives the inclusion of the {@link SearchQueryRow#fragments() fragments} in each {@link SearchQueryRow hit}.
+     *
+     * Note that to be highlighted, the fields must be stored in the FTS index.
+     *
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery highlight() {
+        return highlight(HighlightStyle.SERVER_DEFAULT);
     }
 
     /**
@@ -437,9 +468,9 @@ public class SearchQuery {
      * Factory methods for FTS queries
      * =============================== */
 
-    /** Prepare a {@link StringQuery} body. */
-    public static StringQuery string(String query) {
-        return new StringQuery(query);
+    /** Prepare a {@link QueryStringQuery} body. */
+    public static QueryStringQuery queryString(String query) {
+        return new QueryStringQuery(query);
     }
 
     /** Prepare a {@link MatchQuery} body. */

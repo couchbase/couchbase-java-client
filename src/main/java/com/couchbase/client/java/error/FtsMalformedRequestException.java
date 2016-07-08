@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.couchbase.client.java.search;
+package com.couchbase.client.java.error;
 
-import com.couchbase.client.core.annotations.InterfaceAudience;
-import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.CouchbaseException;
 
 /**
- * Enumeration of the highlighting styles recognized by the FTS engine.
+ * An exception denoting that the search engine couldn't parse an FTS request.
  *
  * @author Simon Baslé
- * @author Michael Nitschinger
- * @since 2.3.0
+ * @since 2.3
  */
-@InterfaceStability.Experimental
-@InterfaceAudience.Public
-public enum HighlightStyle {
-    HTML,
-    ANSI,
-    SERVER_DEFAULT
+public class FtsMalformedRequestException extends CouchbaseException {
+
+    public FtsMalformedRequestException(String payload) {
+        super("FTS request is malformed. Details: " + payload);
+    }
 }

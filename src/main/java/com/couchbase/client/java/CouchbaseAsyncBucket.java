@@ -805,6 +805,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     return DefaultAsyncSearchQueryResult.fromJson(json);
                 } else if (response.status() == ResponseStatus.INVALID_ARGUMENTS) {
                     return DefaultAsyncSearchQueryResult.fromHttp400(response.payload());
+                } else if (response.status() == ResponseStatus.FAILURE) {
+                    //TODO for now only HTTP 412 can lead to FAILURE in search, will need to keep the HTTP code in the future
+                    return DefaultAsyncSearchQueryResult.fromHttp412();
                 } else {
                     throw new CouchbaseException("Could not query search index, " + response.status() + ": " + response.payload());
                 }

@@ -26,6 +26,8 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.FtsConsistencyTimeoutException;
+import com.couchbase.client.java.error.FtsMalformedRequestException;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
 import com.couchbase.client.java.search.result.SearchMetrics;
 import com.couchbase.client.java.search.result.SearchQueryRow;
@@ -110,51 +112,54 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
 
         List<SearchQueryRow> hits = new ArrayList<SearchQueryRow>();
 
-        for (Object rawHit : json.getArray("hits")) {
-            JsonObject hit = (JsonObject)rawHit;
-            String index = hit.getString("index");
-            String id = hit.getString("id");
-            double score = hit.getDouble("score");
-            JsonObject explanationJson = hit.getObject("explanation");
-            if (explanationJson == null) {
-                explanationJson = JsonObject.empty();
-            }
+        JsonArray rawHits = json.getArray("hits");
+        if (rawHits != null) {
+            for (Object rawHit : rawHits) {
+                JsonObject hit = (JsonObject) rawHit;
+                String index = hit.getString("index");
+                String id = hit.getString("id");
+                double score = hit.getDouble("score");
+                JsonObject explanationJson = hit.getObject("explanation");
+                if (explanationJson == null) {
+                    explanationJson = JsonObject.empty();
+                }
 
-            HitLocations locations = DefaultHitLocations.from(hit.getObject("locations"));
+                HitLocations locations = DefaultHitLocations.from(hit.getObject("locations"));
 
-            JsonObject fragmentsJson = hit.getObject("fragments");
-            Map<String, List<String>> fragments;
-            if (fragmentsJson != null) {
-                fragments = new HashMap<String, List<String>>(fragmentsJson.size());
-                for (String field : fragmentsJson.getNames()) {
-                    List<String> fragment;
-                    JsonArray fragmentJson = fragmentsJson.getArray(field);
-                    if (fragmentJson != null) {
-                        fragment = new ArrayList<String>(fragmentJson.size());
-                        for (int i = 0; i < fragmentJson.size(); i++) {
-                            fragment.add(fragmentJson.getString(i));
+                JsonObject fragmentsJson = hit.getObject("fragments");
+                Map<String, List<String>> fragments;
+                if (fragmentsJson != null) {
+                    fragments = new HashMap<String, List<String>>(fragmentsJson.size());
+                    for (String field : fragmentsJson.getNames()) {
+                        List<String> fragment;
+                        JsonArray fragmentJson = fragmentsJson.getArray(field);
+                        if (fragmentJson != null) {
+                            fragment = new ArrayList<String>(fragmentJson.size());
+                            for (int i = 0; i < fragmentJson.size(); i++) {
+                                fragment.add(fragmentJson.getString(i));
+                            }
+                        } else {
+                            fragment = Collections.emptyList();
                         }
-                    } else {
-                        fragment = Collections.emptyList();
+                        fragments.put(field, fragment);
                     }
-                    fragments.put(field, fragment);
+                } else {
+                    fragments = Collections.emptyMap();
                 }
-            } else {
-                fragments = Collections.emptyMap();
-            }
 
-            Map<String, String> fields;
-            JsonObject fieldsJson = hit.getObject("fields");
-            if (fieldsJson != null) {
-                fields = new HashMap<String, String>(fieldsJson.size());
-                for (String f : fieldsJson.getNames()) {
-                    fields.put(f, String.valueOf(fieldsJson.get(f)));
+                Map<String, String> fields;
+                JsonObject fieldsJson = hit.getObject("fields");
+                if (fieldsJson != null) {
+                    fields = new HashMap<String, String>(fieldsJson.size());
+                    for (String f : fieldsJson.getNames()) {
+                        fields.put(f, String.valueOf(fieldsJson.get(f)));
+                    }
+                } else {
+                    fields = Collections.emptyMap();
                 }
-            } else {
-                fields = Collections.emptyMap();
-            }
 
-            hits.add(new DefaultSearchQueryRow(index, id, score, explanationJson, locations, fragments, fields));
+                hits.add(new DefaultSearchQueryRow(index, id, score, explanationJson, locations, fragments, fields));
+            }
         }
 
         List<FacetResult> facets;
@@ -205,11 +210,19 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
         }
 
         Observable<SearchQueryRow> errors;
-        JsonArray errorsJson = jsonStatus.getArray("errors");
-        if (errorsJson != null) {
+        Object errorsRaw = jsonStatus.get("errors");
+        if (errorsRaw instanceof JsonArray) {
+            JsonArray errorsJson = (JsonArray) errorsRaw;
             List<Exception> exceptions = new ArrayList<Exception>(errorsJson.size());
             for (Object o : errorsJson) {
                 exceptions.add(new RuntimeException(String.valueOf(o)));
+            }
+            errors = Observable.error(new CompositeException(exceptions));
+        } else if (errorsRaw instanceof JsonObject) {
+            JsonObject errorsJson = (JsonObject) errorsRaw;
+            List<Exception> exceptions = new ArrayList<Exception>(errorsJson.size());
+            for (String key : errorsJson.getNames()) {
+                exceptions.add(new RuntimeException(key + ": " + errorsJson.get(key)));
             }
             errors = Observable.error(new CompositeException(exceptions));
         } else {
@@ -228,10 +241,10 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
      * {@link AsyncSearchQueryResult}. HTTP 400 indicates the request was malformed and couldn't
      * be parsed on the server. As of Couchbase Server 4.5 such a response is a text/plain
      * body that describes the parsing error. The whole body is emitted/thrown, wrapped in a
-     * {@link CouchbaseException}.
+     * {@link FtsMalformedRequestException}.
      *
      * @param payload the HTTP 400 response body describing the parsing failure.
-     * @return an {@link AsyncSearchQueryResult} that will emit a {@link CouchbaseException} when calling its
+     * @return an {@link AsyncSearchQueryResult} that will emit a {@link FtsMalformedRequestException} when calling its
      * {@link AsyncSearchQueryResult#hits() hits()} method.
      * @deprecated FTS is still in BETA so the response format is likely to change in a future version, and be
      * unified with the HTTP 200 response format.
@@ -245,7 +258,32 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
 
         return new DefaultAsyncSearchQueryResult(
                 status,
-                Observable.<SearchQueryRow>error(new CouchbaseException(payload)),
+                Observable.<SearchQueryRow>error(new FtsMalformedRequestException(payload)),
+                Observable.<FacetResult>empty(),
+                Observable.just(metrics)
+        );
+    }
+
+    /**
+     * A utility method to convert an HTTP 412 response from the search service into a proper
+     * {@link AsyncSearchQueryResult}. HTTP 412 indicates the request couldn't be satisfied with given
+     * consistency before the timeout expired. This is translated to a {@link FtsConsistencyTimeoutException}.
+     *
+     * @return an {@link AsyncSearchQueryResult} that will emit a {@link FtsConsistencyTimeoutException} when calling
+     * its {@link AsyncSearchQueryResult#hits() hits()} method.
+     * @deprecated FTS is still in BETA so the response format is likely to change in a future version, and be
+     * unified with the HTTP 200 response format.
+     */
+    @Deprecated
+    public static AsyncSearchQueryResult fromHttp412() {
+        //dummy default values
+        SearchStatus status = new DefaultSearchStatus(1L, 1L, 0L);
+        SearchMetrics metrics = new DefaultSearchMetrics(0L, 0L, 0d);
+
+
+        return new DefaultAsyncSearchQueryResult(
+                status,
+                Observable.<SearchQueryRow>error(new FtsConsistencyTimeoutException()),
                 Observable.<FacetResult>empty(),
                 Observable.just(metrics)
         );
