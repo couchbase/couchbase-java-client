@@ -16,6 +16,7 @@
 
 package com.couchbase.client.java;
 
+import static com.couchbase.client.java.util.ClusterDependentTest.bucketManager;
 import static com.googlecode.catchexception.CatchException.caughtException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -46,6 +47,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.subdoc.BadDeltaException;
 import com.couchbase.client.java.error.subdoc.CannotInsertValueException;
 import com.couchbase.client.java.error.subdoc.MultiMutationException;
@@ -1692,4 +1694,27 @@ public class SubDocumentTest {
                 .remove("int")
         .execute();
     }
+
+    @Test(expected = DurabilityException.class)
+    public void shouldFailMutationWithDurabilityException() {
+        int replicaCount = ctx.bucketManager().info().replicaCount();
+        Assume.assumeTrue(replicaCount < 3);
+
+        ctx.bucket()
+            .mutateIn(key)
+            .upsert("sub", 1234, false)
+            .execute(PersistTo.FOUR);
+    }
+
+    @Test
+    public void shouldPersistMutation() {
+        DocumentFragment<Mutation> result = ctx.bucket()
+            .mutateIn(key)
+            .upsert("string", "iPersist", false)
+            .execute(PersistTo.ONE);
+
+        assertTrue(result.cas() != 0);
+        assertEquals(ResponseStatus.SUCCESS, result.status("string"));
+    }
+
 }

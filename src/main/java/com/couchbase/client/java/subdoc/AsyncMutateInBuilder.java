@@ -150,7 +150,6 @@ public class AsyncMutateInBuilder {
      *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
      *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
      *  - The multi-mutation failed: {@link MultiMutationException}
-     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
      *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
      *
      * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
@@ -172,6 +171,174 @@ public class AsyncMutateInBuilder {
             return doMultiMutate();
         }
     }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param persistTo the persistence requirement to watch.
+     * @param replicateTo the replication requirement to watch.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(final PersistTo persistTo, final ReplicateTo replicateTo) {
+        Observable<DocumentFragment<Mutation>> mutationResult = execute();
+
+        if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
+            return mutationResult;
+        }
+
+        return mutationResult.flatMap(new Func1<DocumentFragment<Mutation>, Observable<DocumentFragment<Mutation>>>() {
+            @Override
+            public Observable<DocumentFragment<Mutation>> call(final DocumentFragment<Mutation> fragment) {
+                return Observe.call(core, bucketName, docId, fragment.cas(), false, fragment.mutationToken(),
+                    persistTo.value(), replicateTo.value(),
+                    environment.observeIntervalDelay(), environment.retryStrategy())
+                    .map(new Func1<Boolean, DocumentFragment<Mutation>>() {
+                        @Override
+                        public DocumentFragment<Mutation> call(Boolean aBoolean) {
+                            return fragment;
+                        }
+                    }).onErrorResumeNext(new Func1<Throwable, Observable<DocumentFragment<Mutation>>>() {
+                        @Override
+                        public Observable<DocumentFragment<Mutation>> call(Throwable throwable) {
+                            return Observable.error(new DurabilityException(
+                                "Durability requirement failed: " + throwable.getMessage(),
+                                throwable));
+                        }
+                    });
+            }
+        });
+
+
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param persistTo the persistence requirement to watch.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(PersistTo persistTo) {
+        return execute(persistTo, ReplicateTo.NONE);
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param replicateTo the replication requirement to watch.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(ReplicateTo replicateTo) {
+        return execute(PersistTo.NONE, replicateTo);
+    }
+
 
     //==== DOCUMENT level modifiers ====
     /**
