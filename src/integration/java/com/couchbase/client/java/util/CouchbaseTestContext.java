@@ -29,10 +29,10 @@ import com.couchbase.client.java.cluster.DefaultBucketSettings;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
-import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
@@ -134,6 +134,7 @@ public class CouchbaseTestContext {
     public static final class Builder {
 
         private boolean createAdhocBucket;
+        private boolean createIfMissing;
         private String seedNode;
         private String adminName;
         private String adminPassword;
@@ -156,6 +157,7 @@ public class CouchbaseTestContext {
                 .enableFlush(true)
                 .type(BucketType.COUCHBASE);
             flushOnInit = true;
+            createIfMissing = true;
             this.createAdhocBucket = false;
         }
 
@@ -168,6 +170,17 @@ public class CouchbaseTestContext {
         public Builder adhoc(boolean isAdhoc) {
             this.createAdhocBucket = isAdhoc;
             this.flushOnInit = false;
+            return this;
+        }
+
+        /**
+         * Toggles creation of missing buckets on or off. If disabled and the bucket is actually missing, a
+         * {@link BucketDoesNotExistException} will be thrown when building the context.
+         *
+         * @param createIfMissing should missing buckets be created using context bucket settings?
+         */
+        public Builder createBucketIfMissing(boolean createIfMissing) {
+            this.createIfMissing = createIfMissing;
             return this;
         }
 
@@ -217,6 +230,22 @@ public class CouchbaseTestContext {
          */
         public Builder bucketPassword(String bucketPassword) {
             this.bucketPassword = bucketPassword;
+            return this;
+        }
+
+        /**
+         * Use a sample bucket. Doing so implies that no password is used, and the
+         * bucket won't be created if missing (instead leading to an error). It
+         * also forces flushOnInit and adhoc to false.
+         *
+         * @param sampleName the name of the sample bucket to use.
+         */
+        public Builder sampleBucket(String sampleName) {
+            bucketName(sampleName);
+            bucketPassword("");
+            flushOnInit(false);
+            adhoc(false);
+            createBucketIfMissing(false);
             return this;
         }
 
@@ -280,7 +309,11 @@ public class CouchbaseTestContext {
 
             boolean existing = clusterManager.hasBucket(bucketName);
             if (!existing) {
-                clusterManager.insertBucket(bucketSettingsBuilder.build());
+                if (createIfMissing) {
+                    clusterManager.insertBucket(bucketSettingsBuilder.build());
+                } else {
+                    throw new BucketDoesNotExistException("Bucket " + bucketName + " doesn't exist and bucket creation disabled (or a sample)");
+                }
             }
 
             boolean isFlushEnabled = bucketSettingsBuilder.enableFlush();
@@ -460,6 +493,13 @@ public class CouchbaseTestContext {
     /** @return the name of the {@link #bucket()} to be used for tests in this context. */
     public String bucketName() {
         return bucketName;
+    }
+
+    /**
+     * @return the seed node provided when connecting to the cluster.
+     */
+    public String seedNode() {
+        return seedNode;
     }
 
     /**
