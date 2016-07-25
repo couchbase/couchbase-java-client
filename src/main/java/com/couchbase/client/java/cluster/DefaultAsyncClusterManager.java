@@ -17,6 +17,7 @@ package com.couchbase.client.java.cluster;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.config.*;
 import com.couchbase.client.core.message.internal.AddNodeRequest;
 import com.couchbase.client.core.message.internal.AddNodeResponse;
@@ -26,6 +27,7 @@ import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.ConnectionString;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.bucket.BucketType;
+import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
@@ -47,10 +49,10 @@ import java.util.concurrent.TimeUnit;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
-    private final ClusterFacade core;
-    private final String username;
-    private final String password;
-    private final CouchbaseEnvironment environment;
+    final ClusterFacade core;
+    final String username;
+    final String password;
+    final CouchbaseEnvironment environment;
     private final ConnectionString connectionString;
 
     DefaultAsyncClusterManager(final String username, final String password, final ConnectionString connectionString,
@@ -65,6 +67,18 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     public static DefaultAsyncClusterManager create(final String username, final String password,
                                                     final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
         return new DefaultAsyncClusterManager(username, password, connectionString, environment, core);
+    }
+
+    @Override
+    @InterfaceStability.Experimental
+    public Observable<AsyncClusterApiClient> apiClient() {
+        return ensureServiceEnabled()
+                .map(new Func1<Boolean, AsyncClusterApiClient>() {
+                    @Override
+                    public AsyncClusterApiClient call(Boolean aBoolean) {
+                        return new AsyncClusterApiClient(username, password, core);
+                    }
+                });
     }
 
     @Override

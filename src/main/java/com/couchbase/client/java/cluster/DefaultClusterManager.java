@@ -16,9 +16,12 @@
 package com.couchbase.client.java.cluster;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.utils.Blocking;
 import com.couchbase.client.java.ConnectionString;
+import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
+import com.couchbase.client.java.cluster.api.ClusterApiClient;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.util.Blocking;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class DefaultClusterManager implements ClusterManager {
 
     private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
-    private final AsyncClusterManager asyncClusterManager;
+    private final DefaultAsyncClusterManager asyncClusterManager;
     private final long timeout;
 
     DefaultClusterManager(final String username, final String password, final ConnectionString connectionString,
@@ -114,5 +117,12 @@ public class DefaultClusterManager implements ClusterManager {
     @Override
     public Boolean removeBucket(String name, long timeout, TimeUnit timeUnit) {
         return Blocking.blockForSingle(asyncClusterManager.removeBucket(name).single(), timeout, timeUnit);
+    }
+
+    @Override
+    @InterfaceStability.Experimental
+    public ClusterApiClient apiClient() {
+        return new ClusterApiClient(asyncClusterManager.username, asyncClusterManager.password, asyncClusterManager.core,
+                this.timeout, TIMEOUT_UNIT); //uses the management timeout as default for API calls as well
     }
 }
