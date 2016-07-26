@@ -34,6 +34,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class JsonFunctions {
 
+    private JsonFunctions() {}
+
     /**
      * The returned Expression unmarshals the expression representing a JSON-encoded string
      * into a N1QL value. The empty string results in MISSING.

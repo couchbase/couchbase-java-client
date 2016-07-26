@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Deprecated
 public class Blocking {
 
+    private Blocking() {}
+
     /**
      * Blocks on an {@link Observable} and returns a single event or throws an {@link Exception}.
      *

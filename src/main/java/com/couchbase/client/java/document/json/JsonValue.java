@@ -46,6 +46,8 @@ public abstract class JsonValue {
         return JsonArray.create();
     }
 
+    private JsonValue() {}
+
     /**
      * Helper method to check if the given item is a supported JSON item.
      *

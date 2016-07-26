@@ -56,6 +56,8 @@ public class Bootstrap {
      */
     private static final String DEFAULT_DNS_SECURE_SERVICE = "_couchbases._tcp.";
 
+    private Bootstrap() {}
+
     /**
      * Fetch a bootstrap list from DNS SRV.
      *

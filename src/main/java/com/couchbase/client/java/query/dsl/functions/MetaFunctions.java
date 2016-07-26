@@ -32,6 +32,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class MetaFunctions {
 
+    private MetaFunctions() {}
+
     /**
      * @return metadata for the document expression
      */

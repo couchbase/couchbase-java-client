@@ -54,6 +54,8 @@ public class ReplicaReader {
      */
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(ReplicaReader.class);
 
+    private ReplicaReader() {}
+
     /**
      * Perform replica reads to as many nodes a possible based on the given {@link ReplicaMode}.
      *

@@ -34,6 +34,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class Collections {
 
+    private Collections() {}
+
     private abstract static class CollectionBuilder {
         private Expression prefix;
         private List<Expression> variables;
