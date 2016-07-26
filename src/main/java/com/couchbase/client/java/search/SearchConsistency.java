@@ -27,7 +27,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Public
-public enum ScanConsistency {
+public enum SearchConsistency {
 
     NOT_BOUNDED;
     //TODO in Spock, add REQUEST_PLUS

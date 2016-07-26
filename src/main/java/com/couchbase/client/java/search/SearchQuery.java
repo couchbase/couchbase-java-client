@@ -75,7 +75,7 @@ public class SearchQuery {
     private String[] fields;
     private Map<String, SearchFacet> facets;
     private Long serverSideTimeout;
-    private ScanConsistency consistency;
+    private SearchConsistency consistency;
     private MutationState mutationState;
 
     /**
@@ -174,7 +174,7 @@ public class SearchQuery {
         if (consistency != null || mutationState != null) {
             JsonObject consistencyJson = JsonObject.create();
 
-            if (consistency == ScanConsistency.NOT_BOUNDED) {
+            if (consistency == SearchConsistency.NOT_BOUNDED) {
                 consistencyJson.put("level", "");
             } else if (mutationState != null) {
                 consistencyJson.put("level", "at_plus");
@@ -365,7 +365,7 @@ public class SearchQuery {
      * @param consistency the simple consistency to use.
      * @return this SearchQuery for chaining.
      */
-    public SearchQuery scanConsistency(ScanConsistency consistency) {
+    public SearchQuery searchConsistency(SearchConsistency consistency) {
         this.consistency = consistency;
         this.mutationState = null;
         return this;
