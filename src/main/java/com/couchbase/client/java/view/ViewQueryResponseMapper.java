@@ -46,6 +46,8 @@ public class ViewQueryResponseMapper {
      * The JSON transcoder used to convert to {@link JsonValue}s.
      */
     private static final JsonTranscoder TRANSCODER = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
+    private static final String COULD_NOT_DECODE_VIEW_JSON = "Could not decode View JSON: ";
+    private static final String VALUE = "value";
 
     /**
      * Maps a raw {@link ViewQueryResponse} into a {@link AsyncViewResult}.
@@ -97,7 +99,7 @@ public class ViewQueryResponseMapper {
             try {
                 return TRANSCODER.byteBufToJsonObject(input);
             } catch (Exception e) {
-                throw new TranscodingException("Could not decode View JSON: " + input.toString(CharsetUtil.UTF_8), e);
+                throw new TranscodingException(COULD_NOT_DECODE_VIEW_JSON + input.toString(CharsetUtil.UTF_8), e);
             } finally {
                 if (input.refCnt() > 0) {
                     input.release();
@@ -147,13 +149,13 @@ public class ViewQueryResponseMapper {
                                 @Override
                                 public AsyncSpatialViewRow call(Document<?> document) {
                                     return new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
-                                        row.get("value"), row.getObject("geometry"), document);
+                                        row.get(VALUE), row.getObject("geometry"), document);
                                 }
                             });
                         } else {
                             return Observable.just((AsyncSpatialViewRow)
                                 new DefaultAsyncSpatialViewRow(bucket, row.getString("id"), row.getArray("key"),
-                                    row.get("value"), row.getObject("geometry"), null)
+                                    row.get(VALUE), row.getObject("geometry"), null)
                             );
                         }
                     }
@@ -167,7 +169,7 @@ public class ViewQueryResponseMapper {
                         try {
                             return TRANSCODER.stringToJsonObject(input);
                         } catch (Exception e) {
-                            throw new TranscodingException("Could not decode View JSON: " + input, e);
+                            throw new TranscodingException(COULD_NOT_DECODE_VIEW_JSON + input, e);
                         }
                     }
                 });
@@ -233,7 +235,7 @@ public class ViewQueryResponseMapper {
                         try {
                             return TRANSCODER.stringToJsonObject(input);
                         } catch (Exception e) {
-                            throw new TranscodingException("Could not decode View JSON: " + input, e);
+                            throw new TranscodingException(COULD_NOT_DECODE_VIEW_JSON + input, e);
                         }
                     }
                 });
@@ -251,12 +253,12 @@ public class ViewQueryResponseMapper {
                     return bucket.get(id, query.includeDocsTarget()).map(new Func1<Document<?>, AsyncViewRow>() {
                         @Override
                         public AsyncViewRow call(Document<?> document) {
-                            return new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get("value"), document);
+                            return new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get(VALUE), document);
                         }
                     });
                 } else {
                     return Observable.just((AsyncViewRow)
-                                    new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get("value"), null)
+                                    new DefaultAsyncViewRow(bucket, id, row.get("key"), row.get(VALUE), null)
                     );
                 }
                 }

@@ -34,6 +34,8 @@ import com.couchbase.client.java.query.dsl.Expression;
 @InterfaceAudience.Public
 public class StringFunctions {
 
+    private static final String SUBSTR = "SUBSTR(";
+
     /**
      * Returned expression results in True if the string expression contains the substring.
      */
@@ -260,7 +262,7 @@ public class StringFunctions {
      * If position is negative, it is counted from the end of the string; -1 is the last position in the string.
      */
     public static Expression substr(Expression expression, int position, int length) {
-        return x("SUBSTR(" + expression.toString() + ", " + position + ", " + length + ")");
+        return x(SUBSTR + expression.toString() + ", " + position + ", " + length + ")");
     }
 
     /**
@@ -270,7 +272,7 @@ public class StringFunctions {
      * If position is negative, it is counted from the end of the string; -1 is the last position in the string.
      */
     public static Expression substr(String expression, int position, int length) {
-        return x("SUBSTR(" + expression.toString() + ", " + position + ", " + length + ")");
+        return x(SUBSTR + expression.toString() + ", " + position + ", " + length + ")");
     }
 
     /**
@@ -280,7 +282,7 @@ public class StringFunctions {
      * If position is negative, it is counted from the end of the string; -1 is the last position in the string.
      */
     public static Expression substr(Expression expression, int position) {
-        return x("SUBSTR(" + expression.toString() + ", " + position + ")");
+        return x(SUBSTR + expression.toString() + ", " + position + ")");
     }
 
     /**
@@ -290,7 +292,7 @@ public class StringFunctions {
      * If position is negative, it is counted from the end of the string; -1 is the last position in the string.
      */
     public static Expression substr(String expression, int position) {
-        return x("SUBSTR(" + expression.toString() + ", " + position + ")");
+        return x(SUBSTR + expression.toString() + ", " + position + ")");
     }
 
 //            TRIM(expression [, characters ])

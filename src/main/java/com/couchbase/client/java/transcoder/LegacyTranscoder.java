@@ -45,6 +45,8 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
      */
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(LegacyTranscoder.class);
 
+    private static final String COULD_NOT_CLOSE_BYTE_OUTPUT_STREAM = "Could not close byte output stream.";
+
     public static final int DEFAULT_COMPRESSION_THRESHOLD = 16384;
 
     // General flags
@@ -242,7 +244,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
                     bos.close();
                 }
             } catch(Exception ex) {
-                LOGGER.error("Could not close byte output stream.", ex);
+                LOGGER.error(COULD_NOT_CLOSE_BYTE_OUTPUT_STREAM, ex);
             }
         }
         return rv;
@@ -307,7 +309,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
             try {
                 bos.close();
             } catch(Exception ex) {
-                LOGGER.error("Could not close byte output stream.", ex);
+                LOGGER.error(COULD_NOT_CLOSE_BYTE_OUTPUT_STREAM, ex);
             }
         }
         return bos.toByteArray();
@@ -336,7 +338,7 @@ public class LegacyTranscoder extends AbstractTranscoder<LegacyDocument, Object>
                         bos.close();
                     }
                 } catch(Exception ex) {
-                    LOGGER.error("Could not close byte output stream.", ex);
+                    LOGGER.error(COULD_NOT_CLOSE_BYTE_OUTPUT_STREAM, ex);
                 }
                 try {
                     if (gis != null) {

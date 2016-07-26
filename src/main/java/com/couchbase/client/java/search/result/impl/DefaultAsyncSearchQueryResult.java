@@ -55,6 +55,7 @@ import rx.exceptions.CompositeException;
 @InterfaceAudience.Public
 public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
 
+    private static final String COUNT = "count";
     private final SearchStatus status;
     private final Observable<SearchQueryRow> hits;
     private final Observable<FacetResult> facets;
@@ -178,7 +179,7 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
                     List<NumericRange> nr = new ArrayList<NumericRange>(rangesJson.size());
                     for (Object o : rangesJson) {
                         JsonObject r = (JsonObject) o;
-                        nr.add(new NumericRange(r.getString("name"), r.getDouble("min"), r.getDouble("max"), r.getLong("count")));
+                        nr.add(new NumericRange(r.getString("name"), r.getDouble("min"), r.getDouble("max"), r.getLong(COUNT)));
                     }
                     facets.add(new DefaultNumericRangeFacetResult(facetName, field, total, missing, other, nr));
                 } else if (facetJson.containsKey("date_ranges")) {
@@ -187,7 +188,7 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
                     for (Object o : rangesJson) {
                         JsonObject r = (JsonObject) o;
                         dr.add(new DateRange(r.getString("name"), r.getString("start"), r.getString("end"),
-                                r.getLong("count")));
+                                r.getLong(COUNT)));
                     }
                     facets.add(new DefaultDateRangeFacetResult(facetName, field, total, missing, other, dr));
                 } else {
@@ -199,7 +200,7 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
                         tr = new ArrayList<TermRange>(rangesJson.size());
                         for (Object o : rangesJson) {
                             JsonObject r = (JsonObject) o;
-                            tr.add(new TermRange(r.getString("term"), r.getLong("count")));
+                            tr.add(new TermRange(r.getString("term"), r.getLong(COUNT)));
                         }
                     }
                     facets.add(new DefaultTermFacetResult(facetName, field, total, missing, other, tr));

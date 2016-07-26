@@ -45,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
+    private static final String QUOTA = "quota";
+    private static final String MEMBASE = "membase";
     private final ClusterFacade core;
     private final String username;
     private final String password;
@@ -132,12 +134,12 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                             Boolean replicaIndex = bucket.getBoolean("replicaIndex");
                             boolean indexReplicas = replicaIndex != null ? replicaIndex : false;
                             int ramQuota = 0;
-                            if (bucket.getObject("quota").get("ram") instanceof Long) {
-                                ramQuota = (int) (bucket.getObject("quota").getLong("ram") / 1024 / 1024);
+                            if (bucket.getObject(QUOTA).get("ram") instanceof Long) {
+                                ramQuota = (int) (bucket.getObject(QUOTA).getLong("ram") / 1024 / 1024);
                             } else {
-                                ramQuota = bucket.getObject("quota").getInt("ram") / 1024 / 1024;
+                                ramQuota = bucket.getObject(QUOTA).getInt("ram") / 1024 / 1024;
                             }
-                            BucketType bucketType = "membase".equalsIgnoreCase(bucket.getString("bucketType")) ?
+                            BucketType bucketType = MEMBASE.equalsIgnoreCase(bucket.getString("bucketType")) ?
                                 BucketType.COUCHBASE : BucketType.MEMCACHED;
 
                             settings.add(DefaultBucketSettings.builder()
@@ -207,7 +209,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         sb.append("&saslPassword=").append(settings.password());
         sb.append("&replicaNumber=").append(settings.replicas());
         sb.append("&proxyPort=").append(settings.port());
-        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
+        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? MEMBASE : "memcached");
         sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
 
         return ensureBucketIsHealthy(hasBucket(settings.name())
@@ -243,7 +245,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         sb.append("&saslPassword=").append(settings.password());
         sb.append("&replicaNumber=").append(settings.replicas());
         sb.append("&proxyPort=").append(settings.port());
-        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
+        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? MEMBASE : "memcached");
         sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
 
         return ensureBucketIsHealthy(hasBucket(settings.name())

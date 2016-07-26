@@ -63,6 +63,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     private static final boolean DNS_SRV_ENABLED = false;
+    private static final String THIS_CAN_LEAD_TO_FALSELY_CANCELLED_REQUESTS = "This can lead to falsely cancelled requests.";
 
     private final long managementTimeout;
     private final long queryTimeout;
@@ -137,19 +138,19 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
 
         if (queryTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured query timeout is greater than the maximum request lifetime. " +
-                "This can lead to falsely cancelled requests.");
+                    THIS_CAN_LEAD_TO_FALSELY_CANCELLED_REQUESTS);
         }
         if (kvTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured key/value timeout is greater than the maximum request lifetime." +
-                "This can lead to falsely cancelled requests.");
+                    THIS_CAN_LEAD_TO_FALSELY_CANCELLED_REQUESTS);
         }
         if (viewTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured view timeout is greater than the maximum request lifetime." +
-                "This can lead to falsely cancelled requests.");
+                    THIS_CAN_LEAD_TO_FALSELY_CANCELLED_REQUESTS);
         }
         if (managementTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured management timeout is greater than the maximum request lifetime." +
-                "This can lead to falsely cancelled requests.");
+                    THIS_CAN_LEAD_TO_FALSELY_CANCELLED_REQUESTS);
         }
     }
 
