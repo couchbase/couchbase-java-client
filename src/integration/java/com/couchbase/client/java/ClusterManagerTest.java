@@ -15,6 +15,15 @@
  */
 package com.couchbase.client.java;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterInfo;
 import com.couchbase.client.java.cluster.ClusterManager;
@@ -23,18 +32,9 @@ import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Func1;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class ClusterManagerTest {
 
@@ -78,6 +78,16 @@ public class ClusterManagerTest {
 
         //also find out how many buckets remain
         this.bucketsRemaining = clusterManager.async().getBuckets().count().toBlocking().single();
+    }
+
+    @Test
+    public void shouldHaveRawButNoCustomSettingsWhenGet() {
+        List<BucketSettings> buckets = clusterManager.getBuckets();
+        assertThat(buckets).isNotEmpty();
+        for (BucketSettings bucket : buckets) {
+            assertThat(bucket.customSettings()).isEmpty();
+            assertThat(bucket.raw().isEmpty()).isFalse();
+        }
     }
 
     @Test(expected = InvalidPasswordException.class)

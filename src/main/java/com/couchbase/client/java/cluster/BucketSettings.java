@@ -15,10 +15,13 @@
  */
 package com.couchbase.client.java.cluster;
 
+import java.util.Map;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.bucket.BucketType;
+import com.couchbase.client.java.document.json.JsonObject;
 
 /**
  * {@link BucketSettings} represent changeable properties for a {@link Bucket}.
@@ -85,5 +88,28 @@ public interface BucketSettings {
      * @return flush enabled.
      */
     boolean enableFlush();
+
+    /**
+     * A map of map of advanced settings that are not covered by the native methods of the object
+     * but still need to be set when configuring a bucket.
+     *
+     * To get a full raw representation of an existing bucket's configuration, see {@link #raw()}
+     * instead.
+     *
+     * @return the map of custom advanced settings to use when configuring the bucket.
+     */
+    Map<String, Object> customSettings();
+
+    /**
+     * A raw representation of the bucket settings when acquired from the server. This can be used
+     * to get any missing information about the bucket that isn't covered by native methods.
+     *
+     * To configure a bucket and add settings that are not covered by native methods either, you
+     * should instead see {@link #customSettings()}.
+     *
+     * @return the raw representation of the whole bucket settings, as returned by the server, or
+     * an empty {@link JsonObject} if not applicable.
+     */
+    JsonObject raw();
 
 }

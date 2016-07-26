@@ -15,7 +15,11 @@
  */
 package com.couchbase.client.java.cluster;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.couchbase.client.java.bucket.BucketType;
+import com.couchbase.client.java.document.json.JsonObject;
 
 public class DefaultBucketSettings implements BucketSettings {
 
@@ -27,8 +31,14 @@ public class DefaultBucketSettings implements BucketSettings {
     private final int replicas;
     private final boolean indexReplicas;
     private final boolean enableFlush;
+    private final Map<String, Object> customSettings;
+    private final JsonObject raw;
 
     DefaultBucketSettings(Builder builder) {
+        this(builder, JsonObject.empty());
+    }
+
+    DefaultBucketSettings(Builder builder, JsonObject raw) {
         name = builder.name();
         type = builder.type();
         quota = builder.quota();
@@ -37,6 +47,8 @@ public class DefaultBucketSettings implements BucketSettings {
         replicas = builder.replicas();
         indexReplicas = builder.indexReplicas();
         enableFlush = builder.enableFlush();
+        customSettings = builder.customSettings();
+        this.raw = raw;
     }
 
     public static Builder builder() {
@@ -83,6 +95,16 @@ public class DefaultBucketSettings implements BucketSettings {
         return enableFlush;
     }
 
+    @Override
+    public Map<String, Object> customSettings() {
+        return customSettings;
+    }
+
+    @Override
+    public JsonObject raw() {
+        return raw;
+    }
+
     public static class Builder implements BucketSettings {
 
         private String name = "";
@@ -93,6 +115,7 @@ public class DefaultBucketSettings implements BucketSettings {
         private int replicas = 0;
         private boolean indexReplicas = false;
         private boolean enableFlush = false;
+        private final Map<String, Object> customSettings = new HashMap<String, Object>();
 
         @Override
         public String name() {
@@ -174,23 +197,73 @@ public class DefaultBucketSettings implements BucketSettings {
             return this;
         }
 
+        @Override
+        public Map<String, Object> customSettings() {
+            return this.customSettings;
+        }
+
+        @Override
+        public JsonObject raw() {
+            return JsonObject.empty();
+        }
+
+        /**
+         * Add a custom setting to the bucket settings (ie. one that is not covered by
+         * a native method).
+         *
+         * @param key the setting's key.
+         * @param value the setting's value.
+         * @return the Builder for chaining.
+         */
+        public Builder withSetting(String key, Object value) {
+            this.customSettings.put(key, value);
+            return this;
+        }
+
+        /**
+         * Add several custom settings to the bucket settings (ie. settings not covered by
+         * a native method).
+         *
+         * @param customSettings the settings to add.
+         * @return the Builder for chaining.
+         */
+        public Builder withSettings(Map<String, Object> customSettings) {
+            this.customSettings.putAll(customSettings);
+            return this;
+        }
+
         public DefaultBucketSettings build() {
             return new DefaultBucketSettings(this);
+        }
+
+        /**
+         * Build the {@link BucketSettings} from the data aggregated by this builder,
+         * and set its {@link BucketSettings#raw()} representation as well.
+         *
+         * @param raw the raw representation for the settings, from the server.
+         * @return the new {@link BucketSettings}.
+         */
+        public DefaultBucketSettings build(JsonObject raw) {
+            return new DefaultBucketSettings(this, raw);
         }
 
     }
 
     @Override
     public String toString() {
-        return "DefaultClusterBucketSettings{" +
-            "name='" + name + '\'' +
-            ", type=" + type +
-            ", quota=" + quota +
-            ", port=" + port +
-            ", password='" + password + '\'' +
-            ", replicas=" + replicas +
-            ", indexReplicas=" + indexReplicas +
-            ", enableFlush=" + enableFlush +
-            '}';
+        StringBuilder s = new StringBuilder("DefaultClusterBucketSettings{")
+                .append("name='").append(name).append('\'')
+                .append(", type=").append(type)
+                .append(", quota=").append(quota)
+                .append(", port=").append(port)
+                .append(", password='").append(password).append('\'')
+                .append(", replicas=").append(replicas)
+                .append(", indexReplicas=").append(indexReplicas)
+                .append(", enableFlush=").append(enableFlush);
+        if (!customSettings.isEmpty()) {
+            s.append(", customSettings=").append(customSettings);
+        }
+        s.append('}');
+        return s.toString();
     }
 }

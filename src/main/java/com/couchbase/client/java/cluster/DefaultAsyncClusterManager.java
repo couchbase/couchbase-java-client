@@ -40,7 +40,9 @@ import rx.functions.Func1;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
@@ -141,15 +143,15 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                 BucketType.COUCHBASE : BucketType.MEMCACHED;
 
                             settings.add(DefaultBucketSettings.builder()
-                                .name(bucket.getString("name"))
-                                .enableFlush(enableFlush)
-                                .type(bucketType)
-                                .replicas(bucket.getInt("replicaNumber"))
-                                .quota(ramQuota)
-                                .indexReplicas(indexReplicas)
-                                .port(bucket.getInt("proxyPort"))
-                                .password(bucket.getString("saslPassword"))
-                                .build());
+                                    .name(bucket.getString("name"))
+                                    .enableFlush(enableFlush)
+                                    .type(bucketType)
+                                    .replicas(bucket.getInt("replicaNumber"))
+                                    .quota(ramQuota)
+                                    .indexReplicas(indexReplicas)
+                                    .port(bucket.getInt("proxyPort"))
+                                    .password(bucket.getString("saslPassword"))
+                                    .build(bucket));
                         }
                         return Observable.from(settings);
                     } catch (Exception e) {
@@ -200,15 +202,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
     @Override
     public Observable<BucketSettings> insertBucket(final BucketSettings settings) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("name=").append(settings.name());
-        sb.append("&ramQuotaMB=").append(settings.quota());
-        sb.append("&authType=").append("sasl");
-        sb.append("&saslPassword=").append(settings.password());
-        sb.append("&replicaNumber=").append(settings.replicas());
-        sb.append("&proxyPort=").append(settings.port());
-        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
-        sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
+        final String payload = getConfigureBucketPayload(settings, true);
 
         return ensureBucketIsHealthy(hasBucket(settings.name())
             .doOnNext(new Action1<Boolean>() {
@@ -221,7 +215,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             }).flatMap(new Func1<Boolean, Observable<InsertBucketResponse>>() {
                 @Override
                 public Observable<InsertBucketResponse> call(Boolean exists) {
-                    return core.send(new InsertBucketRequest(sb.toString(), username, password));
+                    return core.send(new InsertBucketRequest(payload, username, password));
                 }
             })
             .map(new Func1<InsertBucketResponse, BucketSettings>() {
@@ -237,14 +231,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
     @Override
     public Observable<BucketSettings> updateBucket(final BucketSettings settings) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("ramQuotaMB=").append(settings.quota());
-        sb.append("&authType=").append("sasl");
-        sb.append("&saslPassword=").append(settings.password());
-        sb.append("&replicaNumber=").append(settings.replicas());
-        sb.append("&proxyPort=").append(settings.port());
-        sb.append("&bucketType=").append(settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
-        sb.append("&flushEnabled=").append(settings.enableFlush() ? "1" : "0");
+        final String payload = getConfigureBucketPayload(settings, false);
 
         return ensureBucketIsHealthy(hasBucket(settings.name())
             .doOnNext(new Action1<Boolean>() {
@@ -257,7 +244,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             }).flatMap(new Func1<Boolean, Observable<UpdateBucketResponse>>() {
                 @Override
                 public Observable<UpdateBucketResponse> call(Boolean exists) {
-                    return core.send(new UpdateBucketRequest(settings.name(), sb.toString(), username, password));
+                    return core.send(new UpdateBucketRequest(settings.name(), payload, username, password));
                 }
             }).map(new Func1<UpdateBucketResponse, BucketSettings>() {
                 @Override
@@ -268,6 +255,37 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     return settings;
                 }
             }));
+    }
+
+    protected String getConfigureBucketPayload(BucketSettings settings, boolean includeName) {
+        Map<String, Object> customSettings = settings.customSettings();
+        Map<String, Object> actual = new LinkedHashMap<String, Object>(8 + customSettings.size());
+
+        if (includeName) {
+            actual.put("name", settings.name());
+        }
+        actual.put("ramQuotaMB", settings.quota());
+        actual.put("authType", "sasl");
+        actual.put("saslPassword", settings.password());
+        actual.put("replicaNumber", settings.replicas());
+        actual.put("proxyPort", settings.port());
+        actual.put("bucketType", settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
+        actual.put("flushEnabled", settings.enableFlush() ? "1" : "0");
+        for (Map.Entry<String, Object> customSetting : customSettings.entrySet()) {
+            if (actual.containsKey(customSetting.getKey()) || (!includeName && "name".equals(customSetting.getKey()))) {
+                continue;
+            }
+            actual.put(customSetting.getKey(), customSetting.getValue());
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Object> setting : actual.entrySet()) {
+            sb.append('&').append(setting.getKey()).append('=').append(setting.getValue());
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(0);
+        }
+        return sb.toString();
     }
 
     /**
