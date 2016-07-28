@@ -20,7 +20,11 @@ import org.junit.Test;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -60,7 +64,8 @@ public class BootstrapTest {
     @Test
     public void shouldBootstrapFromDnsSrv() throws Exception {
         String demoService = "_xmpp-server._tcp.gmail.com";
-        List<String> strings = Bootstrap.fromDnsSrv(demoService, true, false);
+        String publicNameServer = "8.8.8.8"; //google's public DNS
+        List<String> strings = Bootstrap.fromDnsSrv(demoService, true, false, publicNameServer);
         assertTrue(strings.size() > 0);
     }
 
