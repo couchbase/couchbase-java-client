@@ -28,9 +28,6 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.search.SearchQuery;
-import com.couchbase.client.java.search.result.SearchQueryResult;
-import com.couchbase.client.java.search.result.impl.DefaultSearchQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.DefaultN1qlQueryResult;
@@ -40,6 +37,9 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.repository.CouchbaseRepository;
 import com.couchbase.client.java.repository.Repository;
+import com.couchbase.client.java.search.SearchQuery;
+import com.couchbase.client.java.search.result.SearchQueryResult;
+import com.couchbase.client.java.search.result.impl.DefaultSearchQueryResult;
 import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
 import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
 import com.couchbase.client.java.subdoc.LookupInBuilder;
@@ -70,7 +70,7 @@ public class CouchbaseBucket implements Bucket {
 
     /**
      * Create a {@link CouchbaseBucket} that doesn't reuse an existing {@link AsyncBucket} but rather creates one internally. Prefer using the alternative constructor
-     * {@link #CouchbaseBucket(CouchbaseEnvironment, ClusterFacade, String, String, List)} if you can obtain an AsyncBucket externally.
+     * {@link #CouchbaseBucket(AsyncBucket, CouchbaseEnvironment, ClusterFacade, String, String)} if you can obtain an AsyncBucket externally.
      */
     public CouchbaseBucket(final CouchbaseEnvironment env, final ClusterFacade core, final String name, final String password,
                            final List<Transcoder<? extends Document, ?>> customTranscoders) {

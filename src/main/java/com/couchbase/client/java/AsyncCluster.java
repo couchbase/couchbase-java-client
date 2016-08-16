@@ -18,9 +18,12 @@ package com.couchbase.client.java;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.auth.Authenticator;
+import com.couchbase.client.java.auth.CredentialContext;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.error.AuthenticatorException;
 import com.couchbase.client.java.transcoder.Transcoder;
 import rx.Observable;
 
@@ -53,13 +56,18 @@ public interface AsyncCluster {
     Observable<AsyncBucket> openBucket();
 
     /**
-     * Opens the bucket with the given name and an empty password.
+     * Opens the bucket with the given name using the password from the {@link Authenticator} that was last
+     * {@link #authenticate(Authenticator) set} (in the {@link CredentialContext#BUCKET_KV BUCKET_KV context}).
+     *
+     * If no credential can be found for the bucket in the authenticator, the old behavior of defaulting to an empty
+     * password is used.
      *
      * The {@link Observable} can error under the following conditions:
      *
      *  - com.couchbase.client.core.CouchbaseException: If the bucket could not be opened (see logs and nested stack
      *    trace for more details why it failed).
-     *   - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
+     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
+     *  - {@link AuthenticatorException}: If more than one credentials was returned by the Authenticator for this bucket.
      *
      * @param name the name of the bucket.
      * @return the opened bucket if successful.
@@ -108,6 +116,20 @@ public interface AsyncCluster {
     Observable<AsyncClusterManager> clusterManager(String username, String password);
 
     /**
+     * Provides access to the {@link AsyncClusterManager} to perform cluster-wide operations, using the
+     * credentials set through the configured {@link #authenticate(Authenticator) Authenticator}, for the
+     * {@link CredentialContext#CLUSTER_MANAGEMENT} context.
+     *
+     * The Observable can error under the following notable condition:
+     *
+     *  - {@link AuthenticatorException}: if no {@link Authenticator} is set or it doesn't contains a cluster
+     *  management credential.
+     *
+     * @return the {@link AsyncClusterManager} if successful.
+     */
+    Observable<AsyncClusterManager> clusterManager();
+
+    /**
      * Disconnects form all open buckets and shuts down the {@link CouchbaseEnvironment} if it is the exclusive owner.
      *
      * @return true once done and everything succeeded, false otherwise.
@@ -124,4 +146,16 @@ public interface AsyncCluster {
      */
     Observable<ClusterFacade> core();
 
+    /**
+     * Sets the {@link Authenticator} to use when credentials are needed for an operation
+     * but no explicit credentials are provided.
+     *
+     * Note that setting a new Authenticator will not be propagated to any {@link Bucket} that
+     * has been opened with the previous Authenticator, as the instance is passed to the Bucket
+     * for its own use.
+     *
+     * @param auth the new {@link Authenticator} to use.
+     * @return this AsyncCluster instance for chaining.
+     */
+    AsyncCluster authenticate(Authenticator auth);
 }

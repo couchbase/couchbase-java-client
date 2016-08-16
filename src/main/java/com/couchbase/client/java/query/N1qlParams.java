@@ -15,19 +15,21 @@
  */
 package com.couchbase.client.java.query;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.java.MutationState;
+import com.couchbase.client.java.auth.Credential;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
-import com.couchbase.client.java.query.dsl.functions.ObjectFunctions;
-import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import com.couchbase.client.java.subdoc.DocumentFragment;
 
 /**
  * Parameter Object for {@link N1qlQuery queries} that allows to fluently set most of the N1QL query parameters:
@@ -54,6 +56,8 @@ public class N1qlParams implements Serializable {
     private MutationState mutationState;
     private Map<String, Object> rawParams;
 
+    private final Map<String, String> credentials;
+
     /**
      * If adhoc, the query should never be prepared.
      */
@@ -62,6 +66,7 @@ public class N1qlParams implements Serializable {
     private N1qlParams() {
         adhoc = true;
         disableMetrics = false;
+        credentials = new HashMap<String, String>();
     }
 
     /**
@@ -97,6 +102,16 @@ public class N1qlParams implements Serializable {
             }
             queryJson.put("scan_vectors", mutationState.export());
             queryJson.put("scan_consistency", "at_plus");
+        }
+
+        if (!this.credentials.isEmpty()) {
+            JsonArray creds = JsonArray.create();
+            for (Map.Entry<String, String> c : credentials.entrySet()) {
+                creds.add(JsonObject.create()
+                    .put("user", c.getKey())
+                    .put("pass", c.getValue()));
+            }
+            queryJson.put("creds", creds);
         }
 
         if (this.rawParams != null) {
@@ -268,6 +283,33 @@ public class N1qlParams implements Serializable {
     }
 
     /**
+     * Allows to add a list of credentials (in the form of {@link Credential} objects) to this
+     * request. Credentials for usernames that were previously set by a similar call are replaced.
+     *
+     * @param credentials the list of credentials to add to the request.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams withCredentials(List<Credential> credentials) {
+        for (Credential credential : credentials) {
+            withCredentials(credential.login(), credential.password());
+        }
+        return this;
+    }
+
+    /**
+     * Allows to add a credential username/password pair to this request. If a credential for that
+     * username was previously set by a similar call, it is replaced.
+     *
+     * @param login the username/bucketname to add a credential for.
+     * @param password the associated password.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams withCredentials(String login, String password) {
+        credentials.put(login, password);
+        return this;
+    }
+
+    /**
      * Allows to specify an arbitrary, raw N1QL param.
      *
      * Use with care and only provide options that are supported by the server and are not exposed as part of the
@@ -328,6 +370,7 @@ public class N1qlParams implements Serializable {
             return false;
         if (mutationState != null ? !mutationState.equals(that.mutationState) : that.mutationState != null)
             return false;
+        if (!credentials.equals(that.credentials)) return false;
         return rawParams != null ? rawParams.equals(that.rawParams) : that.rawParams == null;
 
     }
@@ -341,6 +384,7 @@ public class N1qlParams implements Serializable {
         result = 31 * result + (maxParallelism != null ? maxParallelism.hashCode() : 0);
         result = 31 * result + (disableMetrics ? 1 : 0);
         result = 31 * result + (mutationState != null ? mutationState.hashCode() : 0);
+        result = 31 * result + credentials.hashCode();
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
         result = 31 * result + (adhoc ? 1 : 0);
         return result;
@@ -357,6 +401,8 @@ public class N1qlParams implements Serializable {
         sb.append(", adhoc=").append(adhoc);
         sb.append(", disableMetrics=").append(disableMetrics);
         sb.append(", rawParams=").append(rawParams);
+        if (!credentials.isEmpty())
+            sb.append(", credentials=").append(credentials.size());
         sb.append('}');
         return sb.toString();
     }

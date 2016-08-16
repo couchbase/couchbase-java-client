@@ -15,6 +15,14 @@
  */
 package com.couchbase.client.java;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.core.endpoint.kv.KeyValueStatus;
 import com.couchbase.client.core.message.CouchbaseRequest;
@@ -34,14 +42,6 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.transcoder.Transcoder;
 import org.junit.Test;
 import rx.Observable;
-
-import java.util.Collections;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Verifies functionality of the {@link CouchbaseAsyncBucket}.

@@ -29,7 +29,6 @@ import com.couchbase.client.deps.io.netty.handler.codec.http.HttpHeaders;
 import com.couchbase.client.deps.io.netty.handler.codec.http.HttpMethod;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
-import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import rx.Observable;
 import rx.functions.Func0;
 
@@ -44,7 +43,7 @@ import rx.functions.Func0;
 @InterfaceStability.Experimental
 public class AsyncRestBuilder implements RestBuilderMarker {
 
-    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(N1qlQueryExecutor.class);
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(AsyncRestBuilder.class);
 
     //parameters from the RestApiClient
     private final String username;
