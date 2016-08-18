@@ -90,7 +90,8 @@ public class DocumentFragment<OPERATION> {
     }
 
     /**
-     * Attempt to get the value corresponding to the first operation that targeted the given path, as a specific class.
+     * Attempt to get the value corresponding to the first operation that targeted the given path, casted to a
+     * specific class.
      * If the operation was successful, the value will be returned. Otherwise the adequate {@link SubDocumentException}
      * will be thrown (mostly in the case of multiple lookups).
      *
@@ -98,7 +99,7 @@ public class DocumentFragment<OPERATION> {
      * {@link #content(int, Class)} to get a result by index).
      *
      * @param path the path to look for.
-     * @param targetClass the expected type of the content.
+     * @param targetClass the expected type of the content, to use in a cast.
      * @return the content if one could be retrieved and no error occurred.
      */
     public <T> T content(String path, Class<T> targetClass) {
@@ -129,12 +130,12 @@ public class DocumentFragment<OPERATION> {
     }
 
     /**
-     * Attempt to get the value corresponding to the n-th operation, as a specific class.
+     * Attempt to get the value corresponding to the n-th operation, casting it as a specific class.
      * If the operation was successful, the value will be returned. Otherwise the adequate {@link SubDocumentException}
      * will be thrown (mostly in the case of multiple lookups).
      *
      * @param index the 0-based index of the operation to look for.
-     * @param targetClass the expected type of the content.
+     * @param targetClass the expected type of the content, to use in a cast.
      * @return the content if one could be retrieved and no error occurred.
      */
     public <T> T content(int index, Class<T> targetClass) {
@@ -153,6 +154,45 @@ public class DocumentFragment<OPERATION> {
         return this.content(index, Object.class);
     }
 
+    /**
+     * Attempt to get the serialized form of the value corresponding to the n-th operation, as a raw array of bytes.
+     * If the operation was successful, the value will be returned. Otherwise the adequate {@link SubDocumentException}
+     * will be thrown (mostly in the case of multiple lookups).
+     *
+     * @param index the 0-based index of the operation to look for.
+     * @return the raw byte array corresponding to the serialized content, if one could be retrieved and
+     * no error occurred.
+     */
+    public byte[] rawContent(int index) {
+        return interpretResultRaw(resultList.get(index));
+    }
+
+    /**
+     * Attempt to get the serialized form of the value corresponding to the first operation that targeted the given
+     * path, as an array of bytes.
+     *
+     * If the operation was successful, the value will be returned. Otherwise the adequate {@link SubDocumentException}
+     * will be thrown (mostly in the case of multiple lookups).
+     *
+     * If multiple operations targeted the same path, this method only considers the first one (see
+     * {@link #rawContent(int)} to get a result by index).
+     *
+     * @param path the path to look for.
+     * @return the raw byte array corresponding to the serialized content, if one could be retrieved and
+     * no error occurred.
+     */
+    public byte[] rawContent(String path) {
+        if (path == null) {
+            return null;
+        }
+        for (SubdocOperationResult<OPERATION> result : resultList) {
+            if (path.equals(result.path())) {
+                return interpretResultRaw(result);
+            }
+        }
+        return null;
+    }
+
     private <T> T interpretResult(SubdocOperationResult<OPERATION> result) {
         if (result.status() == ResponseStatus.FAILURE && result.value() instanceof RuntimeException) {
             //case where a fatal error happened while PARSING the response
@@ -163,6 +203,19 @@ public class DocumentFragment<OPERATION> {
         } else {
             //case where the server returned a value (or null if not applicable) for this operation
             return (T) result.value();
+        }
+    }
+
+    private byte[] interpretResultRaw(SubdocOperationResult<OPERATION> result) {
+        if (result.status() == ResponseStatus.FAILURE && result.value() instanceof RuntimeException) {
+            //case where a fatal error happened while PARSING the response
+            throw (RuntimeException) result.value();
+        } else if (result.value() instanceof CouchbaseException) {
+            //case where the server returned an error for this operation
+            throw (CouchbaseException) result.value();
+        } else {
+            //case where the server returned a raw value (or null if not applicable) for this operation
+            return result.rawValue();
         }
     }
 

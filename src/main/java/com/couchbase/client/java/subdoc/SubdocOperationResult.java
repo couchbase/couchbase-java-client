@@ -38,6 +38,24 @@ public class SubdocOperationResult<OPERATION> {
     private final ResponseStatus status;
 
     private final Object value;
+    private final byte[] rawValue;
+
+    /**
+     * Create a new MultiResult with a raw form of the serialized value.
+     *
+     * @param path the path that was looked up in a document.
+     * @param operation the kind of operation that was performed.
+     * @param status the status for this lookup.
+     * @param value the value for a successful GET, true/false for a EXIST, an Exception in case of FAILURE, null otherwise.
+     * @param rawValue the raw byte array representation of the serialized form of a GET value (if requested), or null.
+     */
+    private SubdocOperationResult(String path, OPERATION operation, ResponseStatus status, Object value, byte[] rawValue) {
+        this.path = path;
+        this.operation = operation;
+        this.status = status;
+        this.value = value;
+        this.rawValue = rawValue;
+    }
 
     /**
      * Create a new MultiResult.
@@ -48,10 +66,7 @@ public class SubdocOperationResult<OPERATION> {
      * @param value the value for a successful GET, true/false for a EXIST, an Exception in case of FAILURE, null otherwise.
      */
     private SubdocOperationResult(String path, OPERATION operation, ResponseStatus status, Object value) {
-        this.path = path;
-        this.operation = operation;
-        this.status = status;
-        this.value = value;
+        this(path, operation, status, value, null);
     }
 
     /**
@@ -78,7 +93,23 @@ public class SubdocOperationResult<OPERATION> {
      * @return the operation result.
      */
     public static <OPERATION> SubdocOperationResult<OPERATION> createResult(String path, OPERATION operation, ResponseStatus status, Object value) {
-        return new SubdocOperationResult<OPERATION>(path, operation, status, value);
+        return new SubdocOperationResult<OPERATION>(path, operation, status, value, null);
+    }
+
+    /**
+     * Create a {@link SubdocOperationResult} that corresponds to an operation that should return a content (including null)
+     * instead of throwing when calling {@link DocumentFragment#content(String)}. Additionally, the result can also contain
+     * a raw byte representation of the same content in serialized form.
+     *
+     * @param path the path looked up.
+     * @param operation the type of operation.
+     * @param status the status of the operation.
+     * @param value the value of the operation if applicable, null otherwise.
+     * @param rawValue the raw byte value of the operation if applicable, null otherwise.
+     * @return the operation result.
+     */
+    public static <OPERATION> SubdocOperationResult<OPERATION> createResult(String path, OPERATION operation, ResponseStatus status, Object value, byte[] rawValue) {
+        return new SubdocOperationResult<OPERATION>(path, operation, status, value, rawValue);
     }
 
     /**
@@ -137,6 +168,16 @@ public class SubdocOperationResult<OPERATION> {
     }
 
     /**
+     * Returns the serialized form of the value of a successful GET, as an array of bytes,
+     * or null for any other case, including when the raw value isn't relevant.
+     *
+     * @return the serialized raw value, if available.
+     */
+    public byte[] rawValue() {
+        return rawValue;
+    }
+
+    /**
      * @return true if there was a fatal error while processing the result on the client side, in which case
      * {@link #value()} returns an {@link RuntimeException}.
      */
@@ -150,6 +191,9 @@ public class SubdocOperationResult<OPERATION> {
         sb.append(operation).append('(').append(path).append("){");
         if (status.isSuccess() || !(value instanceof Exception)) {
             sb.append("value=").append(value);
+            if (rawValue != null) {
+                sb.append(", includesRaw");
+            }
         } else if (status == ResponseStatus.FAILURE) {
             sb.append("fatal=").append(value);
         } else {

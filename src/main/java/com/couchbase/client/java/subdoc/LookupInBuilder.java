@@ -177,6 +177,21 @@ public class LookupInBuilder {
         return this;
     }
 
+    /**
+     * Set to true, includes the raw byte value for each GET in the results, in addition to the deserialized content.
+     */
+    public LookupInBuilder includeRaw(boolean includeRaw) {
+        async.includeRaw(includeRaw);
+        return this;
+    }
+
+    /**
+     * @return true if this builder is configured to include raw byte values for each GET result.
+     */
+    public boolean isIncludeRaw() {
+        return async.isIncludeRaw();
+    }
+
     @Override
     public String toString() {
         return async.toString();

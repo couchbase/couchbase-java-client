@@ -17,6 +17,7 @@
 package com.couchbase.client.java.subdoc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,6 +42,7 @@ import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.error.subdoc.DocumentNotJsonException;
 import com.couchbase.client.java.error.subdoc.SubDocumentException;
+import com.couchbase.client.java.transcoder.TranscoderUtils;
 import com.couchbase.client.java.transcoder.subdoc.FragmentTranscoder;
 import rx.Observable;
 import rx.functions.Func0;
@@ -71,6 +73,7 @@ public class AsyncLookupInBuilder {
     private final String docId;
 
     private final List<LookupSpec> specs;
+    private boolean includeRaw = false;
 
     /**
      * Instances of this builder should be obtained through {@link AsyncBucket#lookupIn(String)} rather than directly
@@ -146,6 +149,21 @@ public class AsyncLookupInBuilder {
     }
 
     /**
+     * Set to true, includes the raw byte value for each GET in the results, in addition to the deserialized content.
+     */
+    public AsyncLookupInBuilder includeRaw(boolean includeRaw) {
+        this.includeRaw = includeRaw;
+        return this;
+    }
+
+    /**
+     * @return true if this builder is configured to include raw byte values for each GET result.
+     */
+    public boolean isIncludeRaw() {
+        return this.includeRaw;
+    }
+
+    /**
      * Get a value inside the JSON document.
      *
      * @param paths the path inside the document where to get the value from.
@@ -211,10 +229,16 @@ public class AsyncLookupInBuilder {
                 } else if (isExist && isNotFound) {
                     return SubdocOperationResult.createResult(path, operation, status, false);
                 } else if (!isExist && isSuccess) {
-                    try {
+                    try  {
+                        byte[] raw = null;
+                        if (isIncludeRaw()) {
+                            //make a copy of the bytes
+                            TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(lookupResult.value());
+                            raw = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
+                        }
                         //generic, so will transform dictionaries into JsonObject and arrays into JsonArray
                         Object content = subdocumentTranscoder.decode(lookupResult.value(), Object.class);
-                        return SubdocOperationResult.createResult(path, operation, status, content);
+                        return SubdocOperationResult.createResult(path, operation, status, content, raw);
                     } catch (TranscodingException e) {
                         LOGGER.error("Couldn't decode multi-lookup " + operation + " for " + docId + "/" + path, e);
                         return SubdocOperationResult.createFatal(path, operation, e);
@@ -286,10 +310,15 @@ public class AsyncLookupInBuilder {
             public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
                 if (response.status().isSuccess()) {
                     try {
+                        byte[] raw = null;
+                        if (isIncludeRaw()) {
+                            TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(response.content());
+                            raw = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
+                        }
                         T content = subdocumentTranscoder.decodeWithMessage(response.content(), fragmentType,
                                 "Couldn't decode subget fragment for " + id + "/" + path);
                         SubdocOperationResult<Lookup> single = SubdocOperationResult
-                                .createResult(path, Lookup.GET, response.status(), content);
+                                .createResult(path, Lookup.GET, response.status(), content, raw);
                         return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(),
                                 Collections.singletonList(single));
                     } finally {
