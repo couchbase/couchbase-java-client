@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.MutationState;
 import com.couchbase.client.java.auth.Credential;
@@ -43,6 +44,8 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
  * @author Simon Baslé
  * @since 2.1
  */
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public class N1qlParams implements Serializable {
 
     private static final long serialVersionUID = 8888370260267213830L;

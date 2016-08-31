@@ -15,9 +15,13 @@
  */
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
 
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public class DefaultN1qlQueryRow implements N1qlQueryRow {
 
 

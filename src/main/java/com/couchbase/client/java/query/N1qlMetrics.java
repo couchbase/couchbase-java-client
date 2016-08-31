@@ -30,7 +30,7 @@ import java.io.Serializable;
  * @author Simon Baslé
  * @since 2.1
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class N1qlMetrics implements Serializable{
 

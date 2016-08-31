@@ -19,8 +19,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonObject;
 
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public class DefaultN1qlQueryResult implements N1qlQueryResult {
 
     private final String status;

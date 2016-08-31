@@ -31,7 +31,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Michael Nitschinger
  * @since 2.0.0
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public interface N1qlQueryResult extends Iterable<N1qlQueryRow> {
 

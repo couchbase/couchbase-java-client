@@ -26,7 +26,7 @@ import rx.Observable;
  *
  * @author Michael Nitschinger
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public interface AsyncN1qlQueryResult {
 

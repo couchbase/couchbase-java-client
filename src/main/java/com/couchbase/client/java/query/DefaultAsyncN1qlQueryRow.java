@@ -17,11 +17,15 @@ package com.couchbase.client.java.query;
 
 import java.io.IOException;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
+@InterfaceStability.Committed
+@InterfaceAudience.Public
 public class DefaultAsyncN1qlQueryRow implements AsyncN1qlQueryRow {
 
     private static final ObjectMapper OBJECT_MAPPER = JacksonTransformers.MAPPER;
