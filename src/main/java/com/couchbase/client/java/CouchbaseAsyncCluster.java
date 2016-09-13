@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseCore;
@@ -49,6 +50,8 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Bootstrap;
 import rx.Observable;
@@ -519,6 +522,57 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     @InterfaceAudience.Private
     public Authenticator authenticator() {
         return authenticator;
+    }
+
+    @Override
+    public Observable<AsyncN1qlQueryResult> query(N1qlQuery query) {
+        /*
+         * This method iterates over the cached buckets to choose the first open bucket it finds in
+         * order to execute the query. This is done this way rather than through attempting to use
+         * a cluster-dedicated N1qlQueryExecutor because the core needs a non-null bucket name to do
+         * generic node dispatching (NPE otherwise), and the QueryHandler will add basic http authentication
+         * information to the outgoing request, which N1QL will validate...
+         *
+         * That in turn means the N1qlQueryExecutor must be created with a valid bucketName and password pair,
+         * which we're not guaranteed to have at this point. So the simplest path is to delegate to one of the
+         * opened buckets (which has its own correctly initialized executor).
+         *
+         * Of course we pass all known credentials to the N1qlQuery, so they will supplement the basic HTTP
+         * authentication mentioned above.
+         */
+        AsyncBucket delegateBucket = null;
+        for (AsyncBucket asyncBucket : bucketCache.values()) {
+            if (!asyncBucket.isClosed()) {
+                delegateBucket = asyncBucket;
+                break;
+            }
+        }
+        if (delegateBucket == null) {
+            return Observable.error(new UnsupportedOperationException("Cluster level querying is only available " +
+                    "when at least 1 bucket is opened"));
+        }
+
+        //enrich with cluster-level credentials for N1QL (aka list of all bucket credentials)
+        if (this.authenticator == null) {
+            throw new IllegalStateException("An Authenticator is required to perform cluster level querying");
+        } else {
+            try {
+                List<Credential> creds = this.authenticator.getCredentials(CredentialContext.CLUSTER_N1QL, null);
+                if (creds.isEmpty()) {
+                    throw new IllegalStateException(
+                            "CLUSTER_N1QL credentials are required in the Authenticator for cluster level querying");
+                } else {
+                    query.params().withCredentials(creds);
+                    LOGGER.trace("Added {} credentials to a cluster-level N1qlQuery", creds.size());
+                }
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Couldn't retrieve credentials for cluster level querying from Authenticator", e);
+            }
+        }
+
+        //note that delegating to the Bucket has the additional effect
+        // of enriching the query with server side timeout if not explicitly defined
+        return delegateBucket.query(query);
     }
 
     /**

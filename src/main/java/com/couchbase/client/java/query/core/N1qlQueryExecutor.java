@@ -40,8 +40,10 @@ import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.DefaultAsyncN1qlQueryResult;
 import com.couchbase.client.java.query.DefaultAsyncN1qlQueryRow;
+import com.couchbase.client.java.query.DefaultN1qlQueryResult;
 import com.couchbase.client.java.query.N1qlMetrics;
 import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.ParameterizedN1qlQuery;
 import com.couchbase.client.java.query.PrepareStatement;
 import com.couchbase.client.java.query.PreparedN1qlQuery;
@@ -55,11 +57,13 @@ import rx.exceptions.CompositeException;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.functions.Func6;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
@@ -528,5 +532,32 @@ public class N1qlQueryExecutor {
     public boolean isEncodedPlanEnabled() {
         return this.encodedPlanEnabled;
     }
+
+    /**
+     * A function that can be used in a flatMap to convert an {@link AsyncN1qlQueryResult} to a {@link N1qlQueryResult}.
+     */
+    public static final Func1<? super AsyncN1qlQueryResult, ? extends Observable<? extends N1qlQueryResult>> ASYNC_RESULT_TO_SYNC = new Func1<AsyncN1qlQueryResult, Observable<N1qlQueryResult>>() {
+        @Override
+        public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {
+            final boolean parseSuccess = aqr.parseSuccess();
+            final String requestId = aqr.requestId();
+            final String clientContextId = aqr.clientContextId();
+
+            return Observable.zip(aqr.rows().toList(),
+                    aqr.signature().singleOrDefault(JsonObject.empty()),
+                    aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
+                    aqr.errors().toList(),
+                    aqr.status(),
+                    aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
+                    new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
+                        @Override
+                        public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
+                                N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
+                            return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
+                                    parseSuccess, requestId, clientContextId);
+                        }
+                    });
+        }
+    };
 
 }

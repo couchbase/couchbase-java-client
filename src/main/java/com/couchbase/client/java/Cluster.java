@@ -17,8 +17,11 @@ package com.couchbase.client.java;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.auth.Authenticator;
@@ -27,6 +30,8 @@ import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.transcoder.Transcoder;
 
 /**
@@ -176,6 +181,56 @@ public interface Cluster {
     Bucket openBucket(String name, String password, List<Transcoder<? extends Document, ?>> transcoders,
         long timeout, TimeUnit timeUnit);
 
+    /**
+     * Synchronously perform a N1QL query that can span multiple buckets, with the default
+     * {@link CouchbaseEnvironment#queryTimeout() timeout}.
+     *
+     * The query will use credentials set through this cluster's {@link #authenticate(Authenticator) Authenticator}.
+     * In order to use that method, at least one {@link Bucket} must currently be opened. Note that if you
+     * are only performing queries spanning a single bucket, you should prefer opening that {@link Bucket} and
+     * use the query API at the bucket level.
+     *
+     * This method throws under the following conditions:
+     *
+     * - {@link UnsupportedOperationException}: no bucket is currently opened.
+     * - {@link IllegalStateException}: no {@link Authenticator} is set or no credentials are available in it for cluster
+     *   level querying.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: the operation takes longer than the default timeout.
+     * - {@link BackpressureException}: the producer outpaces the SDK.
+     * - {@link RequestCancelledException}: the operation had to be cancelled while on the wire or the retry strategy
+     *   cancelled it instead of retrying.
+     *
+     * @param query the {@link N1qlQuery} to execute.
+     * @return the {@link N1qlQueryResult query result}.
+     */
+    @InterfaceStability.Uncommitted
+    N1qlQueryResult query(N1qlQuery query);
+
+    /**
+     * Synchronously perform a N1QL query that can span multiple buckets, with a custom timeout.
+     *
+     * The query will use credentials set through this cluster's {@link #authenticate(Authenticator) Authenticator}.
+     * In order to use that method, at least one {@link Bucket} must currently be opened. Note that if you
+     * are only performing queries spanning a single bucket, you should prefer opening that {@link Bucket} and
+     * use the query API at the bucket level.
+     *
+     * This method throws under the following conditions:
+     *
+     * - {@link UnsupportedOperationException}: no bucket is currently opened.
+     * - {@link IllegalStateException}: no {@link Authenticator} is set or no credentials are available in it for cluster
+     *   level querying.
+     * - {@link TimeoutException} wrapped in a {@link RuntimeException}: the operation takes longer than the specified timeout.
+     * - {@link BackpressureException}: the producer outpaces the SDK.
+     * - {@link RequestCancelledException}: the operation had to be cancelled while on the wire or the retry strategy
+     *   cancelled it instead of retrying.
+     *
+     * @param query the {@link N1qlQuery} to execute.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the {@link N1qlQueryResult query result}.
+     */
+    @InterfaceStability.Uncommitted
+    N1qlQueryResult query(N1qlQuery query, long timeout, TimeUnit timeUnit);
 
     /**
      * Provides access to the {@link ClusterManager} to perform cluster-wide operations.

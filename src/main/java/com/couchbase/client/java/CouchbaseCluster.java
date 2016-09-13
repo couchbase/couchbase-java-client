@@ -15,7 +15,6 @@
  */
 package com.couchbase.client.java;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.utils.Blocking;
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.Credential;
 import com.couchbase.client.java.auth.CredentialContext;
@@ -37,8 +37,10 @@ import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import com.couchbase.client.java.transcoder.Transcoder;
-import com.couchbase.client.java.util.Blocking;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
@@ -411,5 +413,19 @@ public class CouchbaseCluster implements Cluster {
     @InterfaceAudience.Private
     public Authenticator authenticator() {
         return couchbaseAsyncCluster.authenticator();
+    }
+
+    @Override
+    public N1qlQueryResult query(N1qlQuery query) {
+        return query(query, environment.queryTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public N1qlQueryResult query(N1qlQuery query, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(
+                couchbaseAsyncCluster
+                        .query(query)
+                        .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC),
+                timeout, timeUnit);
     }
 }

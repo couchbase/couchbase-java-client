@@ -15,7 +15,9 @@
  */
 package com.couchbase.client.java;
 
+import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.auth.Authenticator;
@@ -24,10 +26,13 @@ import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.transcoder.Transcoder;
 import rx.Observable;
 
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Represents a Couchbase Server {@link Cluster}.
@@ -101,6 +106,30 @@ public interface AsyncCluster {
      * @return the opened bucket if successful.
      */
     Observable<AsyncBucket> openBucket(String name, String password, List<Transcoder<? extends Document, ?>> transcoders);
+
+    /**
+     * Asynchronously perform a N1QL query that can span multiple buckets. The query will use any credential set
+     * through this cluster's {@link #authenticate(Authenticator) Authenticator}.
+     *
+     * In order to use that method, at least one {@link AsyncBucket} must currently be opened. Note that if you
+     * are only performing queries spanning a single bucket, you should prefer opening that {@link Bucket} and
+     * use the query API at the bucket level.
+     *
+     * The Observable can fail in the following notable conditions:
+     *
+     * - {@link UnsupportedOperationException}: no bucket is currently opened.
+     * - {@link IllegalStateException}: no {@link Authenticator} is set or no credentials are available in it for cluster
+     *   level querying.
+     * - {@link TimeoutException}: the operation takes longer than the specified timeout.
+     * - {@link BackpressureException}: the producer outpaces the SDK.
+     * - {@link RequestCancelledException}: the operation had to be cancelled while on the wire or the retry strategy
+     *   cancelled it instead of retrying.
+     *
+     * @param query the {@link N1qlQuery} to execute.
+     * @return an observable emitting at most a single {@link AsyncN1qlQueryResult query result}.
+     */
+    @InterfaceStability.Uncommitted
+    Observable<AsyncN1qlQueryResult> query(N1qlQuery query);
 
     /**
      * Provides access to the {@link AsyncClusterManager} to perform cluster-wide operations.

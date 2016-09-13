@@ -26,15 +26,11 @@ import com.couchbase.client.java.bucket.DefaultBucketManager;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import com.couchbase.client.java.query.AsyncN1qlQueryResult;
-import com.couchbase.client.java.query.AsyncN1qlQueryRow;
-import com.couchbase.client.java.query.DefaultN1qlQueryResult;
-import com.couchbase.client.java.query.N1qlMetrics;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.Statement;
+import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import com.couchbase.client.java.repository.CouchbaseRepository;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.search.SearchQuery;
@@ -54,9 +50,7 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
-import rx.Observable;
 import rx.functions.Func1;
-import rx.functions.Func6;
 
 public class CouchbaseBucket implements Bucket {
 
@@ -641,29 +635,7 @@ public class CouchbaseBucket implements Bucket {
 
         return Blocking.blockForSingle(asyncBucket
             .query(query)
-            .flatMap(new Func1<AsyncN1qlQueryResult, Observable<N1qlQueryResult>>() {
-                @Override
-                public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {
-                    final boolean parseSuccess = aqr.parseSuccess();
-                    final String requestId = aqr.requestId();
-                    final String clientContextId = aqr.clientContextId();
-
-                    return Observable.zip(aqr.rows().toList(),
-                        aqr.signature().singleOrDefault(JsonObject.empty()),
-                        aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
-                        aqr.errors().toList(),
-                        aqr.status(),
-                        aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                        new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
-                            @Override
-                            public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
-                                                        N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
-                                return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
-                                    parseSuccess, requestId, clientContextId);
-                            }
-                        });
-                }
-            })
+            .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC)
             .single(), timeout, timeUnit);
     }
 
