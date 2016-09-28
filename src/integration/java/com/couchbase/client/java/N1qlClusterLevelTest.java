@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.CredentialContext;
-import com.couchbase.client.java.auth.PasswordAuthenticator;
+import com.couchbase.client.java.auth.ClassicAuthenticator;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
@@ -76,7 +76,7 @@ public class N1qlClusterLevelTest {
 
     @After
     public void resetAuthenticator() {
-        ctx.cluster().authenticate(new PasswordAuthenticator());
+        ctx.cluster().authenticate(new ClassicAuthenticator());
     }
 
     @AfterClass
@@ -87,7 +87,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldJoinProtectedBuckets() {
-        Authenticator authenticator = new PasswordAuthenticator()
+        Authenticator authenticator = new ClassicAuthenticator()
                 .bucket(ctx.bucketName(), "protected")
                 .bucket(ctx2.bucketName(), "safe");
         JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
@@ -116,7 +116,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldJoinProtectedBucketsAsynchronously() {
-        Authenticator authenticator = new PasswordAuthenticator()
+        Authenticator authenticator = new ClassicAuthenticator()
                 .bucket(ctx.bucketName(), "protected")
                 .bucket(ctx2.bucketName(), "safe");
         JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
@@ -158,7 +158,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailJoinWithPartialCredentials() {
-        Authenticator authenticator = new PasswordAuthenticator()
+        Authenticator authenticator = new ClassicAuthenticator()
                 .bucket(ctx2.bucketName(), "safe");
         JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
         JsonObject content2 = JsonObject.create().put("foo", "bar");
@@ -211,7 +211,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailOnClusterWithoutCredentials() {
-        ctx.cluster().authenticate(new PasswordAuthenticator());
+        ctx.cluster().authenticate(new ClassicAuthenticator());
 
         N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx2.bucketName());
 

@@ -32,7 +32,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  */
 @InterfaceStability.Experimental
 @InterfaceAudience.Private
-public class PasswordAuthenticator implements Authenticator {
+public class ClassicAuthenticator implements Authenticator {
 
     private Credential clusterManagementCredential = null;
     private Map<String, Credential> bucketCredentials = new HashMap<String, Credential>();
@@ -78,9 +78,9 @@ public class PasswordAuthenticator implements Authenticator {
      *
      * @param bucketName the name of the bucket for which to set a password.
      * @param password the password for the bucket.
-     * @return this {@link PasswordAuthenticator} for chaining.
+     * @return this {@link ClassicAuthenticator} for chaining.
      */
-    public PasswordAuthenticator bucket(String bucketName, String password) {
+    public ClassicAuthenticator bucket(String bucketName, String password) {
         this.bucketCredentials.put(bucketName, new Credential(bucketName, password));
         return this;
     }
@@ -90,9 +90,9 @@ public class PasswordAuthenticator implements Authenticator {
      *
      * @param adminName the administrative login to use.
      * @param adminPassword the administrative password to use.
-     * @return this {@link PasswordAuthenticator} for chaining.
+     * @return this {@link ClassicAuthenticator} for chaining.
      */
-    public PasswordAuthenticator cluster(String adminName, String adminPassword) {
+    public ClassicAuthenticator cluster(String adminName, String adminPassword) {
         this.clusterManagementCredential = new Credential(adminName, adminPassword);
         return this;
     }
