@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -321,5 +322,22 @@ public class N1qlQueryTest {
             assertEquals(new String(row.byteValue(), CharsetUtil.UTF_8).replaceAll("\\s", "")
                     , row.value().toString().replaceAll("\\s", ""));
         }
+    }
+
+    @Test
+    public void shouldWorkWithPrettyFalse() {
+        ctx.ignoreIfClusterUnder(Version.parseVersion("4.5.1"));
+        N1qlQuery query = N1qlQuery.simple(
+            select("*").fromCurrentBucket().limit(1),
+            N1qlParams.build().pretty(false)
+        );
+
+        N1qlQueryResult result = ctx.bucket().query(query);
+        assertEquals(1, result.allRows().size());
+        assertTrue(result.parseSuccess());
+        assertTrue(result.finalSuccess());
+        assertNotNull(result.info());
+        assertNotNull(result.allRows());
+        assertNotNull(result.errors());
     }
 }

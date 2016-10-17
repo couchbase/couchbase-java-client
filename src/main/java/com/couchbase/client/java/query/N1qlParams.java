@@ -48,7 +48,7 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
 @InterfaceAudience.Public
 public class N1qlParams implements Serializable {
 
-    private static final long serialVersionUID = 8888370260267213830L;
+    private static final long serialVersionUID = 8888370260267213831L;
 
     private String serverSideTimeout;
     private ScanConsistency consistency;
@@ -58,6 +58,7 @@ public class N1qlParams implements Serializable {
     private boolean disableMetrics;
     private MutationState mutationState;
     private Map<String, Object> rawParams;
+    private boolean pretty;
 
     private final Map<String, String> credentials;
 
@@ -69,6 +70,7 @@ public class N1qlParams implements Serializable {
     private N1qlParams() {
         adhoc = true;
         disableMetrics = false;
+        pretty = true;
         credentials = new HashMap<String, String>();
     }
 
@@ -115,6 +117,10 @@ public class N1qlParams implements Serializable {
                     .put("pass", c.getValue()));
             }
             queryJson.put("creds", creds);
+        }
+
+        if (!this.pretty) {
+            queryJson.put("pretty", false);
         }
 
         if (this.rawParams != null) {
@@ -313,6 +319,21 @@ public class N1qlParams implements Serializable {
     }
 
     /**
+     * If set to false, the server will be instructed to remove extra whitespace from the JSON response
+     * in order to save bytes. In performance-critical environments as well as large responses this is
+     * recommended in order to cut down on network traffic.
+     *
+     * Note that this option is only supported in Couchbase Server 4.5.1 or later.
+     *
+     * @param pretty if set to false, pretty responses are disabled.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams pretty(boolean pretty) {
+        this.pretty = pretty;
+        return this;
+    }
+
+    /**
      * Allows to specify an arbitrary, raw N1QL param.
      *
      * Use with care and only provide options that are supported by the server and are not exposed as part of the
@@ -363,6 +384,7 @@ public class N1qlParams implements Serializable {
 
         if (disableMetrics != that.disableMetrics) return false;
         if (adhoc != that.adhoc) return false;
+        if (pretty != that.pretty) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
         if (consistency != that.consistency) return false;
@@ -375,7 +397,6 @@ public class N1qlParams implements Serializable {
             return false;
         if (!credentials.equals(that.credentials)) return false;
         return rawParams != null ? rawParams.equals(that.rawParams) : that.rawParams == null;
-
     }
 
     @Override
@@ -390,6 +411,7 @@ public class N1qlParams implements Serializable {
         result = 31 * result + credentials.hashCode();
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
         result = 31 * result + (adhoc ? 1 : 0);
+        result = 31 * result + (pretty ? 1 : 0);
         return result;
     }
 
@@ -402,6 +424,7 @@ public class N1qlParams implements Serializable {
         sb.append(", clientContextId='").append(clientContextId).append('\'');
         sb.append(", maxParallelism=").append(maxParallelism);
         sb.append(", adhoc=").append(adhoc);
+        sb.append(", pretty=").append(pretty);
         sb.append(", disableMetrics=").append(disableMetrics);
         sb.append(", rawParams=").append(rawParams);
         if (!credentials.isEmpty())
