@@ -24,6 +24,7 @@ import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
+import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.document.BinaryDocument;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
@@ -2035,7 +2036,6 @@ public interface AsyncBucket {
      * asynchronously by calling the {@link AsyncMutateInBuilder#execute()} method. Only the values that you want
      * mutated inside the document will be transferred over the wire, limiting the network overhead for large documents.
      * A get followed by a replace of the whole document isn't needed anymore.
-     *
      * Note that you can set the expiry, check the CAS and ask for durability constraints in the builder using methods
      * prefixed by "with": {@link AsyncMutateInBuilder#withExpiry(int) withExpiry},
      * {@link AsyncMutateInBuilder#withCas(long) withCas},
@@ -2048,6 +2048,617 @@ public interface AsyncBucket {
     @InterfaceStability.Committed
     @InterfaceAudience.Public
     AsyncMutateInBuilder mutateIn(String docId);
+
+    /**
+     * Add a key value pair into CouchbaseMap
+     *
+     * If the underlying document for the map does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @param key key to be stored
+     * @param value value to be stored
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <V> Observable<Boolean> mapAdd(String docId, String key, V value);
+
+    /**
+     * Add a key value pair into CouchbaseMap with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * If the underlying document for the map does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - {@link IllegalStateException} if the map is full (limited by couchbase document size)
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @param key key to be stored
+     * @param value value to be stored
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <V> Observable<Boolean> mapAdd(String docId, String key, V value, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Get value of a key in the CouchbaseMap
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @param key key in the map
+     * @param valueType value type class
+     * @return value if found
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <V> Observable<V> mapGet(String docId, String key, Class<V> valueType);
+
+    /**
+     * Remove a key value pair from CouchbaseMap
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @param key key to be removed
+     * @return true if successful, even if the key doesn't exist
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Boolean> mapRemove(String docId, String key);
+
+
+    /**
+     * Remove a key value pair from CouchbaseMap with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @param key key to be removed
+     * @return true if successful, even if the key doesn't exist
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Boolean> mapRemove(String docId, String key, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Returns the number key value pairs in CouchbaseMap
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the map
+     * @return number of key value pairs
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Integer> mapSize(String docId);
+
+
+    /**
+     * Get element at an index in the CouchbaseList
+     *
+     * This method throws under the following conditions:
+     * - {@link IndexOutOfBoundsException} if index is not found
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param index index in list
+     * @param elementType element type class
+     * @return value if found
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<E> listGet(String docId, int index, Class<E> elementType);
+
+    /**
+     * Push an element to tail of CouchbaseList
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param element element to be pushed into the queue
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listPush(String docId, E element);
+
+    /**
+     * Push an element to tail of CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param element element to be pushed into the queue
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listPush(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Remove an element from an index in CouchbaseList
+     *
+     * This method throws under the following conditions:
+     * - {@link IndexOutOfBoundsException} if index is not found
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param index index of the element in list
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Boolean> listRemove(String docId, int index);
+
+    /**
+     * Remove an element from an index in CouchbaseList with additional mutation options provided by
+     * {@link MutationOptionBuilder}
+     *
+     * This method throws under the following conditions:
+     * - {@link IndexOutOfBoundsException} if index is not found
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param index index of the element in list
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Boolean> listRemove(String docId, int index, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Shift list head to element in CouchbaseList
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - {@link IllegalStateException} if the list is full (limited by couchbase document size)
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param element element to shift as head of list
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listShift(String docId, E element);
+
+    /**
+     * Shift list head to element in CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param element element to shift as head of list
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listShift(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Add an element at an index in CouchbaseList
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param index index in the list
+     * @param element element to be added
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listSet(String docId, int index, E element);
+
+    /**
+     * Add an element at an index in CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}.
+     *
+     * If the underlying document for the list does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @param index index in the list
+     * @param element element to be added
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> listSet(String docId, int index, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Returns the number of elements in CouchbaseList
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the list
+     * @return number of elements
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Integer> listSize(String docId);
+
+    /**
+     * Add an element into CouchbaseSet
+     *
+     * If the underlying document for the set does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @param element element to be pushed into the set
+     * @return true if successful, false if the element exists in set
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> setAdd(String docId, E element);
+
+    /**
+     * Add an element into CouchbaseSet with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * If the underlying document for the set does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @param element element to be pushed into the set
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful, false if the element exists in set
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> setAdd(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Check if an element exists in CouchbaseSet
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @param element element to check for existence
+     * @return true if element exists, false if the element does not exist
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> setExists(String docId, E element);
+
+    /**
+     * Removes an element from CouchbaseSet
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @param element element to be removed
+     * @return element removed from set (fails silently by returning the element is not found in set)
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<E> setRemove(String docId, E element);
+
+    /**
+     * Removes an element from CouchbaseSet with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @param element element to be removed
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return element removed from set (fails silently by returning the element is not found in set)
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<E> setRemove(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Returns the number of elements in CouchbaseSet
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the set
+     * @return number of elements in set
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Integer> setSize(String docId);
+
+    /**
+     * Add an element into CouchbaseQueue
+     *
+     * If the underlying document for the queue does not exist, this operation will create a new document to back
+     * the data structure.
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the queue
+     * @param element element to be pushed into the queue
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> queueAdd(String docId, E element);
+
+    /**
+     * Add an element into CouchbaseQueue with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * If the underlying document for the queue does not exist, this operation will create a new document to back
+     * the data structure.
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the queue
+     * @param element element to be pushed into the queue
+     * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
+     * @return true if successful
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<Boolean> queueAdd(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Removes the first element from CouchbaseQueue
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the queue
+     * @param elementType element type class
+     * @return element removed from queue
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<E> queueRemove(String docId, Class<E> elementType);
+
+    /**
+     * Removes the first element from CouchbaseQueue with additional mutation options provided by {@link MutationOptionBuilder}
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     * {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the queue
+     * @param elementType element type class
+     * @return element removed from queue
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    <E> Observable<E> queueRemove(String docId, Class<E> elementType, MutationOptionBuilder mutationOptionBuilder);
+
+    /**
+     * Returns the number of elements in CouchbaseQueue
+     *
+     * This method throws under the following conditions:
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param docId document id backing the queue
+     * @return number of elements
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    Observable<Integer> queueSize(String docId);
 
     /**
      * Invalidates and clears the internal query cache.
