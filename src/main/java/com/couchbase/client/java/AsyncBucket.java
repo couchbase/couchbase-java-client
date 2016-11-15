@@ -2052,13 +2052,11 @@ public interface AsyncBucket {
     /**
      * Add a key value pair into CouchbaseMap
      *
-     * If the underlying document for the map does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2075,14 +2073,12 @@ public interface AsyncBucket {
     /**
      * Add a key value pair into CouchbaseMap with additional mutation options provided by {@link MutationOptionBuilder}
      *
-     * If the underlying document for the map does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - {@link IllegalStateException} if the map is full (limited by couchbase document size)
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
@@ -2210,13 +2206,12 @@ public interface AsyncBucket {
     /**
      * Push an element to tail of CouchbaseList
      *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
      *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2227,18 +2222,16 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> listPush(String docId, E element);
+    <E> Observable<Boolean> listAppend(String docId, E element);
 
     /**
      * Push an element to tail of CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}
-     *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
      *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
@@ -2253,7 +2246,7 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> listPush(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+    <E> Observable<Boolean> listAppend(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
     /**
      * Remove an element from an index in CouchbaseList
@@ -2305,9 +2298,6 @@ public interface AsyncBucket {
     /**
      * Shift list head to element in CouchbaseList
      *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - {@link IllegalStateException} if the list is full (limited by couchbase document size)
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2315,6 +2305,7 @@ public interface AsyncBucket {
      * retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -2326,13 +2317,10 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> listShift(String docId, E element);
+    <E> Observable<Boolean> listPrepend(String docId, E element);
 
     /**
      * Shift list head to element in CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}
-     *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
      *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2340,6 +2328,7 @@ public interface AsyncBucket {
      * retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -2352,18 +2341,16 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> listShift(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+    <E> Observable<Boolean> listPrepend(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
     /**
      * Add an element at an index in CouchbaseList
-     *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
      *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2380,15 +2367,13 @@ public interface AsyncBucket {
     /**
      * Add an element at an index in CouchbaseList with additional mutation options provided by {@link MutationOptionBuilder}.
      *
-     * If the underlying document for the list does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -2426,13 +2411,11 @@ public interface AsyncBucket {
     /**
      * Add an element into CouchbaseSet
      *
-     * If the underlying document for the set does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2448,13 +2431,11 @@ public interface AsyncBucket {
     /**
      * Add an element into CouchbaseSet with additional mutation options provided by {@link MutationOptionBuilder}
      *
-     * If the underlying document for the set does not exist, this operation will create a new document to back
-     * the data structure.
-     *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2486,7 +2467,7 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> setExists(String docId, E element);
+    <E> Observable<Boolean> setContains(String docId, E element);
 
     /**
      * Removes an element from CouchbaseSet
@@ -2554,12 +2535,11 @@ public interface AsyncBucket {
     /**
      * Add an element into CouchbaseQueue
      *
-     * If the underlying document for the queue does not exist, this operation will create a new document to back
-     * the data structure.
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2570,18 +2550,16 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> queueAdd(String docId, E element);
+    <E> Observable<Boolean> queuePush(String docId, E element);
 
     /**
      * Add an element into CouchbaseQueue with additional mutation options provided by {@link MutationOptionBuilder}
-     *
-     * If the underlying document for the queue does not exist, this operation will create a new document to back
-     * the data structure.
      *
      * This method throws under the following conditions:
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      * {@link DurabilityException}.
      * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
@@ -2596,7 +2574,7 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<Boolean> queueAdd(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
+    <E> Observable<Boolean> queuePush(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
     /**
      * Removes the first element from CouchbaseQueue
@@ -2616,7 +2594,7 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<E> queueRemove(String docId, Class<E> elementType);
+    <E> Observable<E> queuePop(String docId, Class<E> elementType);
 
     /**
      * Removes the first element from CouchbaseQueue with additional mutation options provided by {@link MutationOptionBuilder}
@@ -2639,7 +2617,7 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    <E> Observable<E> queueRemove(String docId, Class<E> elementType, MutationOptionBuilder mutationOptionBuilder);
+    <E> Observable<E> queuePop(String docId, Class<E> elementType, MutationOptionBuilder mutationOptionBuilder);
 
     /**
      * Returns the number of elements in CouchbaseQueue

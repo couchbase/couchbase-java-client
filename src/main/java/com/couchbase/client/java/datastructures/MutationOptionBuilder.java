@@ -27,6 +27,7 @@ import com.couchbase.client.java.ReplicateTo;
  * - expiry
  * - persistence
  * - replication
+ * - create Document
  *
  * @author Subhashni Balakrishnan
  * @since 2.3.5
@@ -40,12 +41,14 @@ public class MutationOptionBuilder {
     private long cas;
     private PersistTo persistTo;
     private ReplicateTo replicateTo;
+    private boolean createDocument;
 
     private MutationOptionBuilder() {
         this.expiry = 0;
         this.cas = 0L;
         this.persistTo = PersistTo.NONE;
         this.replicateTo = ReplicateTo.NONE;
+        this.createDocument = false;
     }
 
     public static MutationOptionBuilder builder() {
@@ -128,5 +131,22 @@ public class MutationOptionBuilder {
      */
     public ReplicateTo replicateTo() {
         return this.replicateTo;
+    }
+
+    /**
+     * createDocument On true, creates the document if it does not exist
+     */
+    public MutationOptionBuilder createDocument(boolean createDoc) {
+        this.createDocument = createDoc;
+        return this;
+    }
+
+    /**
+     * Return createDocument option set in mutation option builder
+     *
+     * Returns createDocument boolean
+     */
+    public  boolean createDocument() {
+        return this.createDocument;
     }
 }
