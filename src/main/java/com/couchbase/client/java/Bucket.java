@@ -44,6 +44,7 @@ import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.error.ViewDoesNotExistException;
+import com.couchbase.client.java.error.subdoc.PathNotFoundException;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.query.N1qlQuery;
@@ -4560,6 +4561,7 @@ public interface Bucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the key is not found in the map {@link PathNotFoundException}
      * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
@@ -4734,6 +4736,7 @@ public interface Bucket {
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      * retrying: {@link RequestCancelledException}
+     * - If the index is not found in the list {@link PathNotFoundException}
      * - If the underlying couchbase document does not exist: {@link DocumentDoesNotExistException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}

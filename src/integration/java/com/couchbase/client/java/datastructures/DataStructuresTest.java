@@ -30,6 +30,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.RequestTooBigException;
+import com.couchbase.client.java.error.subdoc.PathNotFoundException;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.*;
@@ -97,8 +98,8 @@ public class DataStructuresTest {
         assertEquals(result, true);
     }
 
-    @Test(expected = CouchbaseException.class)
-    public void testMapGetInvalidKey() {
+    @Test(expected = PathNotFoundException.class)
+    public void testMapGetNonExistentKey() {
         ctx.bucket().mapGet("dsmap", "9999", String.class);
     }
 
@@ -184,7 +185,7 @@ public class DataStructuresTest {
     }
 
 
-    @Test(expected = CouchbaseException.class)
+    @Test(expected = PathNotFoundException.class)
     public void testListRemoveNonExistentIndex() {
         ctx.bucket().listGet("dslist", 2, Object.class);
     }
