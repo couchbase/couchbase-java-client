@@ -18,6 +18,7 @@ package com.couchbase.client.java.util;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.CouchbaseException;
+import com.couchbase.client.core.ServiceNotAvailableException;
 import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -35,6 +36,7 @@ import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.repository.Repository;
+import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
@@ -435,6 +437,19 @@ public class CouchbaseTestContext {
      */
     public CouchbaseTestContext ignoreIfClusterUnder(Version minimumVersion) {
         Assume.assumeTrue("Cluster is under " + minimumVersion, clusterManager().info().getMinVersion().compareTo(minimumVersion) >= 0);
+        return this;
+    }
+
+    /**
+     * Check if search service exists in @BeforeClass
+     * tests will be skipped if the service is not found
+     */
+    public CouchbaseTestContext ignoreIfSearchServiceNotFound() {
+        try {
+            this.bucket().query(new SearchQuery(this.bucketName, SearchQuery.matchPhrase("deadbeef")));
+        } catch (Exception ex) {
+            Assume.assumeTrue("Query service not available", (ex instanceof ServiceNotAvailableException) == false);
+        }
         return this;
     }
 

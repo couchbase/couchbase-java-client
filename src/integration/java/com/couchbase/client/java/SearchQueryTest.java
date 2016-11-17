@@ -76,17 +76,20 @@ public class SearchQueryTest {
     public static void init() throws InterruptedException {
         ctx = CouchbaseTestContext.builder()
                 .withEnv(DefaultCouchbaseEnvironment.builder()
-                    .mutationTokensEnabled(true))
+                        .mutationTokensEnabled(true))
                 .bucketName("beer-sample")
                 .flushOnInit(false)
                 .adhoc(false)
                 .build()
-                .ignoreIfMissing(CouchbaseFeature.FTS_BETA);
+                .ignoreIfMissing(CouchbaseFeature.FTS_BETA)
+                .ignoreIfSearchServiceNotFound();
     }
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test
