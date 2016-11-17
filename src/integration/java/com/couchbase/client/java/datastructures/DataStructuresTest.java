@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.couchbase.client.java;
+package com.couchbase.client.java.datastructures;
 
 import static org.junit.Assert.*;
 
+import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.error.subdoc.PathInvalidException;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.java.bucket.BucketType;
-import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.document.JsonArrayDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -355,4 +355,5 @@ public class DataStructuresTest {
     public void testSetSizeOnNonExistentDocument() {
         ctx.bucket().setSize("dssetRandom");
     }
+
 }
