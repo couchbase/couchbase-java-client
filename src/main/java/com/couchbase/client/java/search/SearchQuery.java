@@ -73,6 +73,7 @@ public class SearchQuery {
     private HighlightStyle highlightStyle;
     private String[] highlightFields;
     private String[] fields;
+    private String[] sort;
     private Map<String, SearchFacet> facets;
     private Long serverSideTimeout;
     private SearchConsistency consistency;
@@ -91,6 +92,7 @@ public class SearchQuery {
 
         this.highlightFields = new String[0];
         this.fields = new String[0];
+        this.sort = new String[0];
         this.facets = new HashMap<String, SearchFacet>();
 
         this.consistency = null;
@@ -154,6 +156,9 @@ public class SearchQuery {
         }
         if (fields != null && fields.length > 0) {
             queryJson.put("fields", JsonArray.from(fields));
+        }
+        if (sort != null && sort.length > 0) {
+            queryJson.put("sort", JsonArray.from(sort));
         }
         if (!this.facets.isEmpty()) {
             JsonObject facets = JsonObject.create();
@@ -309,6 +314,29 @@ public class SearchQuery {
     public SearchQuery fields(String... fields) {
         if (fields != null) {
             this.fields = fields;
+        }
+        return this;
+    }
+
+    /**
+     * Configures the list of fields (including special fields) which are used for sorting purposes. If empty, the
+     * default sorting (descending by score) is used by the server.
+     *
+     * The list of sort fields can include actual fields (like "firstname" but then they must be stored in the index,
+     * configured in the server side mapping). Fields provided first are considered first and in a "tie" case the
+     * next sort field is considered. So sorting by "firstname" and then "lastname" will first sort ascending by
+     * the firstname and if the names are equal then sort ascending by lastname. Special fields like "_id" and "_score"
+     * can also be used. If prefixed with "-" the sort order is set to descending.
+     *
+     * If no sort is provided, it is equal to sort("-_score"), since the server will sort it by score in descending
+     * order.
+     *
+     * @param sort the fields that should take part in the sorting.
+     * @return this SearchQuery for chaining.
+     */
+    public SearchQuery sort(String... sort) {
+        if (sort != null) {
+            this.sort = sort;
         }
         return this;
     }
