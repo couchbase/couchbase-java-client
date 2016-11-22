@@ -115,6 +115,8 @@ import rx.Observable;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
+
 public class CouchbaseAsyncBucket implements AsyncBucket {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseAsyncBucket.class);
@@ -233,7 +235,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
-        return Observable.defer(new Func0<Observable<GetResponse>>() {
+        return deferAndWatch(new Func0<Observable<GetResponse>>() {
                 @Override
                 public Observable<GetResponse> call() {
                     return core.send(new GetRequest(id, bucket));
@@ -275,7 +277,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<Boolean> exists(final String id) {
-        return Observable.defer(new Func0<Observable<ObserveResponse>>() {
+        return deferAndWatch(new Func0<Observable<ObserveResponse>>() {
             @Override
             public Observable<ObserveResponse> call() {
                 return core.send(new ObserveRequest(id, 0, true, (short) 0, bucket));
@@ -319,7 +321,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndLock(final String id, final int lockTime, final Class<D> target) {
-        return Observable.defer(new Func0<Observable<GetResponse>>() {
+        return deferAndWatch(new Func0<Observable<GetResponse>>() {
                 @Override
                 public Observable<GetResponse> call() {
                     return core.send(new GetRequest(id, bucket, true, false, lockTime));
@@ -374,7 +376,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndTouch(final String id, final int expiry, final Class<D> target) {
-        return Observable.defer(new Func0<Observable<GetResponse>>() {
+        return deferAndWatch(new Func0<Observable<GetResponse>>() {
                 @Override
                 public Observable<GetResponse> call() {
                     return core.send(new GetRequest(id, bucket, false, true, expiry));
@@ -447,7 +449,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public <D extends Document<?>> Observable<D> insert(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
 
-        return Observable.defer(new Func0<Observable<InsertResponse>>() {
+        return deferAndWatch(new Func0<Observable<InsertResponse>>() {
             @Override
             public Observable<InsertResponse> call() {
                 Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
@@ -519,7 +521,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public <D extends Document<?>> Observable<D> upsert(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
 
-        return Observable.defer(new Func0<Observable<UpsertResponse>>() {
+        return deferAndWatch(new Func0<Observable<UpsertResponse>>() {
             @Override
             public Observable<UpsertResponse> call() {
                 Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
@@ -592,7 +594,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public <D extends Document<?>> Observable<D> replace(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
 
-        return Observable.defer(new Func0<Observable<ReplaceResponse>>() {
+        return deferAndWatch(new Func0<Observable<ReplaceResponse>>() {
             @Override
             public Observable<ReplaceResponse> call() {
                 Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
@@ -665,7 +667,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Observable.defer(new Func0<Observable<RemoveResponse>>() {
+        return deferAndWatch(new Func0<Observable<RemoveResponse>>() {
             @Override
             public Observable<RemoveResponse> call() {
                 return core.send(new RemoveRequest(document.id(), document.cas(), bucket));
@@ -869,7 +871,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
-        return Observable.defer(new Func0<Observable<CounterResponse>>() {
+        return deferAndWatch(new Func0<Observable<CounterResponse>>() {
             @Override
             public Observable<CounterResponse> call() {
                 return core.send(new CounterRequest(id, initial, delta, expiry, bucket));
@@ -904,7 +906,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<Boolean> unlock(final String id, final long cas) {
-        return Observable.defer(new Func0<Observable<UnlockResponse>>() {
+        return deferAndWatch(new Func0<Observable<UnlockResponse>>() {
             @Override
             public Observable<UnlockResponse> call() {
                 return core.send(new UnlockRequest(id, cas, bucket));
@@ -943,7 +945,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<Boolean> touch(final String id, final int expiry) {
-        return Observable.defer(new Func0<Observable<TouchResponse>>() {
+        return deferAndWatch(new Func0<Observable<TouchResponse>>() {
             @Override
             public Observable<TouchResponse> call() {
                 return core.send(new TouchRequest(id, expiry, bucket));
@@ -984,7 +986,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public <D extends Document<?>> Observable<D> append(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
 
-        return Observable.defer(new Func0<Observable<AppendResponse>>() {
+        return deferAndWatch(new Func0<Observable<AppendResponse>>() {
             @Override
             public Observable<AppendResponse> call() {
                 Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
@@ -1024,7 +1026,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> prepend(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Observable.defer(new Func0<Observable<PrependResponse>>() {
+        return deferAndWatch(new Func0<Observable<PrependResponse>>() {
             @Override
             public Observable<PrependResponse> call() {
                 Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);

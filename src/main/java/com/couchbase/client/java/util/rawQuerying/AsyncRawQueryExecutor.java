@@ -46,6 +46,8 @@ import rx.Observable;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
+
 /**
  * A utility class that allows to perform {@link N1qlQuery N1QL} and {@link SearchQuery FTS} queries
  * asynchronously and receive a raw version of the service's JSON response.
@@ -132,7 +134,7 @@ public class AsyncRawQueryExecutor {
      * @return an {@link Observable} of the N1QL response as a T.
      */
     public <T> Observable<T> n1qlToRawCustom(final N1qlQuery query, final Func1<TranscoderUtils.ByteBufToArray, T> deserializer) {
-        return Observable.defer(new Func0<Observable<RawQueryResponse>>() {
+        return deferAndWatch(new Func0<Observable<RawQueryResponse>>() {
             @Override
             public Observable<RawQueryResponse> call() {
                 RawQueryRequest request = RawQueryRequest.jsonQuery(query.n1ql().toString(), bucket, password);

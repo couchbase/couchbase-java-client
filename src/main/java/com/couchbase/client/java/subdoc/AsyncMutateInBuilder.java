@@ -72,6 +72,8 @@ import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.functions.Func3;
 
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
+
 
 /**
  * A builder for subdocument mutations. In order to perform the final set of operations, use the
@@ -981,7 +983,7 @@ public class AsyncMutateInBuilder {
     private Observable<DocumentFragment<Mutation>> doSingleMutate(final MutationSpec spec,
             final Func2<MutationSpec, ByteBuf, ? extends AbstractSubdocMutationRequest> requestFactory,
             final Func3<ResponseStatus, String, String, Object> responseStatusDocIdAndPathToValueEvaluator) {
-        return Observable.defer(new Func0<Observable<SimpleSubdocResponse>>() {
+        return deferAndWatch(new Func0<Observable<SimpleSubdocResponse>>() {
             @Override
             public Observable<SimpleSubdocResponse> call() {
                 ByteBuf buf;
@@ -1021,7 +1023,7 @@ public class AsyncMutateInBuilder {
     }
 
     private Observable<DocumentFragment<Mutation>> removeIn(final MutationSpec spec) {
-        return Observable.defer(
+        return deferAndWatch(
                 new Func0<Observable<SimpleSubdocResponse>>() {
                     @Override
                     public Observable<SimpleSubdocResponse> call() {
@@ -1069,7 +1071,7 @@ public class AsyncMutateInBuilder {
 
         final long delta = fragment.longValue();
 
-        return Observable.defer(
+        return deferAndWatch(
                 new Func0<Observable<SimpleSubdocResponse>>() {
                     @Override
                     public Observable<SimpleSubdocResponse> call() {
