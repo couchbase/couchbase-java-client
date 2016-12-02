@@ -25,6 +25,7 @@ import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.metrics.LatencyMetricsCollectorConfig;
 import com.couchbase.client.core.metrics.MetricsCollectorConfig;
+import com.couchbase.client.core.node.MemcachedHashingStrategy;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.com.lmax.disruptor.WaitStrategy;
@@ -502,6 +503,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         @Override
         public Builder requestBufferWaitStrategy(WaitStrategyFactory waitStrategy) {
             super.requestBufferWaitStrategy(waitStrategy);
+            return this;
+        }
+
+        @Override
+        public Builder memcachedHashingStrategy(MemcachedHashingStrategy memcachedHashingStrategy) {
+            super.memcachedHashingStrategy(memcachedHashingStrategy);
             return this;
         }
 
