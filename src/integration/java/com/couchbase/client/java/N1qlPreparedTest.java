@@ -16,12 +16,16 @@
 package com.couchbase.client.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.UUID;
 
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.DefaultN1qlQueryResult;
@@ -35,6 +39,7 @@ import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Func1;
@@ -52,21 +57,51 @@ public class N1qlPreparedTest {
 
     private static final ScanConsistency CONSISTENCY = ScanConsistency.REQUEST_PLUS;
     private static N1qlQueryExecutor executor;
+    private static int count = 0;
 
     @BeforeClass
     public static void init() throws InterruptedException {
         ctx = CouchbaseTestContext.builder()
                 .adhoc(true)
+                .bucketName("N1qlPrepared")
                 .bucketQuota(100)
-                .bucketName("queryPrepared")
                 .build()
                 .ignoreIfNoN1ql()
         .ensurePrimaryIndex();
 
         executor = new N1qlQueryExecutor(ctx.cluster().core(), ctx.bucketName(), ctx.bucketPassword(), false);
+        final JsonObject jsonObject = JsonObject.create();
+        for (int i=0; i < 10; i++) {
+            jsonObject.put("field" + i,  UUID.randomUUID().toString());
+        }
+        List<String> keys = new ArrayList<String>();
+        for (int i=0; i < 15000; i++) {
+            keys.add("Key" + i);
+        }
 
-        ctx.bucket().upsert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
-        ctx.bucket().upsert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
+        List<JsonDocument> documents = Observable.from(keys)
+                .flatMap(new Func1<String, Observable<JsonDocument>>() {
+                    @Override
+                    public Observable<JsonDocument> call(String key) {
+                        return ctx.bucket().async().upsert(JsonDocument.create(key, jsonObject)) ;
+                    }
+                })
+                .onErrorResumeNext(new Func1<Throwable, Observable<JsonDocument>>() {
+                    @Override
+                    public Observable<JsonDocument> call(Throwable throwable) {
+                        if (throwable instanceof TemporaryFailureException) {
+                            return Observable.empty();
+                        } else {
+                            return Observable.error(throwable);
+                        }
+                    }
+                })
+                .toList()
+                .toBlocking()
+                .single();
+
+        count = documents.size();
+        assertTrue(count >= 10000);
     }
 
     @AfterClass
@@ -77,33 +112,33 @@ public class N1qlPreparedTest {
     public static N1qlQueryResult query(N1qlQuery query) {
         return executor.execute(query)
                 .flatMap(new Func1<AsyncN1qlQueryResult, Observable<N1qlQueryResult>>() {
-                @Override
-                public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {
-                    final boolean parseSuccess = aqr.parseSuccess();
-                    final String requestId = aqr.requestId();
-                    final String clientContextId = aqr.clientContextId();
+                    @Override
+                    public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {
+                        final boolean parseSuccess = aqr.parseSuccess();
+                        final String requestId = aqr.requestId();
+                        final String clientContextId = aqr.clientContextId();
 
-                    return Observable.zip(aqr.rows().toList(),
-                        aqr.signature().singleOrDefault(JsonObject.empty()),
-                        aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
-                        aqr.errors().toList(),
-                        aqr.status(),
-                        aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                        new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
-                            @Override
-                            public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
-                                                        N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
-                                return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
-                                    parseSuccess, requestId, clientContextId);
-                            }
-                        });
-                }
-            }).toBlocking().singleOrDefault(null);
+                        return Observable.zip(aqr.rows().toList(),
+                                aqr.signature().singleOrDefault(JsonObject.empty()),
+                                aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
+                                aqr.errors().toList(),
+                                aqr.status(),
+                                aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
+                                new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
+                                    @Override
+                                    public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
+                                                                N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
+                                        return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
+                                                parseSuccess, requestId, clientContextId);
+                                    }
+                                });
+                    }
+                }).toBlocking().singleOrDefault(null);
     }
 
     @Test
     public void testPreparedWithEncodedPlanDisabledExecutor() {
-        N1qlQuery query = N1qlQuery.simple("SELECT * FROM `" + ctx.bucketName() + "`", N1qlParams.build().consistency(CONSISTENCY).adhoc(false));
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM `" + ctx.bucketName() + "` limit 2", N1qlParams.build().consistency(CONSISTENCY).adhoc(false));
         N1qlQueryResult result = query(query); //this uses the executor with encodedPlan forcefully disabled
         List<N1qlQueryRow> list = result.allRows();
         List<JsonObject> errors = result.errors();
@@ -116,5 +151,14 @@ public class N1qlPreparedTest {
         errors = result.errors();
         assertEquals("error during second iteration: " + errors, Collections.emptyList(), errors);
         assertEquals("result set too small during second iteration", 2, list.size());
+    }
+
+    @Test
+    public void testLongRunningPreparedQuery() {
+        int fetzhSz = 10000;
+        N1qlQuery query = N1qlQuery.simple("select * from `"+ ctx.bucketName() +"` limit " + fetzhSz, N1qlParams.build().adhoc(false));
+        N1qlQueryResult result = ctx.bucket().query(query);
+        System.out.println("Elapsed time:" + result.info().elapsedTime());
+        assertEquals("Did not fetch all results", result.allRows().size(), fetzhSz);
     }
 }

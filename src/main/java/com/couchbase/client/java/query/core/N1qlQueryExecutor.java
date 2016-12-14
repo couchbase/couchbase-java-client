@@ -258,36 +258,40 @@ public class N1qlQueryExecutor {
     new Func1<AsyncN1qlQueryResult, Observable<AsyncN1qlQueryResult>>() {
         @Override
         public Observable<AsyncN1qlQueryResult> call(final AsyncN1qlQueryResult aqr) {
-            final Observable<JsonObject> cachedErrors = aqr.errors().cache();
+            if (!aqr.parseSuccess()) {
+                final Observable<JsonObject> cachedErrors = aqr.errors().cache();
 
-            return cachedErrors
-                    //only keep errors that triggers a prepared statement retry
-                    .filter(new Func1<JsonObject, Boolean>() {
-                        @Override
-                        public Boolean call(JsonObject e) {
-                            return shouldRetry(e);
-                        }
-                    })
-                    //if none, will emit null
-                    .lastOrDefault(null)
-                    //... in which case a copy of the AsyncN1qlQueryResult is propagated, otherwise an retry
-                    // triggering exception is propagated.
-                    .flatMap(new Func1<JsonObject, Observable<AsyncN1qlQueryResult>>() {
-                        @Override
-                        public Observable<AsyncN1qlQueryResult> call(JsonObject errorJson) {
-                            if (errorJson == null) {
-                                AsyncN1qlQueryResult copyResult = new DefaultAsyncN1qlQueryResult(
-                                        aqr.rows(), aqr.signature(), aqr.info(),
-                                        cachedErrors,
-                                        aqr.status(), aqr.parseSuccess(), aqr.requestId(),
-                                        aqr.clientContextId());
-                                return Observable.just(copyResult);
-                            } else {
-                                return Observable.error(new QueryExecutionException("Error with prepared query",
-                                        errorJson));
+                return cachedErrors
+                        //only keep errors that triggers a prepared statement retry
+                        .filter(new Func1<JsonObject, Boolean>() {
+                            @Override
+                            public Boolean call(JsonObject e) {
+                                return shouldRetry(e);
                             }
-                        }
-                    });
+                        })
+                        //if none, will emit null
+                        .lastOrDefault(null)
+                        //... in which case a copy of the AsyncN1qlQueryResult is propagated, otherwise an retry
+                        // triggering exception is propagated.
+                        .flatMap(new Func1<JsonObject, Observable<AsyncN1qlQueryResult>>() {
+                            @Override
+                            public Observable<AsyncN1qlQueryResult> call(JsonObject errorJson) {
+                                if (errorJson == null) {
+                                    AsyncN1qlQueryResult copyResult = new DefaultAsyncN1qlQueryResult(
+                                            aqr.rows(), aqr.signature(), aqr.info(),
+                                            cachedErrors,
+                                            aqr.status(), aqr.parseSuccess(), aqr.requestId(),
+                                            aqr.clientContextId());
+                                    return Observable.just(copyResult);
+                                } else {
+                                    return Observable.error(new QueryExecutionException("Error with prepared query",
+                                            errorJson));
+                                }
+                            }
+                        });
+            } else {
+                return Observable.just(aqr);
+            }
         }
     };
 
