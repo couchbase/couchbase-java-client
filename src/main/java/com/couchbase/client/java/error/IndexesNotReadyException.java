@@ -35,7 +35,9 @@ import com.couchbase.client.java.bucket.BucketManager;
 @InterfaceStability.Experimental
 @InterfaceAudience.Private
 public class IndexesNotReadyException extends CouchbaseException {
+
     public IndexesNotReadyException() {
+        super();
     }
 
     public IndexesNotReadyException(String message) {

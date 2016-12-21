@@ -24,6 +24,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class DesignDocumentException extends CouchbaseException {
 
     public DesignDocumentException() {
+        super();
     }
 
     public DesignDocumentException(String message) {

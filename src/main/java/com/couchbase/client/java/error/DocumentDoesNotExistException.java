@@ -26,6 +26,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class DocumentDoesNotExistException extends CouchbaseException {
 
     public DocumentDoesNotExistException() {
+        super();
     }
 
     public DocumentDoesNotExistException(String message) {

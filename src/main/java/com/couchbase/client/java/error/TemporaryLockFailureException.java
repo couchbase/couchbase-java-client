@@ -33,6 +33,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class TemporaryLockFailureException extends CouchbaseException {
 
     public TemporaryLockFailureException() {
+        super();
     }
 
     public TemporaryLockFailureException(String message) {

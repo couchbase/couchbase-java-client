@@ -24,6 +24,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class FlushDisabledException extends CouchbaseException {
 
     public FlushDisabledException() {
+        super();
     }
 
     public FlushDisabledException(String message) {
