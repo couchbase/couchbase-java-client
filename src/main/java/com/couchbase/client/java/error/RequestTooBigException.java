@@ -26,6 +26,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class RequestTooBigException extends CouchbaseException {
 
     public RequestTooBigException() {
+        super();
     }
 
     public RequestTooBigException(String message) {

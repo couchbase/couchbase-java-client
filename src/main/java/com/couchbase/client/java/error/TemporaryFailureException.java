@@ -28,6 +28,7 @@ import com.couchbase.client.core.CouchbaseException;
 public class TemporaryFailureException extends CouchbaseException {
 
     public TemporaryFailureException() {
+        super();
     }
 
     public TemporaryFailureException(String message) {
