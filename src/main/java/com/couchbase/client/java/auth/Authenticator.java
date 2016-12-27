@@ -30,7 +30,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @author Simon Baslé
  * @since 2.3
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Private
 public interface Authenticator {
 

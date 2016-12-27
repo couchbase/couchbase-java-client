@@ -145,7 +145,7 @@ public class N1qlQueryExecutor {
 
     /**
      *
-     * Experimental, Internal: Queries a N1QL secondary index.
+     * Internal: Queries a N1QL secondary index.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -362,7 +362,7 @@ public class N1qlQueryExecutor {
     }
 
     /**
-     * Experimental: Queries a N1QL secondary index and prepare an execution plan via the given
+     * Queries a N1QL secondary index and prepare an execution plan via the given
      * statement in {@link String} form. Statement can contain placeholders.
      * The resulting {@link PreparedPayload} can be cached and (re)used later in a {@link PreparedN1qlQuery}.
      *

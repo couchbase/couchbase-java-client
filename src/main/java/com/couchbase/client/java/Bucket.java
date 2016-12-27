@@ -2643,7 +2643,7 @@ public interface Bucket {
     SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
+     * Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
      * Said timeout includes the time it takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
@@ -2659,7 +2659,7 @@ public interface Bucket {
     N1qlQueryResult query(Statement statement);
 
     /**
-     * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
+     * Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
      * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
@@ -2677,7 +2677,7 @@ public interface Bucket {
     N1qlQueryResult query(Statement statement, long timeout, TimeUnit timeUnit);
 
     /**
-     * Experimental: Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
+     * Queries a N1QL secondary index with the {@link CouchbaseEnvironment#queryTimeout() default query timeout}.
      * Said timeout includes the time it takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
@@ -2693,7 +2693,7 @@ public interface Bucket {
     N1qlQueryResult query(N1qlQuery query);
 
     /**
-     * Experimental: Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
+     * Queries a N1QL secondary index with a custom timeout. Said timeout includes the time it
      * takes to retrieve all of the rows and errors from server.
      *
      * This method throws under the following conditions:
@@ -4467,7 +4467,7 @@ public interface Bucket {
      * @param value value to be stored
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> boolean mapAdd(String docId, String key, V value);
 
@@ -4493,7 +4493,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> boolean mapAdd(String docId, String key, V value, long timeout, TimeUnit timeUnit);
 
@@ -4520,7 +4520,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> boolean mapAdd(String docId, String key, V value, MutationOptionBuilder mutationOptionBuilder);
 
@@ -4550,7 +4550,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> boolean mapAdd(String docId, String key, V value, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -4572,7 +4572,7 @@ public interface Bucket {
      * @param valueType value type class
      * @return value if found
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> V mapGet(String docId, String key, Class<V> valueType);
 
@@ -4595,7 +4595,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return value if found
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <V> V mapGet(String docId, String key, Class<V> valueType, long timeout, TimeUnit timeUnit);
 
@@ -4615,7 +4615,7 @@ public interface Bucket {
      * @param key key to be removed
      * @return true if successful, even if the key doesn't exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean mapRemove(String docId, String key);
 
@@ -4637,7 +4637,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful, even if the key doesn't exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean mapRemove(String docId, String key, long timeout, TimeUnit timeUnit);
 
@@ -4660,7 +4660,7 @@ public interface Bucket {
      * @param key key to be removed
      * @return true if successful, even if the key doesn't exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean mapRemove(String docId, String key, MutationOptionBuilder mutationOptionBuilder);
 
@@ -4685,7 +4685,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful, even if the key doesn't exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean mapRemove(String docId, String key, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -4704,7 +4704,7 @@ public interface Bucket {
      * @param docId document id backing the map
      * @return number of key value pairs
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int mapSize(String docId);
 
@@ -4725,7 +4725,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return number of key value pairs
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int mapSize(String docId, long timeout, TimeUnit timeUnit);
 
@@ -4747,7 +4747,7 @@ public interface Bucket {
      * @param elementType element type class
      * @return value if found
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E listGet(String docId, int index, Class<E> elementType);
 
@@ -4771,7 +4771,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return value if found
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E listGet(String docId, int index, Class<E> elementType, long timeout, TimeUnit timeUnit);
 
@@ -4791,7 +4791,7 @@ public interface Bucket {
      * @param element element to be pushed into the queue
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listAppend(String docId, E element);
 
@@ -4813,7 +4813,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listAppend(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -4837,7 +4837,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listAppend(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -4863,7 +4863,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listAppend(String docId, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -4884,7 +4884,7 @@ public interface Bucket {
      * @param index index of the element in list
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean listRemove(String docId, int index);
 
@@ -4908,7 +4908,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean listRemove(String docId, int index, long timeout, TimeUnit timeUnit);
 
@@ -4934,7 +4934,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean listRemove(String docId, int index, MutationOptionBuilder mutationOptionBuilder);
 
@@ -4963,7 +4963,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     boolean listRemove(String docId, int index, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -4986,7 +4986,7 @@ public interface Bucket {
      * @param element element to shift as head of list
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listPrepend(String docId, E element);
 
@@ -5011,7 +5011,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listPrepend(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -5035,7 +5035,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listPrepend(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5061,7 +5061,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listPrepend(String docId, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5081,7 +5081,7 @@ public interface Bucket {
      * @param element element to be added
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listSet(String docId, int index, E element);
 
@@ -5103,7 +5103,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listSet(String docId, int index, E element, long timeout, TimeUnit timeUnit);
 
@@ -5127,7 +5127,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listSet(String docId, int index, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5153,7 +5153,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean listSet(String docId, int index, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5172,7 +5172,7 @@ public interface Bucket {
      * @param docId document id backing the list
      * @return number of elements
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int listSize(String docId);
 
@@ -5193,7 +5193,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return number of elements
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int listSize(String docId, long timeout, TimeUnit timeUnit);
 
@@ -5213,7 +5213,7 @@ public interface Bucket {
      * @param element element to be pushed into the set
      * @return true if successful, false if the element exists in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setAdd(String docId, E element);
 
@@ -5235,7 +5235,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful, false if the element exists in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setAdd(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -5257,7 +5257,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful, false if the element exists in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setAdd(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5281,7 +5281,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful, false if the element exists in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setAdd(String docId, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5301,7 +5301,7 @@ public interface Bucket {
      * @param element element to check for existence
      * @return true if element exists, false if the element does not exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setContains(String docId, E element);
 
@@ -5324,7 +5324,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if element exists, false if the element does not exist
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean setContains(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -5344,7 +5344,7 @@ public interface Bucket {
      * @param element element to be removed
      * @return element removed from set (fails silently by returning the element is not found in set)
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E setRemove(String docId, E element);
 
@@ -5366,7 +5366,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return element removed from set (fails silently by returning the element is not found in set)
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E setRemove(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -5390,7 +5390,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return element removed from set (fails silently by returning the element is not found in set)
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E setRemove(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5417,7 +5417,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return element removed from set (fails silently by returning the element is not found in set)
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E setRemove(String docId, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5436,7 +5436,7 @@ public interface Bucket {
      * @param docId document id backing the set
      * @return number of elements in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int setSize(String docId);
 
@@ -5458,7 +5458,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return number of elements in set
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int setSize(String docId, long timeout, TimeUnit timeUnit);
 
@@ -5478,7 +5478,7 @@ public interface Bucket {
      * @param element element to be pushed into the queue
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean queuePush(String docId, E element);
 
@@ -5500,7 +5500,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean queuePush(String docId, E element, long timeout, TimeUnit timeUnit);
 
@@ -5524,7 +5524,7 @@ public interface Bucket {
      * @param mutationOptionBuilder mutation options {@link MutationOptionBuilder}
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean queuePush(String docId, E element, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5550,7 +5550,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return true if successful
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> boolean queuePush(String docId, E element, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5570,7 +5570,7 @@ public interface Bucket {
      * @param elementType element type class
      * @return element removed from queue
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E queuePop(String docId, Class<E> elementType);
 
@@ -5593,7 +5593,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return element removed from queue
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E queuePop(String docId, Class<E> elementType, long timeout, TimeUnit timeUnit);
 
@@ -5617,7 +5617,7 @@ public interface Bucket {
      * @param elementType element type class
      * @return element removed from queue
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E queuePop(String docId, Class<E> elementType, MutationOptionBuilder mutationOptionBuilder);
 
@@ -5643,7 +5643,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return element removed from queue
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     <E> E queuePop(String docId, Class<E> elementType, MutationOptionBuilder mutationOptionBuilder, long timeout, TimeUnit timeUnit);
 
@@ -5662,7 +5662,7 @@ public interface Bucket {
      * @param docId document id backing the queue
      * @return number of elements
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int queueSize(String docId);
 
@@ -5683,7 +5683,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout
      * @return number of elements
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
     int queueSize(String docId, long timeout, TimeUnit timeUnit);
 

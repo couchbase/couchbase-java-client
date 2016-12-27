@@ -217,7 +217,7 @@ public class N1qlParams implements Serializable {
      * @param documents the documents returned from a mutation.
      * @return this {@link N1qlParams} for chaining.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public N1qlParams consistentWith(Document... documents) {
         return consistentWith(MutationState.from(documents));
     }
@@ -228,7 +228,7 @@ public class N1qlParams implements Serializable {
      * @param fragments the fragments returned from a mutation.
      * @return this {@link N1qlParams} for chaining.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public N1qlParams consistentWith(DocumentFragment... fragments) {
         return consistentWith(MutationState.from(fragments));
     }
@@ -239,7 +239,7 @@ public class N1qlParams implements Serializable {
      * @param mutationState the mutation state which accumulates tokens from one or more mutation results.
      * @return this {@link N1qlParams} for chaining.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public N1qlParams consistentWith(MutationState mutationState) {
         this.mutationState = mutationState;
         return this;
