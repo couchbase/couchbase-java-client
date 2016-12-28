@@ -18,6 +18,7 @@ package com.couchbase.client.java;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.error.DesignDocumentDoesNotExistException;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.Version;
 import com.couchbase.client.java.view.DesignDocument;
@@ -95,8 +96,12 @@ public class SpatialViewQueryTest {
                 + " \"coordinates\":[doc.lon, doc.lat] }, null); } }")
         ));
 
-        DesignDocument stored = ctx.bucketManager().getDesignDocument("cities");
-        if (stored == null || !stored.equals(designDoc)) {
+        try {
+            DesignDocument stored = ctx.bucketManager().getDesignDocument("cities");
+            if (!stored.equals(designDoc)) {
+                ctx.bucketManager().upsertDesignDocument(designDoc);
+            }
+        } catch (DesignDocumentDoesNotExistException ex) {
             ctx.bucketManager().upsertDesignDocument(designDoc);
         }
     }

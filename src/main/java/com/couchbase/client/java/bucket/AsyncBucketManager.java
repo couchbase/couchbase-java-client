@@ -87,6 +87,7 @@ public interface AsyncBucketManager {
      * The {@link Observable} can error under the following conditions:
      *
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param development if the {@link DesignDocument}s should be loaded from development or production.
      * @return zero to N invocations containing published {@link DesignDocument}s.
@@ -99,6 +100,7 @@ public interface AsyncBucketManager {
      * The {@link Observable} can error under the following conditions:
      *
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @return and empty observable if the document not found or a {@link DesignDocument}.
@@ -111,6 +113,7 @@ public interface AsyncBucketManager {
      * The {@link Observable} can error under the following conditions:
      *
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @param development if it should be loaded from development or production.
@@ -189,6 +192,11 @@ public interface AsyncBucketManager {
     /**
      * Removes a {@link DesignDocument} from production by its name.
      *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
+     *
+     *
      * @param name the name of the {@link DesignDocument}.
      * @return true if succeeded, false otherwise.
      */
@@ -196,6 +204,10 @@ public interface AsyncBucketManager {
 
     /**
      * Removes a {@link DesignDocument} from production or development by its name.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @param development if the {@link DesignDocument} should be removed from development or production.
@@ -228,6 +240,7 @@ public interface AsyncBucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists and override is set to false.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @param overwrite if an existing {@link DesignDocument} should be overridden.

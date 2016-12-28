@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.error.DesignDocumentAlreadyExistsException;
+import com.couchbase.client.java.error.DesignDocumentDoesNotExistException;
 import com.couchbase.client.java.error.DesignDocumentException;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import com.couchbase.client.java.view.DefaultView;
@@ -216,7 +217,7 @@ public class DesignDocumentTest extends ClusterDependentTest {
         assertEquals(3, found);
     }
 
-    @Test
+    @Test(expected = DesignDocumentDoesNotExistException.class)
     public void shouldRemoveDesignDocument() {
         List<View> views = Arrays.asList(
             DefaultView.create("v1", "function(d,m){}"),
@@ -233,8 +234,7 @@ public class DesignDocumentTest extends ClusterDependentTest {
 
         assertTrue(manager.removeDesignDocument("remove1"));
 
-        found = manager.getDesignDocument("remove1");
-        assertNull(found);
+        manager.getDesignDocument("remove1");
     }
 
     @Test
@@ -247,12 +247,8 @@ public class DesignDocumentTest extends ClusterDependentTest {
         DesignDocument designDocument = DesignDocument.create("pub1", views);
         manager.upsertDesignDocument(designDocument, true);
 
-        DesignDocument found = manager.getDesignDocument("pub1");
-        assertNull(found);
-
         manager.publishDesignDocument("pub1");
-
-        found = manager.getDesignDocument("pub1");
+        DesignDocument found = manager.getDesignDocument("pub1");
         assertNotNull(found);
         assertEquals("pub1", found.name());
         assertEquals(2, found.views().size());
@@ -267,10 +263,6 @@ public class DesignDocumentTest extends ClusterDependentTest {
 
         DesignDocument designDocument = DesignDocument.create("pub2", views);
         manager.upsertDesignDocument(designDocument, true);
-
-        DesignDocument found = manager.getDesignDocument("pub2");
-        assertNull(found);
-
         manager.publishDesignDocument("pub2");
         manager.publishDesignDocument("pub2");
     }
