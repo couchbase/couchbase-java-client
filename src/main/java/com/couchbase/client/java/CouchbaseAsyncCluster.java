@@ -37,6 +37,7 @@ import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.OpenBucketResponse;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
+import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.Credential;
 import com.couchbase.client.java.auth.CredentialContext;

@@ -18,8 +18,8 @@ package com.couchbase.client.java.cluster;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.utils.Blocking;
-import com.couchbase.client.java.ConnectionString;
 import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
+import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.cluster.api.ClusterApiClient;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 

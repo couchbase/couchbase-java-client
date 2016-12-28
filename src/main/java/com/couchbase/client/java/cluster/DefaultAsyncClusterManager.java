@@ -24,7 +24,7 @@ import com.couchbase.client.core.message.internal.AddNodeResponse;
 import com.couchbase.client.core.message.internal.AddServiceRequest;
 import com.couchbase.client.core.message.internal.AddServiceResponse;
 import com.couchbase.client.core.service.ServiceType;
-import com.couchbase.client.java.ConnectionString;
+import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;

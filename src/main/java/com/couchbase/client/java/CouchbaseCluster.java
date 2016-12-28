@@ -26,6 +26,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.core.utils.Blocking;
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.Credential;
