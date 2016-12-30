@@ -22,6 +22,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 public class JacksonTransformers {
 
@@ -56,6 +57,15 @@ public class JacksonTransformers {
     }
 
     static abstract class AbstractJsonValueDeserializer<T> extends JsonDeserializer<T> {
+
+        private final boolean decimalForFloat;
+
+        public AbstractJsonValueDeserializer() {
+            decimalForFloat = Boolean.parseBoolean(
+                System.getProperty("com.couchbase.json.decimalForFloat", "false")
+            );
+        }
+
         protected JsonObject decodeObject(final JsonParser parser, final JsonObject target) throws IOException {
             JsonToken current = parser.nextToken();
             String field = null;
@@ -76,10 +86,12 @@ public class JacksonTransformers {
                             target.put(field, parser.getValueAsString());
                             break;
                         case VALUE_NUMBER_INT:
-                            target.put(field, parser.getNumberValue());
-                            break;
                         case VALUE_NUMBER_FLOAT:
-                            target.put(field, parser.getDoubleValue());
+                            Number numberValue = parser.getNumberValue();
+                            if (numberValue instanceof Double && decimalForFloat) {
+                                numberValue = parser.getDecimalValue();
+                            }
+                            target.put(field, numberValue);
                             break;
                         case VALUE_NULL:
                             target.put(field, (JsonObject) null);
@@ -111,10 +123,12 @@ public class JacksonTransformers {
                             target.add(parser.getValueAsString());
                             break;
                         case VALUE_NUMBER_INT:
-                            target.add(parser.getNumberValue());
-                            break;
                         case VALUE_NUMBER_FLOAT:
-                            target.add(parser.getDoubleValue());
+                            Number numberValue = parser.getNumberValue();
+                            if (numberValue instanceof Double && decimalForFloat) {
+                                numberValue = parser.getDecimalValue();
+                            }
+                            target.add(numberValue);
                             break;
                         case VALUE_NULL:
                             target.add((JsonObject) null);

@@ -18,6 +18,8 @@ package com.couchbase.client.java.document.json;
 import com.couchbase.client.java.SerializationHelper;
 import org.junit.Test;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -439,6 +441,44 @@ public class JsonObjectTest {
 
         JsonObject deserialized = SerializationHelper.deserializeFromBytes(serialized, JsonObject.class);
         assertEquals(original, deserialized);
+    }
+
+    @Test
+    public void shouldSupportBigInteger() throws Exception {
+        BigInteger bigint = new BigInteger("12345678901234567890");
+        JsonObject original = JsonObject
+            .create()
+            .put("value", bigint);
+
+
+        String encoded = original.toString();
+        assertEquals("{\"value\":12345678901234567890}", encoded);
+
+        JsonObject decoded = JsonObject.fromJson(encoded);
+        assertEquals(bigint, decoded.getBigInteger("value"));
+        assertTrue(decoded.getNumber("value") instanceof BigInteger);
+    }
+
+    @Test
+    public void shouldSupportBigDecimalConverted() throws Exception {
+        BigDecimal bigdec = new BigDecimal("1234.5678901234567890432423432324");
+        JsonObject original = JsonObject
+            .create()
+            .put("value", bigdec);
+
+
+        String encoded = original.toString();
+        assertEquals("{\"value\":1234.5678901234567890432423432324}", encoded);
+
+        JsonObject decoded = JsonObject.fromJson(encoded);
+        // This happens because of double rounding, set com.couchbase.json.decimalForFloat true for better accuracy
+        // but more overhead
+        assertEquals(
+            new BigDecimal("1234.5678901234568911604583263397216796875"),
+            decoded.getBigDecimal("value")
+        );
+        assertEquals(1234.567890123457, decoded.getDouble("value"), 0);
+        assertTrue(decoded.getNumber("value") instanceof Double);
     }
 
 }

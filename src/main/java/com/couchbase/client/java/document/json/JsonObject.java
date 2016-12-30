@@ -19,7 +19,10 @@ import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingExcept
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
+import java.io.ObjectInput;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -390,6 +393,18 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Stores a {@link Number} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @return the {@link JsonObject}.
+     */
+    public JsonObject put(String name, Number value) {
+        content.put(name, value);
+        return this;
+    }
+
+    /**
      * Stores a {@link JsonArray} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -408,6 +423,42 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public JsonArray getArray(String name) {
         return (JsonArray) content.get(name);
+    }
+
+    /**
+     * Retrieves the value from the field name and casts it to {@link BigInteger}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public BigInteger getBigInteger(String name) {
+        return (BigInteger) content.get(name);
+    }
+
+    /**
+     * Retrieves the value from the field name and casts it to {@link BigDecimal}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public BigDecimal getBigDecimal(String name) {
+        Object found = content.get(name);
+        if (found == null) {
+            return null;
+        } else if (found instanceof Double) {
+            return new BigDecimal((Double) found);
+        }
+        return (BigDecimal) found;
+    }
+
+    /**
+     * Retrieves the value from the field name and casts it to {@link Number}.
+     *
+     * @param name the name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Number getNumber(String name) {
+        return (Number) content.get(name);
     }
 
     /**

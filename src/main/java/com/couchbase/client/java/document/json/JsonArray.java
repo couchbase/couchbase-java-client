@@ -19,6 +19,8 @@ import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -422,6 +424,17 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     }
 
     /**
+     * Append a {@link Number} element to the {@link JsonArray}.
+     *
+     * @param value the value to append.
+     * @return the {@link JsonArray}.
+     */
+    public JsonArray add(Number value) {
+        content.add(value);
+        return this;
+    }
+
+    /**
      * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link JsonArray}.
      *
      * @param index the index of the value.
@@ -430,6 +443,45 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
      */
     public JsonArray getArray(int index) {
         return (JsonArray) content.get(index);
+    }
+
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link BigInteger}.
+     *
+     * @param index the index of the value.
+     * @return the value at the given index.
+     * @throws IndexOutOfBoundsException if the index is negative or too large.
+     */
+    public BigInteger getBigInteger(int index) {
+        return (BigInteger) content.get(index);
+    }
+
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link BigDecimal}.
+     *
+     * @param index the index of the value.
+     * @return the value at the given index.
+     * @throws IndexOutOfBoundsException if the index is negative or too large.
+     */
+    public BigDecimal getBigDecimal(int index) {
+        Object found = content.get(index);
+        if (found == null) {
+            return null;
+        } else if (found instanceof Double) {
+            return new BigDecimal((Double) found);
+        }
+        return (BigDecimal) found;
+    }
+
+    /**
+     * Retrieves the value by the position in the {@link JsonArray} and casts it to {@link Number}.
+     *
+     * @param index the index of the value.
+     * @return the value at the given index.
+     * @throws IndexOutOfBoundsException if the index is negative or too large.
+     */
+    public Number getNumber(int index) {
+        return (Number) content.get(index);
     }
 
     /**
