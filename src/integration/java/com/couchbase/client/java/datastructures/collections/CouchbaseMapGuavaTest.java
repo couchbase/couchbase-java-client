@@ -42,6 +42,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ CouchbaseMapGuavaTest.GuavaTests.class })
+@Ignore
 public class CouchbaseMapGuavaTest {
 
     //the holder for the guava-generated test suite
