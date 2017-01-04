@@ -35,8 +35,9 @@ import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
+import com.couchbase.client.java.query.N1qlParams;
+import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.util.CouchbaseTestContext;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,8 +51,10 @@ import rx.observers.TestSubscriber;
  */
 public class N1qlClusterLevelTest {
 
-    public static CouchbaseTestContext ctx;
+    private static CouchbaseTestContext ctx;
     private static CouchbaseTestContext ctx2;
+    private static CouchbaseTestContext ctx3;
+
 
     @BeforeClass
     public static void init() {
@@ -61,44 +64,52 @@ public class N1qlClusterLevelTest {
                 .adhoc(true)
                 .bucketQuota(100)
                 .build()
-            .ignoreIfNoN1ql()
-            .ensurePrimaryIndex();
+                .ignoreIfNoN1ql()
+                .ensurePrimaryIndex();
 
         ctx2 = CouchbaseTestContext.builder()
                 .bucketName("N1qlCluster2")
+                .bucketPassword("protected")
+                .adhoc(true)
+                .bucketQuota(100)
+                .build()
+                .ignoreIfNoN1ql()
+                .ensurePrimaryIndex();
+
+        ctx3 = CouchbaseTestContext.builder()
+                .bucketName("N1qlCluster3")
                 .bucketPassword("safe")
                 .adhoc(true)
                 .bucketQuota(100)
-                .buildWithCluster(ctx.cluster(), ctx.env())
-            .ignoreIfNoN1ql()
-            .ensurePrimaryIndex();
-    }
+                .build()
+                .ignoreIfNoN1ql()
+                .ensurePrimaryIndex();
 
-    @After
-    public void resetAuthenticator() {
-        ctx.cluster().authenticate(new ClassicAuthenticator());
-    }
 
-    @AfterClass
-    public static void cleanup() {
-        ctx.destroyBucket();
-        ctx2.destroyBucketAndDisconnect();
-    }
-
-    @Test
-    public void shouldJoinProtectedBuckets() {
-        Authenticator authenticator = new ClassicAuthenticator()
-                .bucket(ctx.bucketName(), "protected")
-                .bucket(ctx2.bucketName(), "safe");
         JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
         JsonObject content2 = JsonObject.create().put("foo", "bar");
         ctx.bucket().upsert(JsonDocument.create("join", content1));
         ctx2.bucket().upsert(JsonDocument.create("baz", content2));
+        ctx3.bucket().upsert(JsonDocument.create("baz", content2));
+        Authenticator authenticator = new ClassicAuthenticator()
+                .bucket(ctx.bucketName(), "protected")
+                .bucket(ctx2.bucketName(), "protected");
         ctx.cluster().authenticate(authenticator);
+    }
 
+    @AfterClass
+    public static void cleanup() {
+        ctx.destroyBucketAndDisconnect();
+        ctx2.destroyBucketAndDisconnect();
+        ctx3.destroyBucketAndDisconnect();
+    }
+
+    @Test
+    public void shouldJoinProtectedBuckets() {
         N1qlQuery query = N1qlQuery.simple(
                 "SELECT A.*, B.* FROM `" + ctx.bucketName() + "` AS A" +
-                        " JOIN `" + ctx2.bucketName() + "` as B ON KEYS A.foreignKey");
+                        " JOIN `" + ctx2.bucketName() + "` as B ON KEYS A.foreignKey",
+                N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS));
 
         N1qlQueryResult result = ctx.cluster().query(query);
 
@@ -118,11 +129,7 @@ public class N1qlClusterLevelTest {
     public void shouldJoinProtectedBucketsAsynchronously() {
         Authenticator authenticator = new ClassicAuthenticator()
                 .bucket(ctx.bucketName(), "protected")
-                .bucket(ctx2.bucketName(), "safe");
-        JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
-        JsonObject content2 = JsonObject.create().put("foo", "bar");
-        ctx.bucket().upsert(JsonDocument.create("join", content1));
-        ctx2.bucket().upsert(JsonDocument.create("baz", content2));
+                .bucket(ctx2.bucketName(), "protected");
 
         AsyncCluster asyncCluster = CouchbaseAsyncCluster.create(ctx.env(), ctx.seedNode());
         asyncCluster.authenticate(authenticator);
@@ -132,7 +139,8 @@ public class N1qlClusterLevelTest {
 
         N1qlQuery query = N1qlQuery.simple(
                 "SELECT A.*, B.* FROM `" + ctx.bucketName() + "` AS A" +
-                        " JOIN `" + ctx2.bucketName() + "` as B ON KEYS A.foreignKey");
+                        " JOIN `" + ctx2.bucketName() + "` as B ON KEYS A.foreignKey",
+                N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS));
 
         try {
             AsyncN1qlQueryResult result = asyncCluster.query(query).timeout(2, TimeUnit.SECONDS).toBlocking().single();
@@ -158,17 +166,10 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailJoinWithPartialCredentials() {
-        Authenticator authenticator = new ClassicAuthenticator()
-                .bucket(ctx2.bucketName(), "safe");
-        JsonObject content1 = JsonObject.create().put("foreignKey", "baz");
-        JsonObject content2 = JsonObject.create().put("foo", "bar");
-        ctx.bucket().upsert(JsonDocument.create("join", content1));
-        ctx2.bucket().upsert(JsonDocument.create("baz", content2));
-        ctx.cluster().authenticate(authenticator);
-
         N1qlQuery query = N1qlQuery.simple(
                 "SELECT A.*, B.* FROM `" + ctx.bucketName() + "` AS A" +
-                        " JOIN `" + ctx2.bucketName() + "` as B ON KEYS A.foreignKey");
+                        " JOIN `" + ctx3.bucketName() + "` as B ON KEYS A.foreignKey",
+                N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS));
 
         N1qlQueryResult result = ctx.cluster().query(query);
 
@@ -211,12 +212,13 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailOnClusterWithoutCredentials() {
-        ctx.cluster().authenticate(new ClassicAuthenticator());
+        ctx2.cluster().authenticate(new ClassicAuthenticator());
 
-        N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx2.bucketName());
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx2.bucketName(),
+                N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS));
 
         try {
-            ctx.cluster().query(query);
+            ctx2.cluster().query(query);
             fail("Expected IllegalStateException");
         } catch (IllegalStateException e) {
             assertThat(e).hasMessage("CLUSTER_N1QL credentials are required in the Authenticator for cluster level querying");
@@ -230,11 +232,11 @@ public class N1qlClusterLevelTest {
         when(mock.getCredentials(any(CredentialContext.class), anyString()))
                 .thenThrow(cause);
 
-        ctx.cluster().authenticate(mock);
-        N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx2.bucketName());
+        ctx3.cluster().authenticate(mock);
+        N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx3.bucketName());
 
         try {
-            ctx.cluster().query(query);
+            ctx3.cluster().query(query);
             fail("Expected IllegalStateException");
         } catch (IllegalStateException e) {
             assertThat(e)
