@@ -329,7 +329,7 @@ public class N1qlQueryTest {
         ctx.ignoreIfClusterUnder(Version.parseVersion("4.5.1"));
         N1qlQuery query = N1qlQuery.simple(
             select("*").fromCurrentBucket().limit(1),
-            N1qlParams.build().pretty(false)
+            N1qlParams.build().pretty(false).consistency(CONSISTENCY)
         );
 
         N1qlQueryResult result = ctx.bucket().query(query);
