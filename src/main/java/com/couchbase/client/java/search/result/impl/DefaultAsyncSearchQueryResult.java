@@ -28,6 +28,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.FtsConsistencyTimeoutException;
 import com.couchbase.client.java.error.FtsMalformedRequestException;
+import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
 import com.couchbase.client.java.search.result.SearchMetrics;
 import com.couchbase.client.java.search.result.SearchQueryRow;
@@ -286,6 +287,30 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
                 Observable.<SearchQueryRow>error(new FtsConsistencyTimeoutException()),
                 Observable.<FacetResult>empty(),
                 Observable.just(metrics)
+        );
+    }
+
+    /**
+     * A utility method to return a result when the index is not found.
+     *
+     * @return an {@link AsyncSearchQueryResult} that will emit a {@link IndexDoesNotExistException} when calling
+     * its {@link AsyncSearchQueryResult#hits() hits()} method.
+     * @deprecated FTS is still in BETA so the response format is likely to change in a future version, and be
+     * unified with the HTTP 200 response format.
+     */
+    @Deprecated
+    public static AsyncSearchQueryResult fromIndexNotFound(final String indexName) {
+        //dummy default values
+        SearchStatus status = new DefaultSearchStatus(1L, 1L, 0L);
+        SearchMetrics metrics = new DefaultSearchMetrics(0L, 0L, 0d);
+
+
+        return new DefaultAsyncSearchQueryResult(
+            status,
+            Observable.<SearchQueryRow>error(new IndexDoesNotExistException("Search Index \"" + indexName
+                + "\" Not Found")),
+            Observable.<FacetResult>empty(),
+            Observable.just(metrics)
         );
     }
 }

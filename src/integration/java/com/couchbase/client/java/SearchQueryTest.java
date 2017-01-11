@@ -82,7 +82,8 @@ public class SearchQueryTest {
                 .adhoc(false)
                 .build()
                 .ignoreIfMissing(CouchbaseFeature.FTS_BETA)
-                .ignoreIfSearchServiceNotFound();
+                .ignoreIfSearchServiceNotFound()
+                .ignoreIfSearchIndexDoesNotExist("beer-search");
     }
 
     @AfterClass

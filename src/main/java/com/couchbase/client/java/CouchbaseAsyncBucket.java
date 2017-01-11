@@ -87,6 +87,7 @@ import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.CouchbaseAsyncRepository;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
+import com.couchbase.client.java.search.result.SearchStatus;
 import com.couchbase.client.java.search.result.impl.DefaultAsyncSearchQueryResult;
 import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
 import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
@@ -814,6 +815,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 if (response.status().isSuccess()) {
                     JsonObject json = JsonObject.fromJson(response.payload());
                     return DefaultAsyncSearchQueryResult.fromJson(json);
+                } else if (response.payload().contains("index not found")) {
+                    return DefaultAsyncSearchQueryResult.fromIndexNotFound(indexName);
                 } else if (response.status() == ResponseStatus.INVALID_ARGUMENTS) {
                     return DefaultAsyncSearchQueryResult.fromHttp400(response.payload());
                 } else if (response.status() == ResponseStatus.FAILURE) {

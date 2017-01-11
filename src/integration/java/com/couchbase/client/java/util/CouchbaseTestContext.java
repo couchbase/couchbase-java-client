@@ -31,12 +31,14 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
 import com.couchbase.client.java.repository.Repository;
 import com.couchbase.client.java.search.SearchQuery;
+import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
@@ -452,6 +454,21 @@ public class CouchbaseTestContext {
         }
         return this;
     }
+
+    public CouchbaseTestContext ignoreIfSearchIndexDoesNotExist(String idxname) {
+        SearchQueryResult result = bucket.query(
+            new SearchQuery(idxname, SearchQuery.queryString("test")).limit(1)
+        );
+        if (!result.status().isSuccess()) {
+            try {
+                result.hitsOrFail();
+            } catch (IndexDoesNotExistException ex) {
+                Assume.assumeTrue("FTS Index \"" + idxname + "\" not available.", false);
+            }
+        }
+        return this;
+    }
+
 
     /**
      * Utility method to get a meaningful test fail message out of a {@link N1qlQueryResult}'s {@link N1qlQueryResult#errors()} list.
