@@ -20,6 +20,7 @@ import static com.couchbase.client.java.query.dsl.Expression.i;
 import static com.couchbase.client.java.query.dsl.Expression.s;
 import static com.couchbase.client.java.query.dsl.Expression.x;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
+import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 import static com.couchbase.client.java.util.retry.RetryBuilder.anyOf;
 
 import java.util.ArrayList;
@@ -111,7 +112,9 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             public Observable<BucketConfigResponse> call() {
                 return core.send(new BucketConfigRequest("/pools/default/buckets/", null, bucket, password));
             }
-        }).map(new Func1<BucketConfigResponse, BucketInfo>() {
+        })
+        .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+        .map(new Func1<BucketConfigResponse, BucketInfo>() {
             @Override
             public BucketInfo call(BucketConfigResponse response) {
                 try {
@@ -143,7 +146,9 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             public Observable<GetDesignDocumentsResponse> call() {
                 return core.send(new GetDesignDocumentsRequest(bucket, password));
             }
-        }).flatMap(new Func1<GetDesignDocumentsResponse, Observable<DesignDocument>>() {
+        })
+        .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+        .flatMap(new Func1<GetDesignDocumentsResponse, Observable<DesignDocument>>() {
             @Override
             public Observable<DesignDocument> call(GetDesignDocumentsResponse response) {
                 JsonObject converted;

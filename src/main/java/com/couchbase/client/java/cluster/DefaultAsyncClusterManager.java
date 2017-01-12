@@ -18,12 +18,22 @@ package com.couchbase.client.java.cluster;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.message.config.*;
+import com.couchbase.client.core.message.config.BucketsConfigRequest;
+import com.couchbase.client.core.message.config.BucketsConfigResponse;
+import com.couchbase.client.core.message.config.ClusterConfigRequest;
+import com.couchbase.client.core.message.config.ClusterConfigResponse;
+import com.couchbase.client.core.message.config.InsertBucketRequest;
+import com.couchbase.client.core.message.config.InsertBucketResponse;
+import com.couchbase.client.core.message.config.RemoveBucketRequest;
+import com.couchbase.client.core.message.config.RemoveBucketResponse;
+import com.couchbase.client.core.message.config.UpdateBucketRequest;
+import com.couchbase.client.core.message.config.UpdateBucketResponse;
 import com.couchbase.client.core.message.internal.AddNodeRequest;
 import com.couchbase.client.core.message.internal.AddNodeResponse;
 import com.couchbase.client.core.message.internal.AddServiceRequest;
 import com.couchbase.client.core.message.internal.AddServiceResponse;
 import com.couchbase.client.core.service.ServiceType;
+import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.bucket.BucketType;
@@ -46,6 +56,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
@@ -90,6 +102,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     return core.send(new ClusterConfigRequest(username, password));
                 }
             })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .doOnNext(new Action1<ClusterConfigResponse>() {
                 @Override
                 public void call(ClusterConfigResponse response) {
@@ -123,6 +136,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     return core.send(new BucketsConfigRequest(username, password));
                 }
             })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .doOnNext(new Action1<BucketsConfigResponse>() {
                 @Override
                 public void call(BucketsConfigResponse response) {
@@ -206,7 +220,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     public Observable<RemoveBucketResponse> call(Boolean aBoolean) {
                         return core.send(new RemoveBucketRequest(name, username, password));
                     }
-                }).map(new Func1<RemoveBucketResponse, Boolean>() {
+                })
+                .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+                .map(new Func1<RemoveBucketResponse, Boolean>() {
                 @Override
                 public Boolean call(RemoveBucketResponse response) {
                     return response.status().isSuccess();
@@ -232,6 +248,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                     return core.send(new InsertBucketRequest(payload, username, password));
                 }
             })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .map(new Func1<InsertBucketResponse, BucketSettings>() {
                 @Override
                 public BucketSettings call(InsertBucketResponse response) {
@@ -260,7 +277,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                 public Observable<UpdateBucketResponse> call(Boolean exists) {
                     return core.send(new UpdateBucketRequest(settings.name(), payload, username, password));
                 }
-            }).map(new Func1<UpdateBucketResponse, BucketSettings>() {
+            })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+            .map(new Func1<UpdateBucketResponse, BucketSettings>() {
                 @Override
                 public BucketSettings call(UpdateBucketResponse response) {
                     if (!response.status().isSuccess()) {

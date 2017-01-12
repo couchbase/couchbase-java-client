@@ -26,6 +26,7 @@ import com.couchbase.client.core.message.kv.GetRequest;
 import com.couchbase.client.core.message.kv.GetResponse;
 import com.couchbase.client.core.message.kv.UpsertRequest;
 import com.couchbase.client.core.message.kv.UpsertResponse;
+import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.error.FlushDisabledException;
@@ -37,6 +38,8 @@ import rx.functions.Func2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 
 /**
  * Helper class to flush a bucket properly and wait for it to be completed.
@@ -137,6 +140,7 @@ public class BucketFlusher {
     private static Observable<Boolean> initiateFlush(final ClusterFacade core, final String bucket, final String password) {
         return core
             .<FlushResponse>send(new FlushRequest(bucket, password))
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .map(new Func1<FlushResponse, Boolean>() {
                 @Override
                 public Boolean call(FlushResponse flushResponse) {
