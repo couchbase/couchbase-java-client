@@ -58,7 +58,8 @@ public class SubdocHelper {
             case COMMAND_UNAVAILABLE:
             case ACCESS_ERROR:
                 return new CouchbaseException("Access error for subdocument operations (This can also happen "+
-                        "if the server version doesn't support it. Couchbase server 4.5 or later is required for Subdocument operations)");
+                        "if the server version doesn't support it. Couchbase server 4.5 or later is required for Subdocument operations " +
+                        "and Couchbase Server 5.0 or later is required for extended attributes access)");
             case NOT_EXISTS:
                 return new DocumentDoesNotExistException("Document not found for subdoc API: " + id);
             case TEMPORARY_FAILURE:

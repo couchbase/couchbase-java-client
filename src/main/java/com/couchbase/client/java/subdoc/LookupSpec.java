@@ -20,6 +20,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.kv.subdoc.multi.Lookup;
 import com.couchbase.client.core.message.kv.subdoc.multi.LookupCommand;
+import com.couchbase.client.core.message.kv.subdoc.multi.LookupCommandBuilder;
 
 /**
  * Internally represents a single lookup operation in a batch of subdocument operations.
@@ -33,7 +34,11 @@ import com.couchbase.client.core.message.kv.subdoc.multi.LookupCommand;
 public class LookupSpec extends LookupCommand {
 
     public LookupSpec(Lookup type, String path) {
-        super(type, path);
+        super(new LookupCommandBuilder(type, path));
+    }
+
+    public LookupSpec(Lookup type, String path, SubdocOptionsBuilder builder) {
+        super(new LookupCommandBuilder(type, path).attributeAccess(builder.attributeAccess()));
     }
 
     @Override

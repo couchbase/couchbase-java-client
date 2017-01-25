@@ -36,7 +36,9 @@ public enum CouchbaseFeature {
      * @deprecated FTS is still in BETA in 4.5.0, likely to get major changes when switching to GA.
      */
     @Deprecated
-    FTS_BETA(4, 5, 0);
+    FTS_BETA(4, 5, 0),
+
+    XATTR(5,0,0);
 
     private final Version availableFrom;
 

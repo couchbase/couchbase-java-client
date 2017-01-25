@@ -165,6 +165,30 @@ public class LookupInBuilder {
     }
 
     /**
+     * Get a value inside the JSON document.
+     *
+     * @param path the paths inside the document where to get the value from.
+     * @param optionsBuilder {@link SubdocOptionsBuilder}
+     * @return this builder for chaining.
+     */
+    public LookupInBuilder get(String path, SubdocOptionsBuilder optionsBuilder) {
+        this.async.get(path, optionsBuilder);
+        return this;
+    }
+
+    /**
+     * Get a value inside the JSON document.
+     *
+     * @param paths the paths inside the document where to get the value from.
+     * @param optionsBuilder {@link SubdocOptionsBuilder}
+     * @return this builder for chaining.
+     */
+    public LookupInBuilder get(Iterable<String> paths, SubdocOptionsBuilder optionsBuilder) {
+        this.async.get(paths, optionsBuilder);
+        return this;
+    }
+
+    /**
      * Check if a value exists inside the document (if it does not, attempting to get the
      * {@link DocumentFragment#content(int)} will raise an error).
      * This doesn't transmit the value on the wire if it exists, saving the corresponding byte overhead.
@@ -174,6 +198,35 @@ public class LookupInBuilder {
      */
     public LookupInBuilder exists(String... paths) {
         this.async.exists(paths);
+        return this;
+    }
+
+    /**
+     * Check if a value exists inside the document (if it does not, attempting to get the
+     * {@link DocumentFragment#content(int)} will raise an error).
+     * This doesn't transmit the value on the wire if it exists, saving the corresponding byte overhead.
+     *
+     * @param path the path inside the document to check for existence.
+     * @param optionsBuilder {@link SubdocOptionsBuilder}
+     * @return this builder for chaining.
+     */
+    public LookupInBuilder exists(String path, SubdocOptionsBuilder optionsBuilder) {
+        this.async.exists(path, optionsBuilder);
+        return this;
+    }
+
+
+    /**
+     * Check if a value exists inside the document (if it does not, attempting to get the
+     * {@link DocumentFragment#content(int)} will raise an error).
+     * This doesn't transmit the value on the wire if it exists, saving the corresponding byte overhead.
+     *
+     * @param paths the paths inside the document to check for existence.
+     * @param optionsBuilder {@link SubdocOptionsBuilder}
+     * @return this builder for chaining.
+     */
+    public LookupInBuilder exists(Iterable<String> paths, SubdocOptionsBuilder optionsBuilder) {
+        this.async.exists(paths, optionsBuilder);
         return this;
     }
 
