@@ -57,6 +57,9 @@ import com.couchbase.client.core.message.search.SearchQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.java.analytics.AnalyticsQuery;
+import com.couchbase.client.java.analytics.AnalyticsQueryExecutor;
+import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.ReplicaReader;
@@ -152,6 +155,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     private final CouchbaseEnvironment environment;
     /** the bucket's {@link N1qlQueryExecutor}. Prefer using {@link #n1qlQueryExecutor()} since it allows mocking and testing */
     private final N1qlQueryExecutor n1qlQueryExecutor;
+    private final AnalyticsQueryExecutor analyticsQueryExecutor;
 
     private volatile boolean closed;
 
@@ -186,6 +190,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
         boolean n1qlPreparedEncodedPlanEnabled = "true".equalsIgnoreCase(System.getProperty(N1qlQueryExecutor.ENCODED_PLAN_ENABLED_PROPERTY, "true")); //active by default
         n1qlQueryExecutor = new N1qlQueryExecutor(core, bucket, password, n1qlPreparedEncodedPlanEnabled);
+        analyticsQueryExecutor = new AnalyticsQueryExecutor(core, bucket, password);
     }
 
     @Override
@@ -861,6 +866,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
         }
         return n1qlQueryExecutor.execute(query);
+    }
+
+    public Observable<AsyncAnalyticsQueryResult> query(final AnalyticsQuery query) {
+      /* TODO once exposed on the server
+        if (!query.params().hasServerSideTimeout()) {
+            query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
+        }
+        */
+        return analyticsQueryExecutor.execute(query);
     }
 
     @Override

@@ -20,6 +20,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.java.analytics.AnalyticsQuery;
+import com.couchbase.client.java.analytics.AnalyticsQueryExecutor;
+import com.couchbase.client.java.analytics.AnalyticsQueryResult;
+import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
+import com.couchbase.client.java.analytics.DefaultAnalyticsQueryResult;
+import com.couchbase.client.java.analytics.DefaultAsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.DefaultBucketManager;
@@ -582,6 +588,19 @@ public class CouchbaseBucket implements Bucket {
         return Blocking.blockForSingle(asyncBucket
             .query(query)
             .flatMap(DefaultSearchQueryResult.FROM_ASYNC)
+            .single(), timeout, timeUnit);
+    }
+
+    @Override
+    public AnalyticsQueryResult query(AnalyticsQuery query) {
+        return query(query, environment.analyticsTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public AnalyticsQueryResult query(AnalyticsQuery query, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncBucket
+            .query(query)
+            .flatMap(AnalyticsQueryExecutor.ASYNC_RESULT_TO_SYNC)
             .single(), timeout, timeUnit);
     }
 

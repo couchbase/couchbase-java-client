@@ -65,6 +65,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long VIEW_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long SEARCH_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
+    private static final long ANALYTICS_TIMEOUT = TimeUnit.SECONDS.toMillis(75);
     private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     private static final boolean DNS_SRV_ENABLED = false;
@@ -73,6 +74,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long queryTimeout;
     private final long viewTimeout;
     private final long searchTimeout;
+    private final long analyticsTimeout;
     private final long kvTimeout;
     private final long connectTimeout;
     private final boolean dnsSrvEnabled;
@@ -137,6 +139,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         viewTimeout = longPropertyOr("viewTimeout", builder.viewTimeout);
         kvTimeout = longPropertyOr("kvTimeout", builder.kvTimeout);
         searchTimeout = longPropertyOr("searchTimeout", builder.searchTimeout);
+        analyticsTimeout = longPropertyOr("analyticsTimeout", builder.analyticsTimeout);
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout);
         dnsSrvEnabled = booleanPropertyOr("dnsSrvEnabled", builder.dnsSrvEnabled);
 
@@ -150,6 +153,14 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
         if (viewTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured view timeout is greater than the maximum request lifetime." +
+                "This can lead to falsely cancelled requests.");
+        }
+        if (analyticsTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured analytics timeout is greater than the maximum request lifetime." +
+                "This can lead to falsely cancelled requests.");
+        }
+        if (searchTimeout > maxRequestLifetime()) {
+            LOGGER.warn("The configured search timeout is greater than the maximum request lifetime." +
                 "This can lead to falsely cancelled requests.");
         }
         if (managementTimeout > maxRequestLifetime()) {
@@ -183,6 +194,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long viewTimeout = VIEW_TIMEOUT;
         private long kvTimeout = KV_TIMEOUT;
         private long searchTimeout = SEARCH_TIMEOUT;
+        private long analyticsTimeout = ANALYTICS_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
 
@@ -216,6 +228,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
 
         public Builder searchTimeout(long searchTimeout) {
             this.searchTimeout = searchTimeout;
+            return this;
+        }
+
+        public Builder analyticsTimeout(long analyticsTimeout) {
+            this.analyticsTimeout = analyticsTimeout;
             return this;
         }
 
@@ -591,6 +608,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     }
 
     @Override
+    public long analyticsTimeout() {
+        return analyticsTimeout;
+    }
+
+    @Override
     public long kvTimeout() {
         return kvTimeout;
     }
@@ -622,6 +644,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         //dump java-client specific parameters
         sb.append(", queryTimeout=").append(this.queryTimeout);
         sb.append(", viewTimeout=").append(this.viewTimeout);
+        sb.append(", searchTimeout=").append(this.searchTimeout);
+        sb.append(", analyticsTimeout=").append(this.analyticsTimeout);
         sb.append(", kvTimeout=").append(this.kvTimeout);
         sb.append(", connectTimeout=").append(this.connectTimeout);
         sb.append(", dnsSrvEnabled=").append(this.dnsSrvEnabled);

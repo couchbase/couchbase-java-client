@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Couchbase, Inc.
+ * Copyright (c) 2017 Couchbase, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.couchbase.client.java.auth;
+package com.couchbase.client.java.analytics;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.document.json.JsonObject;
 
-/**
- * Enum of the contexts that can be used to retrieve an implicit credential from an
- * {@link Authenticator}. Note that not all Authenticator implementations will support
- * all these contexts, and some contexts may also require additional information (a
- * "specific").
- *
- * @author Simon Baslé
- * @since 2.3
- */
-@InterfaceStability.Committed
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Public
-public enum CredentialContext {
+public interface AnalyticsQueryRow {
 
-    BUCKET_KV, BUCKET_VIEW, BUCKET_N1QL, BUCKET_FTS, BUCKET_ANALYTICS,
-    CLUSTER_N1QL, CLUSTER_FTS, CLUSTER_ANALYTICS,
-    BUCKET_MANAGEMENT, CLUSTER_MANAGEMENT
+    /**
+     * @return the raw array of bytes representing the JSON of this row.
+     */
+    byte[] byteValue();
 
+    /**
+     * @return the {@link JsonObject} representation of the JSON corresponding to this row.
+     */
+    JsonObject value();
 }

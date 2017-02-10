@@ -59,6 +59,13 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
     long searchTimeout();
 
     /**
+     * The default timeout for analytics operations, set to {@link DefaultCouchbaseEnvironment#ANALYTICS_TIMEOUT}.
+     *
+     * @return the default analytics timeout.
+     */
+    long analyticsTimeout();
+
+    /**
      * The default timeout for binary (key/value) operations, set to {@link DefaultCouchbaseEnvironment#KV_TIMEOUT}.
      *
      * @return the default binary timeout.

@@ -23,6 +23,8 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.analytics.AnalyticsQuery;
+import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.document.BinaryDocument;
@@ -1232,6 +1234,15 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Experimental
     Observable<AsyncSearchQueryResult> query(SearchQuery query);
+
+    /**
+     * Uncommitted: Queries Couchbase Analytics
+     *
+     * @param query the query builder.
+     * @return a query result containing the rows and additional information.
+     */
+    @InterfaceStability.Uncommitted
+    Observable<AsyncAnalyticsQueryResult> query(AnalyticsQuery query);
 
     /**
      * Unlocks a write-locked {@link Document}.

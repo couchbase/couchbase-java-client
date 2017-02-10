@@ -26,6 +26,8 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.java.analytics.AnalyticsQuery;
+import com.couchbase.client.java.analytics.AnalyticsQueryResult;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.document.BinaryDocument;
@@ -2741,6 +2743,26 @@ public interface Bucket {
      */
     @InterfaceStability.Experimental
     SearchQueryResult query(SearchQuery query, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Uncommitted: Queries Couchbase Analytics
+     *
+     * @param query the query builder.
+     * @return a query result containing the rows and additional information.
+     */
+    @InterfaceStability.Uncommitted
+    AnalyticsQueryResult query(AnalyticsQuery query);
+
+    /**
+     * Uncommitted: Queries Couchbase Analytics
+     *
+     * @param query the query builder.
+     * @param timeout the custom full timeout, including the time to retrieve all rows, errors, etc...
+     * @param timeUnit the unit for the timeout.
+     * @return a query result containing the rows and additional information.
+     */
+    @InterfaceStability.Uncommitted
+    AnalyticsQueryResult query(AnalyticsQuery query, long timeout, TimeUnit timeUnit);
 
     /**
      * Unlocks a write-locked {@link Document} with the default key/value timeout.
