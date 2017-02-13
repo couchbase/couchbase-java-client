@@ -157,6 +157,14 @@ public class Collections {
     }
 
     /**
+     * Create an ANY AND EVERY comprehension with a first IN range.
+     *
+     */
+    public static SatisfiesBuilder anyAndEveryIn(String variable, Expression expression) {
+        return new SatisfiesBuilder(x("ANY AND EVERY"), variable, expression, true);
+    }
+
+    /**
      * Create an ANY comprehension with a first WITHIN range.
      *
      * ANY is a range predicate that allows you to test a Boolean condition over the
