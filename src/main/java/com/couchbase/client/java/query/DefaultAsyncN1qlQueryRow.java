@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
@@ -67,6 +68,6 @@ public class DefaultAsyncN1qlQueryRow implements AsyncN1qlQueryRow {
 
     @Override
     public String toString() {
-        return byteValue == null ? "null" : value().toString();
+        return byteValue == null ? "null" : new String(byteValue, CharsetUtil.UTF_8);
     }
 }
