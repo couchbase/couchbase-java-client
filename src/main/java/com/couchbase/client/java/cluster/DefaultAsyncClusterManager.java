@@ -362,6 +362,10 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     }
 
     private Observable<Boolean> ensureServiceEnabled() {
+        if (connectionString.hosts().isEmpty()) {
+            return Observable.error(new IllegalStateException("No host found in the connection string! " + connectionString.toString()));
+        }
+
         return Observable
             .just(connectionString.hosts().get(0).getHostName())
             .map(new Func1<String, InetAddress>() {
