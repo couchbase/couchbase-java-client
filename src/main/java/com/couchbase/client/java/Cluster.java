@@ -25,6 +25,7 @@ import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.auth.Authenticator;
+import com.couchbase.client.java.auth.ClassicAuthenticator;
 import com.couchbase.client.java.auth.CredentialContext;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.document.Document;
@@ -79,11 +80,9 @@ public interface Cluster {
 
     /**
      * Opens the bucket with the given name, using the default timeout and the password from the {@link Authenticator}
-     * that was last {@link #authenticate(Authenticator) set}
-     * (in the {@link CredentialContext#BUCKET_KV BUCKET_KV context}).
      *
-     * If no credential can be found for the bucket in the authenticator, the old behavior of defaulting to an empty
-     * password is used.
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior of
+     * defaulting to an empty password is used.
      *
      * This method throws:
      *
@@ -100,11 +99,9 @@ public interface Cluster {
 
     /**
      * Opens the bucket with the given name, using a custom timeout and the password from the {@link Authenticator}
-     * that was last {@link #authenticate(Authenticator) set}
-     * (in the {@link CredentialContext#BUCKET_KV BUCKET_KV context}).
      *
-     * If no credential can be found for the bucket in the authenticator, the old behavior of defaulting to an empty
-     * password is used.
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior of
+     * defaulting to an empty password is used.
      *
      * This method throws:
      *
@@ -119,6 +116,45 @@ public interface Cluster {
      * @return the opened bucket if successful.
      */
     Bucket openBucket(String name, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Opens the bucket with the given name, using the default timeout and the password from the {@link Authenticator}
+     *
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior of
+     * defaulting to an empty password is used.
+     *
+     * This method throws:
+     *
+     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     *  - com.couchbase.client.core.CouchbaseException: If the bucket could not be opened (see logs and nested stack
+     *    trace for more details why it failed).
+     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
+     *  - {@link AuthenticatorException}: If more than one credentials was returned by the Authenticator for this bucket.
+
+     *
+     * @return the opened bucket if successful.
+     */
+    Bucket openBucket(String name, List<Transcoder<? extends Document, ?>> transcoders);
+
+    /**
+     * Opens the bucket with the given name, using a custom timeout and the password from the {@link Authenticator}
+     *
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior
+     * of defaulting to an empty password is used.
+     *
+     * This method throws:
+     *
+     *  - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     *  - com.couchbase.client.core.CouchbaseException: If the bucket could not be opened (see logs and nested stack
+     *    trace for more details why it failed).
+     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
+     *  - {@link AuthenticatorException}: If more than one credentials was returned by the Authenticator for this bucket.
+     *
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return the opened bucket if successful.
+     */
+    Bucket openBucket(String name, List<Transcoder<? extends Document, ?>> transcoders, long timeout, TimeUnit timeUnit);
 
     /**
      * Opens a bucket identified by its name and password with the default connect timeout.

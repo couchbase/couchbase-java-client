@@ -93,6 +93,7 @@ public class N1qlQueryExecutor {
 
     private final ClusterFacade core;
     private final String bucket;
+    private final String username;
     private final String password;
     private final Map<String, PreparedPayload> queryCache;
     private final boolean encodedPlanEnabled;
@@ -103,10 +104,23 @@ public class N1qlQueryExecutor {
      *
      * @param core the core through which to send requests.
      * @param bucket the bucket to bootstrap from.
+     * @param username the user authorized for bucket access.
+     * @param password the password for the bucket.
+     */
+    public N1qlQueryExecutor(ClusterFacade core, String bucket, String username, String password) {
+        this(core, bucket, username, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), true);
+    }
+
+    /**
+     * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
+     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     *
+     * @param core the core through which to send requests.
+     * @param bucket the bucket to bootstrap from.
      * @param password the password for the bucket.
      */
     public N1qlQueryExecutor(ClusterFacade core, String bucket, String password) {
-        this(core, bucket, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), true);
+        this(core, bucket, bucket, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), true);
     }
 
     /**
@@ -119,16 +133,31 @@ public class N1qlQueryExecutor {
      * @param encodedPlanEnabled true to include an encoded plan when running prepared queries, false otherwise.
      */
     public N1qlQueryExecutor(ClusterFacade core, String bucket, String password, boolean encodedPlanEnabled) {
-        this(core, bucket, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), encodedPlanEnabled);
+        this(core, bucket, bucket, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), encodedPlanEnabled);
     }
 
     /**
-     * This constructor is for testing purpose, prefer using {@link #N1qlQueryExecutor(ClusterFacade, String, String)}.
+     * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
+     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     *
+     * @param core the core through which to send requests.
+     * @param bucket the bucket to bootstrap from.
+     * @param username the user authorized for bucket access.
+     * @param password the password for the user.
+     * @param encodedPlanEnabled true to include an encoded plan when running prepared queries, false otherwise.
      */
-    protected N1qlQueryExecutor(ClusterFacade core, String bucket, String password,
+    public N1qlQueryExecutor(ClusterFacade core, String bucket, String username, String password, boolean encodedPlanEnabled) {
+        this(core, bucket, username, password, new LRUCache<String, PreparedPayload>(QUERY_CACHE_SIZE), encodedPlanEnabled);
+    }
+
+    /**
+     * This constructor is for testing purpose, prefer using {@link #N1qlQueryExecutor(ClusterFacade, String, String, String)}.
+     */
+    protected N1qlQueryExecutor(ClusterFacade core, String bucket, String username, String password,
             LRUCache<String, PreparedPayload> lruCache, boolean encodedPlanEnabled) {
         this.core = core;
         this.bucket = bucket;
+        this.username = username;
         this.password = password;
         this.encodedPlanEnabled = encodedPlanEnabled;
 
@@ -159,7 +188,7 @@ public class N1qlQueryExecutor {
         return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
             @Override
             public Observable<GenericQueryResponse> call() {
-                return core.send(createN1qlRequest(query, bucket, password, null));
+                return core.send(createN1qlRequest(query, bucket, username, password, null));
             }
         }).flatMap(new Func1<GenericQueryResponse, Observable<AsyncN1qlQueryResult>>() {
             @Override
@@ -398,7 +427,7 @@ public class N1qlQueryExecutor {
             source = Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
                 @Override
                 public Observable<GenericQueryResponse> call() {
-                    return core.send(createN1qlRequest(query, bucket, password, null));
+                    return core.send(createN1qlRequest(query, bucket, username, password, null));
                 }
             });
         } else {
@@ -424,7 +453,7 @@ public class N1qlQueryExecutor {
             }).flatMap(new Func1<NodeInfo, Observable<GenericQueryResponse>>() {
                 @Override
                 public Observable<GenericQueryResponse> call(NodeInfo nodeInfo) {
-                    GenericQueryRequest req = createN1qlRequest(query, bucket, password, nodeInfo.hostname());
+                    GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, nodeInfo.hostname());
                     return core.send(req);
                 }
             });
@@ -496,7 +525,7 @@ public class N1qlQueryExecutor {
     /**
      * Creates the core query request and performs centralized string substitution.
      */
-    private GenericQueryRequest createN1qlRequest(final N1qlQuery query, String bucket, String password,
+    private GenericQueryRequest createN1qlRequest(final N1qlQuery query, String bucket, String username, String password,
             InetAddress targetNode) {
         String rawQuery = query.n1ql().toString();
         rawQuery = rawQuery.replaceAll(
@@ -504,9 +533,9 @@ public class N1qlQueryExecutor {
           "`" + bucket + "`"
         );
         if (targetNode != null) {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, password, targetNode);
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, targetNode);
         } else {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, password);
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password);
         }
     }
 

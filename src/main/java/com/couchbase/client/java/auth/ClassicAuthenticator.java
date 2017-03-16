@@ -31,7 +31,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @since 2.3
  */
 @InterfaceStability.Committed
-@InterfaceAudience.Private
+@InterfaceAudience.Public
 public class ClassicAuthenticator implements Authenticator {
 
     private Credential clusterManagementCredential = null;

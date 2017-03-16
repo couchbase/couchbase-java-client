@@ -21,6 +21,7 @@ import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.auth.Authenticator;
+import com.couchbase.client.java.auth.ClassicAuthenticator;
 import com.couchbase.client.java.auth.CredentialContext;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.document.Document;
@@ -62,9 +63,9 @@ public interface AsyncCluster {
 
     /**
      * Opens the bucket with the given name using the password from the {@link Authenticator} that was last
-     * {@link #authenticate(Authenticator) set} (in the {@link CredentialContext#BUCKET_KV BUCKET_KV context}).
+     * {@link #authenticate(Authenticator) set}
      *
-     * If no credential can be found for the bucket in the authenticator, the old behavior of defaulting to an empty
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior of defaulting to an empty
      * password is used.
      *
      * The {@link Observable} can error under the following conditions:
@@ -78,6 +79,25 @@ public interface AsyncCluster {
      * @return the opened bucket if successful.
      */
     Observable<AsyncBucket> openBucket(String name);
+
+    /**
+     * Opens the bucket with the given name using the password from the {@link Authenticator} that was last
+     * {@link #authenticate(Authenticator) set}
+     *
+     * If no credential context can be found for the bucket when using {@link ClassicAuthenticator} , the old behavior of defaulting to an empty
+     * password is used.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     *  - com.couchbase.client.core.CouchbaseException: If the bucket could not be opened (see logs and nested stack
+     *    trace for more details why it failed).
+     *  - com.couchbase.client.core.BackpressureException: If the incoming request rate is too high to be processed.
+     *  - {@link AuthenticatorException}: If more than one credentials was returned by the Authenticator for this bucket.
+     *
+     * @param name the name of the bucket.
+     * @return the opened bucket if successful.
+     */
+    Observable<AsyncBucket> openBucket(String name, List<Transcoder<? extends Document, ?>> transcoders);
 
     /**
      * Opens the bucket with the given name and password.

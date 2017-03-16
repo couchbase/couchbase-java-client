@@ -36,11 +36,13 @@ public class AnalyticsQueryExecutor {
 
     private final ClusterFacade core;
     private final String bucket;
+    private final String username;
     private final String password;
 
-    public AnalyticsQueryExecutor(ClusterFacade core, String bucket, String password) {
+    public AnalyticsQueryExecutor(ClusterFacade core, String bucket, String username, String password) {
         this.core = core;
         this.bucket = bucket;
+        this.username = username;
         this.password = password;
     }
 
@@ -48,7 +50,7 @@ public class AnalyticsQueryExecutor {
         return Observable.defer(new Func0<Observable<GenericAnalyticsResponse>>() {
             @Override
             public Observable<GenericAnalyticsResponse> call() {
-                return core.send(GenericAnalyticsRequest.jsonQuery(query.query().toString(), bucket, password));
+                return core.send(GenericAnalyticsRequest.jsonQuery(query.query().toString(), bucket, username, password));
             }
         }).flatMap(new Func1<GenericAnalyticsResponse, Observable<AsyncAnalyticsQueryResult>>() {
             @Override

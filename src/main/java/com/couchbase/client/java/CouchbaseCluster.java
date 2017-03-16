@@ -15,6 +15,7 @@
  */
 package com.couchbase.client.java;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -248,13 +249,13 @@ public class CouchbaseCluster implements Cluster {
     @Override
     public Bucket openBucket() {
         //skip the openBucket(String) that checks the authenticator, default to empty password.
-        return openBucket(CouchbaseAsyncCluster.DEFAULT_BUCKET, null);
+        return openBucket(CouchbaseAsyncCluster.DEFAULT_BUCKET, null, null);
     }
 
     @Override
     public Bucket openBucket(long timeout, TimeUnit timeUnit) {
         //skip the openBucket(String) that checks the authenticator, default to empty password.
-        return openBucket(CouchbaseAsyncCluster.DEFAULT_BUCKET, null, timeout, timeUnit);
+        return openBucket(CouchbaseAsyncCluster.DEFAULT_BUCKET, null, null, timeout, timeUnit);
     }
 
     @Override
@@ -264,6 +265,25 @@ public class CouchbaseCluster implements Cluster {
 
     @Override
     public Bucket openBucket(String name, long timeout, TimeUnit timeUnit) {
+        return openBucket(name, new ArrayList<Transcoder<? extends Document, ?>>(), timeout, timeUnit);
+    }
+
+    @Override
+    public Bucket openBucket(String name, List<Transcoder<? extends Document, ?>> transcoders) {
+        return openBucket(name, environment.connectTimeout(), TIMEOUT_UNIT);
+    }
+
+    @Override
+    public Bucket openBucket(final String name, List<Transcoder<? extends Document, ?>> transcoders, long timeout, TimeUnit timeUnit) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Bucket name is not allowed to be null or empty.");
+        }
+
+        Bucket cachedBucket = getCachedBucket(name);
+        if (cachedBucket != null) {
+            return cachedBucket;
+        }
+
         Credential cred = new Credential(name, null); //the old default
         try {
             cred = couchbaseAsyncCluster.getSingleCredential(CredentialContext.BUCKET_KV, name);
@@ -274,8 +294,21 @@ public class CouchbaseCluster implements Cluster {
             }
             //otherwise, the 0 credentials found case reverts back to old behavior of a null password
             //which will get interpreted as empty string in openBucket(String, String, List) below.
+            //this would not impact passwordAuthenticator as there is only one credential
         }
-        return openBucket(cred.login(), cred.password(), timeout, timeUnit);
+        final Credential userCred = cred;
+
+        return Blocking.blockForSingle(couchbaseAsyncCluster
+                .openBucket(name, transcoders)
+                .map(new Func1<AsyncBucket, Bucket>() {
+                    @Override
+                    public Bucket call(AsyncBucket asyncBucket) {
+                        CouchbaseBucket bucket = new CouchbaseBucket(asyncBucket, environment, core(), name,
+                                userCred.login(), userCred.password());
+                        bucketCache.put(name, bucket);
+                        return bucket;
+                    }
+                }).single(), timeout, timeUnit);
     }
 
     @Override
@@ -308,15 +341,16 @@ public class CouchbaseCluster implements Cluster {
         }
 
         return Blocking.blockForSingle(couchbaseAsyncCluster
-            .openBucket(name, password, transcoders)
-            .map(new Func1<AsyncBucket, Bucket>() {
-                @Override
-                public Bucket call(AsyncBucket asyncBucket) {
-                    CouchbaseBucket bucket = new CouchbaseBucket(asyncBucket, environment, core(), name, password);
-                    bucketCache.put(name, bucket);
-                    return bucket;
-                }
-            }).single(), timeout, timeUnit);
+                .openBucket(name, password, transcoders)
+                .map(new Func1<AsyncBucket, Bucket>() {
+                    @Override
+                    public Bucket call(AsyncBucket asyncBucket) {
+                        CouchbaseBucket bucket = new CouchbaseBucket(asyncBucket, environment, core(), name, name, password);
+                        bucketCache.put(name, bucket);
+                        return bucket;
+                    }
+                }).single(), timeout, timeUnit);
+
     }
 
     /**
@@ -426,7 +460,7 @@ public class CouchbaseCluster implements Cluster {
         return Blocking.blockForSingle(
                 couchbaseAsyncCluster
                         .query(query)
-                        .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC),
-                timeout, timeUnit);
+                        .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC)
+                        .single(), timeout, timeUnit);
     }
 }

@@ -500,6 +500,6 @@ public class ViewQueryTest {
                         });
             }
         });
-        return new CouchbaseBucket(spyBucket, DefaultCouchbaseEnvironment.create(), null, "", "");
+        return new CouchbaseBucket(spyBucket, DefaultCouchbaseEnvironment.create(), null, "", "", "");
     }
 }

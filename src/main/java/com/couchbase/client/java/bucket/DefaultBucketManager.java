@@ -31,15 +31,20 @@ public class DefaultBucketManager implements BucketManager {
     private final AsyncBucketManager asyncBucketManager;
     private final long timeout;
 
-    DefaultBucketManager(final CouchbaseEnvironment environment, final String bucket, final String password,
+    DefaultBucketManager(final CouchbaseEnvironment environment, final String bucket, final String username, final String password,
         final ClusterFacade core) {
-        asyncBucketManager = DefaultAsyncBucketManager.create(bucket, password, core);
+        asyncBucketManager = DefaultAsyncBucketManager.create(bucket, username, password, core);
         this.timeout = environment.managementTimeout();
     }
 
     public static DefaultBucketManager create(final CouchbaseEnvironment environment, final String bucket,
+                                              final String password, final ClusterFacade core) {
+        return new DefaultBucketManager(environment, bucket, bucket, password, core);
+    }
+
+    public static DefaultBucketManager create(final CouchbaseEnvironment environment, final String bucket, final String username,
         final String password, final ClusterFacade core) {
-        return new DefaultBucketManager(environment, bucket, password, core);
+        return new DefaultBucketManager(environment, bucket, username, password, core);
     }
 
     @Override

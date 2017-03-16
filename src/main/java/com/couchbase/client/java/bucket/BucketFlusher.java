@@ -78,11 +78,24 @@ public class BucketFlusher {
      * @return an observable which is completed once the flush process is done.
      */
     public static Observable<Boolean> flush(final ClusterFacade core, final String bucket, final String password) {
+        return flush(core, bucket, bucket, password);
+    }
+
+    /**
+     * Flush the bucket and make sure flush is complete before completing the observable.
+     *
+     * @param core the core reference.
+     * @param bucket the bucket to flush.
+     * @param username the user authorized for the bucket.
+     * @param password the password of the user.
+     * @return an observable which is completed once the flush process is done.
+     */
+    public static Observable<Boolean> flush(final ClusterFacade core, final String bucket, final String username, final String password) {
        return createMarkerDocuments(core, bucket)
            .flatMap(new Func1<List<String>, Observable<Boolean>>() {
                @Override
                public Observable<Boolean> call(List<String> strings) {
-                   return initiateFlush(core, bucket, password);
+                   return initiateFlush(core, bucket, username, password);
                }
            })
            .flatMap(new Func1<Boolean, Observable<Boolean>>() {
@@ -134,12 +147,13 @@ public class BucketFlusher {
      *
      * @param core the core reference.
      * @param bucket the bucket to flush.
-     * @param password the password of the bucket.
+     * @param username the user authorized for bucket access
+     * @param password the password of the user.
      * @return an observable indicating if done (true) or polling needs to happen (false).
      */
-    private static Observable<Boolean> initiateFlush(final ClusterFacade core, final String bucket, final String password) {
+    private static Observable<Boolean> initiateFlush(final ClusterFacade core, final String bucket, final String username, final String password) {
         return core
-            .<FlushResponse>send(new FlushRequest(bucket, password))
+            .<FlushResponse>send(new FlushRequest(bucket, username, password))
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .map(new Func1<FlushResponse, Boolean>() {
                 @Override

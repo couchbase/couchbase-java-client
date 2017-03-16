@@ -38,10 +38,7 @@ import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.OpenBucketResponse;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
 import com.couchbase.client.core.utils.ConnectionString;
-import com.couchbase.client.java.auth.Authenticator;
-import com.couchbase.client.java.auth.Credential;
-import com.couchbase.client.java.auth.CredentialContext;
-import com.couchbase.client.java.auth.ClassicAuthenticator;
+import com.couchbase.client.java.auth.*;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
 import com.couchbase.client.java.cluster.DefaultAsyncClusterManager;
 import com.couchbase.client.java.document.Document;
@@ -50,6 +47,7 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.error.MixedAuthenticationException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.transcoder.Transcoder;
@@ -265,6 +263,9 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     CouchbaseAsyncCluster(final CouchbaseEnvironment environment,
         final ConnectionString connectionString, final boolean sharedEnvironment) {
         this.sharedEnvironment = sharedEnvironment;
+        if(connectionString.username() != null && !connectionString.username().equals("")) {
+            this.authenticator = new PasswordAuthenticator(connectionString.username(), "");
+        }
         core = new CouchbaseCore(environment);
         SeedNodesRequest request = new SeedNodesRequest(
             assembleSeedNodes(connectionString, environment)
@@ -273,7 +274,6 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         this.environment = environment;
         this.connectionString = connectionString;
         this.bucketCache = new ConcurrentHashMap<String, AsyncBucket>();
-        this.authenticator = new ClassicAuthenticator();
     }
 
     /**
@@ -351,11 +351,16 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     @Override
     public Observable<AsyncBucket> openBucket() {
         //skip the openBucket(String) that checks the authenticator, default to empty password.
-        return openBucket(DEFAULT_BUCKET, null);
+        return openBucket(DEFAULT_BUCKET, null, null);
     }
 
     @Override
     public Observable<AsyncBucket> openBucket(final String name) {
+        return openBucket(name, new ArrayList<Transcoder<? extends Document, ?>>());
+    }
+
+    @Override
+    public Observable<AsyncBucket> openBucket(final String name, final List<Transcoder<? extends Document, ?>> transcoders) {
         Credential cred = new Credential(name, null);
         try {
             cred = getSingleCredential(CredentialContext.BUCKET_KV, name);
@@ -366,9 +371,9 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             }
             //otherwise, the 0 credentials found case reverts back to old behavior of a null password
             //which will get interpreted as empty string in openBucket(String, String, List) below.
+            //this would not impact passwordAuthenticator as there is only one credential
         }
-
-        return openBucket(cred.login(), cred.password());
+        return openBucketInternal(name, cred.login(), cred.password(), null);
     }
 
     @Override
@@ -378,10 +383,19 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
     @Override
     public Observable<AsyncBucket> openBucket(final String name, final String password,
-        final List<Transcoder<? extends Document, ?>> transcoders) {
+                                              final List<Transcoder<? extends Document, ?>> transcoders) {
+        if (this.authenticator instanceof PasswordAuthenticator) {
+            return Observable.error(new MixedAuthenticationException("Mixed mode authentication not allowed, use Bucket credentials or User credentials (rbac)"));
+        }
+
+        return openBucketInternal(name, name, password, transcoders);
+    }
+
+    private Observable<AsyncBucket> openBucketInternal(final String name, final String username, final String password,
+                                                       final List<Transcoder<? extends Document, ?>> transcoders) {
         if (name == null || name.isEmpty()) {
             return Observable.error(
-                new IllegalArgumentException("Bucket name is not allowed to be null or empty.")
+                    new IllegalArgumentException("Bucket name is not allowed to be null or empty.")
             );
         }
 
@@ -392,27 +406,24 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
         final String pass = password == null ? "" : password;
         final List<Transcoder<? extends Document, ?>> trans = transcoders == null
-            ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
+                ? new ArrayList<Transcoder<? extends Document, ?>>() : transcoders;
 
         return Observable.defer(new Func0<Observable<OpenBucketResponse>>() {
-                @Override
-                public Observable<OpenBucketResponse> call() {
-                    return core.send(new OpenBucketRequest(name, pass));
+            @Override
+            public Observable<OpenBucketResponse> call() {
+                return core.send(new OpenBucketRequest(name, username, pass));
+            }
+        }).map(new Func1<CouchbaseResponse, AsyncBucket>() {
+            @Override
+            public AsyncBucket call(CouchbaseResponse response) {
+                if (response.status() != ResponseStatus.SUCCESS) {
+                    throw new CouchbaseException("Could not open bucket.");
                 }
-            })
-            .map(new Func1<CouchbaseResponse, AsyncBucket>() {
-                @Override
-                public AsyncBucket call(CouchbaseResponse response) {
-                    if (response.status() != ResponseStatus.SUCCESS) {
-                        throw new CouchbaseException("Could not open bucket.");
-                    }
-
-                    AsyncBucket bucket = new CouchbaseAsyncBucket(core, environment, name, pass, trans);
-                    bucketCache.put(name, bucket);
-                    return bucket;
-                }
-            })
-            .onErrorResumeNext(new OpenBucketErrorHandler(name));
+                AsyncBucket bucket = new CouchbaseAsyncBucket(core, environment, name, username, pass, trans);
+                bucketCache.put(name, bucket);
+                return bucket;
+            }
+        }).onErrorResumeNext(new OpenBucketErrorHandler(name));
     }
 
     /**
@@ -504,6 +515,19 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             LOGGER.trace("Authenticator was set to null, ignored");
             return this;
         }
+        if (this.authenticator != null  && this.authenticator.getClass() != auth.getClass()) {
+            throw new MixedAuthenticationException("Mixed mode authentication not allowed, use either Classic Authenticator " +
+                    "or Password Authenticator");
+        }
+
+        if (this.authenticator instanceof PasswordAuthenticator) {
+            PasswordAuthenticator pa = (PasswordAuthenticator)this.authenticator;
+            PasswordAuthenticator newPa = (PasswordAuthenticator)auth;
+            if (newPa.username() == null) {
+                auth = new PasswordAuthenticator(pa.username(), newPa.password());
+            }
+        }
+
         this.authenticator = auth;
         if (!bucketCache.isEmpty()) {
             LOGGER.warn("Authenticator was switched while {} buckets are still open. Operations on these buckets" +
