@@ -273,6 +273,110 @@ public interface ClusterManager {
     Boolean removeBucket(String name, long timeout, TimeUnit timeUnit);
 
     /**
+     * Creates/Updates a user with its {@link UserSettings} with default management timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user to be updated
+     * @param settings the user settings that should be applied.
+     * @return true if succeeded.
+     */
+    @InterfaceStability.Experimental
+    Boolean upsertUser(String username, UserSettings settings);
+
+    /**
+     * Creates/Updates a user with its {@link UserSettings} with custom timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user to be updated.
+     * @param settings the user settings that should be applied.
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return true if succeeded.
+     */
+    @InterfaceStability.Experimental
+    Boolean upsertUser(String username, UserSettings settings, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Removes a user identified by user name with the default management timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user to be deleted.
+     * @return true if the removal was successful, false otherwise.
+     */
+    @InterfaceStability.Experimental
+    Boolean removeUser(String username);
+
+    /**
+     * Removes a user identified by user name with a custom timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user to be deleted.
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return true if the removal was successful, false otherwise.
+     */
+    @InterfaceStability.Experimental
+    Boolean removeUser(String username, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Get all users in Couchbase with default management timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @return users the list of users.
+     */
+    @InterfaceStability.Experimental
+    List<User> getUsers();
+
+    /**
+     * Get all users in Couchbase with a custom timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @param timeout the custom timeout.
+     * @param timeUnit the time unit for the custom timeout.
+     * @return users the list of users.
+     */
+    @InterfaceStability.Experimental
+    List<User> getUsers(long timeout, TimeUnit timeUnit);
+
+    /**
      * Returns a new {@link ClusterApiClient} to prepare and perform REST API synchronous requests on this cluster.
      * The requests have a default timeout corresponding to the configured {@link CouchbaseEnvironment#managementTimeout()}.
      *

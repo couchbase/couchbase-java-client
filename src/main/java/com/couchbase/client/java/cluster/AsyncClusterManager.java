@@ -134,6 +134,52 @@ public interface AsyncClusterManager {
     Observable<Boolean> removeBucket(String name);
 
     /**
+     * Creates/Updates a user with its {@link UserSettings}.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user that should be updated.
+     * @param settings the user settings that should be applied.
+     * @return true if the update was successful, false otherwise.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> upsertUser(String username, UserSettings settings);
+
+    /**
+     * Removes a user identified by user name.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     *
+     * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
+     * response is returned there is no guarantee that the operation has finished on the server itself.
+     *
+     * @param username the user name of the user that should be updated.
+     * @return true if the removal was successful, false otherwise.
+     */
+    @InterfaceStability.Experimental
+    Observable<Boolean> removeUser(String username);
+
+    /**
+     * Get all users in Couchbase Server.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @return users list of users.
+     */
+    @InterfaceStability.Experimental
+    Observable<User> getUsers();
+
+    /**
      * @return an {@link Observable} emitting a single new {@link AsyncClusterApiClient} to prepare and perform
      * REST API asynchronous requests on this cluster.
      */
