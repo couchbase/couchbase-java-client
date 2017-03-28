@@ -59,10 +59,12 @@ public class BucketAndClusterManagerUserTest {
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
-        cluster.disconnect();
-        ctx.clusterManager().removeUser(username);
-        ctx.destroyBucketAndDisconnect();
+    public static void cleanup() throws Exception {
+        if (ctx != null) {
+            cluster.disconnect();
+            ctx.clusterManager().removeUser(username);
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

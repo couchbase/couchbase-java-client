@@ -77,10 +77,10 @@ public class SubdocumentExtendedAttributesTest {
     }
 
     @AfterClass
-    public static void disconnect() throws InterruptedException {
-        if (ctx == null) return;
-        ctx.destroyBucketAndDisconnect();
-        ctx.disconnect();
+    public static void cleanup() {
+        if (ctx != null) {
+            ctx.disconnect();
+        }
     }
 
     @Test
