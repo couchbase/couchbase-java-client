@@ -87,7 +87,6 @@ public interface AsyncBucketManager {
      * The {@link Observable} can error under the following conditions:
      *
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
-     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param development if the {@link DesignDocument}s should be loaded from development or production.
      * @return zero to N invocations containing published {@link DesignDocument}s.
@@ -226,6 +225,8 @@ public interface AsyncBucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @return the published {@link DesignDocument} on success.
@@ -240,7 +241,8 @@ public interface AsyncBucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists and override is set to false.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
-     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @param overwrite if an existing {@link DesignDocument} should be overridden.

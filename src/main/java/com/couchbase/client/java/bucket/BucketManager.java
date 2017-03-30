@@ -168,12 +168,11 @@ public interface BucketManager {
     /**
      * Loads a published {@link DesignDocument} by its name with the default management timeout.
      *
-     * If the {@link DesignDocument} is not found, null is returned.
-     *
      * This method throws:
      *
      * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @return null if the document not found or a {@link DesignDocument}.
@@ -183,12 +182,11 @@ public interface BucketManager {
     /**
      * Loads a published {@link DesignDocument} by its name with the a custom timeout.
      *
-     * If the {@link DesignDocument} is not found, null is returned.
-     *
      * This method throws:
      *
      * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @param timeout the custom timeout.
@@ -201,12 +199,11 @@ public interface BucketManager {
      * Loads a {@link DesignDocument} by its name from either development or production with the default management
      * timeout.
      *
-     * If the {@link DesignDocument} is not found, null is returned.
-     *
      * This method throws:
      *
      * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
      * @param development if {@link DesignDocument} should be loaded from development or from production.
@@ -457,6 +454,8 @@ public interface BucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @return the published {@link DesignDocument} on success.
@@ -475,6 +474,8 @@ public interface BucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @param timeout the custom timeout.
@@ -492,6 +493,8 @@ public interface BucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists and override is set to false.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @param overwrite if an existing {@link DesignDocument} should be overridden.
@@ -508,6 +511,8 @@ public interface BucketManager {
      * - com.couchbase.client.java.error.DesignDocumentAlreadyExistsException: If the {@link DesignDocument} already
      *   exists and override is set to false.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be parsed.
+     * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found
+     *   in development.
      *
      * @param name the name of the  {@link DesignDocument} to publish.
      * @param overwrite if an existing {@link DesignDocument} should be overridden.
