@@ -33,6 +33,7 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
     private final List<N1qlQueryRow> allRows;
     private final Object signature;
     private final N1qlMetrics info;
+    private final JsonObject profileInfo;
     private final List<JsonObject> errors;
     private final String requestId;
     private final String clientContextId;
@@ -44,15 +45,16 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
      * @param rows the list of rows.
      * @param signature the signature for rows.
      * @param info the metrics.
+     * @param profileInfo the profile information
      * @param errors the list of errors and warnings.
      * @param finalStatus the definitive (but potentially delayed) status of the query.
      * @param finalSuccess the definitive (but potentially delayed) success of the query.
      * @param parseSuccess the intermediate result of the query
      */
     public DefaultN1qlQueryResult(List<AsyncN1qlQueryRow> rows, Object signature,
-            N1qlMetrics info, List<JsonObject> errors,
-            String finalStatus, Boolean finalSuccess, boolean parseSuccess,
-            String requestId, String clientContextId) {
+                                  N1qlMetrics info, List<JsonObject> errors, JsonObject profileInfo,
+                                  String finalStatus, Boolean finalSuccess, boolean parseSuccess,
+                                  String requestId, String clientContextId) {
 
         this.requestId = requestId;
         this.clientContextId = clientContextId;
@@ -66,6 +68,7 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
         this.signature = signature;
         this.errors = errors;
         this.info = info;
+        this.profileInfo = profileInfo;
     }
 
     @Override
@@ -86,6 +89,11 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
     @Override
     public N1qlMetrics info() {
         return this.info;
+    }
+
+    @Override
+    public JsonObject profileInfo() {
+        return this.profileInfo;
     }
 
     @Override
@@ -126,15 +134,16 @@ public class DefaultN1qlQueryResult implements N1qlQueryResult {
     @Override
     public String toString() {
         return "N1qlQueryResult{" +
-            "status='" + status + '\'' +
-            ", finalSuccess=" + finalSuccess +
-            ", parseSuccess=" + parseSuccess +
-            ", allRows=" + allRows +
-            ", signature=" + signature +
-            ", info=" + info +
-            ", errors=" + errors +
-            ", requestId='" + requestId + '\'' +
-            ", clientContextId='" + clientContextId + '\'' +
-            '}';
+                "status='" + status + '\'' +
+                ", finalSuccess=" + finalSuccess +
+                ", parseSuccess=" + parseSuccess +
+                ", allRows=" + allRows +
+                ", signature=" + signature +
+                ", info=" + info +
+                ", profileInfo=" + profileInfo +
+                ", errors=" + errors +
+                ", requestId='" + requestId + '\'' +
+                ", clientContextId='" + clientContextId + '\'' +
+                '}';
     }
 }

@@ -35,17 +35,19 @@ public class DefaultAsyncN1qlQueryResult implements AsyncN1qlQueryResult {
     private final Observable<N1qlMetrics> info;
     private final boolean parsingSuccess;
     private final Observable<JsonObject> errors;
+    private final Observable<JsonObject> profileInfo;
     private final Observable<String> finalStatus;
     private final String requestId;
     private final String clientContextId;
 
     public DefaultAsyncN1qlQueryResult(Observable<AsyncN1qlQueryRow> rows, Observable<Object> signature,
-            Observable<N1qlMetrics> info, Observable<JsonObject> errors, Observable<String> finalStatus,
-            boolean parsingSuccess, String requestId, String clientContextId) {
+                                       Observable<N1qlMetrics> info, Observable<JsonObject> errors, Observable<JsonObject> profileInfo,
+                                       Observable<String> finalStatus, boolean parsingSuccess, String requestId, String clientContextId) {
         this.rows = rows;
         this.signature = signature;
         this.info = info;
         this.errors = errors;
+        this.profileInfo = profileInfo;
         this.finalStatus = finalStatus;
         this.parsingSuccess = parsingSuccess;
         this.requestId = requestId;
@@ -65,6 +67,11 @@ public class DefaultAsyncN1qlQueryResult implements AsyncN1qlQueryResult {
     @Override
     public Observable<N1qlMetrics> info() {
         return info;
+    }
+
+    @Override
+    public Observable<JsonObject> profileInfo() {
+        return profileInfo;
     }
 
     @Override

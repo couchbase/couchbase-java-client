@@ -39,11 +39,10 @@ import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Func1;
-import rx.functions.Func6;
+import rx.functions.Func7;
 
 /**
  * Integration tests of the N1QL Query features.
@@ -122,13 +121,14 @@ public class N1qlPreparedTest {
                                 aqr.signature().singleOrDefault(JsonObject.empty()),
                                 aqr.info().singleOrDefault(N1qlMetrics.EMPTY_METRICS),
                                 aqr.errors().toList(),
+                                aqr.profileInfo().singleOrDefault(JsonObject.empty()),
                                 aqr.status(),
                                 aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
-                                new Func6<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, String, Boolean, N1qlQueryResult>() {
+                                new Func7<List<AsyncN1qlQueryRow>, Object, N1qlMetrics, List<JsonObject>, JsonObject, String, Boolean, N1qlQueryResult>() {
                                     @Override
                                     public N1qlQueryResult call(List<AsyncN1qlQueryRow> rows, Object signature,
-                                                                N1qlMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
-                                        return new DefaultN1qlQueryResult(rows, signature, info, errors, finalStatus, finalSuccess,
+                                                                N1qlMetrics info, List<JsonObject> errors, JsonObject profileInfo, String finalStatus, Boolean finalSuccess) {
+                                        return new DefaultN1qlQueryResult(rows, signature, info, errors,  profileInfo, finalStatus, finalSuccess,
                                                 parseSuccess, requestId, clientContextId);
                                     }
                                 });

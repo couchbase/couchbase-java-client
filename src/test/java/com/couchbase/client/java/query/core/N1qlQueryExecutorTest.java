@@ -155,6 +155,7 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
+                Observable.<JsonObject>empty(),
                 Observable.just("fatal"),
                 false, "req", "");
 
@@ -194,12 +195,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
+                Observable.<JsonObject>empty(),
                 Observable.just("fatal"),
                 false, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
+                Observable.<JsonObject>empty(),
                 Observable.<JsonObject>empty(),
                 Observable.just("success"),
                 true, "req", ""));
@@ -244,12 +247,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", 4050).put("msg", "notRelevant")),
+                Observable.<JsonObject>empty(),
                 Observable.just("fatal"),
                 false, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
+                Observable.<JsonObject>empty(),
                 Observable.<JsonObject>empty(),
                 Observable.just("completed"),
                 true, "req", ""));
@@ -299,12 +304,14 @@ public class N1qlQueryExecutorTest {
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
                 Observable.just(JsonObject.create().put("code", code).put("msg", msg)),
+                Observable.<JsonObject>empty(),
                 Observable.just("fatal"),
                 false, "req", ""));
         Observable<DefaultAsyncN1qlQueryResult> resultOk = Observable.just(new DefaultAsyncN1qlQueryResult(
                 Observable.<AsyncN1qlQueryRow>empty(),
                 Observable.empty(),
                 Observable.<N1qlMetrics>empty(),
+                Observable.<JsonObject>empty(),
                 Observable.<JsonObject>empty(),
                 Observable.just("success"),
                 true, "req", ""));

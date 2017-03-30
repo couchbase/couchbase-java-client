@@ -48,6 +48,11 @@ public interface AsyncN1qlQueryResult {
     Observable<N1qlMetrics> info();
 
     /**
+     * @return an async single item describing some profiling info about the execution of the query.
+     */
+    Observable<JsonObject> profileInfo();
+
+    /**
      * Immediately denotes initial parsing success of the query.
      *
      * As rows are processed, it could be that a late failure occurs.

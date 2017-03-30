@@ -58,6 +58,11 @@ public interface N1qlQueryResult extends Iterable<N1qlQueryRow> {
     N1qlMetrics info();
 
     /**
+     * @return an object describing some profiling info about the execution of the query.
+     */
+    JsonObject profileInfo();
+
+    /**
      * @return true if the query could be parsed, false if it short-circuited due to syntax/fatal error.
      */
     boolean parseSuccess();
