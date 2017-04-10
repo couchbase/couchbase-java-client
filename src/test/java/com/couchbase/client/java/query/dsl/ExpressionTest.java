@@ -15,17 +15,18 @@
  */
 package com.couchbase.client.java.query.dsl;
 
+import static com.couchbase.client.java.query.dsl.Expression.i;
+import static com.couchbase.client.java.query.dsl.Expression.par;
+import static com.couchbase.client.java.query.dsl.Expression.s;
+import static com.couchbase.client.java.query.dsl.Expression.x;
+import static com.couchbase.client.java.query.dsl.functions.MetaFunctions.meta;
+import static org.junit.Assert.assertEquals;
+
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Select;
 import com.couchbase.client.java.query.Statement;
 import org.junit.Test;
-
-import static com.couchbase.client.java.query.dsl.Expression.i;
-import static com.couchbase.client.java.query.dsl.Expression.par;
-import static com.couchbase.client.java.query.dsl.Expression.s;
-import static com.couchbase.client.java.query.dsl.Expression.x;
-import static org.junit.Assert.assertEquals;
 
 public class ExpressionTest {
 
@@ -205,4 +206,14 @@ public class ExpressionTest {
         assertEquals("( foo = bar )", par(base).toString());
     }
 
+    @Test
+    public void shouldAcceptGetterExpressions() {
+        Expression strGetter = x("foo").get("bar");
+        Expression expGetter = x("foo").get(x("bar"));
+        Expression metGetter = meta("foo").get("bar");
+
+        assertEquals("foo.bar", strGetter.toString());
+        assertEquals("foo.bar", expGetter.toString());
+        assertEquals("META(foo).bar", metGetter.toString());
+    }
 }

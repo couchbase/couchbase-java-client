@@ -1820,6 +1820,26 @@ public class Expression {
         return divide(x(expression));
     }
 
+    /**
+     * Get attribute of an object using the given string as attribute name.
+     *
+     * @param expression The attribute name
+     * @return the getter expression
+     */
+    public Expression get(String expression) {
+        return new Expression(path(toString(), x(expression)));
+    }
+
+    /**
+     * Get attribute of an object using the given expression as attribute name.
+     *
+     * @param expression The attribute name
+     * @return the getter expression
+     */
+    public Expression get(Expression expression) {
+        return get(expression.toString());
+    }
+
     //===== HELPERS =====
 
     /**
