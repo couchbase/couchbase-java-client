@@ -22,21 +22,21 @@ import com.couchbase.client.java.query.Statement;
 
 @InterfaceStability.Experimental
 @InterfaceAudience.Private
-public class UnionElement implements Element {
+public class ExceptElement implements Element {
     private final boolean all;
     private final String with;
 
-    public UnionElement(final boolean all) {
+    public ExceptElement(final boolean all) {
         this.all = all;
         this.with = null;
     }
 
-    public UnionElement(final boolean all, final String with) {
+    public ExceptElement(final boolean all, final String with) {
         this.all = all;
         this.with = with;
     }
 
-    public UnionElement(final boolean all, final Statement with) {
+    public ExceptElement(final boolean all, final Statement with) {
         this.all = all;
         this.with = with.toString();
     }
@@ -45,7 +45,7 @@ public class UnionElement implements Element {
     public String export() {
         final StringBuilder sb = new StringBuilder();
 
-        sb.append("UNION");
+        sb.append("EXCEPT");
 
         if (all) {
             sb.append(" ALL");
@@ -57,5 +57,6 @@ public class UnionElement implements Element {
         }
 
         return sb.toString();
+
     }
 }
