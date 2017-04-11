@@ -53,6 +53,8 @@ public class DefaultBucketInfo implements BucketInfo {
         String type = raw.getString("bucketType");
         if (type.equals("membase")) {
             return BucketType.COUCHBASE;
+        } else if (type.equals("ephemeral")) {
+            return BucketType.EPHEMERAL;
         } else {
             return BucketType.MEMCACHED;
         }

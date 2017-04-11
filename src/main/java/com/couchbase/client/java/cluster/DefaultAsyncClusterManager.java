@@ -158,8 +158,16 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                             } else {
                                 ramQuota = bucket.getObject("quota").getInt("ram") / 1024 / 1024;
                             }
-                            BucketType bucketType = "membase".equalsIgnoreCase(bucket.getString("bucketType")) ?
-                                BucketType.COUCHBASE : BucketType.MEMCACHED;
+
+                            BucketType bucketType;
+                            String rawType = bucket.getString("bucketType");
+                            if ("membase".equalsIgnoreCase(rawType)) {
+                                bucketType = BucketType.COUCHBASE;
+                            } else if ("ephemeral".equalsIgnoreCase(rawType)) {
+                                bucketType = BucketType.EPHEMERAL;
+                            } else {
+                                bucketType = BucketType.MEMCACHED;
+                            }
 
                             settings.add(DefaultBucketSettings.builder()
                                     .name(bucket.getString("name"))
@@ -389,8 +397,19 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         actual.put("authType", "sasl");
         actual.put("saslPassword", settings.password());
         actual.put("replicaNumber", settings.replicas());
-        actual.put("proxyPort", settings.port());
-        actual.put("bucketType", settings.type() == BucketType.COUCHBASE ? "membase" : "memcached");
+        if (settings.port() > 0) {
+            actual.put("proxyPort", settings.port());
+        }
+
+        String bucketType;
+        switch(settings.type()) {
+            case COUCHBASE: bucketType = "membase"; break;
+            case MEMCACHED: bucketType = "memcached"; break;
+            case EPHEMERAL: bucketType = "ephemeral"; break;
+            default:
+                throw new UnsupportedOperationException("Could not convert bucket type " + settings.type());
+        }
+        actual.put("bucketType", bucketType);
         actual.put("flushEnabled", settings.enableFlush() ? "1" : "0");
         for (Map.Entry<String, Object> customSetting : customSettings.entrySet()) {
             if (actual.containsKey(customSetting.getKey()) || (!includeName && "name".equals(customSetting.getKey()))) {
