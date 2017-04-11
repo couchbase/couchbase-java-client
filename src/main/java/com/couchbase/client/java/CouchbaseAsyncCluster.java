@@ -536,6 +536,11 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         return this;
     }
 
+    @Override
+    public AsyncCluster authenticate(String username, String password) {
+        return authenticate(new PasswordAuthenticator(username, password));
+    }
+
     /**
      * Get the {@link Authenticator} currently used when credentials are needed for an
      * operation, but no explicit credentials are provided.

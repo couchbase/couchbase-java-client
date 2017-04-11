@@ -438,6 +438,12 @@ public class CouchbaseCluster implements Cluster {
         return this;
     }
 
+    @Override
+    public CouchbaseCluster authenticate(String username, String password) {
+        couchbaseAsyncCluster.authenticate(username, password);
+        return this;
+    }
+
     /**
      * Get the {@link Authenticator} currently used when credentials are needed for an
      * operation, but no explicit credentials are provided.

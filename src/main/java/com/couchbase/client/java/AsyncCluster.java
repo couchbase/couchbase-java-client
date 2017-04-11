@@ -207,4 +207,13 @@ public interface AsyncCluster {
      * @return this AsyncCluster instance for chaining.
      */
     AsyncCluster authenticate(Authenticator auth);
+
+    /**
+     * Shortcut method to directly authenticate with a username and a password.
+     *
+     * @param username the username to authenticate
+     * @param password the password for the username
+     * @return this Cluster instance for chaining.
+     */
+    AsyncCluster authenticate(String username, String password);
 }
