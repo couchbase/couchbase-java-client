@@ -15,6 +15,8 @@
  */
 package com.couchbase.client.java.util;
 
+import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.CouchbaseException;
@@ -41,6 +43,16 @@ import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.couchbase.client.java.util.features.Version;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import com.couchbase.mock.BucketConfiguration;
+import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.JsonUtils;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -80,10 +92,12 @@ public class CouchbaseTestContext {
     private final boolean isFlushEnabled;
     private final Repository repository;
     private final boolean rbacEnabled;
+    private final CouchbaseMock mock;
 
     private CouchbaseTestContext(Bucket bucket, String bucketPassword,
             BucketManager bucketManager, Cluster cluster, ClusterManager clusterManager, String seedNode,
-            String adminName, String adminPassword, CouchbaseEnvironment env, boolean isAdHoc, boolean isFlushEnabled, boolean rbacEnabled) {
+            String adminName, String adminPassword, CouchbaseEnvironment env, boolean isAdHoc, boolean isFlushEnabled,
+        boolean rbacEnabled, CouchbaseMock mock) {
         this.bucket = bucket;
         this.bucketName = bucket.name();
         this.bucketPassword = bucketPassword;
@@ -98,7 +112,9 @@ public class CouchbaseTestContext {
         this.isFlushEnabled = isFlushEnabled;
         this.repository = bucket.repository();
         this.rbacEnabled = rbacEnabled;
+        this.mock = mock;
     }
+
 
     /**
      * @return a {@link Builder} for a new {@link CouchbaseTestContext}.
@@ -149,6 +165,9 @@ public class CouchbaseTestContext {
         private String bucketPassword;
         private DefaultBucketSettings.Builder bucketSettingsBuilder;
         private boolean flushOnInit;
+        private CouchbaseMock couchbaseMock;
+        private Properties testProperties;
+
 
         public Builder() {
             seedNode = TestProperties.seedNode();
@@ -296,11 +315,46 @@ public class CouchbaseTestContext {
             return this;
         }
 
+        private void loadProperties() {
+            if (testProperties != null) {
+                return;
+            }
+            testProperties = new Properties();
+            try {
+                testProperties.load(getClass().getResourceAsStream("/mock.properties"));
+            } catch (Exception ex) {
+                //ignore
+            }
+        }
+
+        private boolean isMockEnabled() {
+            return Boolean.parseBoolean(testProperties.getProperty("mock.enabled", "false"));
+        }
+
         /**
          * Build the {@link CouchbaseTestContext}, triggering potential creation of a bucket, flush of a bucket, etc...
          * (see {@link #adhoc(boolean)}, {@link #flushOnInit(boolean)}, ...).
          */
         public CouchbaseTestContext build() {
+            if (createAdhocBucket) {
+                this.bucketName = AD_HOC + this.bucketName + System.nanoTime();
+            }
+
+            loadProperties();
+
+            if (isMockEnabled()) {
+                createMock();
+                int httpBootstrapPort = this.couchbaseMock.getHttpPort();
+                try {
+                    int carrierBootstrapPort = getCarrierPortInfo(httpBootstrapPort);
+                    envBuilder
+                            .bootstrapHttpDirectPort(httpBootstrapPort)
+                            .bootstrapCarrierDirectPort(carrierBootstrapPort)
+                            .connectTimeout(30000);
+                } catch (Exception ex) {
+                    throw new RuntimeException("Unable to get port info" + ex.getMessage(), ex);
+                }
+            }
             CouchbaseEnvironment env = envBuilder.build();
 
             Cluster cluster = CouchbaseCluster.create(env, seedNode);
@@ -311,6 +365,46 @@ public class CouchbaseTestContext {
                 authed = true;
             }
             return buildWithCluster(cluster, env, authed);
+        }
+
+        protected int getCarrierPortInfo(int httpPort) throws Exception {
+            URIBuilder builder = new URIBuilder();
+            builder.setScheme("http").setHost("localhost").setPort(httpPort).setPath("mock/get_mcports")
+                    .setParameter("bucket", this.bucketName);
+            HttpGet request = new HttpGet(builder.build());
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpResponse response = client.execute(request);
+            int status = response.getStatusLine().getStatusCode();
+            if (status < 200 || status > 300) {
+                throw new ClientProtocolException("Unexpected response status: " + status);
+            }
+            String rawBody = EntityUtils.toString(response.getEntity());
+            com.google.gson.JsonObject respObject = JsonUtils.GSON.fromJson(rawBody, com.google.gson.JsonObject.class);
+            com.google.gson.JsonArray portsArray = respObject.getAsJsonArray("payload");
+            return portsArray.get(0).getAsInt();
+        }
+
+        protected void createMock() {
+            int nodeCount = Integer.parseInt(testProperties.getProperty("mock.nodeCount", "1"));
+            int replicaCount = Integer.parseInt(testProperties.getProperty("mock.replicaCount", "1"));
+            String bucketType = testProperties.getProperty("mock.bucketType", "couchbase");
+
+            BucketConfiguration bucketConfiguration = new BucketConfiguration();
+            bucketConfiguration.numNodes = nodeCount;
+            bucketConfiguration.numReplicas = replicaCount;
+            bucketConfiguration.numVBuckets = 1024;
+            bucketConfiguration.name = this.bucketName;
+            bucketConfiguration.type =  bucketType.compareToIgnoreCase("couchbase") == 0 ? com.couchbase.mock.Bucket.BucketType.COUCHBASE: com.couchbase.mock.Bucket.BucketType.MEMCACHED;
+            bucketConfiguration.password = this.bucketPassword;
+            ArrayList<BucketConfiguration> configList = new ArrayList<BucketConfiguration>();
+            configList.add(bucketConfiguration);
+            try {
+                this.couchbaseMock = new CouchbaseMock(0, configList);
+                this.couchbaseMock.start();
+                this.couchbaseMock.waitForStartup();
+            } catch (Exception ex) {
+                throw new RuntimeException("Unable to initialize mock" + ex.getMessage(), ex);
+            }
         }
 
         /**
@@ -326,14 +420,17 @@ public class CouchbaseTestContext {
             this.bucketSettingsBuilder = bucketSettingsBuilder.name(this.bucketName)
                     .password(this.bucketPassword);
 
+            boolean existing = true;
             ClusterManager clusterManager = cluster.clusterManager(adminName, adminPassword);
 
-            boolean existing = clusterManager.hasBucket(bucketName);
-            if (!existing) {
-                if (createIfMissing) {
-                    clusterManager.insertBucket(bucketSettingsBuilder.build());
-                } else {
-                    throw new BucketDoesNotExistException("Bucket " + bucketName + " doesn't exist and bucket creation disabled (or a sample)");
+            if(!isMockEnabled()) {
+                existing = clusterManager.hasBucket(bucketName);
+                if (!existing) {
+                    if (createIfMissing) {
+                        clusterManager.insertBucket(bucketSettingsBuilder.build());
+                    } else {
+                        throw new BucketDoesNotExistException("Bucket " + bucketName + " doesn't exist and bucket creation disabled (or a sample)");
+                    }
                 }
             }
 
@@ -347,8 +444,7 @@ public class CouchbaseTestContext {
                 bucketManager.flush();
             }
 
-            return new CouchbaseTestContext(bucket, bucketPassword, bucketManager, cluster, clusterManager, seedNode,
-                    adminName, adminPassword, env, createAdhocBucket, isFlushEnabled, authed);
+            return new CouchbaseTestContext(bucket, bucketPassword, bucketManager, cluster, clusterManager, seedNode,                               adminName, adminPassword, env, createAdhocBucket, isFlushEnabled, authed, couchbaseMock);
         }
     }
 
@@ -396,6 +492,9 @@ public class CouchbaseTestContext {
     public void destroyBucketAndDisconnect() {
         destroyBucket();
         disconnect();
+        if (mock != null) {
+            this.mock.stop();
+        }
     }
 
     /**

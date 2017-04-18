@@ -37,6 +37,7 @@
         <assertj.version>1.7.1</assertj.version>
         <guavatest.version>19.0</guavatest.version>
         <core.apidocs>${project.build.directory}/coredocs</core.apidocs>
+        <couchbasemock.version>1.5.7</couchbasemock.version>
     </properties>
 
     <organization>
@@ -146,6 +147,11 @@
             <artifactId>guava-testlib</artifactId>
             <version>${guavatest.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.couchbase.mock</groupId>
+            <artifactId>CouchbaseMock</artifactId>
+            <version>${couchbasemock.version}</version>
         </dependency>
     </dependencies>
 
