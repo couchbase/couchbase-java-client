@@ -375,7 +375,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                     i++;
                                 }
                                 User user = new User(userJsonObj.getString("name"), userJsonObj.getString("id"),
-                                        userJsonObj.getString("type"), userRoles);
+                                        userJsonObj.getString("domain"), userRoles);
                                 users.add(user);
                             }
                             return Observable.from(users);
