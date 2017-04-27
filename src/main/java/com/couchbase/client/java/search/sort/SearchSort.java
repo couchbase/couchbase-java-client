@@ -78,8 +78,8 @@ public abstract class SearchSort {
      * @param locationLat latitude of the location.
      * @param field the field name.
      */
-    public static SearchSortGeo sortGeo(double locationLon, double locationLat, String field) {
-        return new SearchSortGeo(locationLon, locationLat, field);
+    public static SearchSortGeoDistance sortGeoDistance(double locationLon, double locationLat, String field) {
+        return new SearchSortGeoDistance(locationLon, locationLat, field);
     }
 
 }

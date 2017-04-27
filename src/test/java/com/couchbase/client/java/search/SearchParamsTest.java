@@ -16,9 +16,10 @@
 package com.couchbase.client.java.search;
 
 import static com.couchbase.client.java.search.sort.SearchSort.sortField;
-import static com.couchbase.client.java.search.sort.SearchSort.sortGeo;
+import static com.couchbase.client.java.search.sort.SearchSort.sortGeoDistance;
 import static com.couchbase.client.java.search.sort.SearchSort.sortId;
 import static com.couchbase.client.java.search.sort.SearchSort.sortScore;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
@@ -574,7 +575,7 @@ public class SearchParamsTest {
     @Test
     public void shouldInjectAdvancedGeoSort() {
         SearchQuery p = new SearchQuery(null, null)
-            .sort(sortGeo(1.0, 2.0, "fname")
+            .sort(sortGeoDistance(1.0, 2.0, "fname")
                 .unit("km").descending(true));
         JsonObject result = JsonObject.empty();
         p.injectParams(result);
