@@ -43,6 +43,7 @@ import com.couchbase.client.java.search.queries.AbstractFtsQuery;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
@@ -140,9 +141,9 @@ public class AsyncRawQueryExecutor {
      * @return an {@link Observable} of the N1QL response as a T.
      */
     public <T> Observable<T> n1qlToRawCustom(final N1qlQuery query, final Func1<TranscoderUtils.ByteBufToArray, T> deserializer) {
-        return deferAndWatch(new Func0<Observable<RawQueryResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<RawQueryResponse>>() {
             @Override
-            public Observable<RawQueryResponse> call() {
+            public Observable<RawQueryResponse> call(Subscriber s) {
                 RawQueryRequest request = RawQueryRequest.jsonQuery(query.n1ql().toString(), bucket, username, password);
                 return core.<RawQueryResponse>send(request);
             }

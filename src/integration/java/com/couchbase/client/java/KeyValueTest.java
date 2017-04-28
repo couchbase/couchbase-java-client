@@ -30,10 +30,15 @@ import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.util.ClusterDependentTest;
 import org.junit.Assume;
 import org.junit.Test;
+import rx.functions.Action0;
+import rx.functions.Action1;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -610,6 +615,66 @@ public class KeyValueTest extends ClusterDependentTest {
             loaded.content().getBigDecimal("value")
         );
         assertEquals(12345.678901234567, loaded.content().getDouble("value"), 0);
+    }
+
+    @Test
+    public void shouldNotSendTimedOutSyncOperations() {
+        String key = "TimedOutSync";
+        int incrementCount = 6000;
+        bucket().upsert(JsonLongDocument.create(key, 0L));
+        for (int i=0; i< incrementCount; i++) {
+            try {
+                bucket().counter(key, 1, 0, TimeUnit.SECONDS);
+            } catch(RuntimeException ex) {
+                //ignore
+            }
+        }
+        try {
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            //ignore
+        }
+        assert(bucket().get(key, JsonLongDocument.class).content() < incrementCount);
+    }
+
+    @Test
+    public void shouldNotSendTimedOutAsyncOperations() {
+        String key = "TimedOutAsync";
+        int incrementCount = 6000;
+        bucket().upsert(JsonLongDocument.create(key, 0L));
+        final CountDownLatch latch = new CountDownLatch(incrementCount);
+        for (int i=0; i< incrementCount; i++) {
+            try {
+                bucket().async().counter(key, 1)
+                        .timeout(0, TimeUnit.SECONDS)
+                        .subscribe(
+                            new Action1<JsonLongDocument>() {
+                                @Override
+                                public void call(JsonLongDocument doc) {
+                                    //ignore
+                                }
+                            }, new Action1<Throwable>() {
+                                @Override
+                                public void call(Throwable err) {
+                                   latch.countDown();
+                                }
+                            }, new Action0() {
+                                @Override
+                                public void call() {
+                                    latch.countDown();
+                                }
+                            });
+            } catch(RuntimeException ex) {
+                //ignore
+            }
+        }
+        try {
+            latch.await();
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            //ignore
+        }
+        assert(bucket().get(key, JsonLongDocument.class).content() < incrementCount);
     }
 
 }

@@ -20,8 +20,10 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBufAllocator;
 import com.couchbase.client.deps.io.netty.buffer.PooledByteBufAllocator;
 import org.junit.Test;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func0;
+import rx.functions.Func1;
 import rx.observers.TestSubscriber;
 import rx.subjects.AsyncSubject;
 import rx.subjects.Subject;
@@ -47,9 +49,9 @@ public class OnSubscribeDeferAndWatchTest {
         final Subject<ByteBuf, ByteBuf> subject = AsyncSubject.create();
 
         TestSubscriber subscriber = TestSubscriber.create();
-        deferAndWatch(new Func0<Observable<ByteBuf>>() {
+        deferAndWatch(new Func1<Subscriber, Observable<ByteBuf>>() {
             @Override
-            public Observable<ByteBuf> call() {
+            public Observable<ByteBuf> call(Subscriber s) {
                 // Simulate some deferred usage
                 Observable
                     .timer(500, TimeUnit.MILLISECONDS)
@@ -81,9 +83,9 @@ public class OnSubscribeDeferAndWatchTest {
         final Subject<ByteBuf, ByteBuf> subject = AsyncSubject.create();
 
         TestSubscriber<ByteBuf> subscriber = TestSubscriber.create();
-        deferAndWatch(new Func0<Observable<ByteBuf>>() {
+        deferAndWatch(new Func1<Subscriber, Observable<ByteBuf>>() {
             @Override
-            public Observable<ByteBuf> call() {
+            public Observable<ByteBuf> call(Subscriber s) {
                 // Simulate some deferred usage
                 Observable
                     .timer(500, TimeUnit.MILLISECONDS)
