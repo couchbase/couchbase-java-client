@@ -24,7 +24,7 @@ The easiest way is to download the jar as well as its transitive dependencies (o
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.4.4</version>
+    <version>2.4.5</version>
 </dependency>
 ```
 
