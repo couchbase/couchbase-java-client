@@ -34,7 +34,7 @@ public class MutationSpec {
     private final String path;
     private final Object fragment;
     private final boolean createParents;
-    private final boolean attributeAccess;
+    private final boolean xattr;
 
     @Deprecated
     public MutationSpec(Mutation type, String path, Object fragment, boolean createParents) {
@@ -43,7 +43,7 @@ public class MutationSpec {
         this.path = path;
         this.fragment = fragment;
         this.createParents = createParents;
-        this.attributeAccess = false;
+        this.xattr = false;
     }
 
     public MutationSpec(Mutation type, String path, Object fragment, SubdocOptionsBuilder builder) {
@@ -51,7 +51,7 @@ public class MutationSpec {
         this.path = path;
         this.fragment = fragment;
         this.createParents = builder.createParents();
-        this.attributeAccess = builder.attributeAccess();
+        this.xattr = builder.xattr();
     }
 
     public MutationSpec(Mutation type, String path, Object fragment) {
@@ -59,7 +59,7 @@ public class MutationSpec {
         this.path = path;
         this.fragment = fragment;
         this.createParents = false;
-        this.attributeAccess = false;
+        this.xattr = false;
     }
 
     /**
@@ -93,20 +93,18 @@ public class MutationSpec {
     /**
      * @return true if accessing extended attributes
      */
-    public boolean attributeAccess() {
-        return this.attributeAccess;
+    public boolean xattr() {
+        return this.xattr;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("{").append(type());
-        if (createParents) {
-            sb.append(", createParents");
-        }
-        if (attributeAccess) {
-            sb.append(", attributeAccess");
-        }
-        sb.append(':').append(path()).append('}');
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("\"type\":" + type);
+        sb.append(", \"path\":" + path);
+        sb.append(", \"createParents\":" + createParents);
+        sb.append(", \"xattr\":" + xattr);
+        sb.append('}');
         return sb.toString();
     }
 }

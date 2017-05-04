@@ -22,7 +22,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 /**
  * Sub-document options builder. Options supported are
  *  createParents
- * 	attributeAccess
+ * 	xattr
  *
  * @author Subhashni Balakrishnan
  * @since 2.4.2
@@ -31,7 +31,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 @InterfaceAudience.Public
 public class SubdocOptionsBuilder {
     private boolean createParents;
-    private boolean attributeAccess;
+    private boolean xattr;
 
     public SubdocOptionsBuilder() {
     }
@@ -56,33 +56,27 @@ public class SubdocOptionsBuilder {
     }
 
     /**
-     * Set attributeAccess to true to accessing extended attributes, else false.
+     * Set xattr to true to accessing extended attributes, else false.
      */
     @InterfaceStability.Experimental
-    public SubdocOptionsBuilder attributeAccess(boolean attributeAccess) {
-        this.attributeAccess = attributeAccess;
+    public SubdocOptionsBuilder xattr(boolean xattr) {
+        this.xattr = xattr;
         return this;
     }
 
     /**
-     * Get attributeAccess value set on builder
+     * Get xattr value set on builder
      */
-    public boolean attributeAccess() {
-        return this.attributeAccess;
+    public boolean xattr() {
+        return this.xattr;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
-        if (createParents) {
-            sb.append(" createParents ");
-        }
-        if (attributeAccess && createParents) {
-            sb.append(", attributeAccess ");
-        } else if (attributeAccess) {
-            sb.append(" attributeAccess ");
-        }
+        sb.append(" \"createParents\": " + createParents);
+        sb.append(", \"xattr\":" + xattr);
         sb.append("}");
         return sb.toString();
     }

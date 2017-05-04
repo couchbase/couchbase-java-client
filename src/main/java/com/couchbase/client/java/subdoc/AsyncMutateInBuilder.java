@@ -998,7 +998,7 @@ public class AsyncMutateInBuilder {
                     MutationSpec spec = mutationSpecs.get(i);
                     if (spec.type() == Mutation.DELETE) {
                         commands.add(new MutationCommandBuilder(Mutation.DELETE, spec.path())
-                                .attributeAccess(spec.attributeAccess()).build());
+                                .xattr(spec.xattr()).build());
                     } else {
                         try {
                             ByteBuf buf = subdocumentTranscoder.encodeWithMessage(spec.fragment(), "Couldn't encode MutationSpec #" +
@@ -1006,7 +1006,7 @@ public class AsyncMutateInBuilder {
                             bufList.add(buf);
                             commands.add(new MutationCommandBuilder(spec.type(), spec.path(), buf)
                                     .createIntermediaryPath(spec.createParents())
-                                    .attributeAccess(spec.attributeAccess()).build());
+                                    .xattr(spec.xattr()).build());
                         } catch (TranscodingException e) {
                             releaseAll(bufList);
                             return Observable.error(e);
@@ -1115,7 +1115,7 @@ public class AsyncMutateInBuilder {
                 public SubDictUpsertRequest call(MutationSpec spec, ByteBuf buf) {
                     SubDictUpsertRequest request = new SubDictUpsertRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1144,7 +1144,7 @@ public class AsyncMutateInBuilder {
                 public SubDictAddRequest call(MutationSpec spec, ByteBuf buf) {
                     SubDictAddRequest request = new SubDictAddRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1175,7 +1175,7 @@ public class AsyncMutateInBuilder {
                 public SubReplaceRequest call(MutationSpec spec, ByteBuf buf) {
                     SubReplaceRequest request = new SubReplaceRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1215,7 +1215,7 @@ public class AsyncMutateInBuilder {
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(), op,
                             buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1238,7 +1238,7 @@ public class AsyncMutateInBuilder {
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(),
                             SubArrayRequest.ArrayOperation.INSERT, buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1265,7 +1265,7 @@ public class AsyncMutateInBuilder {
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(),
                             SubArrayRequest.ArrayOperation.ADD_UNIQUE, buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
-                    request.attributeAccess(spec.attributeAccess());
+                    request.xattr(spec.xattr());
                     return request;
                 }
             };
@@ -1338,7 +1338,7 @@ public class AsyncMutateInBuilder {
                     @Override
                     public Observable<SimpleSubdocResponse> call() {
                         SubDeleteRequest request = new SubDeleteRequest(docId, spec.path(), bucketName, expiry, cas);
-                        request.attributeAccess(spec.attributeAccess());
+                        request.xattr(spec.xattr());
                         return core.send(request);
                     }
                 })
@@ -1388,7 +1388,7 @@ public class AsyncMutateInBuilder {
                     public Observable<SimpleSubdocResponse> call() {
                         SubCounterRequest request = new SubCounterRequest(docId, spec.path(), delta, bucketName, expiry, cas);
                         request.createIntermediaryPath(spec.createParents());
-                        request.attributeAccess(spec.attributeAccess());
+                        request.xattr(spec.xattr());
                         return core.send(request);
                     }
                 })

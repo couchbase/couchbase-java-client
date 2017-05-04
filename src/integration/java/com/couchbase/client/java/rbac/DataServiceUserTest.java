@@ -117,7 +117,7 @@ public class DataServiceUserTest {
     @Test
     public void testSimpleXattrOperationsAuth() {
         bucket.insert(JsonDocument.create("fooc"));
-        bucket.mutateIn("fooc").upsert("bar", "baz", new SubdocOptionsBuilder().attributeAccess(true)).execute();
+        bucket.mutateIn("fooc").upsert("bar", "baz", new SubdocOptionsBuilder().xattr(true)).execute();
         bucket.remove(JsonDocument.create("fooc"));
     }
 

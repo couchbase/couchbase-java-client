@@ -393,7 +393,7 @@ public class AsyncLookupInBuilder {
             @Override
             public Observable<SimpleSubdocResponse> call() {
                 SubGetRequest request = new SubGetRequest(id, spec.path(), bucketName);
-                request.attributeAccess(spec.attributeAccess());
+                request.xattr(spec.xattr());
                 return core.send(request);
             }
         }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
@@ -439,7 +439,7 @@ public class AsyncLookupInBuilder {
             @Override
             public Observable<SimpleSubdocResponse> call() {
                 SubExistRequest request = new SubExistRequest(id, spec.path(), bucketName);
-                request.attributeAccess(spec.attributeAccess());
+                request.xattr(spec.xattr());
                 return core.send(request);
             }
         }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
