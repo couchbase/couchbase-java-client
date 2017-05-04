@@ -35,6 +35,7 @@ import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
 import com.couchbase.client.core.message.kv.subdoc.multi.MutationCommand;
 import com.couchbase.client.core.message.kv.subdoc.multi.SubMultiMutationRequest;
 import com.couchbase.client.core.message.kv.subdoc.multi.MutationCommandBuilder;
+import com.couchbase.client.core.message.kv.subdoc.multi.SubMultiMutationDocOptionsBuilder;
 import com.couchbase.client.core.message.kv.subdoc.simple.AbstractSubdocMutationRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SimpleSubdocResponse;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubArrayRequest;
@@ -52,6 +53,7 @@ import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.ReplicateTo;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
@@ -105,6 +107,7 @@ public class AsyncMutateInBuilder {
     protected long cas;
     protected PersistTo persistTo;
     protected ReplicateTo replicateTo;
+    protected boolean createDocument;
 
     /**
      * Instances of this builder should be obtained through {@link AsyncBucket#mutateIn(String)} rather than directly
@@ -406,6 +409,16 @@ public class AsyncMutateInBuilder {
         return this;
     }
 
+    /**
+     * Set createDocument to true, if the document has to be created
+     *
+     * @param createDocument true to create document.
+     */
+    public AsyncMutateInBuilder createDocument(boolean createDocument) {
+        this.createDocument = createDocument;
+        return this;
+    }
+
     //==== SUBDOC operation specs ====
     /**
      * Replace an existing value by the given fragment.
@@ -508,6 +521,17 @@ public class AsyncMutateInBuilder {
             throw new IllegalArgumentException("Path must not be empty for upsert");
         }
         this.mutationSpecs.add(new MutationSpec(Mutation.DICT_UPSERT, path, fragment));
+        return this;
+    }
+
+    /**
+     * Upsert a full JSON document.
+     *
+     * @param content full content of the JSON document
+     */
+    @InterfaceStability.Experimental
+    public AsyncMutateInBuilder upsert(JsonObject content) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.UPSERTDOC, "", content));
         return this;
     }
 
@@ -1019,7 +1043,9 @@ public class AsyncMutateInBuilder {
         .flatMap(new Func1<List<MutationCommand>, Observable<MultiMutationResponse>>(){
             @Override
             public Observable<MultiMutationResponse> call(List<MutationCommand> mutationCommands) {
-                return core.send(new SubMultiMutationRequest(docId, bucketName, expiry, cas, mutationCommands));
+                return core.send(new SubMultiMutationRequest(docId, bucketName,
+                        expiry, cas, SubMultiMutationDocOptionsBuilder.builder().createDocument(createDocument),
+                        mutationCommands));
             }
         }).flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
             @Override

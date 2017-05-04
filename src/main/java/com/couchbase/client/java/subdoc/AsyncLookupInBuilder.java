@@ -184,6 +184,16 @@ public class AsyncLookupInBuilder {
         return this;
     }
 
+    /**
+     * Get the full JSON document.
+     *
+     * @return this builder for chaining.
+     */
+    @InterfaceStability.Experimental
+    public AsyncLookupInBuilder get() {
+        this.specs.add(new LookupSpec(Lookup.GETDOC, ""));
+        return this;
+    }
 
     /**
      * Get a value inside the JSON document.

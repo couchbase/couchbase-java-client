@@ -29,6 +29,7 @@ import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.ReplicateTo;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.DurabilityException;
@@ -481,6 +482,17 @@ public class MutateInBuilder {
         return this;
     }
 
+    /**
+     * Set true to create document
+     *
+     * @param createDocument set to true to create document.
+     * @return this builder for chaining.
+     */
+    public MutateInBuilder createDocument(boolean createDocument) {
+        asyncBuilder.createDocument(createDocument);
+        return this;
+    }
+
     //==== SUBDOC operation specs ====
     /**
      * Replace an existing value by the given fragment.
@@ -550,6 +562,17 @@ public class MutateInBuilder {
      */
     public <T> MutateInBuilder upsert(String path, T fragment) {
         asyncBuilder.upsert(path, fragment);
+        return this;
+    }
+
+    /**
+     * Upsert a full JSON document that doesn't exist.
+     *
+     * @param content full content of the JSON document
+     */
+    @InterfaceStability.Experimental
+    public MutateInBuilder upsert(JsonObject content) {
+        asyncBuilder.upsert(content);
         return this;
     }
 

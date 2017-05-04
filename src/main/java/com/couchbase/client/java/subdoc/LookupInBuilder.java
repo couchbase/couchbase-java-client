@@ -165,6 +165,17 @@ public class LookupInBuilder {
     }
 
     /**
+     * Get full JSON document
+     *
+     * @return this builder for chaining.
+     */
+    @InterfaceStability.Experimental
+    public LookupInBuilder get() {
+        this.async.get();
+        return this;
+    }
+
+    /**
      * Get a value inside the JSON document.
      *
      * @param path the paths inside the document where to get the value from.
