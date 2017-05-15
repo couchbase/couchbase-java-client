@@ -485,6 +485,16 @@ public class JsonObject extends JsonValue implements Serializable {
         content.remove(name);
         return this;
     }
+    
+    /**
+     * Removes an entry from the {@link JsonObject} and returns the value associated with that entry
+     * 
+     * @param name the name of the field to remove
+     * @return the removed value
+     */
+    public Object removeAndGet(String name) {
+    	return content.remove(name);
+    }
 
     /**
      * Returns a set of field names on the {@link JsonObject}.
