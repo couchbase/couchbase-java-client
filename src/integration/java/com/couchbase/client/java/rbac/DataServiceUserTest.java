@@ -57,7 +57,7 @@ public class DataServiceUserTest {
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));
 
         ctx.clusterManager().upsertUser(username, UserSettings.build().password(password)
-                .roles(Arrays.asList(new UserRole("data_reader_writer", ctx.bucketName()))));
+                .roles(Arrays.asList(new UserRole("data_writer", ctx.bucketName()),new UserRole("data_reader", ctx.bucketName()))));
         ctx.clusterManager().upsertUser(roUsername, UserSettings.build().password(password)
                 .roles(Arrays.asList(new UserRole("data_reader", ctx.bucketName()))));
         Thread.sleep(100); //sleep a bit for the user to be async updated to memcached before opening bucket
