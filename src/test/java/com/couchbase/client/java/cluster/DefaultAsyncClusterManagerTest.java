@@ -17,9 +17,9 @@ public class DefaultAsyncClusterManagerTest {
 
         String expectedToString = "DefaultClusterBucketSettings{name='foo', type=COUCHBASE, quota=0, port=0, password='', replicas=3, indexReplicas=false, enableFlush=false" +
                 ", customSettings={foo=bar, baz=123}}";
-        String expectedInsert = "name=foo&ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&proxyPort=0&bucketType=membase&flushEnabled=0" +
+        String expectedInsert = "name=foo&ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&bucketType=membase&flushEnabled=0" +
                 "&foo=bar&baz=123";
-        String expectedUpdate = "ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&proxyPort=0&bucketType=membase&flushEnabled=0" +
+        String expectedUpdate = "ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&bucketType=membase&flushEnabled=0" +
                 "&foo=bar&baz=123";
 
 
@@ -43,12 +43,11 @@ public class DefaultAsyncClusterManagerTest {
                 .withSetting("authType", "bar")
                 .withSetting("saslPassword", "bar")
                 .withSetting("replicaNumber", "bar")
-                .withSetting("proxyPort", "bar")
                 .withSetting("bucketType", "bar")
                 .withSetting("flushEnabled", "bar")
                 .build();
 
-        String expected = "name=foo&ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&proxyPort=0&bucketType=membase&flushEnabled=0";
+        String expected = "name=foo&ramQuotaMB=0&authType=sasl&saslPassword=&replicaNumber=3&bucketType=membase&flushEnabled=0";
 
         DefaultAsyncClusterManager clusterManager = new DefaultAsyncClusterManager("login", "password", null, null, null);
         String payload = clusterManager.getConfigureBucketPayload(settings, true);

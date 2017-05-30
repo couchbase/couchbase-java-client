@@ -18,7 +18,22 @@ package com.couchbase.client.java.cluster;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.message.config.*;
+import com.couchbase.client.core.message.config.BucketsConfigRequest;
+import com.couchbase.client.core.message.config.BucketsConfigResponse;
+import com.couchbase.client.core.message.config.ClusterConfigRequest;
+import com.couchbase.client.core.message.config.ClusterConfigResponse;
+import com.couchbase.client.core.message.config.GetUsersRequest;
+import com.couchbase.client.core.message.config.GetUsersResponse;
+import com.couchbase.client.core.message.config.InsertBucketRequest;
+import com.couchbase.client.core.message.config.InsertBucketResponse;
+import com.couchbase.client.core.message.config.RemoveBucketRequest;
+import com.couchbase.client.core.message.config.RemoveBucketResponse;
+import com.couchbase.client.core.message.config.RemoveUserRequest;
+import com.couchbase.client.core.message.config.RemoveUserResponse;
+import com.couchbase.client.core.message.config.UpdateBucketRequest;
+import com.couchbase.client.core.message.config.UpdateBucketResponse;
+import com.couchbase.client.core.message.config.UpsertUserRequest;
+import com.couchbase.client.core.message.config.UpsertUserResponse;
 import com.couchbase.client.core.message.internal.AddNodeRequest;
 import com.couchbase.client.core.message.internal.AddNodeResponse;
 import com.couchbase.client.core.message.internal.AddServiceRequest;
@@ -26,6 +41,7 @@ import com.couchbase.client.core.message.internal.AddServiceResponse;
 import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.core.utils.ConnectionString;
+import com.couchbase.client.core.utils.NetworkAddress;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
@@ -40,8 +56,6 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -513,19 +527,15 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
         return Observable
             .just(connectionString.hosts().get(0).getHostName())
-            .map(new Func1<String, InetAddress>() {
+            .map(new Func1<String, NetworkAddress>() {
                 @Override
-                public InetAddress call(String hostname) {
-                    try {
-                        return InetAddress.getByName(hostname);
-                    } catch(UnknownHostException e) {
-                        throw new CouchbaseException(e);
-                    }
+                public NetworkAddress call(String hostname) {
+                    return NetworkAddress.create(hostname);
                 }
             })
-            .flatMap(new Func1<InetAddress, Observable<AddServiceResponse>>() {
+            .flatMap(new Func1<NetworkAddress, Observable<AddServiceResponse>>() {
                 @Override
-                public Observable<AddServiceResponse> call(final InetAddress hostname) {
+                public Observable<AddServiceResponse> call(final NetworkAddress hostname) {
                     return core
                         .<AddNodeResponse>send(new AddNodeRequest(hostname))
                         .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {

@@ -51,10 +51,10 @@ public class SubDocumentTest {
         MutationSpec spec3 = new MutationSpec(Mutation.ARRAY_PUSH_LAST, "path", "toto", false);
         MutationSpec spec4 = new MutationSpec(Mutation.ARRAY_PUSH_FIRST, "path", "toto", true);
 
-        assertEquals("{DICT_ADD:some/path/\"e\"}", spec1.toString());
-        assertEquals("{ARRAY_ADD_UNIQUE, createParents:some/path/\"e\"}", spec2.toString());
-        assertEquals("{ARRAY_PUSH_LAST:path}", spec3.toString());
-        assertEquals("{ARRAY_PUSH_FIRST, createParents:path}", spec4.toString());
+        assertEquals("{\"type\":DICT_ADD, \"path\":some/path/\"e\", \"createParents\":false, \"xattr\":false}", spec1.toString());
+        assertEquals("{\"type\":ARRAY_ADD_UNIQUE, \"path\":some/path/\"e\", \"createParents\":true, \"xattr\":false}", spec2.toString());
+        assertEquals("{\"type\":ARRAY_PUSH_LAST, \"path\":path, \"createParents\":false, \"xattr\":false}", spec3.toString());
+        assertEquals("{\"type\":ARRAY_PUSH_FIRST, \"path\":path, \"createParents\":true, \"xattr\":false}", spec4.toString());
     }
 
     @Test

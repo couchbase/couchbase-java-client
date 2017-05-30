@@ -60,6 +60,7 @@ import rx.functions.Func2;
 import rx.functions.Func7;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -468,8 +469,13 @@ public class N1qlQueryExecutor {
             }).flatMap(new Func1<NodeInfo, Observable<GenericQueryResponse>>() {
                 @Override
                 public Observable<GenericQueryResponse> call(NodeInfo nodeInfo) {
-                    GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, nodeInfo.hostname());
-                    return core.send(req);
+                    try {
+                        InetAddress hostname = InetAddress.getByName(nodeInfo.hostname().address());
+                        GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, hostname);
+                        return core.send(req);
+                    } catch (UnknownHostException e) {
+                        return Observable.error(e);
+                    }
                 }
             });
         }
