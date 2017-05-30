@@ -526,7 +526,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         }
 
         return Observable
-            .just(connectionString.hosts().get(0).getHostName())
+            .just(connectionString.hosts().get(0).getAddress().getHostAddress())
             .map(new Func1<String, NetworkAddress>() {
                 @Override
                 public NetworkAddress call(String hostname) {
