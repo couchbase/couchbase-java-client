@@ -1142,6 +1142,7 @@ public class AsyncMutateInBuilder {
                     SubDictUpsertRequest request = new SubDictUpsertRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
+                    request.createDocument(createDocument);
                     return request;
                 }
             };
@@ -1171,6 +1172,7 @@ public class AsyncMutateInBuilder {
                     SubDictAddRequest request = new SubDictAddRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
+                    request.createDocument(createDocument);
                     return request;
                 }
             };
@@ -1202,6 +1204,7 @@ public class AsyncMutateInBuilder {
                     SubReplaceRequest request = new SubReplaceRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
+                    request.createDocument(createDocument);
                     return request;
                 }
             };
@@ -1242,6 +1245,7 @@ public class AsyncMutateInBuilder {
                             buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
+                    request.createDocument(createDocument);
                     return request;
                 }
             };
@@ -1292,6 +1296,7 @@ public class AsyncMutateInBuilder {
                             SubArrayRequest.ArrayOperation.ADD_UNIQUE, buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
+                    request.createDocument(createDocument);
                     return request;
                 }
             };
@@ -1415,6 +1420,7 @@ public class AsyncMutateInBuilder {
                         SubCounterRequest request = new SubCounterRequest(docId, spec.path(), delta, bucketName, expiry, cas);
                         request.createIntermediaryPath(spec.createParents());
                         request.xattr(spec.xattr());
+                        request.createDocument(true);
                         return core.send(request);
                     }
                 })
