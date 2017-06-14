@@ -23,6 +23,8 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.auth.PasswordAuthenticator;
+import com.couchbase.client.java.cluster.AuthDomain;
+import com.couchbase.client.java.cluster.User;
 import com.couchbase.client.java.cluster.UserRole;
 import com.couchbase.client.java.cluster.UserSettings;
 import com.couchbase.client.java.util.CouchbaseTestContext;
@@ -33,6 +35,9 @@ import com.couchbase.client.java.view.View;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Subhashni Balakrishnan
@@ -50,7 +55,7 @@ public class BucketAndClusterManagerUserTest {
                 .build()
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));
 
-        ctx.clusterManager().upsertUser(username, UserSettings.build().password(password)
+        ctx.clusterManager().upsertUser(AuthDomain.LOCAL, username, UserSettings.build().password(password)
                 .roles(Arrays.asList(new UserRole("ro_admin", ""))));
         cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
@@ -62,7 +67,7 @@ public class BucketAndClusterManagerUserTest {
     public static void cleanup() throws Exception {
         if (ctx != null) {
             cluster.disconnect();
-            ctx.clusterManager().removeUser(username);
+            ctx.clusterManager().removeUser(AuthDomain.LOCAL, username);
             ctx.destroyBucketAndDisconnect();
         }
     }
@@ -71,12 +76,15 @@ public class BucketAndClusterManagerUserTest {
     public void testGetReadOnlyClusterInfoAuth() {
         cluster.clusterManager().info();
         cluster.clusterManager().getBuckets();
-        cluster.clusterManager().getUsers();
+        List<User> users = cluster.clusterManager().getUsers(AuthDomain.LOCAL);
+        assertTrue(users.size() > 0);
+        User user = cluster.clusterManager().getUser(AuthDomain.LOCAL, username);
+        assertEquals(username, user.userId());
     }
 
     @Test(expected = CouchbaseException.class)
     public void shouldFailOnUpdatingCluster() {
-        cluster.clusterManager().upsertUser("testUser", UserSettings.build().password("password"));
+        cluster.clusterManager().upsertUser(AuthDomain.LOCAL,"testUser", UserSettings.build().password("password"));
     }
 
     @Test

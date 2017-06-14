@@ -30,10 +30,10 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 public class User {
     final private String name;
     final private String userId;
-    final private String domain;
+    final private AuthDomain domain;
     final private UserRole[] roles;
 
-    protected User(String name, String userId, String domain, UserRole[] roles) {
+    protected User(String name, String userId, AuthDomain domain, UserRole[] roles) {
         this.name = name;
         this.userId = userId;
         this.domain = domain;
@@ -60,7 +60,7 @@ public class User {
      * Get user domain local or ldap
      * @return domain
      */
-    public String domain() {
+    public AuthDomain domain() {
         return this.domain;
     }
 

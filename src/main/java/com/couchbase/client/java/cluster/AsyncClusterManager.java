@@ -143,12 +143,13 @@ public interface AsyncClusterManager {
      * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user that should be updated.
      * @param settings the user settings that should be applied.
      * @return true if the update was successful, false otherwise.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> upsertUser(String username, UserSettings settings);
+    Observable<Boolean> upsertUser(AuthDomain domain, String username, UserSettings settings);
 
     /**
      * Removes a user identified by user name.
@@ -160,11 +161,12 @@ public interface AsyncClusterManager {
      * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user that should be updated.
      * @return true if the removal was successful, false otherwise.
      */
     @InterfaceStability.Experimental
-    Observable<Boolean> removeUser(String username);
+    Observable<Boolean> removeUser(AuthDomain domain, String username);
 
     /**
      * Get all users in Couchbase Server.
@@ -174,10 +176,25 @@ public interface AsyncClusterManager {
      * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @return users list of users.
      */
     @InterfaceStability.Experimental
-    Observable<User> getUsers();
+    Observable<User> getUsers(AuthDomain domain);
+
+    /**
+     * Get user info from Couchbase Server.
+     *
+     * The {@link Observable} can error under the following conditions:
+     *
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
+     * @return user info
+     */
+    @InterfaceStability.Experimental
+    Observable<User> getUser(AuthDomain domain, String username);
 
     /**
      * @return an {@link Observable} emitting a single new {@link AsyncClusterApiClient} to prepare and perform

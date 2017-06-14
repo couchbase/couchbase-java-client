@@ -120,33 +120,43 @@ public class DefaultClusterManager implements ClusterManager {
     }
 
     @Override
-    public Boolean upsertUser(String username, UserSettings settings) {
-        return upsertUser(username, settings, timeout, TIMEOUT_UNIT);
+    public Boolean upsertUser(AuthDomain domain, String username, UserSettings settings) {
+        return upsertUser(domain, username, settings, timeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public Boolean upsertUser(String username, UserSettings settings, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncClusterManager.upsertUser(username, settings).single(), timeout, timeUnit);
+    public Boolean upsertUser(AuthDomain domain, String username, UserSettings settings, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncClusterManager.upsertUser(domain, username, settings).single(), timeout, timeUnit);
     }
 
     @Override
-    public Boolean removeUser(String username) {
-        return removeUser(username, timeout, TIMEOUT_UNIT);
+    public Boolean removeUser(AuthDomain domain, String username) {
+        return removeUser(domain, username, timeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public Boolean removeUser(String username, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncClusterManager.removeUser(username).single(), timeout, timeUnit);
+    public Boolean removeUser(AuthDomain domain, String username, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncClusterManager.removeUser(domain, username).single(), timeout, timeUnit);
     }
 
     @Override
-    public List<User> getUsers() {
-        return getUsers(timeout, TIMEOUT_UNIT);
+    public List<User> getUsers(AuthDomain domain) {
+        return getUsers(domain, timeout, TIMEOUT_UNIT);
     }
 
     @Override
-    public List<User> getUsers(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncClusterManager.getUsers().toList().single(), timeout, timeUnit);
+    public List<User> getUsers(AuthDomain domain, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncClusterManager.getUsers(domain).toList().single(), timeout, timeUnit);
+    }
+
+    @Override
+    public User getUser(AuthDomain domain, String userid) {
+        return Blocking.blockForSingle(asyncClusterManager.getUser(domain, userid).single(), timeout, TIMEOUT_UNIT);
+    }
+
+    @Override
+    public User getUser(AuthDomain domain, String userid, long timeout, TimeUnit timeUnit) {
+        return Blocking.blockForSingle(asyncClusterManager.getUser(domain, userid).single(), timeout, timeUnit);
     }
 
     @Override

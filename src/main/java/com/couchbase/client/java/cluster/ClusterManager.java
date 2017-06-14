@@ -283,12 +283,13 @@ public interface ClusterManager {
      * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user to be updated
      * @param settings the user settings that should be applied.
      * @return true if succeeded.
      */
     @InterfaceStability.Experimental
-    Boolean upsertUser(String username, UserSettings settings);
+    Boolean upsertUser(AuthDomain domain, String username, UserSettings settings);
 
     /**
      * Creates/Updates a user with its {@link UserSettings} with custom timeout.
@@ -301,6 +302,7 @@ public interface ClusterManager {
      * **Note:** Updating a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user to be updated.
      * @param settings the user settings that should be applied.
      * @param timeout the custom timeout.
@@ -308,7 +310,7 @@ public interface ClusterManager {
      * @return true if succeeded.
      */
     @InterfaceStability.Experimental
-    Boolean upsertUser(String username, UserSettings settings, long timeout, TimeUnit timeUnit);
+    Boolean upsertUser(AuthDomain domain, String username, UserSettings settings, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a user identified by user name with the default management timeout.
@@ -321,11 +323,12 @@ public interface ClusterManager {
      * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user to be deleted.
      * @return true if the removal was successful, false otherwise.
      */
     @InterfaceStability.Experimental
-    Boolean removeUser(String username);
+    Boolean removeUser(AuthDomain domain, String username);
 
     /**
      * Removes a user identified by user name with a custom timeout.
@@ -338,13 +341,14 @@ public interface ClusterManager {
      * **Note:** Removing a user is an asynchronous operation on the server side, so even if the
      * response is returned there is no guarantee that the operation has finished on the server itself.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param username the user name of the user to be deleted.
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
      * @return true if the removal was successful, false otherwise.
      */
     @InterfaceStability.Experimental
-    Boolean removeUser(String username, long timeout, TimeUnit timeUnit);
+    Boolean removeUser(AuthDomain domain, String username, long timeout, TimeUnit timeUnit);
 
     /**
      * Get all users in Couchbase with default management timeout.
@@ -358,7 +362,7 @@ public interface ClusterManager {
      * @return users the list of users.
      */
     @InterfaceStability.Experimental
-    List<User> getUsers();
+    List<User> getUsers(AuthDomain domain);
 
     /**
      * Get all users in Couchbase with a custom timeout.
@@ -369,12 +373,43 @@ public interface ClusterManager {
      * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
      * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
      *
+     * @param domain the authentication to use, most likely {@link AuthDomain#LOCAL}
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
      * @return users the list of users.
      */
     @InterfaceStability.Experimental
-    List<User> getUsers(long timeout, TimeUnit timeUnit);
+    List<User> getUsers(AuthDomain domain, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Get user info in Couchbase with default management timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @return user info
+     */
+    @InterfaceStability.Experimental
+    User getUser(AuthDomain domain, String userid);
+
+
+    /**
+     * Get user info in Couchbase with custom timeout.
+     *
+     * This method throws:
+     *
+     * - java.util.concurrent.TimeoutException: If the timeout is exceeded.
+     * - com.couchbase.client.core.CouchbaseException: If the underlying resources could not be enabled properly.
+     * - com.couchbase.client.java.error.TranscodingException: If the server response could not be decoded.
+     *
+     * @return user info
+     */
+    @InterfaceStability.Experimental
+    User getUser(AuthDomain domain, String userid, long timeout, TimeUnit timeUnit);
+
 
     /**
      * Returns a new {@link ClusterApiClient} to prepare and perform REST API synchronous requests on this cluster.

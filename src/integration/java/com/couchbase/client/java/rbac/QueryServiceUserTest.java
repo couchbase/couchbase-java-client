@@ -22,6 +22,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.auth.PasswordAuthenticator;
+import com.couchbase.client.java.cluster.AuthDomain;
 import com.couchbase.client.java.cluster.UserRole;
 import com.couchbase.client.java.cluster.UserSettings;
 import com.couchbase.client.java.query.N1qlQuery;
@@ -51,7 +52,7 @@ public class QueryServiceUserTest {
                 .ignoreIfNoN1ql()
                 .ensurePrimaryIndex();
 
-        ctx.clusterManager().upsertUser(username, UserSettings.build().password(password)
+        ctx.clusterManager().upsertUser(AuthDomain.LOCAL, username, UserSettings.build().password(password)
                 .roles(Arrays.asList(new UserRole("query_select", ctx.bucketName()),
                         new UserRole("data_reader", ctx.bucketName()))));//see MB-23475, needs a data role
         cluster = CouchbaseCluster.create(ctx.seedNode());
@@ -64,7 +65,7 @@ public class QueryServiceUserTest {
     public static void cleanup() throws Exception {
         if (ctx != null) {
             cluster.disconnect();
-            ctx.clusterManager().removeUser(username);
+            ctx.clusterManager().removeUser(AuthDomain.LOCAL, username);
             ctx.destroyBucketAndDisconnect();
         }
     }
