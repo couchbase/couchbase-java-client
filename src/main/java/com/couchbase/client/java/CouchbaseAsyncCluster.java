@@ -328,7 +328,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             );
 
             try {
-                List<String> foundNodes = Bootstrap.fromDnsSrv(lookupNode.getAddress().getHostAddress(), false,
+                List<String> foundNodes = Bootstrap.fromDnsSrv(lookupNode.getHostName(), false,
                     environment.sslEnabled());
                 if (foundNodes.isEmpty()) {
                     throw new IllegalStateException("DNS SRV list is empty.");
