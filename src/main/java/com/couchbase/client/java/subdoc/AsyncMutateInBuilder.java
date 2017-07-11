@@ -1425,7 +1425,7 @@ public class AsyncMutateInBuilder {
                         request.createIntermediaryPath(spec.createParents());
                         request.xattr(spec.xattr());
                         request.subscriber(s);
-                        request.createDocument(true);
+                        request.createDocument(createDocument);
                         return core.send(request);
                     }
                 })
