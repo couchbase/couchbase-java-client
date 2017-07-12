@@ -48,7 +48,7 @@ public class PasswordAuthenticatorTest {
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));
 
         ctx.clusterManager().upsertUser(username, UserSettings.build().password(password)
-                .roles(Arrays.asList(new UserRole("data_reader_writer", "*"))));
+                .roles(Arrays.asList(new UserRole("bucket_full_access", "*"))));
         Thread.sleep(100); //sleep a bit for the user to be async updated to memcached before opening bucket
     }
 

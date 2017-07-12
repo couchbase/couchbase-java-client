@@ -23,15 +23,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.document.JsonArrayDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,18 +40,22 @@ import org.junit.Test;
 
 public class CouchbaseMapTest {
 
-    private static Cluster cluster;
-    private static Bucket bucket;
+    private static CouchbaseTestContext ctx;
 
     @BeforeClass
     public static void setup() {
-        cluster = CouchbaseCluster.create();
-        bucket = cluster.openBucket();
+        ctx = CouchbaseTestContext.builder()
+            .bucketQuota(100)
+            .bucketReplicas(1)
+            .bucketType(BucketType.COUCHBASE)
+            .build();
+
+        ctx.ignoreIfMissing(CouchbaseFeature.SUBDOC);
     }
 
     @AfterClass
     public static void teardown() {
-        cluster.disconnect();
+        ctx.destroyBucketAndDisconnect();
     }
 
     private String uuid;
@@ -64,7 +68,7 @@ public class CouchbaseMapTest {
     @After
     public void deleteDoc() {
         try {
-            bucket.remove(uuid);
+            ctx.bucket().remove(uuid);
         } catch (DocumentDoesNotExistException e) {
             //ignore
         }
@@ -77,9 +81,9 @@ public class CouchbaseMapTest {
     @Test
     public void testConstructorWithPreExistingDocument() {
         JsonDocument preExisting = JsonDocument.create(uuid, JsonObject.create().put("test", 123).put("foo", "bar"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Map<String, Object> map = new CouchbaseMap<Object>(uuid, bucket);
+        Map<String, Object> map = new CouchbaseMap<Object>(uuid, ctx.bucket());
 
         assertEquals(2, map.size());
         assertTrue(map.containsKey("foo"));
@@ -89,9 +93,9 @@ public class CouchbaseMapTest {
     @Test
     public void testConstructorWithPreExistingDocumentOfWrongTypeFails() {
         JsonArrayDocument preExisting = JsonArrayDocument.create(uuid, JsonArray.from("test"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Map<String, Object> map = new CouchbaseMap<Object>(uuid, bucket);
+        Map<String, Object> map = new CouchbaseMap<Object>(uuid, ctx.bucket());
         try {
             map.size();
             fail("Expected TranscodingException");
@@ -103,9 +107,9 @@ public class CouchbaseMapTest {
     @Test
     public void testConstructorWithCollectionDataOverwrites() {
         JsonArrayDocument preExisting = JsonArrayDocument.create(uuid, JsonArray.from("test", "test2"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Map<String, Object> map = new CouchbaseMap<Object>(uuid, bucket, Collections.singletonMap("foo", "bar"));
+        Map<String, Object> map = new CouchbaseMap<Object>(uuid, ctx.bucket(), Collections.singletonMap("foo", "bar"));
 
         assertEquals(1, map.size());
         assertTrue(map.containsKey("foo"));
@@ -115,9 +119,9 @@ public class CouchbaseMapTest {
     @Test
     public void testConstructorWithEmptyCollectionOverwrites() {
         JsonArrayDocument preExisting = JsonArrayDocument.create(uuid, JsonArray.from("test", "test2"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Map<String, Object> map = new CouchbaseMap<Object>(uuid, bucket, Collections.<String, Object>emptyMap());
+        Map<String, Object> map = new CouchbaseMap<Object>(uuid, ctx.bucket(), Collections.<String, Object>emptyMap());
 
         assertEquals(0, map.size());
     }

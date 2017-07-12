@@ -31,7 +31,12 @@ public class BucketClosingTest extends ClusterDependentTest {
 
   @Test(expected = BucketClosedException.class)
   public void shouldPreventSyncCloseBucketThenSyncGet() {
-    Bucket bucket = cluster().openBucket(bucketName(), password());
+    Bucket bucket;
+    if (ctx.rbacEnabled()) {
+      bucket = cluster().openBucket(bucketName());
+    } else {
+      bucket = cluster().openBucket(bucketName(), password());
+    }
     bucket.close();
 
     bucket.get("someid");
@@ -40,7 +45,12 @@ public class BucketClosingTest extends ClusterDependentTest {
 
   @Test(expected = BucketClosedException.class)
   public void shouldPreventSyncCloseBucketThenAsyncGet() {
-    Bucket bucket = cluster().openBucket(bucketName(), password());
+    Bucket bucket;
+    if (ctx.rbacEnabled()) {
+      bucket = cluster().openBucket(bucketName());
+    } else {
+      bucket = cluster().openBucket(bucketName(), password());
+    }
     bucket.close();
 
     bucket.async().get("someid").toBlocking().first();
@@ -49,7 +59,12 @@ public class BucketClosingTest extends ClusterDependentTest {
 
   @Test(expected = BucketClosedException.class)
   public void shouldPreventAsyncClosedBucketThenGet() throws InterruptedException {
-    Bucket bucket = cluster().openBucket(bucketName(), password());
+    Bucket bucket;
+    if (ctx.rbacEnabled()) {
+      bucket = cluster().openBucket(bucketName());
+    } else {
+      bucket = cluster().openBucket(bucketName(), password());
+    }
     //ensures that even
     bucket.async().close().toBlocking().single();
 

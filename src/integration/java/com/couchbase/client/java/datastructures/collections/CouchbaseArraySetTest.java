@@ -23,15 +23,15 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.document.JsonArrayDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TranscodingException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import com.couchbase.client.java.util.features.CouchbaseFeature;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,18 +40,22 @@ import org.junit.Test;
 
 public class CouchbaseArraySetTest {
 
-    private static Cluster cluster;
-    private static Bucket bucket;
+    private static CouchbaseTestContext ctx;
 
     @BeforeClass
     public static void setup() {
-        cluster = CouchbaseCluster.create();
-        bucket = cluster.openBucket();
+        ctx = CouchbaseTestContext.builder()
+            .bucketQuota(100)
+            .bucketReplicas(1)
+            .bucketType(BucketType.COUCHBASE)
+            .build();
+
+        ctx.ignoreIfMissing(CouchbaseFeature.SUBDOC);
     }
 
     @AfterClass
     public static void teardown() {
-        cluster.disconnect();
+        ctx.destroyBucketAndDisconnect();
     }
 
     private String uuid;
@@ -64,7 +68,7 @@ public class CouchbaseArraySetTest {
     @After
     public void deleteDoc() {
         try {
-            bucket.remove(uuid);
+            ctx.bucket().remove(uuid);
         } catch (DocumentDoesNotExistException e) {
             //ignore
         }
@@ -76,7 +80,7 @@ public class CouchbaseArraySetTest {
 
     @Test
     public void shouldRefuseAddingJsonObjectToSet() {
-        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket, null);
+        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket(), null);
 
         try {
             set.add(JsonObject.create());
@@ -91,7 +95,7 @@ public class CouchbaseArraySetTest {
         Set<Object> initial = Collections.<Object>singleton(JsonObject.create());
 
         try {
-            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket, initial);
+            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket(), initial);
         } catch (ClassCastException e) {
             assertTrue(e.getMessage().contains("CouchbaseArraySet"));
             //success
@@ -100,7 +104,7 @@ public class CouchbaseArraySetTest {
 
     @Test
     public void shouldRefuseAddingJsonArrayToSet() {
-        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket, null);
+        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket(), null);
 
         try {
             set.add(JsonArray.create());
@@ -115,7 +119,7 @@ public class CouchbaseArraySetTest {
         Set<Object> initial = Collections.<Object>singleton(JsonArray.create());
 
         try {
-            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket, initial);
+            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket(), initial);
         } catch (ClassCastException e) {
             assertTrue(e.getMessage().contains("CouchbaseArraySet"));
             //success
@@ -124,7 +128,7 @@ public class CouchbaseArraySetTest {
 
     @Test
     public void shouldAddCloseValuesDifferentTypes() {
-        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket);
+        CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket());
 
         set.add("1");
         set.add(1);
@@ -136,9 +140,9 @@ public class CouchbaseArraySetTest {
     @Test
     public void testConstructorWithPreExistingDocument() {
         JsonArrayDocument preExisting = JsonArrayDocument.create(uuid, JsonArray.from("test"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Set<String> set = new CouchbaseArraySet(uuid, bucket);
+        Set<String> set = new CouchbaseArraySet(uuid, ctx.bucket());
 
         assertEquals(1, set.size());
         assertTrue(set.contains("test"));
@@ -147,9 +151,9 @@ public class CouchbaseArraySetTest {
     @Test
     public void testConstructorWithPreExistingDocumentOfWrongTypeFails() {
         JsonDocument preExisting = JsonDocument.create(uuid, JsonObject.create().put("test", "value"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Set<String> set = new CouchbaseArraySet(uuid, bucket);
+        Set<String> set = new CouchbaseArraySet(uuid, ctx.bucket());
         try {
             set.size();
             fail("Expected TranscodingException");
@@ -161,9 +165,9 @@ public class CouchbaseArraySetTest {
     @Test
     public void testConstructorWithCollectionDataOverwrites() {
         JsonDocument preExisting = JsonDocument.create(uuid, JsonObject.create().put("test", "value"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Set<String> set = new CouchbaseArraySet(uuid, bucket, Collections.singleton("foo"));
+        Set<String> set = new CouchbaseArraySet(uuid, ctx.bucket(), Collections.singleton("foo"));
 
         assertEquals(1, set.size());
         assertTrue(set.contains("foo"));
@@ -172,9 +176,9 @@ public class CouchbaseArraySetTest {
     @Test
     public void testConstructorWithEmptyCollectionOverwrites() {
         JsonDocument preExisting = JsonDocument.create(uuid, JsonObject.create().put("test", "value"));
-        bucket.upsert(preExisting);
+        ctx.bucket().upsert(preExisting);
 
-        Set<String> set = new CouchbaseArraySet(uuid, bucket, Collections.emptySet());
+        Set<String> set = new CouchbaseArraySet(uuid, ctx.bucket(), Collections.emptySet());
 
         assertEquals(0, set.size());
     }

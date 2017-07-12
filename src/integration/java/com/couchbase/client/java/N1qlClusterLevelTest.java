@@ -17,6 +17,7 @@ package com.couchbase.client.java;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.CredentialContext;
 import com.couchbase.client.java.auth.ClassicAuthenticator;
+import com.couchbase.client.java.auth.PasswordAuthenticator;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
@@ -91,10 +93,12 @@ public class N1qlClusterLevelTest {
         ctx.bucket().upsert(JsonDocument.create("join", content1));
         ctx2.bucket().upsert(JsonDocument.create("baz", content2));
         ctx3.bucket().upsert(JsonDocument.create("baz", content2));
-        Authenticator authenticator = new ClassicAuthenticator()
+        if (!ctx.rbacEnabled()) {
+            Authenticator authenticator = new ClassicAuthenticator()
                 .bucket(ctx.bucketName(), "protected")
                 .bucket(ctx2.bucketName(), "protected");
-        ctx.cluster().authenticate(authenticator);
+            ctx.cluster().authenticate(authenticator);
+        }
     }
 
     @AfterClass
@@ -127,7 +131,9 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldJoinProtectedBucketsAsynchronously() {
-        Authenticator authenticator = new ClassicAuthenticator()
+
+        Authenticator authenticator = ctx.rbacEnabled() ? new PasswordAuthenticator(ctx.adminName(), ctx.adminPassword()) :
+            new ClassicAuthenticator()
                 .bucket(ctx.bucketName(), "protected")
                 .bucket(ctx2.bucketName(), "protected");
 
@@ -166,6 +172,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailJoinWithPartialCredentials() {
+        assumeTrue(!ctx2.rbacEnabled());
         N1qlQuery query = N1qlQuery.simple(
                 "SELECT A.*, B.* FROM `" + ctx.bucketName() + "` AS A" +
                         " JOIN `" + ctx3.bucketName() + "` as B ON KEYS A.foreignKey",
@@ -212,6 +219,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailOnClusterWithoutCredentials() {
+        assumeTrue(!ctx2.rbacEnabled());
         ctx2.cluster().authenticate(new ClassicAuthenticator());
 
         N1qlQuery query = N1qlQuery.simple("SELECT * FROM " + ctx2.bucketName(),
@@ -227,6 +235,7 @@ public class N1qlClusterLevelTest {
 
     @Test
     public void shouldFailOnClusterWhenAuthenticatorDoesntSupportClusterN1QL() {
+        assumeTrue(!ctx2.rbacEnabled());
         Authenticator mock = mock(Authenticator.class);
         IllegalArgumentException cause = new IllegalArgumentException();
         when(mock.getCredentials(any(CredentialContext.class), anyString()))

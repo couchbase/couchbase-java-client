@@ -22,7 +22,10 @@ import java.util.UUID;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import com.couchbase.client.java.util.features.CouchbaseFeature;
 import com.google.common.collect.testing.SampleElements;
 import com.google.common.collect.testing.SetTestSuiteBuilder;
 import com.google.common.collect.testing.TestSetGenerator;
@@ -48,8 +51,6 @@ public class CouchbaseArraySetGuavaTest {
     //the holder for the guava-generated test suite
     public static class GuavaTests {
 
-        private static Cluster cluster = CouchbaseCluster.create();
-        private static Bucket bucket = cluster.openBucket();
         private static int testCount;
 
         private static String uuid;
@@ -61,11 +62,19 @@ public class CouchbaseArraySetGuavaTest {
         }
 
         public static TestSuite suite() {
+            final CouchbaseTestContext ctx = CouchbaseTestContext.builder()
+                .bucketQuota(100)
+                .bucketReplicas(1)
+                .bucketType(BucketType.COUCHBASE)
+                .build();
+
+            ctx.ignoreIfMissing(CouchbaseFeature.SUBDOC);
+
             TestSuite suite = new SetTestSuiteBuilder<Object>()
                     .using(new TestSetGenerator<Object>() {
                         @Override
                         public Set<Object> create(Object... elements) {
-                            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, bucket, null);
+                            CouchbaseArraySet<Object> set = new CouchbaseArraySet<Object>(uuid, ctx.bucket(), null);
                             for (Object o : elements) {
                                 set.add(o);
                             }
@@ -97,13 +106,13 @@ public class CouchbaseArraySetGuavaTest {
                         @Override
                         public void run() {
                             try {
-                                bucket.remove(uuid);
+                                ctx.bucket().remove(uuid);
                             } catch (DocumentDoesNotExistException e) {
                                 //ignore
                             }
                             testCount--;
                             if (testCount < 1) {
-                                cluster.disconnect();
+                                ctx.destroyBucketAndDisconnect();
                             }
                         }
                     })

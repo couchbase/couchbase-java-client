@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2017 Couchbase, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.couchbase.client.java.util.rawQuerying;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +26,6 @@ import com.couchbase.client.deps.com.fasterxml.jackson.databind.JsonNode;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
-import com.couchbase.client.java.query.N1qlMetrics;
 import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.consistency.ScanConsistency;
@@ -41,7 +55,12 @@ public class RawQueryExecutorTest {
         ctx.bucket().upsert(JsonDocument.create("test1", JsonObject.create().put("item", "value")));
         ctx.bucket().upsert(JsonDocument.create("test2", JsonObject.create().put("item", 123)));
 
-        AsyncRawQueryExecutor asyncExecutor = new AsyncRawQueryExecutor(ctx.bucketName(), ctx.bucketPassword(), ctx.cluster().core());
+        AsyncRawQueryExecutor asyncExecutor;
+        if (ctx.rbacEnabled()) {
+            asyncExecutor = new AsyncRawQueryExecutor(ctx.bucketName(), ctx.adminName(), ctx.adminPassword(), ctx.cluster().core());
+        } else {
+            asyncExecutor = new AsyncRawQueryExecutor(ctx.bucketName(), ctx.bucketPassword(), ctx.cluster().core());
+        }
         rawQueryExecutor = new RawQueryExecutor(asyncExecutor, ctx.env());
     }
 
@@ -57,8 +76,6 @@ public class RawQueryExecutorTest {
                 N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS).withContextId("foo"));
 
         JsonObject result = rawQueryExecutor.n1qlToJsonObject(query);
-
-        System.out.println(result);
 
         assertThat(result).isNotNull();
         assertThat(result.getNames()).containsOnly("requestID", "clientContextID", "signature", "results", "status", "metrics");

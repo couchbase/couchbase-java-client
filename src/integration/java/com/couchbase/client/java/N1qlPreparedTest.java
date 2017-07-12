@@ -68,7 +68,13 @@ public class N1qlPreparedTest {
                 .ignoreIfNoN1ql()
         .ensurePrimaryIndex();
 
-        executor = new N1qlQueryExecutor(ctx.cluster().core(), ctx.bucketName(), ctx.bucketPassword(), false);
+        if (ctx.rbacEnabled()) {
+            executor = new N1qlQueryExecutor(ctx.cluster().core(), ctx.bucketName(), ctx.adminName(), ctx.adminPassword(), false);
+        } else {
+            executor = new N1qlQueryExecutor(ctx.cluster().core(), ctx.bucketName(), ctx.bucketPassword(), false);
+        }
+
+
         final JsonObject jsonObject = JsonObject.create();
         for (int i=0; i < 10; i++) {
             jsonObject.put("field" + i,  UUID.randomUUID().toString());
