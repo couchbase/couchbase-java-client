@@ -24,6 +24,7 @@ import com.couchbase.client.core.env.WaitStrategyFactory;
 import com.couchbase.client.core.env.resources.ShutdownHook;
 import com.couchbase.client.core.event.EventBus;
 import com.couchbase.client.core.event.consumers.LoggingConsumer;
+import com.couchbase.client.core.hooks.CouchbaseCoreSendHook;
 import com.couchbase.client.core.logging.CouchbaseLogLevel;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
@@ -584,6 +585,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         @Override
         public Builder keepAliveTimeout(long keepAliveTimeout) {
             super.keepAliveTimeout(keepAliveTimeout);
+            return this;
+        }
+
+        @Override
+        public Builder couchbaseCoreSendHook(CouchbaseCoreSendHook hook) {
+            super.couchbaseCoreSendHook(hook);
             return this;
         }
 
