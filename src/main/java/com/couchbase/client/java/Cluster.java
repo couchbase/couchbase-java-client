@@ -44,6 +44,8 @@ import com.couchbase.client.java.transcoder.Transcoder;
  * @author Michael Nitschinger
  * @since 2.0
  */
+
+
 @InterfaceStability.Committed
 @InterfaceAudience.Public
 public interface Cluster {
