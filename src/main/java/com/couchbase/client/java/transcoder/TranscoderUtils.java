@@ -27,6 +27,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -285,6 +286,28 @@ public class TranscoderUtils {
             input.getBytes(input.readerIndex(), inputBytes);
         }
         return new ByteBufToArray(inputBytes, offset, length);
+    }
+    
+    /**
+     * Converts a {@link ByteBuf} to a byte[] in the most straightforward manner available.
+     * the byte[] returned is a copy of the actual data
+     * @param input the ByteBuf to convert.
+     * @return a byte[] array
+     */
+    public static byte[] copyByteBufToByteArray(ByteBuf input) {
+        byte[] copy;
+        int offset = 0;
+        int length = input.readableBytes();
+        if (input.hasArray()) {
+        	byte[] inputBytes = input.array();
+            offset = input.arrayOffset() + input.readerIndex();
+            copy = Arrays.copyOfRange(inputBytes, offset, offset + length);
+            return copy;
+        } else {
+        	copy = new byte[length];
+            input.getBytes(input.readerIndex(), copy);
+        }
+        return copy;
     }
 
     /**
