@@ -16,6 +16,7 @@
 package com.couchbase.client.java.cluster;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.couchbase.client.java.bucket.BucketType;
@@ -115,7 +116,7 @@ public class DefaultBucketSettings implements BucketSettings {
         private int replicas = 0;
         private boolean indexReplicas = false;
         private boolean enableFlush = false;
-        private final Map<String, Object> customSettings = new HashMap<String, Object>();
+        private final Map<String, Object> customSettings = new LinkedHashMap<String, Object>();
 
         @Override
         public String name() {

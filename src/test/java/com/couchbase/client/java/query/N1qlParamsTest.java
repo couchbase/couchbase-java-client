@@ -322,8 +322,8 @@ public class N1qlParamsTest {
                 .withCredentials("bar", "b");
 
         JsonObject expected = JsonObject.create().put("creds", JsonArray.from(
-                JsonObject.create().put("user", "bar").put("pass", "b"),
-                JsonObject.create().put("user", "foo").put("pass", "a")
+            JsonObject.create().put("user", "foo").put("pass", "a"),
+            JsonObject.create().put("user", "bar").put("pass", "b")
         ));
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
@@ -341,8 +341,8 @@ public class N1qlParamsTest {
                 .withCredentials(credentialList);
 
         JsonObject expected = JsonObject.create().put("creds", JsonArray.from(
-                JsonObject.create().put("user", "bar").put("pass", "b"),
-                JsonObject.create().put("user", "foo").put("pass", "a")
+                JsonObject.create().put("user", "foo").put("pass", "a"),
+                JsonObject.create().put("user", "bar").put("pass", "b")
         ));
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
@@ -361,8 +361,8 @@ public class N1qlParamsTest {
                 .withCredentials("bar", "c");
 
         JsonObject expected = JsonObject.create().put("creds", JsonArray.from(
-                JsonObject.create().put("user", "bar").put("pass", "c"),
-                JsonObject.create().put("user", "foo").put("pass", "a")
+                JsonObject.create().put("user", "foo").put("pass", "a"),
+                JsonObject.create().put("user", "bar").put("pass", "c")
         ));
         JsonObject actual = JsonObject.empty();
         source.injectParams(actual);
