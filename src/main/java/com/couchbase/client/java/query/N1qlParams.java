@@ -56,10 +56,14 @@ public class N1qlParams implements Serializable {
     private String scanWait;
     private String clientContextId;
     private Integer maxParallelism;
+    private Integer pipelineCap;
+    private Integer pipelineBatch;
+    private Integer scanCap;
     private boolean disableMetrics;
     private MutationState mutationState;
     private Map<String, Object> rawParams;
     private boolean pretty;
+    private boolean readonly;
 
     private final Map<String, String> credentials;
 
@@ -72,6 +76,7 @@ public class N1qlParams implements Serializable {
         adhoc = true;
         disableMetrics = false;
         pretty = true;
+        readonly = false;
         credentials = new LinkedHashMap<String, String>();
     }
 
@@ -96,6 +101,15 @@ public class N1qlParams implements Serializable {
         }
         if (this.maxParallelism != null) {
             queryJson.put("max_parallelism", this.maxParallelism.toString());
+        }
+        if (this.pipelineCap != null) {
+            queryJson.put("pipeline_cap", this.pipelineCap.toString());
+        }
+        if (this.pipelineBatch != null) {
+            queryJson.put("pipeline_batch", this.pipelineBatch.toString());
+        }
+        if (this.scanCap != null) {
+            queryJson.put("scan_cap", this.scanCap.toString());
         }
         if (this.disableMetrics) {
             queryJson.put("metrics", false);
@@ -122,6 +136,10 @@ public class N1qlParams implements Serializable {
 
         if (!this.pretty) {
             queryJson.put("pretty", false);
+        }
+
+        if (this.readonly) {
+            queryJson.put("readonly", true);
         }
 
         if (this.rawParams != null) {
@@ -335,6 +353,64 @@ public class N1qlParams implements Serializable {
     }
 
     /**
+     * If set to true, it will signal the query engine on the server that only non-data modifying requests
+     * are allowed. Note that this rule is enforced on the server and not the SDK side.
+     *
+     * Controls whether a query can change a resulting record set.
+     *
+     * If readonly is true, then the following statements are not allowed:
+     *  - CREATE INDEX
+     *  - DROP INDEX
+     *  - INSERT
+     *  - MERGE
+     *  - UPDATE
+     *  - UPSERT
+     *  - DELETE
+     *
+     * @param readonly true if readonly should be forced, false is the default and will use the server side default.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams readonly(boolean readonly) {
+        this.readonly = readonly;
+        return this;
+    }
+
+    /**
+     * Advanced: Maximum buffered channel size between the indexer client and the query service for index scans.
+     *
+     * This parameter controls when to use scan backfill. Use 0 or a negative number to disable.
+     *
+     * @param scanCap the scan_cap param, use 0 or negative number to disable.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams scanCap(int scanCap) {
+        this.scanCap = scanCap;
+        return this;
+    }
+
+    /**
+     * Advanced: Controls the number of items execution operators can batch for Fetch from the KV.
+     *
+     * @param pipelineBatch the pipeline_batch param.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams pipelineBatch(int pipelineBatch) {
+        this.pipelineBatch = pipelineBatch;
+        return this;
+    }
+
+    /**
+     * Advanced: Maximum number of items each execution operator can buffer between various operators.
+     *
+     * @param pipelineCap the pipeline_cap param.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams pipelineCap(int pipelineCap) {
+        this.pipelineCap = pipelineCap;
+        return this;
+    }
+
+    /**
      * Allows to specify an arbitrary, raw N1QL param.
      *
      * Use with care and only provide options that are supported by the server and are not exposed as part of the
@@ -386,6 +462,7 @@ public class N1qlParams implements Serializable {
         if (disableMetrics != that.disableMetrics) return false;
         if (adhoc != that.adhoc) return false;
         if (pretty != that.pretty) return false;
+        if (readonly != that.readonly) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
         if (consistency != that.consistency) return false;
@@ -393,6 +470,12 @@ public class N1qlParams implements Serializable {
         if (clientContextId != null ? !clientContextId.equals(that.clientContextId) : that.clientContextId != null)
             return false;
         if (maxParallelism != null ? !maxParallelism.equals(that.maxParallelism) : that.maxParallelism != null)
+            return false;
+        if (pipelineCap != null ? !pipelineCap.equals(that.pipelineCap) : that.pipelineCap != null)
+            return false;
+        if (pipelineBatch != null ? !pipelineBatch.equals(that.pipelineBatch) : that.pipelineBatch != null)
+            return false;
+        if (scanCap != null ? !scanCap.equals(that.scanCap) : that.scanCap != null)
             return false;
         if (mutationState != null ? !mutationState.equals(that.mutationState) : that.mutationState != null)
             return false;
@@ -407,12 +490,16 @@ public class N1qlParams implements Serializable {
         result = 31 * result + (scanWait != null ? scanWait.hashCode() : 0);
         result = 31 * result + (clientContextId != null ? clientContextId.hashCode() : 0);
         result = 31 * result + (maxParallelism != null ? maxParallelism.hashCode() : 0);
+        result = 31 * result + (scanCap != null ? scanCap.hashCode() : 0);
+        result = 31 * result + (pipelineBatch != null ? pipelineBatch.hashCode() : 0);
+        result = 31 * result + (pipelineCap != null ? pipelineCap.hashCode() : 0);
         result = 31 * result + (disableMetrics ? 1 : 0);
         result = 31 * result + (mutationState != null ? mutationState.hashCode() : 0);
         result = 31 * result + credentials.hashCode();
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
         result = 31 * result + (adhoc ? 1 : 0);
         result = 31 * result + (pretty ? 1 : 0);
+        result = 31 * result + (readonly ? 1 : 0);
         return result;
     }
 
@@ -424,7 +511,11 @@ public class N1qlParams implements Serializable {
         sb.append(", scanWait='").append(scanWait).append('\'');
         sb.append(", clientContextId='").append(clientContextId).append('\'');
         sb.append(", maxParallelism=").append(maxParallelism);
+        sb.append(", scanCap=").append(scanCap);
+        sb.append(", pipelineCap=").append(pipelineCap);
+        sb.append(", pipelineBatch=").append(pipelineBatch);
         sb.append(", adhoc=").append(adhoc);
+        sb.append(", readonly=").append(readonly);
         sb.append(", pretty=").append(pretty);
         sb.append(", disableMetrics=").append(disableMetrics);
         sb.append(", rawParams=").append(rawParams);
