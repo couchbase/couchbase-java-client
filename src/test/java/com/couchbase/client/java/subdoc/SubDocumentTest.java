@@ -26,6 +26,7 @@ import com.couchbase.client.core.message.kv.subdoc.multi.Lookup;
 import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.error.subdoc.PathMismatchException;
+import com.couchbase.client.java.error.subdoc.XattrOrderingException;
 import org.junit.Test;
 
 /**
@@ -87,5 +88,21 @@ public class SubDocumentTest {
                 "EXIST(path){fatal=com.couchbase.client.java.error.TranscodingException: test}]";
 
         assertEquals(expected, fragment.toString());
+    }
+
+    @Test(expected = XattrOrderingException.class)
+    public void shouldFailIfXattrLookupIsNotFirst() {
+        new AsyncLookupInBuilder(null, null, null, null, "id")
+            .get("foo")
+            .get("bar", new SubdocOptionsBuilder().xattr(true))
+            .execute();
+    }
+
+    @Test(expected = XattrOrderingException.class)
+    public void shouldFailIfXattrMutateIsNotFirst() {
+        new AsyncMutateInBuilder(null, null, null, null, "id")
+            .remove("foo")
+            .remove("bar", new SubdocOptionsBuilder().xattr(true))
+            .execute();
     }
 }

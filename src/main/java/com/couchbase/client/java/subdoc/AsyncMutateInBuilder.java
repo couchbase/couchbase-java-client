@@ -69,6 +69,7 @@ import com.couchbase.client.java.error.subdoc.PathInvalidException;
 import com.couchbase.client.java.error.subdoc.PathMismatchException;
 import com.couchbase.client.java.error.subdoc.PathNotFoundException;
 import com.couchbase.client.java.error.subdoc.SubDocumentException;
+import com.couchbase.client.java.error.subdoc.XattrOrderingException;
 import com.couchbase.client.java.transcoder.subdoc.FragmentTranscoder;
 import rx.Observable;
 import rx.Subscriber;
@@ -1012,6 +1013,14 @@ public class AsyncMutateInBuilder {
     protected Observable<DocumentFragment<Mutation>> doMultiMutate() {
         if (mutationSpecs.isEmpty()) {
             throw new IllegalArgumentException("At least one Mutation Spec is necessary for mutateIn");
+        }
+        boolean seenNonXattr = false;
+        for (MutationSpec spec : mutationSpecs) {
+            if (spec.xattr() && seenNonXattr) {
+                throw new XattrOrderingException("Xattr-based commands must always come first in the builder!");
+            } else if (!spec.xattr()) {
+                seenNonXattr = true;
+            }
         }
 
         Observable<DocumentFragment<Mutation>> mutations = Observable.defer(new Func0<Observable<MutationCommand>>() {
