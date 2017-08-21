@@ -64,6 +64,7 @@ public class SubdocHelper {
                 return new DocumentDoesNotExistException("Document not found for subdoc API: " + id);
             case TEMPORARY_FAILURE:
             case SERVER_BUSY:
+            case LOCKED:
                 return  new TemporaryFailureException();
             case OUT_OF_MEMORY:
                 return new CouchbaseOutOfMemoryException();
