@@ -1356,6 +1356,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -1576,6 +1580,10 @@ public interface AsyncBucket {
      * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
      * will bring the actual value below zero.
      *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -1588,7 +1596,7 @@ public interface AsyncBucket {
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
      * @param initial the initial value to use if the document does not exist yet.
-     * @param expiry the new expiration time for the document.
+     * @param expiry the new expiration time for the document, only used on creation.
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry);
@@ -1598,6 +1606,10 @@ public interface AsyncBucket {
      *
      * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
      * will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -1621,7 +1633,7 @@ public interface AsyncBucket {
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
      * @param initial the initial value to use if the document does not exist yet.
-     * @param expiry the new expiration time for the document.
+     * @param expiry the new expiration time for the document, only used on creation.
      * @param persistTo the persistence constraint to watch.
      * @return a {@link Document} containing the resulting value.
      */
@@ -1633,6 +1645,10 @@ public interface AsyncBucket {
      * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
      * will bring the actual value below zero.
      *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -1655,7 +1671,7 @@ public interface AsyncBucket {
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
      * @param initial the initial value to use if the document does not exist yet.
-     * @param expiry the new expiration time for the document.
+     * @param expiry the new expiration time for the document, only used on creation.
      * @param replicateTo the replication constraint to watch.
      * @return a {@link Document} containing the resulting value.
      */
@@ -1667,6 +1683,10 @@ public interface AsyncBucket {
      * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
      * will bring the actual value below zero.
      *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -1689,7 +1709,7 @@ public interface AsyncBucket {
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
      * @param initial the initial value to use if the document does not exist yet.
-     * @param expiry the new expiration time for the document.
+     * @param expiry the new expiration time for the document, only used on creation.
      * @param persistTo the persistence constraint to watch.
      * @param replicateTo the replication constraint to watch.
      * @return a {@link Document} containing the resulting value.
