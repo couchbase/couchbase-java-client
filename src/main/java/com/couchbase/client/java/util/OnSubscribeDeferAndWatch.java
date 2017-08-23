@@ -85,14 +85,6 @@ public class OnSubscribeDeferAndWatch<T> implements Observable.OnSubscribe<T> {
             return;
         }
 
-        // For now, make sure we only support AsyncSubjects to make issues explicit down the road.
-        if (!(o instanceof AsyncSubject)) {
-            Exceptions.throwOrReport(
-                new IllegalStateException("Only AsyncSubject is allowed with deferAndWatch (is "
-                    + o.getClass().getSimpleName() + ")"), s);
-            return;
-        }
-
         // Hook up the consumer subscription and store it in a reference
         final AtomicReference<Subscription> sr = new AtomicReference<Subscription>();
         final AtomicBoolean emitted = new AtomicBoolean(false);
