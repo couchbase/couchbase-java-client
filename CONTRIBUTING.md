@@ -5,7 +5,7 @@ easier for all of us to contribute with code and comments.
 
 There are some prerequisites before you can start contributing, so be sure to start with the following:
 
-  1. Visit [http://review.couchbase.org(http://review.couchbase.org) and "Register" for an account
+  1. Visit [http://review.couchbase.org](http://review.couchbase.org) and "Register" for an account
   2. Review [our Contributor Licence Agreement (CLA)](http://review.couchbase.org/static/individual_agreement.html)
   3. Agree to CLA by visiting [http://review.couchbase.org/#/settings/agreements](http://review.couchbase.org/#/settings/agreements)
      Otherwise, you won't be able to push changes to Gerrit (instead getting a "`Upload denied for project`" message).
