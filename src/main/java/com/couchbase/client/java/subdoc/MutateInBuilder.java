@@ -483,13 +483,26 @@ public class MutateInBuilder {
     }
 
     /**
-     * Set true to create document
+     *  Set createDocument to true, if the document has to be created
      *
-     * @param createDocument set to true to create document.
+     * @param createDocument true to create document.
      * @return this builder for chaining.
      */
+    @InterfaceStability.Experimental
     public MutateInBuilder createDocument(boolean createDocument) {
         asyncBuilder.createDocument(createDocument);
+        return this;
+    }
+
+    /**
+     * Set insertDocument to true, if the document has to be created only if it does not exist
+     *
+     * @param insertDocument true to insert document.
+     * @return this builder for chaining.
+     */
+    @InterfaceStability.Experimental
+    public MutateInBuilder insertDocument(boolean insertDocument) {
+        asyncBuilder.insertDocument(insertDocument);
         return this;
     }
 
