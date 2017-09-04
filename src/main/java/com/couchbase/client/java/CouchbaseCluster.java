@@ -27,6 +27,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.message.internal.ServicesHealth;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.core.utils.Blocking;
 import com.couchbase.client.java.auth.Authenticator;
@@ -468,5 +469,10 @@ public class CouchbaseCluster implements Cluster {
                         .query(query)
                         .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC)
                         .single(), timeout, timeUnit);
+    }
+
+    @Override
+    public ServicesHealth healthCheck() {
+        return Blocking.blockForSingle(couchbaseAsyncCluster.healthCheck(), environment.managementTimeout(), TIMEOUT_UNIT);
     }
 }

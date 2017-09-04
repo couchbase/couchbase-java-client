@@ -37,6 +37,9 @@ import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.OpenBucketResponse;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
+import com.couchbase.client.core.message.internal.HealthCheckRequest;
+import com.couchbase.client.core.message.internal.HealthCheckResponse;
+import com.couchbase.client.core.message.internal.ServicesHealth;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.auth.*;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
@@ -602,6 +605,17 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         //note that delegating to the Bucket has the additional effect
         // of enriching the query with server side timeout if not explicitly defined
         return delegateBucket.query(query);
+    }
+
+    @Override
+    public Observable<ServicesHealth> healthCheck() {
+        return core.<HealthCheckResponse>send(new HealthCheckRequest())
+            .map(new Func1<HealthCheckResponse, ServicesHealth>() {
+                @Override
+                public ServicesHealth call(HealthCheckResponse response) {
+                    return response.servicesHealth();
+                }
+            });
     }
 
     /**
