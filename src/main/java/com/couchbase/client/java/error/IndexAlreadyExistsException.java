@@ -31,7 +31,7 @@ import com.couchbase.client.java.query.dsl.Expression;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class IndexAlreadyExistsException extends CouchbaseException {
 

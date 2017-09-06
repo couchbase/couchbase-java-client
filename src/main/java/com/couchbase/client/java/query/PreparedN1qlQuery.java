@@ -34,7 +34,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Simon Baslé
  * @since 2.1
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Private
 public class PreparedN1qlQuery extends ParameterizedN1qlQuery {
 

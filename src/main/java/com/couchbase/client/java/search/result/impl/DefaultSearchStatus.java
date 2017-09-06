@@ -26,7 +26,7 @@ import com.couchbase.client.java.search.result.SearchStatus;
  * @author Michael Nitschinger
  * @since 2.3.0
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class DefaultSearchStatus implements SearchStatus {
 

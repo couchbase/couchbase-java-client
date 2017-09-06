@@ -32,7 +32,7 @@ import com.couchbase.client.java.bucket.BucketManager;
  * @author Simon Baslé
  * @since 2.2
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Private
 public class IndexesNotReadyException extends CouchbaseException {
 

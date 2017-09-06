@@ -2724,7 +2724,7 @@ public interface Bucket {
      * @param query the query builder.
      * @return a query result containing the matches and additional information.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     SearchQueryResult query(SearchQuery query);
 
     /**
@@ -2741,7 +2741,7 @@ public interface Bucket {
      * @param timeUnit the unit for the timeout.
      * @return a query result containing the matches and additional information.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     SearchQueryResult query(SearchQuery query, long timeout, TimeUnit timeUnit);
 
     /**

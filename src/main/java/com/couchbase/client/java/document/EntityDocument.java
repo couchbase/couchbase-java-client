@@ -26,7 +26,7 @@ import com.couchbase.client.core.message.kv.MutationToken;
  * @since 1.2.0
  */
 @InterfaceAudience.Public
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 public class EntityDocument<T> implements Document<T> {
 
     private String id;

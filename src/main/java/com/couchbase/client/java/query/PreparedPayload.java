@@ -26,7 +26,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @since 2.2
  */
 @InterfaceAudience.Private
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 public class PreparedPayload implements SerializableStatement {
 
     private static final long serialVersionUID = -5950676152745796617L;

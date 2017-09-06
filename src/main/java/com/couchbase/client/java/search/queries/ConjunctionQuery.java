@@ -27,7 +27,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Michael Nitschinger
  * @since 2.3.0
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Public
 public class ConjunctionQuery extends AbstractCompoundQuery {
 

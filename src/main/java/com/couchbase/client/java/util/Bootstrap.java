@@ -33,7 +33,7 @@ import java.util.List;
  * @author Michael Nitschinger
  * @since 2.1.0
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Private
 public class Bootstrap {
 

@@ -30,7 +30,7 @@ import com.couchbase.client.java.search.util.SearchUtils;
  * @author Michael Nitschinger
  * @since 2.3.0
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Uncommitted
 @InterfaceAudience.Public
 public class DateRangeQuery extends AbstractFtsQuery {
 
