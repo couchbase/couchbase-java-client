@@ -271,7 +271,7 @@ public class CouchbaseCluster implements Cluster {
 
     @Override
     public Bucket openBucket(String name, List<Transcoder<? extends Document, ?>> transcoders) {
-        return openBucket(name, environment.connectTimeout(), TIMEOUT_UNIT);
+        return openBucket(name, transcoders, environment.connectTimeout(), TIMEOUT_UNIT);
     }
 
     @Override

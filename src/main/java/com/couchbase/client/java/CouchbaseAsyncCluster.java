@@ -376,7 +376,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             //which will get interpreted as empty string in openBucket(String, String, List) below.
             //this would not impact passwordAuthenticator as there is only one credential
         }
-        return openBucketInternal(name, cred.login(), cred.password(), null);
+        return openBucketInternal(name, cred.login(), cred.password(), transcoders);
     }
 
     @Override
