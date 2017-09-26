@@ -110,7 +110,7 @@ public class AsyncLookupInBuilder {
      *
      * @param accessDeleted true to access deleted document xattrs
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public AsyncLookupInBuilder accessDeleted(boolean accessDeleted) {
         this.accessDeleted = accessDeleted;
         return this;
@@ -207,7 +207,7 @@ public class AsyncLookupInBuilder {
      *
      * @return this builder for chaining.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public AsyncLookupInBuilder get() {
         this.specs.add(new LookupSpec(Lookup.GETDOC, ""));
         return this;

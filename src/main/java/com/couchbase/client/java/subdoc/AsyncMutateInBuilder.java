@@ -110,7 +110,7 @@ public class AsyncMutateInBuilder {
     protected long cas;
     protected PersistTo persistTo;
     protected ReplicateTo replicateTo;
-    protected boolean createDocument;
+    protected boolean upsertDocument;
     protected boolean insertDocument;
 
     /**
@@ -416,14 +416,24 @@ public class AsyncMutateInBuilder {
     /**
      * Set createDocument to true, if the document has to be created
      *
+     * This method has been renamed to {@link #upsertDocument(boolean)}
      * @param createDocument true to create document.
      */
-    @InterfaceStability.Experimental
+    @Deprecated
     public AsyncMutateInBuilder createDocument(boolean createDocument) {
-        if (this.insertDocument && createDocument) {
-            throw new IllegalArgumentException("Cannot set both createDocument and insertDocument to true");
+        return upsertDocument(createDocument);
+    }
+
+    /**
+     * Set upsertDocument to true, if the document has to be created
+     *
+     * @param upsertDocument true to create document.
+     */
+    public AsyncMutateInBuilder upsertDocument(boolean upsertDocument) {
+        if (this.insertDocument && upsertDocument) {
+            throw new IllegalArgumentException("Cannot set both upsertDocument and insertDocument to true");
         }
-        this.createDocument = createDocument;
+        this.upsertDocument = upsertDocument;
         return this;
     }
 
@@ -432,10 +442,10 @@ public class AsyncMutateInBuilder {
      *
      * @param insertDocument true to insert document.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public AsyncMutateInBuilder insertDocument(boolean insertDocument) {
-        if (this.createDocument && insertDocument) {
-            throw new IllegalArgumentException("Cannot set both createDocument and insertDocument to true");
+        if (this.upsertDocument && insertDocument) {
+            throw new IllegalArgumentException("Cannot set both upsertDocument and insertDocument to true");
         }
         this.insertDocument = insertDocument;
         return this;
@@ -551,7 +561,7 @@ public class AsyncMutateInBuilder {
      *
      * @param content full content of the JSON document
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public AsyncMutateInBuilder upsert(JsonObject content) {
         this.mutationSpecs.add(new MutationSpec(Mutation.UPSERTDOC, "", content));
         return this;
@@ -1074,7 +1084,7 @@ public class AsyncMutateInBuilder {
             @Override
             public Observable<MultiMutationResponse> call(List<MutationCommand> mutationCommands) {
                 return core.send(new SubMultiMutationRequest(docId, bucketName,
-                        expiry, cas, SubMultiMutationDocOptionsBuilder.builder().createDocument(createDocument).insertDocument(insertDocument),
+                        expiry, cas, SubMultiMutationDocOptionsBuilder.builder().upsertDocument(upsertDocument).insertDocument(insertDocument),
                         mutationCommands));
             }
         }).flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
@@ -1172,7 +1182,7 @@ public class AsyncMutateInBuilder {
                     SubDictUpsertRequest request = new SubDictUpsertRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
-                    request.createDocument(createDocument);
+                    request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
                 }
@@ -1203,7 +1213,7 @@ public class AsyncMutateInBuilder {
                     SubDictAddRequest request = new SubDictAddRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
-                    request.createDocument(createDocument);
+                    request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
                 }
@@ -1236,7 +1246,7 @@ public class AsyncMutateInBuilder {
                     SubReplaceRequest request = new SubReplaceRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
-                    request.createDocument(createDocument);
+                    request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
                 }
@@ -1278,7 +1288,7 @@ public class AsyncMutateInBuilder {
                             buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
-                    request.createDocument(createDocument);
+                    request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
                 }
@@ -1330,7 +1340,7 @@ public class AsyncMutateInBuilder {
                             SubArrayRequest.ArrayOperation.ADD_UNIQUE, buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createParents());
                     request.xattr(spec.xattr());
-                    request.createDocument(createDocument);
+                    request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
                 }
@@ -1458,7 +1468,7 @@ public class AsyncMutateInBuilder {
                         request.createIntermediaryPath(spec.createParents());
                         request.xattr(spec.xattr());
                         request.subscriber(s);
-                        request.createDocument(createDocument);
+                        request.upsertDocument(upsertDocument);
                         request.insertDocument(insertDocument);
                         return core.send(request);
                     }

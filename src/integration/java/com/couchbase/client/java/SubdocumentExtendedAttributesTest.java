@@ -305,7 +305,7 @@ public class SubdocumentExtendedAttributesTest {
                 .mutateIn(key)
                 .upsert("spring.class", "SomeClass", new SubdocOptionsBuilder().createParents(true).xattr(true))
                 .upsert(content)
-                .createDocument(true)
+                .upsertDocument(true)
                 .withExpiry(5)
                 .execute(PersistTo.ONE);
 
@@ -333,7 +333,7 @@ public class SubdocumentExtendedAttributesTest {
                 .mutateIn(key)
                 .upsert(content)
                 .upsert("spring.class", "SomeClass", new SubdocOptionsBuilder().createParents(true).xattr(true))
-                .createDocument(false)
+                .upsertDocument(false)
                 .execute(PersistTo.ONE);
     }
 
@@ -345,7 +345,7 @@ public class SubdocumentExtendedAttributesTest {
                 .mutateIn(key)
                 .upsert(content)
                 .upsert("spring.class", "SomeClass", new SubdocOptionsBuilder().createParents(false).xattr(true))
-                .createDocument(false)
+                .upsertDocument(false)
                 .execute(PersistTo.ONE);
     }
 
@@ -410,7 +410,7 @@ public class SubdocumentExtendedAttributesTest {
                 .upsert("_class", "SomeClass", new SubdocOptionsBuilder().createParents(false).xattr(true))
                 .upsert(content)
                 .insertDocument(true)
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute(PersistTo.ONE);
     }
 
@@ -422,7 +422,7 @@ public class SubdocumentExtendedAttributesTest {
                 .mutateIn(key)
                 .upsert("_class", "SomeClass", new SubdocOptionsBuilder().createParents(false).xattr(true))
                 .upsert(content)
-                .createDocument(true)
+                .upsertDocument(true)
                 .insertDocument(true)
                 .execute(PersistTo.ONE);
     }

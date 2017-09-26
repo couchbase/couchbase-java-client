@@ -27,7 +27,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
  * @author Subhashni Balakrishnan
  * @since 2.4.2
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class SubdocOptionsBuilder {
     private boolean createParents;
@@ -58,7 +58,7 @@ public class SubdocOptionsBuilder {
     /**
      * Set xattr to true to accessing extended attributes, else false.
      */
-    @InterfaceStability.Experimental
+    @InterfaceStability.Committed
     public SubdocOptionsBuilder xattr(boolean xattr) {
         this.xattr = xattr;
         return this;

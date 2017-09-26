@@ -64,7 +64,7 @@ public class SubDocumentDocumentFlagsTests {
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .upsert("somepath.hello", "world", SubdocOptionsBuilder.builder().createParents(true))
                 .withExpiry(1)
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
@@ -76,7 +76,7 @@ public class SubDocumentDocumentFlagsTests {
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .insert("hello", "world")
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
@@ -88,7 +88,7 @@ public class SubDocumentDocumentFlagsTests {
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .arrayPrepend("hello", "world")
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
@@ -100,7 +100,7 @@ public class SubDocumentDocumentFlagsTests {
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .arrayAppend("hello", "world")
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
@@ -112,7 +112,7 @@ public class SubDocumentDocumentFlagsTests {
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .arrayAddUnique("hello", "world")
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
@@ -124,7 +124,7 @@ public class SubDocumentDocumentFlagsTests {
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
                 .counter("counter", 1)
-                .createDocument(true)
+                .upsertDocument(true)
                 .execute();
         assertTrue(response.status(0) == ResponseStatus.SUCCESS);
         removeIfExists(key);
