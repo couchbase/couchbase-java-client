@@ -152,6 +152,7 @@
             <groupId>com.couchbase.mock</groupId>
             <artifactId>CouchbaseMock</artifactId>
             <version>${couchbasemock.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
