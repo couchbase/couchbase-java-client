@@ -75,9 +75,14 @@
             <email>michael.nitschinger@couchbase.com</email>
         </developer>
         <developer>
-            <id>simonbasle</id>
-            <name>Simon Baslé</name>
-            <email>simon@couchbase.com</email>
+            <id>subalakr</id>
+            <name>Subhashni Balakrishnan</name>
+            <email>subhashni@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>dnault</id>
+            <name>David Nault</name>
+            <email>david.nault@couchbase.com</email>
         </developer>
         <developer>
             <id>avsej</id>
