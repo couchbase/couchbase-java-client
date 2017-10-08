@@ -18,9 +18,9 @@ package com.couchbase.client.java.transcoder;
 import com.couchbase.client.core.endpoint.util.WhitespaceSkipper;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
-import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.deps.com.fasterxml.jackson.databind.ObjectMapper;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.ByteBufInputStream;
 import com.couchbase.client.deps.io.netty.buffer.ByteBufUtil;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -313,8 +313,7 @@ public class TranscoderUtils {
      * Decode a {@link ByteBuf} representing a valid JSON entity to the requested target class,
      * using the {@link ObjectMapper} provided and without releasing the buffer.
      *
-     * Mapper uses the byte[], performing the most straightforward conversion from ByteBuf to byte[] available. (see
-     * {@link #byteBufToByteArray(ByteBuf)}).
+     * Mapper uses a {@link ByteBufInputStream} reading directly the netty {@link ByteBuf}
      *
      * @param input the ByteBuf to decode.
      * @param clazz the class to decode to.
@@ -324,8 +323,16 @@ public class TranscoderUtils {
      * @throws IOException in case decoding failed.
      */
     public static <T> T byteBufToClass(ByteBuf input, Class<? extends T> clazz, ObjectMapper mapper) throws IOException {
-        ByteBufToArray toArray = byteBufToByteArray(input);
-        return mapper.readValue(toArray.byteArray, toArray.offset, toArray.length, clazz);
+    	ByteBufInputStream bbis =null;
+    	try {
+    		 bbis = new ByteBufInputStream(input);
+    		 return mapper.readValue(bbis, clazz);
+    	}
+    	finally {
+    		if(bbis != null) {
+    			bbis.close();
+    		}
+    	}
     }
 
     /**
