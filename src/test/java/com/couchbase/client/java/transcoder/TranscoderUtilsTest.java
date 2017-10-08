@@ -15,8 +15,10 @@
  */
 package com.couchbase.client.java.transcoder;
 
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.java.document.json.JsonObject;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -91,6 +93,28 @@ public class TranscoderUtilsTest {
             Unpooled.wrappedBuffer(russian.getBytes(CharsetUtil.UTF_8)),
             TranscoderUtils.encodeStringAsUtf8(russian)
         );
+    }
+
+    @Test
+    public void shouldDecodeToClassFromDirectBuffer() throws Exception {
+        ByteBuf input = Unpooled.directBuffer();
+        input.writeBytes("{\"hello\": \"world\", \"direct\": true}".getBytes(CharsetUtil.UTF_8));
+
+        JsonObject result = TranscoderUtils.byteBufToClass(input, JsonObject.class, JacksonTransformers.MAPPER);
+        assertEquals(JsonObject.create().put("hello", "world").put("direct", true), result);
+        assertEquals(input.refCnt(), 1);
+        input.release();
+    }
+
+    @Test
+    public void shouldDecodeToClassFromHeapBuffer() throws Exception {
+        ByteBuf input = Unpooled.buffer();
+        input.writeBytes("{\"hello\": \"world\", \"direct\": true}".getBytes(CharsetUtil.UTF_8));
+
+        JsonObject result = TranscoderUtils.byteBufToClass(input, JsonObject.class, JacksonTransformers.MAPPER);
+        assertEquals(JsonObject.create().put("hello", "world").put("direct", true), result);
+        assertEquals(input.refCnt(), 1);
+        input.release();
     }
 
 }
