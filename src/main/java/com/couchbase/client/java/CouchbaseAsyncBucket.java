@@ -98,6 +98,7 @@ import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
 import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
 import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.transcoder.BinaryTranscoder;
+import com.couchbase.client.java.transcoder.ByteArrayTranscoder;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
 import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
@@ -142,6 +143,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public static final JsonLongTranscoder JSON_LONG_TRANSCODER = new JsonLongTranscoder();
     public static final JsonStringTranscoder JSON_STRING_TRANSCODER = new JsonStringTranscoder();
     public static final RawJsonTranscoder RAW_JSON_TRANSCODER = new RawJsonTranscoder();
+    public static final ByteArrayTranscoder BYTE_ARRAY_TRANSCODER = new ByteArrayTranscoder();
 
     public static final LegacyTranscoder LEGACY_TRANSCODER = new LegacyTranscoder();
     public static final BinaryTranscoder BINARY_TRANSCODER = new BinaryTranscoder();
@@ -191,6 +193,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         transcoders.put(BINARY_TRANSCODER.documentType(), BINARY_TRANSCODER);
         transcoders.put(STRING_TRANSCODER.documentType(), STRING_TRANSCODER);
         transcoders.put(SERIALIZABLE_TRANSCODER.documentType(), SERIALIZABLE_TRANSCODER);
+        transcoders.put(BYTE_ARRAY_TRANSCODER.documentType(), BYTE_ARRAY_TRANSCODER);
 
         for (Transcoder<? extends Document, ?> custom : customTranscoders) {
             transcoders.put(custom.documentType(), custom);
