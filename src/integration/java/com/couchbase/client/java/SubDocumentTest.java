@@ -117,7 +117,7 @@ public class SubDocumentTest {
     public void testFragmentCanBeAnEntity() {
         ctx.bucket()
                 .mutateIn(key)
-                .upsert("user", new KeyValueTest.User("frank"), new SubdocOptionsBuilder().createParents(false))
+                .upsert("user", new KeyValueTest.User("frank"), new SubdocOptionsBuilder().createPath(false))
                 .remove("sub")
                 .remove("array")
                 .remove("string")
@@ -672,7 +672,7 @@ public class SubDocumentTest {
     public void testUpsertInDictionaryExtraLevelSucceedsWithCreatesParents() {
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .upsert("sub.some.path", 1024, new SubdocOptionsBuilder().createParents(true))
+                .upsert("sub.some.path", 1024, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -761,7 +761,7 @@ public class SubDocumentTest {
     public void testInsertInDictionaryExtraLevelSucceedsWithCreatesParents() {
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .insert("sub.some.path", 1024, new SubdocOptionsBuilder().createParents(true))
+                .insert("sub.some.path", 1024, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -934,11 +934,11 @@ public class SubDocumentTest {
     }
 
     @Test
-    public void testExtendInDictionaryWithCreateParentsCreatesArray() {
+    public void testExtendInDictionaryWithCreatePathCreatesArray() {
         final String path = "sub.array";
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .arrayPrepend(path, "newElement", new SubdocOptionsBuilder().createParents(true))
+                .arrayPrepend(path, "newElement", new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -950,7 +950,7 @@ public class SubDocumentTest {
     }
 
     @Test
-    public void testExtendInDictionnaryWithoutCreateParentsFails() {
+    public void testExtendInDictionnaryWithoutCreatePathFails() {
         final String path = "sub.array";
         verifyException(ctx.bucket()
                 .mutateIn(key)
@@ -1021,8 +1021,8 @@ public class SubDocumentTest {
         List<?> values = Arrays.asList("a", "b", 123, "d");
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .arrayPrependAll("array", values, new SubdocOptionsBuilder().createParents(false))
-                .arrayPrependAll("array2", values, new SubdocOptionsBuilder().createParents(true))
+                .arrayPrependAll("array", values, new SubdocOptionsBuilder().createPath(false))
+                .arrayPrependAll("array2", values, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -1067,8 +1067,8 @@ public class SubDocumentTest {
         List<?> values = Arrays.asList("a", "b", 123, "d");
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .arrayAppendAll("array", values, new SubdocOptionsBuilder().createParents(false))
-                .arrayAppendAll("array2", values, new SubdocOptionsBuilder().createParents(true))
+                .arrayAppendAll("array", values, new SubdocOptionsBuilder().createPath(false))
+                .arrayAppendAll("array2", values, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -1098,7 +1098,7 @@ public class SubDocumentTest {
 
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(arrayKey)
-                .arrayPrepend(path, value1, new SubdocOptionsBuilder().createParents(true))
+                .arrayPrepend(path, value1, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -1110,7 +1110,7 @@ public class SubDocumentTest {
 
         DocumentFragment<Mutation> result2 = ctx.bucket()
                 .mutateIn(arrayKey)
-                .arrayPrepend(path, value2, new SubdocOptionsBuilder().createParents(true))
+                .arrayPrepend(path, value2, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result2);
@@ -1347,10 +1347,10 @@ public class SubDocumentTest {
     }
 
     @Test
-    public void testArrayAddUniqueOnNonExistingArraySucceedsWithCreateParents() {
+    public void testArrayAddUniqueOnNonExistingArraySucceedsWithCreatePath() {
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .arrayAddUnique( "anotherArray", "arrayInsert", new SubdocOptionsBuilder().createParents(true))
+                .arrayAddUnique( "anotherArray", "arrayInsert", new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertNotNull(result);
@@ -1599,12 +1599,12 @@ public class SubDocumentTest {
     }
 
     @Test
-    public void testCounterInPartialPathMissingIntermediaryElementWithCreateParentsSucceeds() {
+    public void testCounterInPartialPathMissingIntermediaryElementWithCreatePathSucceeds() {
         long delta = 1000L;
         final String path = "counters.a";
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
-                .counter(path, delta, new SubdocOptionsBuilder().createParents(true))
+                .counter(path, delta, new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         assertThat(result.content(path), instanceOf(Long.class));
@@ -1759,14 +1759,14 @@ public class SubDocumentTest {
     }
 
     @Test
-    public void testMultiMutationWithCreateParents() {
+    public void testMultiMutationWithCreatePath() {
         DocumentFragment<Mutation> mmr = ctx.bucket()
                 .mutateIn(key)
-                .arrayAddUnique("addUnique.array", "v", new SubdocOptionsBuilder().createParents(true))
-                .counter("counter.newCounter", 100, new SubdocOptionsBuilder().createParents(true))
-                .arrayPrepend("extend.array", "v", new SubdocOptionsBuilder().createParents(true))
-                .insert("insert.sub.entry", "v", new SubdocOptionsBuilder().createParents(true))
-                .upsert("upsert.sub.entry", "v", new SubdocOptionsBuilder().createParents(true))
+                .arrayAddUnique("addUnique.array", "v", new SubdocOptionsBuilder().createPath(true))
+                .counter("counter.newCounter", 100, new SubdocOptionsBuilder().createPath(true))
+                .arrayPrepend("extend.array", "v", new SubdocOptionsBuilder().createPath(true))
+                .insert("insert.sub.entry", "v", new SubdocOptionsBuilder().createPath(true))
+                .upsert("upsert.sub.entry", "v", new SubdocOptionsBuilder().createPath(true))
                 .execute();
 
         JsonDocument stored = ctx.bucket().get(key);

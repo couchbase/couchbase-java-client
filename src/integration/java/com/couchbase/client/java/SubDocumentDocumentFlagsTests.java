@@ -62,7 +62,7 @@ public class SubDocumentDocumentFlagsTests {
         String key = "createDocumentInSubdocMutateDictInsert";
         removeIfExists(key);
         DocumentFragment<Mutation> response = ctx.bucket().mutateIn(key)
-                .upsert("somepath.hello", "world", SubdocOptionsBuilder.builder().createParents(true))
+                .upsert("somepath.hello", "world", SubdocOptionsBuilder.builder().createPath(true))
                 .withExpiry(1)
                 .upsertDocument(true)
                 .execute();

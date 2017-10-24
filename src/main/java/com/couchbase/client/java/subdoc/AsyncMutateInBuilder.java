@@ -486,14 +486,14 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path where to insert a new dictionary value.
      * @param fragment the new dictionary value to insert.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder insert(String path, T fragment, boolean createParents) {
+    public <T> AsyncMutateInBuilder insert(String path, T fragment, boolean createPath) {
         if (StringUtil.isNullOrEmpty(path)) {
             throw new IllegalArgumentException("Path must not be empty for insert");
         }
-        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_ADD, path, fragment, new SubdocOptionsBuilder().createParents(createParents)));
+        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_ADD, path, fragment, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -531,14 +531,14 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path where to insert (or replace) a dictionary value.
      * @param fragment the new dictionary value to be applied.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder upsert(String path, T fragment, boolean createParents) {
+    public <T> AsyncMutateInBuilder upsert(String path, T fragment, boolean createPath) {
         if (StringUtil.isNullOrEmpty(path)) {
             throw new IllegalArgumentException("Path must not be empty for upsert");
         }
-        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_UPSERT, path, fragment, new SubdocOptionsBuilder().createParents(createParents)));
+        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_UPSERT, path, fragment, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -617,10 +617,10 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path to the counter (must be containing a number).
      * @param delta the value to increment or decrement the counter by.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public AsyncMutateInBuilder counter(String path, long delta, boolean createParents) {
+    public AsyncMutateInBuilder counter(String path, long delta, boolean createPath) {
         if (StringUtil.isNullOrEmpty(path)) {
             throw new IllegalArgumentException("Path must not be empty for counter");
         }
@@ -628,7 +628,7 @@ public class AsyncMutateInBuilder {
         if (delta == 0L) {
             throw new BadDeltaException("Delta must not be 0");
         }
-        this.mutationSpecs.add(new MutationSpec(Mutation.COUNTER, path, delta, new SubdocOptionsBuilder().createParents(createParents)));
+        this.mutationSpecs.add(new MutationSpec(Mutation.COUNTER, path, delta, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -677,11 +677,11 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path of the array.
      * @param value the value to insert at the front of the array.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder arrayPrepend(String path, T value, boolean createParents) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, value, new SubdocOptionsBuilder().createParents(createParents)));
+    public <T> AsyncMutateInBuilder arrayPrepend(String path, T value, boolean createPath) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, value, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -726,12 +726,12 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path of the array.
      * @param values the collection of values to insert at the front of the array as individual elements.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      * @param <T> the type of data in the collection (must be JSON serializable).
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder arrayPrependAll(String path, Collection<T> values, boolean createParents) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createParents(createParents)));
+    public <T> AsyncMutateInBuilder arrayPrependAll(String path, Collection<T> values, boolean createPath) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -762,7 +762,7 @@ public class AsyncMutateInBuilder {
     /**
      * Prepend multiple values at once in an existing array, pushing all values to the front/start of the array.
      * This is provided as a convenience alternative to {@link #arrayPrependAll(String, Collection, boolean)}. Note
-     * that parent nodes are not created when using this method (ie. createParents = false).
+     * that parent nodes are not created when using this method (ie. createPath = false).
      *
      * First value becomes the first element of the array, second value the second, etc... All existing values
      * are shifted right in the array, by the number of inserted elements.
@@ -790,11 +790,11 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path of the array.
      * @param value the value to insert at the back of the array.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createParents) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, value, new SubdocOptionsBuilder().createParents(createParents)));
+    public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createPath) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, value, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -836,12 +836,12 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path of the array.
      * @param values the collection of values to individually insert at the back of the array.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      * @param <T> the type of data in the collection (must be JSON serializable).
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder arrayAppendAll(String path, Collection<T> values, boolean createParents) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createParents(createParents)));
+    public <T> AsyncMutateInBuilder arrayAppendAll(String path, Collection<T> values, boolean createPath) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createPath(createPath)));
                 return this;
     }
 
@@ -870,7 +870,7 @@ public class AsyncMutateInBuilder {
     /**
      * Append multiple values at once in an existing array, pushing all values to the back/end of the array.
      * This is provided as a convenience alternative to {@link #arrayAppendAll(String, Collection, boolean)}.
-     * Note that parent nodes are not created when using this method (ie. createParents = false).
+     * Note that parent nodes are not created when using this method (ie. createPath = false).
      *
      * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
      * is saved compared to individual {@link #arrayAppend(String, Object, boolean)} by grouping mutations in
@@ -974,7 +974,7 @@ public class AsyncMutateInBuilder {
      * path, eg. "sub.array[2]"), inserting all values at the given position and shifting existing values
      * beyond the position by the number of elements in the collection. This is provided as a convenience
      * alternative to {@link #arrayInsertAll(String, Collection)}. Note that parent nodes are not created
-     * when using this method (ie. createParents = false).
+     * when using this method (ie. createPath = false).
      *
      * Each item in the collection is inserted as an individual element of the array, but a bit of overhead
      * is saved compared to individual {@link #arrayInsert(String, Object)} by grouping mutations in a single packet.
@@ -1002,11 +1002,11 @@ public class AsyncMutateInBuilder {
      *
      * @param path the path to mutate in the JSON.
      * @param value the value to insert.
-     * @param createParents true to create missing intermediary nodes.
+     * @param createPath true to create missing intermediary nodes.
      */
     @Deprecated
-    public <T> AsyncMutateInBuilder arrayAddUnique(String path, T value, boolean createParents) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_ADD_UNIQUE, path, value, new SubdocOptionsBuilder().createParents(createParents)));
+    public <T> AsyncMutateInBuilder arrayAddUnique(String path, T value, boolean createPath) {
+        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_ADD_UNIQUE, path, value, new SubdocOptionsBuilder().createPath(createPath)));
         return this;
     }
 
@@ -1069,7 +1069,7 @@ public class AsyncMutateInBuilder {
                                     i + " (" + spec.type() + " on " + spec.path() + ") in " + docId);
                             bufList.add(buf);
                             commands.add(new MutationCommandBuilder(spec.type(), spec.path(), buf)
-                                    .createIntermediaryPath(spec.createParents())
+                                    .createIntermediaryPath(spec.createPath())
                                     .xattr(spec.xattr()).build());
                         } catch (TranscodingException e) {
                             releaseAll(bufList);
@@ -1180,7 +1180,7 @@ public class AsyncMutateInBuilder {
                 @Override
                 public SubDictUpsertRequest call(MutationSpec spec, ByteBuf buf) {
                     SubDictUpsertRequest request = new SubDictUpsertRequest(docId, spec.path(), buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
@@ -1211,7 +1211,7 @@ public class AsyncMutateInBuilder {
                 @Override
                 public SubDictAddRequest call(MutationSpec spec, ByteBuf buf) {
                     SubDictAddRequest request = new SubDictAddRequest(docId, spec.path(), buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
@@ -1244,7 +1244,7 @@ public class AsyncMutateInBuilder {
                 @Override
                 public SubReplaceRequest call(MutationSpec spec, ByteBuf buf) {
                     SubReplaceRequest request = new SubReplaceRequest(docId, spec.path(), buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
@@ -1286,7 +1286,7 @@ public class AsyncMutateInBuilder {
 
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(), op,
                             buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
@@ -1311,7 +1311,7 @@ public class AsyncMutateInBuilder {
                 public SubArrayRequest call(MutationSpec spec, ByteBuf buf) {
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(),
                             SubArrayRequest.ArrayOperation.INSERT, buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     return request;
                 }
@@ -1338,7 +1338,7 @@ public class AsyncMutateInBuilder {
                 public SubArrayRequest call(MutationSpec spec, ByteBuf buf) {
                     SubArrayRequest request = new SubArrayRequest(docId, spec.path(),
                             SubArrayRequest.ArrayOperation.ADD_UNIQUE, buf, bucketName, expiry, cas);
-                    request.createIntermediaryPath(spec.createParents());
+                    request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
@@ -1465,7 +1465,7 @@ public class AsyncMutateInBuilder {
                     @Override
                     public Observable<SimpleSubdocResponse> call(Subscriber s) {
                         SubCounterRequest request = new SubCounterRequest(docId, spec.path(), delta, bucketName, expiry, cas);
-                        request.createIntermediaryPath(spec.createParents());
+                        request.createIntermediaryPath(spec.createPath());
                         request.xattr(spec.xattr());
                         request.subscriber(s);
                         request.upsertDocument(upsertDocument);

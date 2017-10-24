@@ -33,16 +33,16 @@ public class MutationSpec {
     private final Mutation type;
     private final String path;
     private final Object fragment;
-    private final boolean createParents;
+    private final boolean createPath;
     private final boolean xattr;
 
     @Deprecated
-    public MutationSpec(Mutation type, String path, Object fragment, boolean createParents) {
+    public MutationSpec(Mutation type, String path, Object fragment, boolean createPath) {
         //TODO check fragment class?
         this.type = type;
         this.path = path;
         this.fragment = fragment;
-        this.createParents = createParents;
+        this.createPath = createPath;
         this.xattr = false;
     }
 
@@ -50,7 +50,7 @@ public class MutationSpec {
         this.type = type;
         this.path = path;
         this.fragment = fragment;
-        this.createParents = builder.createParents();
+        this.createPath = builder.createPath();
         this.xattr = builder.xattr();
     }
 
@@ -58,7 +58,7 @@ public class MutationSpec {
         this.type = type;
         this.path = path;
         this.fragment = fragment;
-        this.createParents = false;
+        this.createPath = false;
         this.xattr = false;
     }
 
@@ -86,8 +86,8 @@ public class MutationSpec {
     /**
      * @return true should the mutation create missing intermediary elements in the path (if it supports it).
      */
-    public boolean createParents() {
-        return this.createParents;
+    public boolean createPath() {
+        return this.createPath;
     }
 
     /**
@@ -102,7 +102,7 @@ public class MutationSpec {
         StringBuilder sb = new StringBuilder("{");
         sb.append("\"type\":" + type);
         sb.append(", \"path\":" + path);
-        sb.append(", \"createParents\":" + createParents);
+        sb.append(", \"createPath\":" + createPath);
         sb.append(", \"xattr\":" + xattr);
         sb.append('}');
         return sb.toString();

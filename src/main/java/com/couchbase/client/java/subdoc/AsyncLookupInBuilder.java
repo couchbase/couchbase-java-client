@@ -224,8 +224,8 @@ public class AsyncLookupInBuilder {
         if (path == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc get");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         this.specs.add(new LookupSpec(Lookup.GET, path, optionsBuilder));
         return this;
@@ -243,8 +243,8 @@ public class AsyncLookupInBuilder {
         if (paths == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc get");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         for (String path : paths) {
             if (StringUtil.isNullOrEmpty(path)) {
@@ -289,8 +289,8 @@ public class AsyncLookupInBuilder {
         if (path == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc exists");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         this.specs.add(new LookupSpec(Lookup.EXIST, path, optionsBuilder));
         return this;
@@ -309,8 +309,8 @@ public class AsyncLookupInBuilder {
         if (paths == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc exists");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         for (String path : paths) {
             if (StringUtil.isNullOrEmpty(path)) {
@@ -355,8 +355,8 @@ public class AsyncLookupInBuilder {
         if (path == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc get count");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         this.specs.add(new LookupSpec(Lookup.GET_COUNT, path, optionsBuilder));
         return this;
@@ -376,8 +376,8 @@ public class AsyncLookupInBuilder {
         if (paths == null) {
             throw new IllegalArgumentException("Path is mandatory for subdoc get count");
         }
-        if (optionsBuilder.createParents()) {
-            throw new IllegalArgumentException("Options createParents are not supported for lookup");
+        if (optionsBuilder.createPath()) {
+            throw new IllegalArgumentException("Options createPath are not supported for lookup");
         }
         for (String path : paths) {
             if (StringUtil.isNullOrEmpty(path)) {

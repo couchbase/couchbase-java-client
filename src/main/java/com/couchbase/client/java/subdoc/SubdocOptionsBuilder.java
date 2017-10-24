@@ -30,7 +30,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 @InterfaceStability.Committed
 @InterfaceAudience.Public
 public class SubdocOptionsBuilder {
-    private boolean createParents;
+    private boolean createPath;
     private boolean xattr;
 
     public SubdocOptionsBuilder() {
@@ -42,17 +42,44 @@ public class SubdocOptionsBuilder {
 
     /**
      * Set createParents to true to create missing intermediary nodes, else false.
+     *
+     * @deprecated Please use {@link #createPath(boolean)} instead, this method will be removed
+     *             in the next major version.
      */
+    @Deprecated
     public SubdocOptionsBuilder createParents(boolean createParents) {
-        this.createParents = createParents;
+        return createPath(createParents);
+    }
+
+    /**
+     * Set true/false if the intermediate paths should be created.
+     *
+     * @param createPath true if they should be created, false otherwise.
+     * @return this builder for chaining purposes.
+     */
+    public SubdocOptionsBuilder createPath(boolean createPath) {
+        this.createPath = createPath;
         return this;
     }
 
     /**
      * Get createParents value set on builder
+     *
+     * @deprecated Please use {@link #createPath()} instead, this method will be removed
+     *             in the next major version.
      */
+    @Deprecated
     public boolean createParents() {
-        return this.createParents;
+        return createPath();
+    }
+
+    /**
+     * Returns true if the intermediate paths should be created.
+     *
+     * @return true if they should be created.
+     */
+    public boolean createPath() {
+        return createPath;
     }
 
     /**
@@ -75,7 +102,7 @@ public class SubdocOptionsBuilder {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
-        sb.append(" \"createParents\": " + createParents);
+        sb.append(" \"createPath\": " + createPath);
         sb.append(", \"xattr\":" + xattr);
         sb.append("}");
         return sb.toString();
