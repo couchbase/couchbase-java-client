@@ -613,6 +613,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
+        public Builder configPollFloorInterval(long configPollFloorInterval) {
+            super.configPollFloorInterval(configPollFloorInterval);
+            return this;
+        }
+
+        @Override
         public DefaultCouchbaseEnvironment build() {
             return new DefaultCouchbaseEnvironment(this);
         }
