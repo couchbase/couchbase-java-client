@@ -97,10 +97,10 @@ public class RetryWithDelayHandler implements Func1<Tuple2<Integer, Throwable>, 
         final int errorNumber = attemptError.value1();
         final Throwable error = attemptError.value2();
 
-        if (errorNumber > maxAttempts) {
-            return Observable.error(new CannotRetryException(messageForMaxAttempts(errorNumber - 1), error));
-        } else if (errorInterruptingPredicate != null && errorInterruptingPredicate.call(error) == Boolean.TRUE) {
+        if (errorInterruptingPredicate != null && Boolean.TRUE.equals(errorInterruptingPredicate.call(error))) {
             return Observable.error(error);
+        } else if (errorNumber > maxAttempts) {
+            return Observable.error(new CannotRetryException(messageForMaxAttempts(errorNumber - 1), error));
         } else {
             final long delay = retryDelay.calculate(errorNumber);
             final TimeUnit unit = retryDelay.unit();
