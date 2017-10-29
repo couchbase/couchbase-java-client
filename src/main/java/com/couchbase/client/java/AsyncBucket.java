@@ -1221,7 +1221,7 @@ public interface AsyncBucket {
     Observable<AsyncN1qlQueryResult> query(N1qlQuery query);
 
     /**
-     * Experimental: Queries a Full-Text Index
+     * Queries a Full-Text Index
      *
      * The returned {@link Observable} can error under the following conditions:
      *
