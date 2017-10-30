@@ -15,6 +15,8 @@
  */
 package com.couchbase.client.java.transcoder;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
@@ -34,6 +36,8 @@ import com.couchbase.client.java.error.TranscodingException;
  * @author Michael Nitschinger
  * @since 2.5.2
  */
+@InterfaceStability.Uncommitted
+@InterfaceAudience.Public
 public class ByteArrayTranscoder extends AbstractTranscoder<ByteArrayDocument, byte[]> {
 
     @Override

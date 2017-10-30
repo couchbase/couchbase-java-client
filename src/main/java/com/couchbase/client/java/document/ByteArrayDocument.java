@@ -15,6 +15,8 @@
  */
 package com.couchbase.client.java.document;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.kv.MutationToken;
 
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.io.Serializable;
  * @author Michael Nitschinger
  * @since 2.5.2
  */
+@InterfaceStability.Uncommitted
+@InterfaceAudience.Public
 public class ByteArrayDocument extends AbstractDocument<byte[]> implements Serializable {
 
     private static final long serialVersionUID = -8616443474645912439L;
