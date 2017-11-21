@@ -368,6 +368,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         case NOT_EXISTS:
                             return false;
                         case TEMPORARY_FAILURE:
+                        case LOCKED:
                             throw addDetails(new TemporaryLockFailureException(), response);
                         case SERVER_BUSY:
                             throw addDetails(new TemporaryFailureException(), response);
