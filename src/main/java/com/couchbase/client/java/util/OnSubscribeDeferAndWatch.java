@@ -44,11 +44,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * that the subscription is still present. If it is not the buffers are proactively cleared out, making sure that
  * no trace/leak is left behind.
  *
- *  ♬ Wir hom so vü zum tuan
- *  ♬ Wir hudln und schurdln ummanond
- *  ♬ Müssen uns sputen des dauert vü zu lang
- *  ♬ Da hüft ka hupen so kummst a ned schneller dran
- *  ♬ Und a ka Fluchen lametier ned gemmas on
+ *  ♬ Wir hom so vü zum tuan                                ♬ We have so much to do
+ *  ♬ Wir hudln und schurdln ummanond                       ♬ We are hurrying and botching around
+ *  ♬ Müssen uns sputen des dauert vü zu lang               ♬ We need to hurry, it all takes too long
+ *  ♬ Da hüft ka hupen so kummst a ned schneller dran       ♬ No need to honk, you’re not getting served quicker
+ *  ♬ Und a ka Fluchen lametier ned gemmas on               ♬ No swearing, no whining, lets get on with it
  *      -- from Skero - "Hudeln"
  *
  * @author Michael Nitschinger
