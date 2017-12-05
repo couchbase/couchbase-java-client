@@ -53,6 +53,7 @@ import rx.Subscriber;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
+import static com.couchbase.client.core.logging.RedactableArgument.user;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
@@ -433,7 +434,13 @@ public class AsyncLookupInBuilder {
                             return SubdocOperationResult.createResult(path, operation, status, content, raw);
                         }
                     } catch (TranscodingException e) {
-                        LOGGER.error("Couldn't decode multi-lookup " + operation + " for " + docId + "/" + path, e);
+                        LOGGER.error(
+                          "Couldn't decode multi-lookup {} for {}/{}",
+                          user(operation),
+                          user(docId),
+                          user(path),
+                          e
+                        );
                         return SubdocOperationResult.createFatal(path, operation, e);
                     }
                 } else if (!isExist && isNotFound) {

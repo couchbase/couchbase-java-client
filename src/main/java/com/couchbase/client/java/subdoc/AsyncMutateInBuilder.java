@@ -77,8 +77,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static com.couchbase.client.core.logging.RedactableArgument.user;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
-
 
 /**
  * A builder for subdocument mutations. In order to perform the final set of operations, use the
@@ -1093,7 +1093,13 @@ public class AsyncMutateInBuilder {
                             results.add(SubdocOperationResult
                                     .createResult(result.path(), result.operation(), result.status(), content));
                         } catch (TranscodingException e) {
-                            LOGGER.error("Couldn't decode multi-lookup " + result.operation() + " for " + docId + "/" + result.path(), e);
+                            LOGGER.error(
+                              "Couldn't decode multi-mutation {} for {}/{}",
+                              user(result),
+                              user(docId),
+                              user(result.path()),
+                              e
+                            );
                             results.add(SubdocOperationResult.createFatal(result.path(), result.operation(), e));
                         } finally {
                             if (result.value() != null) {

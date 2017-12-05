@@ -25,6 +25,8 @@ import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.error.TranscodingException;
 
+import static com.couchbase.client.core.logging.RedactableArgument.user;
+
 /**
  * Base {@link Transcoder} which should be extended for compatibility.
  *
@@ -46,9 +48,9 @@ public abstract class AbstractTranscoder<D extends Document<T>, T> implements Tr
             return result;
         } catch(Exception ex) {
             LOGGER.warn("Decoding of document with {} failed. exception: {}, id: \"{}\", cas: {}, expiry: {}, flags: {}, status: {}"
-                + ", content size: {} bytes, content: \"{}\"", this.getClass().getSimpleName(), ex.getMessage(), id,
-                cas, expiry, "0x" + Integer.toHexString(flags), status, content == null ? 0 : content.readableBytes(),
-                content == null ? "null" : content.toString(CharsetUtil.UTF_8));
+                + ", content size: {} bytes, content: \"{}\"", this.getClass().getSimpleName(), ex.getMessage(), user(id),
+                user(Long.toString(cas)), user(Integer.toString(expiry)), "0x" + user(Integer.toHexString(flags)), status, user(Integer.toString(content == null ? 0 : content.readableBytes())),
+                user(content == null ? "null" : content.toString(CharsetUtil.UTF_8)));
 
             if (content != null && shouldAutoReleaseOnError()) {
                 content.release();

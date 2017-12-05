@@ -60,6 +60,8 @@ import rx.functions.Action1;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
+import static com.couchbase.client.core.logging.RedactableArgument.system;
+
 /**
  * Main asynchronous entry point to a Couchbase Cluster.
  *
@@ -337,7 +339,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                     throw new IllegalStateException("DNS SRV list is empty.");
                 }
                 seedNodes.addAll(foundNodes);
-                LOGGER.info("Loaded seed nodes from DNS SRV {}.", foundNodes);
+                LOGGER.info("Loaded seed nodes from DNS SRV {}.", system(foundNodes));
             } catch (Exception ex) {
                 LOGGER.warn("DNS SRV lookup failed, proceeding with normal bootstrap.", ex);
                 seedNodes.add(lookupNode.getAddress().getHostAddress());

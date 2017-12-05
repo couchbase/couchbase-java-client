@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static com.couchbase.client.core.logging.RedactableArgument.user;
+
 /**
  * Helper methods and flags for the shipped {@link Transcoder}s.
  *
@@ -379,10 +381,16 @@ public class TranscoderUtils {
         //are converted to JsonObject/JsonArray.
         Object value = byteBufToClass(input, Object.class, mapper);
         if (value instanceof Map) {
-            LOGGER.warn("A JSON object could not be fast detected (first byte '" + (char) first + "')");
+            LOGGER.warn(
+              "A JSON object could not be fast detected (first byte '{}')",
+              user((char) first)
+            );
             return JsonObject.from((Map<String, ?>) value);
         } else if (value instanceof List) {
-            LOGGER.warn("A JSON array could not be fast detected (first byte '" + (char) first + "')");
+            LOGGER.warn(
+              "A JSON array could not be fast detected (first byte '{}')",
+              user((char) first)
+            );
             return JsonArray.from((List<?>) value);
         } else {
             return value;

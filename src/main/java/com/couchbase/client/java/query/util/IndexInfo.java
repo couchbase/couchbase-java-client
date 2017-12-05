@@ -22,6 +22,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Index;
 import com.couchbase.client.java.query.dsl.path.index.IndexType;
 
+import static com.couchbase.client.core.logging.RedactableArgument.meta;
+
 /**
  * Contains meta-information about a N1QL index.
  *
@@ -67,7 +69,7 @@ public class IndexInfo {
             try {
                 candidateType = IndexType.valueOf(rawType.toUpperCase());
             } catch (IllegalArgumentException e) {
-                LOGGER.warn("Unknown index type %s for index %s", rawType, name);
+                LOGGER.warn("Unknown index type {} for index {}", rawType, meta(name));
                 candidateType = null;
             }
             this.type = candidateType;
