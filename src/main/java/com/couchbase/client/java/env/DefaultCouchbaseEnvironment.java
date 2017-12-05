@@ -619,6 +619,12 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         }
 
         @Override
+        public Builder forceSaslPlain(boolean forceSaslPlain) {
+            super.forceSaslPlain(forceSaslPlain);
+            return this;
+        }
+
+        @Override
         public DefaultCouchbaseEnvironment build() {
             return new DefaultCouchbaseEnvironment(this);
         }

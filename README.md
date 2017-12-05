@@ -12,7 +12,7 @@ This project is the official driver for Couchbase when working with Java (or on 
 * Complete non-blocking stack through [RxJava](https://github.com/ReactiveX/RxJava) and [Netty](http://netty.io)
 
 ## Getting Help ##
-This README, as well as the [reference documentation](http://developer.couchbase.com/documentation/server/4.5/sdk/java/start-using-sdk.html) are the best places to get started and dig deeper into the Couchbase SDK. In addition, you might want to look at our [travel-sample application](https://github.com/couchbaselabs/try-cb-java).
+This README, as well as the [reference documentation](https://developer.couchbase.com/documentation/server/5.0/sdk/java/start-using-sdk.html) are the best places to get started and dig deeper into the Couchbase SDK. In addition, you might want to look at our [travel-sample application](https://github.com/couchbaselabs/try-cb-java).
 
 The primary way to ask questions is through our official [Forums](http://forums.couchbase.com), although there is also a [stackoverflow tag](http://stackoverflow.com/questions/tagged/couchbase). You can also ask questions on `#couchbase` or `#libcouchbase` on IRC (freenode). Please file any issues you find or enhancements you want to request against our [JIRA](http://issues.couchbase.com/browse/JCBC) which we use for universal issue tracking.
 
@@ -24,7 +24,7 @@ The easiest way is to download the jar as well as its transitive dependencies (o
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.5.2</version>
+    <version>2.5.3</version>
 </dependency>
 ```
 
@@ -63,7 +63,7 @@ for (N1qlQueryRow row : result) {
 
 This prints out the distinct countries for all airlines stored in the `travel-sample` bucket that comes with the server.
 
-If you want to learn more, check out the [Start Using the SDK](http://developer.couchbase.com/documentation/server/4.5/sdk/java/start-using-sdk.html) section in the official documentation.
+If you want to learn more, check out the [Start Using the SDK](https://developer.couchbase.com/documentation/server/5.0/sdk/java/start-using-sdk.html) section in the official documentation.
 
 ## Contributing ##
 
