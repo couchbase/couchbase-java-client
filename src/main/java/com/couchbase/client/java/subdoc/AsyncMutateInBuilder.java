@@ -16,27 +16,21 @@
 
 package com.couchbase.client.java.subdoc;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
-import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.core.message.kv.subdoc.multi.MultiMutationResponse;
 import com.couchbase.client.core.message.kv.subdoc.multi.MultiResult;
 import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
 import com.couchbase.client.core.message.kv.subdoc.multi.MutationCommand;
-import com.couchbase.client.core.message.kv.subdoc.multi.SubMultiMutationRequest;
 import com.couchbase.client.core.message.kv.subdoc.multi.MutationCommandBuilder;
 import com.couchbase.client.core.message.kv.subdoc.multi.SubMultiMutationDocOptionsBuilder;
+import com.couchbase.client.core.message.kv.subdoc.multi.SubMultiMutationRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.AbstractSubdocMutationRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SimpleSubdocResponse;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubArrayRequest;
@@ -77,6 +71,11 @@ import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.functions.Func3;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
@@ -416,8 +415,8 @@ public class AsyncMutateInBuilder {
     /**
      * Set createDocument to true, if the document has to be created
      *
-     * This method has been renamed to {@link #upsertDocument(boolean)}
      * @param createDocument true to create document.
+     * @deprecated Use {@link #upsertDocument(boolean)} instead.
      */
     @Deprecated
     public AsyncMutateInBuilder createDocument(boolean createDocument) {
@@ -482,23 +481,20 @@ public class AsyncMutateInBuilder {
     }
 
     /**
-     * Insert a fragment provided the last element of the path doesn't exists,
+     * Insert a fragment, provided the last element of the path doesn't exist.
      *
      * @param path the path where to insert a new dictionary value.
      * @param fragment the new dictionary value to insert.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #insert(String, T, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder insert(String path, T fragment, boolean createPath) {
-        if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for insert");
-        }
-        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_ADD, path, fragment, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return insert(path, fragment, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
-     * Insert a fragment provided the last element of the path doesn't exists,
+     * Insert a fragment, provided the last element of the path doesn't exist.
      *
      * @param path the path where to insert a new dictionary value.
      * @param fragment the new dictionary value to insert.
@@ -512,7 +508,7 @@ public class AsyncMutateInBuilder {
     }
 
     /**
-     * Insert a fragment provided the last element of the path doesn't exists,
+     * Insert a fragment, provided the last element of the path doesn't exist.
      *
      * @param path the path where to insert a new dictionary value.
      * @param fragment the new dictionary value to insert.
@@ -532,14 +528,11 @@ public class AsyncMutateInBuilder {
      * @param path the path where to insert (or replace) a dictionary value.
      * @param fragment the new dictionary value to be applied.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #upsert(String, T, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder upsert(String path, T fragment, boolean createPath) {
-        if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for upsert");
-        }
-        this.mutationSpecs.add(new MutationSpec(Mutation.DICT_UPSERT, path, fragment, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return upsert(path, fragment, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
@@ -618,18 +611,11 @@ public class AsyncMutateInBuilder {
      * @param path the path to the counter (must be containing a number).
      * @param delta the value to increment or decrement the counter by.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #counter(String, long, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public AsyncMutateInBuilder counter(String path, long delta, boolean createPath) {
-        if (StringUtil.isNullOrEmpty(path)) {
-            throw new IllegalArgumentException("Path must not be empty for counter");
-        }
-        // shortcircuit if delta is zero
-        if (delta == 0L) {
-            throw new BadDeltaException("Delta must not be 0");
-        }
-        this.mutationSpecs.add(new MutationSpec(Mutation.COUNTER, path, delta, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return counter(path, delta, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
@@ -678,11 +664,11 @@ public class AsyncMutateInBuilder {
      * @param path the path of the array.
      * @param value the value to insert at the front of the array.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #arrayPrepend(String, T, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayPrepend(String path, T value, boolean createPath) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, value, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return arrayPrepend(path, value, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
@@ -728,11 +714,11 @@ public class AsyncMutateInBuilder {
      * @param values the collection of values to insert at the front of the array as individual elements.
      * @param createPath true to create missing intermediary nodes.
      * @param <T> the type of data in the collection (must be JSON serializable).
+     * @deprecated Use {@link #arrayPrependAll(String, Collection, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayPrependAll(String path, Collection<T> values, boolean createPath) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_FIRST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return arrayPrependAll(path, values, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
@@ -791,11 +777,11 @@ public class AsyncMutateInBuilder {
      * @param path the path of the array.
      * @param value the value to insert at the back of the array.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #arrayAppend(String, T, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createPath) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, value, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return arrayAppend(path, value, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**
@@ -838,11 +824,11 @@ public class AsyncMutateInBuilder {
      * @param values the collection of values to individually insert at the back of the array.
      * @param createPath true to create missing intermediary nodes.
      * @param <T> the type of data in the collection (must be JSON serializable).
+     * @deprecated Use {@link #arrayAppendAll(String, Collection, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayAppendAll(String path, Collection<T> values, boolean createPath) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_PUSH_LAST, path, new MultiValue<T>(values), new SubdocOptionsBuilder().createPath(createPath)));
-                return this;
+        return arrayAppendAll(path, values, new SubdocOptionsBuilder().createPath(createPath));
     }
 
 
@@ -1003,11 +989,11 @@ public class AsyncMutateInBuilder {
      * @param path the path to mutate in the JSON.
      * @param value the value to insert.
      * @param createPath true to create missing intermediary nodes.
+     * @deprecated Use {@link #arrayAddUnique(String, T, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayAddUnique(String path, T value, boolean createPath) {
-        this.mutationSpecs.add(new MutationSpec(Mutation.ARRAY_ADD_UNIQUE, path, value, new SubdocOptionsBuilder().createPath(createPath)));
-        return this;
+        return arrayAddUnique(path, value, new SubdocOptionsBuilder().createPath(createPath));
     }
 
     /**

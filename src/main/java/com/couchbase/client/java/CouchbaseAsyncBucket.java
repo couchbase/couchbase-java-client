@@ -15,10 +15,6 @@
  */
 package com.couchbase.client.java;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.lang.Tuple2;
@@ -26,7 +22,6 @@ import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.ResponseStatus;
-import com.couchbase.client.core.message.ResponseStatusDetails;
 import com.couchbase.client.core.message.cluster.CloseBucketRequest;
 import com.couchbase.client.core.message.cluster.CloseBucketResponse;
 import com.couchbase.client.core.message.kv.AppendRequest;
@@ -92,7 +87,6 @@ import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.CouchbaseAsyncRepository;
 import com.couchbase.client.java.search.SearchQuery;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
-import com.couchbase.client.java.search.result.SearchStatus;
 import com.couchbase.client.java.search.result.impl.DefaultAsyncSearchQueryResult;
 import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
 import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
@@ -123,6 +117,12 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func0;
 import rx.functions.Func1;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
@@ -316,12 +316,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
 
                     ObserveResponse.ObserveStatus foundStatus = response.observeStatus();
-                    if (foundStatus == ObserveResponse.ObserveStatus.FOUND_PERSISTED
-                        || foundStatus == ObserveResponse.ObserveStatus.FOUND_NOT_PERSISTED) {
-                        return true;
-                    }
+                    return foundStatus == ObserveResponse.ObserveStatus.FOUND_PERSISTED
+                            || foundStatus == ObserveResponse.ObserveStatus.FOUND_NOT_PERSISTED;
 
-                    return false;
                 }
             });
     }
@@ -471,7 +468,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         response.status());
                 }
             })
-            .cache(type.maxAffectedNodes());
+            .cacheWithInitialCapacity(type.maxAffectedNodes());
     }
 
     @Override
@@ -750,7 +747,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(final String id, final Class<D> target) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(target);
-        return remove((D) transcoder.newDocument(id, 0, null, 0));
+        return remove((D) transcoder.newDocument(id, 0, null, 0, null));
     }
 
     @Override
@@ -1419,7 +1416,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         }
                     }
                 };
-        return mutateIn(docId).upsert(key, value, false)
+        return mutateIn(docId).upsert(key, value)
                 .withCas(mutationOptionBuilder.cas())
                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                 .withExpiry(mutationOptionBuilder.expiry())
@@ -1549,7 +1546,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         }
                     }
                 };
-        return mutateIn(docId).arrayAppend("", element, false)
+        return mutateIn(docId).arrayAppend("", element)
                 .withCas(mutationOptionBuilder.cas())
                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                 .withExpiry(mutationOptionBuilder.expiry())
@@ -1683,7 +1680,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
                 };
 
-        return mutateIn(docId).arrayPrepend("", element, false)
+        return mutateIn(docId).arrayPrepend("", element)
                 .withCas(mutationOptionBuilder.cas())
                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                 .withExpiry(mutationOptionBuilder.expiry())
@@ -1771,7 +1768,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
                 };
 
-        return mutateIn(docId).arrayAddUnique("", element, false)
+        return mutateIn(docId).arrayAddUnique("", element)
                 .withCas(mutationOptionBuilder.cas())
                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                 .withExpiry(mutationOptionBuilder.expiry())
@@ -1813,9 +1810,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                         }
                         JsonArrayDocument document = documents.get(0);
                         JsonArray jsonArray = document.content();
-                        Iterator<Object> iterator = jsonArray.iterator();
-                        while (iterator.hasNext()) {
-                            Object next = iterator.next();
+                        for (Object next : jsonArray) {
                             if (next == null && element == null) {
                                 return true;
                             } else if (next != null && next.equals(element)) {
@@ -1952,7 +1947,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     }
                 };
 
-        return mutateIn(docId).arrayPrepend("", element, false)
+        return mutateIn(docId).arrayPrepend("", element)
                 .withCas(mutationOptionBuilder.cas())
                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                 .withExpiry(mutationOptionBuilder.expiry())
