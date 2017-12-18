@@ -24,7 +24,7 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.message.internal.ServicesHealth;
+import com.couchbase.client.core.message.internal.DiagnosticsReport;
 import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.ClassicAuthenticator;
 import com.couchbase.client.java.auth.CredentialContext;
@@ -345,9 +345,19 @@ public interface Cluster {
      * Provides a simple health check which allows insight into the current state of
      * services and endpoints.
      *
-     * @return health services in the form of {@link ServicesHealth}.
+     * @return health services in the form of {@link DiagnosticsReport}.
      */
     @InterfaceStability.Experimental
     @InterfaceAudience.Public
-    ServicesHealth healthCheck();
+    DiagnosticsReport diagnostics();
+
+    /**
+     * Provides a simple health check which allows insight into the current state of
+     * services and endpoints.
+     *
+     * @return health services in the form of {@link DiagnosticsReport}.
+     */
+    @InterfaceStability.Experimental
+    @InterfaceAudience.Public
+    DiagnosticsReport diagnostics(String reportId);
 }

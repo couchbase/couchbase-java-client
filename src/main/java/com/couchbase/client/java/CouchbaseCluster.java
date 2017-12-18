@@ -27,7 +27,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
-import com.couchbase.client.core.message.internal.ServicesHealth;
+import com.couchbase.client.core.message.internal.DiagnosticsReport;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.core.utils.Blocking;
 import com.couchbase.client.java.auth.Authenticator;
@@ -472,7 +472,16 @@ public class CouchbaseCluster implements Cluster {
     }
 
     @Override
-    public ServicesHealth healthCheck() {
-        return Blocking.blockForSingle(couchbaseAsyncCluster.healthCheck(), environment.managementTimeout(), TIMEOUT_UNIT);
+    public DiagnosticsReport diagnostics() {
+        return diagnostics(null);
+    }
+
+    @Override
+    public DiagnosticsReport diagnostics(String reportId) {
+        return Blocking.blockForSingle(
+          couchbaseAsyncCluster.diagnostics(reportId),
+          environment.managementTimeout(),
+          TIMEOUT_UNIT
+        );
     }
 }

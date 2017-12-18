@@ -37,9 +37,9 @@ import com.couchbase.client.core.message.cluster.DisconnectResponse;
 import com.couchbase.client.core.message.cluster.OpenBucketRequest;
 import com.couchbase.client.core.message.cluster.OpenBucketResponse;
 import com.couchbase.client.core.message.cluster.SeedNodesRequest;
-import com.couchbase.client.core.message.internal.HealthCheckRequest;
-import com.couchbase.client.core.message.internal.HealthCheckResponse;
-import com.couchbase.client.core.message.internal.ServicesHealth;
+import com.couchbase.client.core.message.internal.DiagnosticsReport;
+import com.couchbase.client.core.message.internal.DiagnosticsRequest;
+import com.couchbase.client.core.message.internal.DiagnosticsResponse;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.auth.*;
 import com.couchbase.client.java.cluster.AsyncClusterManager;
@@ -610,14 +610,19 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     }
 
     @Override
-    public Observable<ServicesHealth> healthCheck() {
-        return core.<HealthCheckResponse>send(new HealthCheckRequest())
-            .map(new Func1<HealthCheckResponse, ServicesHealth>() {
-                @Override
-                public ServicesHealth call(HealthCheckResponse response) {
-                    return response.servicesHealth();
-                }
-            });
+    public Observable<DiagnosticsReport> diagnostics(String reportId) {
+        return core.<DiagnosticsResponse>send(new DiagnosticsRequest(reportId))
+          .map(new Func1<DiagnosticsResponse, DiagnosticsReport>() {
+              @Override
+              public DiagnosticsReport call(DiagnosticsResponse response) {
+                  return response.diagnosticsReport();
+              }
+          });
+    }
+
+    @Override
+    public Observable<DiagnosticsReport> diagnostics() {
+        return diagnostics(null);
     }
 
     /**
