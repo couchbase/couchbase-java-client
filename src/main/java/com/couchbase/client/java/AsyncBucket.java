@@ -15,6 +15,8 @@
  */
 package com.couchbase.client.java;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.BackpressureException;
@@ -23,6 +25,8 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.RequestCancelledException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.message.internal.PingReport;
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.analytics.AnalyticsQuery;
 import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
@@ -61,6 +65,7 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.View;
 import com.couchbase.client.java.view.ViewQuery;
 import rx.Observable;
+import rx.Single;
 
 /**
  * Defines operations that can be executed asynchronously against a Couchbase Server bucket.
@@ -2722,4 +2727,59 @@ public interface AsyncBucket {
      * @return true if closed, false otherwise.
      */
     boolean isClosed();
+
+
+    /**
+     * Performs a diagnostic active "ping" call with a custom report ID on all services.
+     *
+     * Note that since each service has different timeouts, you need to provide a timeout that suits
+     * your needs (how long each individual service ping should take max before it times out).
+     *
+     * @param reportId the report ID to use in the report.
+     * @param timeout the timeout for each individual service.
+     * @param timeUnit the unit for the timeout.
+     * @return a ping report once created.
+     */
+    Single<PingReport> ping(String reportId, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Performs a diagnostic active "ping" call on all services with a random service id.
+     *
+     * Note that since each service has different timeouts, you need to provide a timeout that suits
+     * your needs (how long each individual service ping should take max before it times out).
+     *
+     * @param timeout the timeout for each individual service.
+     * @param timeUnit the unit for the timeout.
+     * @return a ping report once created.
+     */
+    Single<PingReport> ping(long timeout, TimeUnit timeUnit);
+
+    /**
+     * Performs a diagnostic active "ping" call on a list of services with a random service id.
+     *
+     * Note that since each service has different timeouts, you need to provide a timeout that suits
+     * your needs (how long each individual service ping should take max before it times out).
+     *
+     * @param services collection of services which should be included.
+     * @param timeout the timeout for each individual service.
+     * @param timeUnit the unit for the timeout.
+     * @return a ping report once created.
+     */
+    Single<PingReport> ping(Collection<ServiceType> services, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Performs a diagnostic active "ping" call against all the services provided with a custom
+     * report id.
+     *
+     * Note that since each service has different timeouts, you need to provide a timeout that suits
+     * your needs (how long each individual service ping should take max before it times out).
+     *
+     * @param reportId the report ID to use in the report.
+     * @param services collection of services which should be included.
+     * @param timeout the timeout for each individual service.
+     * @param timeUnit the unit for the timeout.
+     * @return a ping report once created.
+     */
+    Single<PingReport> ping(String reportId, Collection<ServiceType> services, long timeout, TimeUnit timeUnit);
+
 }
