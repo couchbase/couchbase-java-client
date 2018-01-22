@@ -59,7 +59,8 @@ public class DefaultAsyncN1qlQueryRow implements AsyncN1qlQueryRow {
                 value = OBJECT_MAPPER.readValue(byteValue, JsonObject.class);
                 return value;
             } catch (IOException e) {
-                throw new TranscodingException("Error deserializing row value from bytes to JsonObject", e);
+                throw new TranscodingException("Error deserializing row value from bytes to JsonObject \""
+                  + new String(byteValue, CharsetUtil.UTF_8) + "\"", e);
             }
         } else {
             return value;
