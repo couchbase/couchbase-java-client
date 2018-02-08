@@ -66,7 +66,7 @@ git remote add gerrit ssh://YOUR_SSH_USERNAME@review.couchbase.org:29418/couchba
 You'll also need to install a commit hook script that will generate a new Gerrit Change-Id each time you make a brand new commit:
 
 ```bash
-cd .git/hook
+cd .git/hooks
 wget http://review.couchbase.com/tools/hooks/commit-msg
 chmod +x commit-msg
 ```
@@ -186,7 +186,7 @@ git push gerrit HEAD:refs/for/master
 >
 > And it generates the Change-Id, so no need to set up the commit hook manually.
 
-Gerrit should answer with the URL to your Changeset, where you can call for reviewers (for the Java SDK, `Michael Nitschinger` and `Simon Baslé`).
+Gerrit should answer with the URL to your Changeset, where you can call for reviewers (for the Java SDK, `Michael Nitschinger`).
 
 To mark a changeset as ready for review (you are confident the change is complete with code and tests, and you have
 executed all unit tests and preferably all integration tests), you can use the "Reply..." button, top right and give
