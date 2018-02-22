@@ -15,6 +15,7 @@
  */
 package com.couchbase.client.java.repository.mapping;
 
+import com.couchbase.client.java.repository.annotation.EncryptedField;
 import com.couchbase.client.java.repository.annotation.Id;
 
 import java.lang.reflect.Field;
@@ -30,6 +31,7 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
     private final Field fieldReference;
     private final boolean isId;
     private final boolean isField;
+    private String encryptionProvider = null;
     private final String name;
     private final String realName;
 
@@ -38,6 +40,9 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
 
         isId = fieldReference.isAnnotationPresent(Id.class);
         isField = fieldReference.isAnnotationPresent(com.couchbase.client.java.repository.annotation.Field.class);
+        if (fieldReference.isAnnotationPresent(EncryptedField.class)) {
+            this.encryptionProvider = fieldReference.getAnnotation(EncryptedField.class).provider();
+        }
         realName = fieldReference.getName();
         name = extractName(fieldReference);
 
@@ -52,6 +57,11 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
     @Override
     public boolean isField() {
         return isField;
+    }
+
+    @Override
+    public String encryptionProvider() {
+        return encryptionProvider;
     }
 
     @Override

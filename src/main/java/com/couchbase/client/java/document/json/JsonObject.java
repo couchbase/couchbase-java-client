@@ -15,14 +15,19 @@
  */
 package com.couchbase.client.java.document.json;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.encryption.CryptoProvider;
+import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.core.encryption.EncryptionConfig;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
-import java.io.ObjectInput;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,12 +56,28 @@ public class JsonObject extends JsonValue implements Serializable {
     private final Map<String, Object> content;
 
     /**
+     * Encryption meta information for the Json values
+     */
+    private final Map<String, String> encryptionPathInfo;
+
+    /**
+     * Configuration for decryption, set using the environment
+     */
+    private EncryptionConfig encryptionConfig;
+
+    /**
+     * Encryption prefix
+     */
+    public static final String ENCRYPTION_PREFIX = "__encrypt_";
+
+    /**
      * Private constructor to create the object.
      *
      * The internal map is initialized with the default capacity.
      */
     private JsonObject() {
         content = new HashMap<String, Object>();
+        encryptionPathInfo = new HashMap<String, String>();
     }
 
     /**
@@ -64,6 +85,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     private JsonObject(int initialCapacity) {
         content = new HashMap<String, Object>(initialCapacity);
+        encryptionPathInfo = new HashMap<String, String>();
     }
 
     /**
@@ -194,12 +216,72 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Stores a {@link Object} value identified by the field name.
+     *
+     * Note that the value is checked and a {@link IllegalArgumentException} is thrown if not supported.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(final String name, final Object value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        if (this == value) {
+            throw new IllegalArgumentException("Cannot put self");
+        } else if (value == JsonValue.NULL) {
+            putNull(name);
+        } else if (checkType(value)) {
+            content.put(name, value);
+        } else {
+            throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
+        }
+        return this;
+    }
+
+    /**
+     * Decrypt value if the name starts with "__encrypt_"
+     */
+    @InterfaceStability.Uncommitted
+    private Object decrypt(JsonObject object) {
+        Object decrypted = null;
+
+        try {
+            String key = object.getString("kid");
+            String alg = object.getString("alg");
+            String encrypted = object.getString("payload");
+            CryptoProvider provider = this.encryptionConfig.getCryptoProvider(alg);
+            if (provider == null && provider.getKeyName().contentEquals(key)) {
+                throw new Exception("Crypto provider mismatch");
+            }
+
+            byte[] decryptedBytes = provider.decrypt(Base64.decode(encrypted));
+            String decryptedString = new String(decryptedBytes, Charset.forName("UTF-8"));
+            decrypted = JacksonTransformers.MAPPER.readValue(decryptedString, Object.class);
+            if (decrypted instanceof Map) {
+                decrypted = JsonObject.from((Map<String, ?>)decrypted);
+            } else if (decrypted instanceof List) {
+                decrypted = JsonArray.from((List<?>)decrypted);
+            }
+            return decrypted;
+        } catch (Exception ex) {
+        }
+        return decrypted;
+    }
+
+
+    /**
      * Retrieves the (potential null) content and not casting its type.
      *
      * @param name the key of the field.
      * @return the value of the field, or null if it does not exist.
      */
+    @InterfaceStability.Uncommitted
     public Object get(final String name) {
+        if (content.containsKey(ENCRYPTION_PREFIX + name)) {
+            return decrypt((JsonObject) content.get(ENCRYPTION_PREFIX + name));
+        }
         return content.get(name);
     }
 
@@ -211,6 +293,21 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(final String name, final String value) {
+        content.put(name, value);
+        return this;
+    }
+
+    /**
+     * Stores a {@link String} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(final String name, final String value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
         content.put(name, value);
         return this;
     }
@@ -233,6 +330,21 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, int value) {
+        content.put(name, value);
+        return this;
+    }
+
+    /**
+     * Stores a {@link Integer} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, int value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
         content.put(name, value);
         return this;
     }
@@ -270,6 +382,21 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Stores a {@link Long} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, long value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        content.put(name, value);
+        return this;
+    }
+
+    /**
      * Retrieves the value from the field name and casts it to {@link Long}.
      *
      * Note that if value was stored as another numerical type, some truncation or rounding may occur.
@@ -297,6 +424,22 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, double value) {
+        content.put(name, value);
+        return this;
+    }
+
+
+    /**
+     * Stores a {@link Double} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, double value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
         content.put(name, value);
         return this;
     }
@@ -334,6 +477,21 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Stores a {@link Boolean} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, boolean value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        content.put(name, value);
+        return this;
+    }
+
+    /**
      * Retrieves the value from the field name and casts it to {@link Boolean}.
      *
      * @param name the name of the field.
@@ -355,6 +513,34 @@ public class JsonObject extends JsonValue implements Serializable {
             throw new IllegalArgumentException("Cannot put self");
         }
         content.put(name, value);
+        if (value != null) {
+            Map<String, String> paths = value.encryptionPathInfo();
+            if (paths.size() > 0) {
+                for (Map.Entry<String, String> entry : paths.entrySet()) {
+                    this.encryptionPathInfo.put(name + "/" + entry.getKey(), entry.getValue());
+                }
+                value.clearEncryptionPaths();
+            }
+        }
+        return this;
+    }
+
+
+    /**
+     * Stores a {@link JsonObject} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, JsonObject value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        if (this == value) {
+            throw new IllegalArgumentException("Cannot put self");
+        }
+        content.put(name, value);
         return this;
     }
 
@@ -367,6 +553,21 @@ public class JsonObject extends JsonValue implements Serializable {
      * @see #from(Map)
      */
     public JsonObject put(String name, Map<String, ?> value) {
+        return put(name, JsonObject.from(value));
+    }
+
+    /**
+     * Attempt to convert a {@link Map} to a {@link JsonObject} value and store it, identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     * @see #from(Map)
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, Map<String, ?> value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
         return put(name, JsonObject.from(value));
     }
 
@@ -392,6 +593,22 @@ public class JsonObject extends JsonValue implements Serializable {
         return this;
     }
 
+
+    /**
+     * Stores a {@link JsonArray} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, JsonArray value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        content.put(name, value);
+        return this;
+    }
+
     /**
      * Stores a {@link Number} value identified by the field name.
      *
@@ -405,6 +622,21 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Stores a {@link Number} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, Number value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        content.put(name, value);
+        return this;
+    }
+
+    /**
      * Stores a {@link JsonArray} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -412,6 +644,20 @@ public class JsonObject extends JsonValue implements Serializable {
      * @return the {@link JsonObject}.
      */
     public JsonObject put(String name, List<?> value) {
+        return put(name, JsonArray.from(value));
+    }
+
+    /**
+     * Stores a {@link JsonArray} value identified by the field name.
+     *
+     * @param name the name of the JSON field.
+     * @param value the value of the JSON field.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject put(String name, List<?> value, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
         return put(name, JsonArray.from(value));
     }
 
@@ -475,6 +721,24 @@ public class JsonObject extends JsonValue implements Serializable {
         return this;
     }
 
+
+    /**
+     * Store a null value identified by the field's name.
+     *
+     * This method is equivalent to calling {@link #put(String, Object)} with either
+     * {@link JsonValue#NULL JsonValue.NULL} or a null value explicitly cast to Object.
+     *
+     * @param name The null field's name.
+     * @param encryptionProvider Crypto provider for encryption.
+     * @return the {@link JsonObject}
+     */
+    @InterfaceStability.Uncommitted
+    public JsonObject putNull(String name, String encryptionProvider) {
+        this.encryptionPathInfo.put(name, encryptionProvider);
+        content.put(name, null);
+        return this;
+    }
+
     /**
      * Removes an entry from the {@link JsonObject}.
      *
@@ -483,6 +747,9 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public JsonObject removeKey(String name) {
         content.remove(name);
+        if (this.encryptionPathInfo.entrySet().contains(name)) {
+            this.encryptionPathInfo.remove(name);
+        }
         return this;
     }
 
@@ -528,6 +795,37 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Transforms the {@link JsonObject} into a {@link Map}. The resulting
+     * map is not backed by this {@link JsonObject}, and all sub-objects or
+     * sub-arrays ({@link JsonArray}) are also recursively converted to
+     * maps and lists, respectively. The encrypted values are decrypted.
+     *
+     * @return the content copied as a {@link Map}.
+     */
+    @InterfaceStability.Uncommitted
+    public Map<String, Object> toDecryptedMap() {
+        Map<String, Object> copy = new HashMap<String, Object>(content.size());
+        for (Map.Entry<String, Object> entry : content.entrySet()) {
+            Object content = entry.getValue();
+            String key = entry.getKey();
+           if (entry.getKey().startsWith(ENCRYPTION_PREFIX)) {
+                content = decrypt((JsonObject) entry.getValue());
+                key = key.replace(ENCRYPTION_PREFIX, "");
+            }
+            if (content instanceof JsonObject) {
+               JsonObject value = (JsonObject)content;
+               value.setEncryptionConfig(this.encryptionConfig);
+               copy.put(key,  ((JsonObject) content).toDecryptedMap());
+            } else if (content instanceof JsonArray) {
+                copy.put(key, ((JsonArray) content).toList());
+            } else {
+                copy.put(key, content);
+            }
+        }
+        return copy;
+    }
+
+    /**
      * Checks if the {@link JsonObject} contains the field name.
      *
      * @param name the name of the field.
@@ -557,6 +855,52 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Returns true if the field is encrypted.
+     *
+     * @param name the key name of the field.
+     */
+    @InterfaceStability.Uncommitted
+    public boolean isEncrypted(final String name) {
+        return this.containsKey(ENCRYPTION_PREFIX + name);
+    }
+
+    /**
+     * Get the encryption list to merge path with parent
+     */
+    @InterfaceStability.Uncommitted
+    @InterfaceAudience.Private
+    public Map<String, String> encryptionPathInfo() {
+        return this.encryptionPathInfo;
+    }
+
+    /**
+     * Clear the encryption paths
+     */
+    @InterfaceStability.Uncommitted
+    @InterfaceAudience.Private
+    public void clearEncryptionPaths() {
+        this.encryptionPathInfo.clear();
+    }
+
+    /**
+     * Set the encryption configuration for decryption
+     */
+    @InterfaceStability.Uncommitted
+    @InterfaceAudience.Private
+    public void setEncryptionConfig(EncryptionConfig config) {
+        this.encryptionConfig = config;
+    }
+
+    /**
+     * Get the encryption configuration for decryption
+     */
+    @InterfaceStability.Uncommitted
+    @InterfaceAudience.Private
+    public EncryptionConfig getEncryptionConfig() {
+        return this.encryptionConfig;
+    }
+
+    /**
      * Converts the {@link JsonObject} into its JSON string representation.
      *
      * @return the JSON string representing this {@link JsonObject}.
@@ -565,6 +909,21 @@ public class JsonObject extends JsonValue implements Serializable {
     public String toString() {
         try {
             return JacksonTransformers.MAPPER.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot convert JsonObject to Json String", e);
+        }
+    }
+
+    /**
+     * Converts the {@link JsonObject} into its decrypted JSON string representation.
+     *
+     * @return the decrypted JSON string representing this {@link JsonObject}.
+     */
+    @InterfaceStability.Uncommitted
+    public String toDecryptedString() {
+        try {
+            Map<String,Object> mapData = this.toDecryptedMap();
+            return JacksonTransformers.MAPPER.writeValueAsString(JsonObject.from(mapData));
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Cannot convert JsonObject to Json String", e);
         }

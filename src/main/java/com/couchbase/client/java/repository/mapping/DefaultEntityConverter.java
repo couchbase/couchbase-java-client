@@ -53,6 +53,7 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             String name = propertyMetadata.name();
             Class<?> type = propertyMetadata.type();
             Object value = propertyMetadata.get(document);
+            String encryptionProvider = propertyMetadata.encryptionProvider();
 
             if (value == null
                 || value instanceof String
@@ -60,7 +61,11 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
                 || value instanceof Integer
                 || value instanceof Long
                 || value instanceof Double) {
-                content.put(name, value);
+                if (encryptionProvider != null) {
+                    content.put(name, value, encryptionProvider);
+                } else {
+                    content.put(name, value);
+                }
             } else {
                 throw new RepositoryMappingException("Unsupported field type: " + type);
             }
@@ -78,7 +83,7 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             if (source.content() != null) {
                 for (PropertyMetadata propertyMetadata : entityMetadata.properties()) {
                     String fieldName = propertyMetadata.name();
-                    if (source.content().containsKey(fieldName)) {
+                    if (source.content().containsKey(fieldName) || source.content().containsKey(JsonObject.ENCRYPTION_PREFIX + fieldName)) {
                         propertyMetadata.set(source.content().get(fieldName), instance);
                     }
                 }

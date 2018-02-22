@@ -104,6 +104,7 @@ import com.couchbase.client.java.transcoder.ByteArrayTranscoder;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 import com.couchbase.client.java.transcoder.JsonArrayTranscoder;
 import com.couchbase.client.java.transcoder.JsonBooleanTranscoder;
+import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.couchbase.client.java.transcoder.JsonDoubleTranscoder;
 import com.couchbase.client.java.transcoder.JsonLongTranscoder;
 import com.couchbase.client.java.transcoder.JsonStringTranscoder;
@@ -194,7 +195,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         this.closed = false;
 
         transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
-        transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);
+
+        if (environment != null && environment.encryptionConfig() != null) {
+            JsonCryptoTranscoder transcoder = new JsonCryptoTranscoder(environment.encryptionConfig());
+            transcoders.put(transcoder.documentType(), transcoder);
+        } else {
+            transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);
+        }
+
         transcoders.put(JSON_ARRAY_TRANSCODER.documentType(), JSON_ARRAY_TRANSCODER);
         transcoders.put(JSON_BOOLEAN_TRANSCODER.documentType(), JSON_BOOLEAN_TRANSCODER);
         transcoders.put(JSON_DOUBLE_TRANSCODER.documentType(), JSON_DOUBLE_TRANSCODER);

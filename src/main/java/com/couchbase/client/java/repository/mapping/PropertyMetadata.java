@@ -37,6 +37,14 @@ public interface PropertyMetadata {
      */
     boolean isField();
 
+
+    /**
+     * If this property represents an encrypted field in the Document.
+     *
+     * @return encryption provider if present
+     */
+    String encryptionProvider();
+
     /**
      * The name of the field inside the document.
      *
