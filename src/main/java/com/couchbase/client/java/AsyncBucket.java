@@ -356,6 +356,34 @@ public interface AsyncBucket {
     Observable<JsonDocument> getFromReplica(String id, ReplicaMode type);
 
     /**
+     * Retrieves one or more, possibly stale, representations of a {@link JsonDocument} by its unique ID.
+     *
+     * Depending on the {@link ReplicaMode} selected, there can be none to four {@link JsonDocument} be returned
+     * from the {@link Observable}. If {@link ReplicaMode#FIRST}, {@link ReplicaMode#SECOND} or
+     * {@link ReplicaMode#THIRD} are selected zero or one documents are returned, if {@link ReplicaMode#ALL} is used,
+     * all configured replicas plus the master node may return a document.
+     *
+     * If the document has not been replicated yet or if the replica or master are not available (because a node has
+     * been failed over), no response is expected from these nodes.
+     *
+     * **Since data is replicated asynchronously, all data returned from this method must be considered stale. If the
+     * appropriate {@link ReplicateTo} constraints are set on write and the operation returns successfully, then the
+     * data can be considered as non-stale.**
+     *
+     * Note that the returning {@link JsonDocument} responses can come in any order.
+     *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
+     * @param id id the unique ID of the document.
+     * @param type the {@link ReplicaMode} to select.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing zero to N {@link JsonDocument}s.
+     */
+    Observable<JsonDocument> getFromReplica(String id, ReplicaMode type, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
      *
      * The document ID is taken out of the {@link Document} provided, as well as the target type to return. Note that
@@ -389,6 +417,39 @@ public interface AsyncBucket {
     /**
      * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
      *
+     * The document ID is taken out of the {@link Document} provided, as well as the target type to return. Note that
+     * not the same document is returned, but rather a new one of the same type with the freshly loaded properties.
+     *
+     * Depending on the {@link ReplicaMode} selected, there can be none to four {@link Document} be returned
+     * from the {@link Observable}. If {@link ReplicaMode#FIRST}, {@link ReplicaMode#SECOND} or
+     * {@link ReplicaMode#THIRD} are selected zero or one documents are returned, if {@link ReplicaMode#ALL} is used,
+     * all configured replicas plus the master node may return a document.
+     *
+     * If the document has not been replicated yet or if the replica or master are not available (because a node has
+     * been failed over), no response is expected from these nodes.
+     *
+     * **Since data is replicated asynchronously, all data returned from this method must be considered stale. If the
+     * appropriate {@link ReplicateTo} constraints are set on write and the operation returns successfully, then the
+     * data can be considered as non-stale.**
+     *
+     * Note that the returning {@link Document} responses can come in any order.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
+     * @param document the source document from which the ID is taken and the type is inferred.
+     * @param type the {@link ReplicaMode} to select.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing zero to N {@link Document}s.
+     */
+    <D extends Document<?>> Observable<D> getFromReplica(D document, ReplicaMode type, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
+     *
      * This method differs from {@link #getFromReplica(String, ReplicaMode)} in that if a specific {@link Document}
      * type is passed in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
      *
@@ -417,6 +478,40 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing zero to N {@link Document}s.
      */
     <D extends Document<?>> Observable<D> getFromReplica(String id, ReplicaMode type, Class<D> target);
+
+    /**
+     * Retrieves one or more, possibly stale, representations of a {@link Document} by its unique ID.
+     *
+     * This method differs from {@link #getFromReplica(String, ReplicaMode)} in that if a specific {@link Document}
+     * type is passed in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
+     *
+     * Depending on the {@link ReplicaMode} selected, there can be none to four {@link Document} be returned
+     * from the {@link Observable}. If {@link ReplicaMode#FIRST}, {@link ReplicaMode#SECOND} or
+     * {@link ReplicaMode#THIRD} are selected zero or one documents are returned, if {@link ReplicaMode#ALL} is used,
+     * all configured replicas plus the master node may return a document.
+     *
+     * If the document has not been replicated yet or if the replica or master are not available (because a node has
+     * been failed over), no response is expected from these nodes.
+     *
+     * **Since data is replicated asynchronously, all data returned from this method must be considered stale. If the
+     * appropriate {@link ReplicateTo} constraints are set on write and the operation returns successfully, then the
+     * data can be considered as non-stale.**
+     *
+     * Note that the returning {@link Document} responses can come in any order.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * Because this method is considered to be a "last resort" call against the database if a regular get didn't
+     * succeed, all errors are swallowed (but logged) and the Observable will return all successful responses.
+     *
+     * @param id id the unique ID of the document.
+     * @param type the {@link ReplicaMode} to select.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing zero to N {@link Document}s.
+     */
+    <D extends Document<?>> Observable<D> getFromReplica(String id, ReplicaMode type, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
      * Retrieve and lock a {@link JsonDocument} by its unique ID.

@@ -178,7 +178,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public List<JsonDocument> getFromReplica(String id, ReplicaMode type, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getFromReplica(id, type).toList(), timeout, timeUnit);
+        return asyncBucket.getFromReplica(id, type, timeout, timeUnit).toList().toBlocking().single();
     }
 
     @Override
@@ -188,7 +188,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> List<D> getFromReplica(D document, ReplicaMode type, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getFromReplica(document, type).toList(), timeout, timeUnit);
+        return asyncBucket.getFromReplica(document, type, timeout, timeUnit).toList().toBlocking().single();
     }
 
     @Override
@@ -198,7 +198,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> List<D> getFromReplica(String id, ReplicaMode type, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getFromReplica(id, type, target).toList(), timeout, timeUnit);
+        return asyncBucket.getFromReplica(id, type, target, timeout, timeUnit).toList().toBlocking().single();
     }
 
     @Override
@@ -219,8 +219,7 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public <D extends Document<?>> Iterator<D> getFromReplica(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
         return asyncBucket
-            .getFromReplica(id, ReplicaMode.ALL, target)
-            .timeout(timeout, timeUnit)
+            .getFromReplica(id, ReplicaMode.ALL, target, timeout, timeUnit)
             .toBlocking()
             .getIterator();
     }
@@ -228,8 +227,7 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public <D extends Document<?>> Iterator<D> getFromReplica(D document, long timeout, TimeUnit timeUnit) {
         return asyncBucket
-            .getFromReplica(document, ReplicaMode.ALL)
-            .timeout(timeout, timeUnit)
+            .getFromReplica(document, ReplicaMode.ALL, timeout, timeUnit)
             .toBlocking()
             .getIterator();
     }
@@ -237,8 +235,7 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public Iterator<JsonDocument> getFromReplica(String id, long timeout, TimeUnit timeUnit) {
         return asyncBucket
-            .getFromReplica(id, ReplicaMode.ALL)
-            .timeout(timeout, timeUnit)
+            .getFromReplica(id, ReplicaMode.ALL, timeout, timeUnit)
             .toBlocking()
             .getIterator();
     }

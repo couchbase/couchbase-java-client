@@ -356,17 +356,22 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getFromReplica(final String id, final ReplicaMode type,
         final Class<D> target) {
-        return ReplicaReader
-            .read(core, id, type, bucket)
-            .map(new Func1<GetResponse, D>() {
-                @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                        response.status());
-                }
-            })
-            .cacheWithInitialCapacity(type.maxAffectedNodes());
+        return getFromReplica(id, type, target, 0, null);
+    }
+
+    @Override
+    public Observable<JsonDocument> getFromReplica(String id, ReplicaMode type, long timeout, TimeUnit timeUnit) {
+        return getFromReplica(id, type, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getFromReplica(D document, ReplicaMode type, long timeout, TimeUnit timeUnit) {
+        return (Observable<D>) getFromReplica(document.id(), type, document.getClass(), timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getFromReplica(String id, ReplicaMode type, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return ReplicaReader.read(core, id, type, bucket, transcoders, target, environment, timeout, timeUnit);
     }
 
     @Override

@@ -24,6 +24,7 @@ import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -84,6 +85,18 @@ public class Utils {
         if (env.tracingEnabled()) {
             Scope scope = env.tracer()
                 .buildSpan(opName)
+                .startActive(false);
+            request.span(scope.span(), env);
+            scope.close();
+        }
+    }
+
+    public static void addRequestSpanWithParent(CouchbaseEnvironment env, Span parent, CouchbaseRequest request,
+        String opName) {
+        if (env.tracingEnabled()) {
+            Scope scope = env.tracer()
+                .buildSpan(opName)
+                .asChildOf(parent)
                 .startActive(false);
             request.span(scope.span(), env);
             scope.close();

@@ -108,12 +108,12 @@ public class Get {
     }
 
 
-    private static class GetFilter implements Func1<GetResponse, Boolean> {
+    public static class GetFilter implements Func1<GetResponse, Boolean> {
 
         private final CouchbaseEnvironment environment;
 
-        GetFilter(CouchbaseEnvironment environment) {
-            this.environment = environment;
+        public GetFilter(CouchbaseEnvironment environment) {
+          this.environment = environment;
         }
 
         @Override
@@ -225,19 +225,19 @@ public class Get {
         }
     }
 
-    private static class GetMap<D> implements Func1<GetResponse, D> {
+  public static class GetMap<D> implements Func1<GetResponse, D> {
 
         private final CouchbaseEnvironment environment;
         private final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders;
         private final Class<D> target;
         private final String id;
 
-        GetMap(CouchbaseEnvironment environment, Map<Class<? extends Document>,
-            Transcoder<? extends Document, ?>> transcoders, Class<D> target, String id) {
-            this.environment = environment;
-            this.transcoders = transcoders;
-            this.target = target;
-            this.id = id;
+        public GetMap(CouchbaseEnvironment environment, Map<Class<? extends Document>,
+          Transcoder<? extends Document, ?>> transcoders, Class<D> target, String id) {
+          this.environment = environment;
+          this.transcoders = transcoders;
+          this.target = target;
+          this.id = id;
         }
 
         @Override

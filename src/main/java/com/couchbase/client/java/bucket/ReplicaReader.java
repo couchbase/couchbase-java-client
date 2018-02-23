@@ -30,14 +30,26 @@ import com.couchbase.client.core.message.kv.GetResponse;
 import com.couchbase.client.core.message.kv.ReplicaGetRequest;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.ReplicaMode;
+import com.couchbase.client.java.bucket.api.Get;
+import com.couchbase.client.java.bucket.api.Utils;
+import com.couchbase.client.java.document.Document;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.CouchbaseOutOfMemoryException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.transcoder.Transcoder;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import rx.Observable;
+import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.bucket.api.Utils.addRequestSpanWithParent;
 
 /**
  * Helper class to deal with reading from zero to N replicas and returning results.
@@ -67,18 +79,63 @@ public class ReplicaReader {
      * @param bucket the name of the bucket to load it from.
      * @return a potentially empty observable with the returned raw responses.
      */
-    public static Observable<GetResponse> read(final ClusterFacade core, final String id,
-        final ReplicaMode type, final String bucket) {
-        return assembleRequests(core, id, type, bucket)
-            .flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
-                @Override
-                public Observable<GetResponse> call(BinaryRequest request) {
-                    return core
-                        .<GetResponse>send(request)
-                        .filter(GetResponseFilter.INSTANCE)
-                        .onErrorResumeNext(GetResponseErrorHandler.INSTANCE);
+    public static <D extends Document<?>> Observable<D> read(final ClusterFacade core, final String id,
+        final ReplicaMode type, final String bucket,
+        final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders, final Class<D> target,
+        final CouchbaseEnvironment environment, final long timeout, final TimeUnit timeUnit) {
+
+        return Observable.defer(new Func0<Observable<D>>() {
+            @Override
+            public Observable<D> call() {
+                final Span parentSpan;
+                if (environment.tracingEnabled()) {
+                    Scope scope = environment.tracer()
+                      .buildSpan("get_from_replica")
+                      .startActive(false);
+                    parentSpan = scope.span();
+                    scope.close();
+                } else {
+                    parentSpan = null;
                 }
-            });
+
+                Observable<D> result = assembleRequests(core, id, type, bucket)
+                  .flatMap(new Func1<BinaryRequest, Observable<D>>() {
+                      @Override
+                      public Observable<D> call(BinaryRequest request) {
+                          String name = request instanceof ReplicaGetRequest ? "get_replica" : "get";
+                          addRequestSpanWithParent(environment, parentSpan, request, name);
+
+                          Observable<GetResponse> result = core
+                            .<GetResponse>send(request)
+                            .filter(new Get.GetFilter(environment));
+
+                          if (timeout > 0) {
+                              // individual timeout to clean out ops at some point
+                              result = result.timeout(timeout, timeUnit, environment.scheduler());
+                          }
+
+                          return result.onErrorResumeNext(GetResponseErrorHandler.INSTANCE)
+                            .map(new Get.GetMap(environment, transcoders, target, id));
+                      }
+                  });
+
+                if (timeout > 0) {
+                    result = result.timeout(timeout, timeUnit, environment.scheduler());
+                }
+
+                return result.doOnTerminate(new Action0() {
+                      @Override
+                      public void call() {
+                          if (environment.tracingEnabled() && parentSpan != null) {
+                              environment.tracer().scopeManager()
+                                .activate(parentSpan, true)
+                                .close();
+                          }
+                      }
+                  })
+                  .cacheWithInitialCapacity(type.maxAffectedNodes());
+            }
+        });
     }
 
     /**
@@ -116,7 +173,6 @@ public class ReplicaReader {
                 @Override
                 public Observable<BinaryRequest> call(Integer max) {
                     List<BinaryRequest> requests = new ArrayList<BinaryRequest>();
-
                     requests.add(new GetRequest(id, bucket));
                     for (int i = 0; i < max; i++) {
                         requests.add(new ReplicaGetRequest(id, bucket, (short) (i + 1)));
@@ -124,39 +180,6 @@ public class ReplicaReader {
                     return Observable.from(requests);
                 }
             });
-    }
-
-    /**
-     * A filter for the responses.
-     *
-     * This filter checks the response status and releases resources as needed.
-     */
-    private static class GetResponseFilter implements Func1<GetResponse, Boolean> {
-
-        public static final GetResponseFilter INSTANCE = new GetResponseFilter();
-
-        @Override
-        public Boolean call(GetResponse response) {
-            if (response.status().isSuccess()) {
-                return true;
-            }
-            ByteBuf content = response.content();
-            if (content != null && content.refCnt() > 0) {
-                content.release();
-            }
-
-            switch (response.status()) {
-                case NOT_EXISTS:
-                    return false;
-                case TEMPORARY_FAILURE:
-                case SERVER_BUSY:
-                    throw new TemporaryFailureException();
-                case OUT_OF_MEMORY:
-                    throw new CouchbaseOutOfMemoryException();
-                default:
-                    throw new CouchbaseException(response.status().toString());
-            }
-        }
     }
 
     /**
