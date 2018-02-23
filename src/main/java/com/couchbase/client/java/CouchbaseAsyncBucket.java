@@ -55,6 +55,8 @@ import com.couchbase.client.core.message.search.SearchQueryResponse;
 import com.couchbase.client.core.message.view.ViewQueryRequest;
 import com.couchbase.client.core.message.view.ViewQueryResponse;
 import com.couchbase.client.core.service.ServiceType;
+import com.couchbase.client.core.tracing.ThresholdLogReporter;
+import com.couchbase.client.core.tracing.ThresholdLogSpan;
 import com.couchbase.client.core.utils.HealthPinger;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.analytics.AnalyticsQuery;
@@ -63,6 +65,9 @@ import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.ReplicaReader;
+import com.couchbase.client.java.bucket.api.Exists;
+import com.couchbase.client.java.bucket.api.Get;
+import com.couchbase.client.java.bucket.api.Utils;
 import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.datastructures.ResultMappingUtils;
 import com.couchbase.client.java.document.Document;
@@ -116,9 +121,11 @@ import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewQueryResponseMapper;
 import com.couchbase.client.java.view.ViewRetryHandler;
+import io.opentracing.Scope;
 import rx.Observable;
 import rx.Single;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
@@ -260,72 +267,39 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target) {
-        return deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
-                @Override
-                public Observable<GetResponse> call(Subscriber s) {
-                    GetRequest request = new GetRequest(id, bucket);
-                    request.subscriber(s);
-                    return core.send(request);
-                }
-            })
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse response) {
-                    if (response.status().isSuccess()) {
-                        return true;
-                    }
-                    ByteBuf content = response.content();
-                    if (content != null && content.refCnt() > 0) {
-                        content.release();
-                    }
+        return Get.get(id, target, environment, bucket, core, transcoders, 0, null);
+    }
 
-                    switch(response.status()) {
-                        case NOT_EXISTS:
-                            return false;
-                        case TEMPORARY_FAILURE:
-                        case SERVER_BUSY:
-                            throw addDetails(new TemporaryFailureException(), response);
-                        case OUT_OF_MEMORY:
-                            throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                        default:
-                            throw addDetails(new CouchbaseException(response.status().toString()), response);
-                    }
-                }
-            })
-            .map(new Func1<GetResponse, D>() {
-                @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                        response.status());
-                }
-            });
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> get(final String id, final Class<D> target, long timeout, TimeUnit timeUnit) {
+      return Get.get(id, target, environment, bucket, core, transcoders, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> get(String id, long timeout, TimeUnit timeUnit) {
+        return get(id, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <D extends Document<?>> Observable<D> get(D document, long timeout, TimeUnit timeUnit) {
+        return (Observable<D>) Get.get(document.id(), document.getClass(), environment, bucket, core, transcoders, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<Boolean> exists(String id, long timeout, TimeUnit timeUnit) {
+        return Exists.exists(id, environment, core, bucket, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<Boolean> exists(D document, long timeout, TimeUnit timeUnit) {
+        return exists(document.id(), timeout, timeUnit);
     }
 
     @Override
     public Observable<Boolean> exists(final String id) {
-        return deferAndWatch(new Func1<Subscriber, Observable<ObserveResponse>>() {
-            @Override
-            public Observable<ObserveResponse> call(Subscriber s) {
-                ObserveRequest request = new ObserveRequest(id, 0, true, (short) 0, bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        })
-            .map(new Func1<ObserveResponse, Boolean>() {
-                @Override
-                public Boolean call(ObserveResponse response) {
-                    ByteBuf content = response.content();
-                    if (content != null && content.refCnt() > 0) {
-                        content.release();
-                    }
-
-                    ObserveResponse.ObserveStatus foundStatus = response.observeStatus();
-                    return foundStatus == ObserveResponse.ObserveStatus.FOUND_PERSISTED
-                            || foundStatus == ObserveResponse.ObserveStatus.FOUND_NOT_PERSISTED;
-
-                }
-            });
+        return Exists.exists(id, environment, core, bucket, 0, null);
     }
 
     @Override
@@ -347,48 +321,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndLock(final String id, final int lockTime, final Class<D> target) {
-        return deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
-                @Override
-                public Observable<GetResponse> call(Subscriber s) {
-                    GetRequest request = new GetRequest(id, bucket, true, false, lockTime);
-                    request.subscriber(s);
-                    return core.send(request);
-                }
-            })
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse response) {
-                    if (response.status().isSuccess()) {
-                        return true;
-                    }
-                    ByteBuf content = response.content();
-                    if (content != null && content.refCnt() > 0) {
-                        content.release();
-                    }
-
-                    switch (response.status()) {
-                        case NOT_EXISTS:
-                            return false;
-                        case TEMPORARY_FAILURE:
-                        case LOCKED:
-                            throw addDetails(new TemporaryLockFailureException(), response);
-                        case SERVER_BUSY:
-                            throw addDetails(new TemporaryFailureException(), response);
-                        case OUT_OF_MEMORY:
-                            throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                        default:
-                            throw addDetails(new CouchbaseException(response.status().toString()), response);
-                    }
-                }
-            })
-            .map(new Func1<GetResponse, D>() {
-                @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                        response.status());
-                }
-            });
+        return Get.getAndLock(id, target, environment, bucket, core, transcoders, lockTime, 0, null);
     }
 
     @Override
@@ -405,47 +338,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> getAndTouch(final String id, final int expiry, final Class<D> target) {
-        return deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
-                @Override
-                public Observable<GetResponse> call(Subscriber s) {
-                    GetRequest request = new GetRequest(id, bucket, false, true, expiry);
-                    request.subscriber(s);
-                    return core.send(request);
-                }
-            })
-            .filter(new Func1<GetResponse, Boolean>() {
-                @Override
-                public Boolean call(GetResponse response) {
-                    if (response.status().isSuccess()) {
-                        return true;
-                    }
-                    ByteBuf content = response.content();
-                    if (content != null && content.refCnt() > 0) {
-                        content.release();
-                    }
-
-                    switch (response.status()) {
-                        case NOT_EXISTS:
-                            return false;
-                        case TEMPORARY_FAILURE:
-                        case SERVER_BUSY:
-                        case LOCKED:
-                            throw addDetails(new TemporaryFailureException(), response);
-                        case OUT_OF_MEMORY:
-                            throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                        default:
-                            throw addDetails(new CouchbaseException(response.status().toString()), response);
-                    }
-                }
-            })
-            .map(new Func1<GetResponse, D>() {
-                @Override
-                public D call(final GetResponse response) {
-                    Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
-                    return (D) transcoder.decode(id, response.content(), response.cas(), 0, response.flags(),
-                        response.status());
-                }
-            });
+        return Get.getAndTouch(id, target, environment, bucket, core, transcoders, expiry, 0, null);
     }
 
     @Override
@@ -474,6 +367,36 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                 }
             })
             .cacheWithInitialCapacity(type.maxAffectedNodes());
+    }
+
+    @Override
+    public Observable<JsonDocument> getAndLock(String id, int lockTime, long timeout, TimeUnit timeUnit) {
+        return getAndLock(id, lockTime, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime, long timeout, TimeUnit timeUnit) {
+        return (Observable<D>) getAndLock(document.id(), lockTime, document.getClass(), timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getAndLock(String id, int lockTime, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return Get.getAndLock(id, target, environment, bucket, core, transcoders, lockTime, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> getAndTouch(String id, int expiry, long timeout, TimeUnit timeUnit) {
+        return getAndTouch(id, expiry, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getAndTouch(D document, long timeout, TimeUnit timeUnit) {
+        return (Observable<D>) getAndTouch(document.id(), document.expiry(), document.getClass(), timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> getAndTouch(String id, int expiry, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return Get.getAndTouch(id, target, environment, bucket, core, transcoders, expiry, timeout, timeUnit);
     }
 
     @Override
@@ -2131,12 +2054,6 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
      * Helper method to encapsulate the logic of enriching the exception with detailed status info.
      */
     private static <X extends CouchbaseException, R extends CouchbaseResponse> X addDetails(X ex, R r) {
-        if (r.statusDetails() != null) {
-            ex.details(r.statusDetails());
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("{} returned with enhanced error details {}", r, ex);
-            }
-        }
-        return ex;
+        return Utils.addDetails(ex, r);
     }
 }

@@ -128,7 +128,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument get(String id, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.get(id).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.get(id, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D get(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.get(document).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.get(document, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D get(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.get(id, target).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.get(id, target, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public boolean exists(String id, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.exists(id), timeout, timeUnit);
+        return asyncBucket.exists(id, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -250,7 +250,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument getAndLock(String id, int lockTime, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getAndLock(id, lockTime).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.getAndLock(id, lockTime, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -260,9 +260,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndLock(D document, int lockTime, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.getAndLock(document, lockTime).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.getAndLock(document, lockTime, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -272,9 +270,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndLock(String id, int lockTime, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.getAndLock(id, lockTime, target).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.getAndLock(id, lockTime, target, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -284,7 +280,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument getAndTouch(String id, int expiry, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getAndTouch(id, expiry).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.getAndTouch(id, expiry, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -294,7 +290,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndTouch(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.getAndTouch(document).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.getAndTouch(document, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override
@@ -304,9 +300,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D getAndTouch(String id, int expiry, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.getAndTouch(id, expiry, target).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.getAndTouch(id, expiry, target, timeout, timeUnit).toBlocking().singleOrDefault(null);
     }
 
     @Override

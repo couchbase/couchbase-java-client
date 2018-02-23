@@ -138,6 +138,28 @@ public interface AsyncBucket {
     Observable<JsonDocument> get(String id);
 
     /**
+     * Retrieves a {@link JsonDocument} by its unique ID with a custom timeout.
+     *
+     * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     *  The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the unique ID of the document.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
+     */
+    Observable<JsonDocument> get(String id, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieves any type of {@link Document} by its unique ID.
      *
      * The document ID is taken out of the {@link Document} provided, as well as the target type to return. Note that
@@ -159,6 +181,31 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
     <D extends Document<?>> Observable<D> get(D document);
+
+    /**
+     * Retrieves any type of {@link Document} by its unique ID with a custom timeout.
+     *
+     * The document ID is taken out of the {@link Document} provided, as well as the target type to return. Note that
+     * not the same document is returned, but rather a new one of the same type with the freshly loaded properties.
+     *
+     * If the document is found, a {@link Document} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     *  The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the source document from which the ID is taken and the type is inferred.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> get(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Retrieves any type of {@link Document} by its unique ID.
@@ -185,6 +232,32 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> get(String id, Class<D> target);
 
     /**
+     * Retrieves any type of {@link Document} by its unique ID with a custom timeout.
+     *
+     * This method differs from {@link #get(String)} in that if a specific {@link Document} type is passed in, the
+     * appropriate {@link Transcoder} will be selected (and not JSON conversion).
+     *
+     * If the document is found, a {@link Document} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     *  The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the unique ID of the document.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> get(String id, Class<D> target, long timeout, TimeUnit timeUnit);
+
+    /**
      * Check whether a document with the given ID does exist in the bucket.
      *
      * The returned {@link Observable} can error under the following conditions:
@@ -202,6 +275,25 @@ public interface AsyncBucket {
     Observable<Boolean> exists(String id);
 
     /**
+     * Check whether a document with the given ID does exist in the bucket with a custom timeout.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return true if it exists, false otherwise.
+     */
+    Observable<Boolean> exists(String id, long timeout, TimeUnit timeUnit);
+
+    /**
      * Check whether a document with the given ID does exist in the bucket.
      *
      * The returned {@link Observable} can error under the following conditions:
@@ -217,6 +309,25 @@ public interface AsyncBucket {
      * @return true if it exists, false otherwise.
      */
     <D extends Document<?>> Observable<Boolean> exists(D document);
+
+    /**
+     * Check whether a document with the given ID does exist in the bucket with a custom timeout.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document where the ID is extracted from.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return true if it exists, false otherwise.
+     */
+    <D extends Document<?>> Observable<Boolean> exists(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Retrieves one or more, possibly stale, representations of a {@link JsonDocument} by its unique ID.
@@ -337,6 +448,37 @@ public interface AsyncBucket {
     Observable<JsonDocument> getAndLock(String id, int lockTime);
 
     /**
+     * Retrieve and lock a {@link JsonDocument} by its unique ID with a custom timeout.
+     *
+     * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(String)}, but in addition it (write) locks the document for the given
+     * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
+     * value and is not configurable. The document will unlock afterwards automatically.
+     *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id id the unique ID of the document.
+     * @param lockTime the time to write lock the document (max. 30 seconds).
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
+     */
+    Observable<JsonDocument> getAndLock(String id, int lockTime, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieve and lock a {@link Document} by its unique ID.
      *
      * If the document is found, a {@link Document} is returned. If the document is not found, the
@@ -364,6 +506,37 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
     <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime);
+
+    /**
+     * Retrieve and lock a {@link Document} by its unique ID with a custom timeout.
+     *
+     * If the document is found, a {@link Document} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(Document)}, but in addition it (write) locks the document for the given
+     * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
+     * value and is not configurable. The document will unlock afterwards automatically.
+     *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the source document from which the ID is taken and the type is inferred.
+     * @param lockTime the time to write lock the document (max. 30 seconds).
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> getAndLock(D document, int lockTime, long timeout, TimeUnit timeUnit);
 
     /**
      * Retrieve and lock a {@link Document} by its unique ID.
@@ -398,6 +571,40 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> getAndLock(String id, int lockTime, Class<D> target);
 
     /**
+     * Retrieve and lock a {@link Document} by its unique ID with a custom timeout.
+     *
+     * This method differs from {@link #getAndLock(String, int)} in that if a specific {@link Document} type is passed
+     * in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
+     *
+     * If the document is found, a {@link Document} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(String)}, but in addition it (write) locks the document for the given
+     * lock time interval. Note that this lock time is hard capped to 30 seconds, even if provided with a higher
+     * value and is not configurable. The document will unlock afterwards automatically.
+     *
+     * Detecting an already locked document is done by checking for {@link TemporaryLockFailureException}. Note that
+     * this exception can also be raised in other conditions, always when the error is transient and retrying may help.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     * - In case of transient error, most probably because key is already locked: {@link TemporaryLockFailureException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id id the unique ID of the document.
+     * @param lockTime the time to write lock the document (max. 30 seconds).
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> getAndLock(String id, int lockTime, Class<D> target, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieve and touch a {@link JsonDocument} by its unique ID.
      *
      * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
@@ -422,6 +629,32 @@ public interface AsyncBucket {
     Observable<JsonDocument> getAndTouch(String id, int expiry);
 
     /**
+     * Retrieve and touch a {@link JsonDocument} by its unique ID with a custom timeout.
+     *
+     * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(String)}, but in addition it touches the document, which will reset
+     * its configured expiration time to the value provided.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id id the unique ID of the document.
+     * @param expiry the new expiration time for the document.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link JsonDocument}.
+     */
+    Observable<JsonDocument> getAndTouch(String id, int expiry, long timeout, TimeUnit timeUnit);
+
+    /**
      * Retrieve and touch a {@link Document} by its unique ID.
      *
      * If the document is found, a {@link Document} is returned. If the document is not found, the
@@ -443,6 +676,31 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
     <D extends Document<?>> Observable<D> getAndTouch(D document);
+
+    /**
+     * Retrieve and touch a {@link Document} by its unique ID with a custom timeout.
+     *
+     * If the document is found, a {@link Document} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(Document)}, but in addition it touches the document, which will reset
+     * its configured expiration time set on the given document itself.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the source document from which the ID and expiry is taken and the type is inferred.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> getAndTouch(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Retrieve and touch a {@link Document} by its unique ID.
@@ -471,6 +729,36 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing the found {@link Document}.
      */
     <D extends Document<?>> Observable<D> getAndTouch(String id, int expiry, Class<D> target);
+
+    /**
+     * Retrieve and touch a {@link Document} by its unique ID with a custom timeout.
+     *
+     * This method differs from {@link #getAndTouch(String, int)} in that if a specific {@link Document} type is passed
+     * in, the appropriate {@link Transcoder} will be selected (and not JSON conversion).
+     *
+     * If the document is found, a {@link JsonDocument} is returned. If the document is not found, the
+     * {@link Observable} completes without an item emitted.
+     *
+     * This method works similar to {@link #get(String, Class)}, but in addition it touches the document, which will
+     * reset its configured expiration time to the value provided.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id id the unique ID of the document.
+     * @param expiry the new expiration time for the document.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing the found {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> getAndTouch(String id, int expiry, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
      * Insert a {@link Document} if it does not exist already.
