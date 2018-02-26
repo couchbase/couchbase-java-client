@@ -443,28 +443,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D remove(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.remove(document).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.remove(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(document, persistTo, replicateTo).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(document, persistTo).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(document, persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(document, replicateTo).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(document, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -489,24 +483,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonDocument remove(String id, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.remove(id).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.remove(id, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonDocument remove(String id, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(id, persistTo, replicateTo).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(id, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonDocument remove(String id, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.remove(id, persistTo).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.remove(id, persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonDocument remove(String id, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.remove(id, replicateTo).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.remove(id, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -531,28 +523,22 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D remove(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.remove(id, target).singleOrDefault(null), timeout, timeUnit);
+        return asyncBucket.remove(id, target, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(id, persistTo, replicateTo, target).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(id, persistTo, replicateTo, target, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, PersistTo persistTo, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(id, persistTo, target).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(id, persistTo, target, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.remove(id, replicateTo, target).singleOrDefault(null), timeout, timeUnit
-        );
+        return asyncBucket.remove(id, replicateTo, target, timeout, timeUnit).toBlocking().single();
     }
 
     @Override

@@ -506,7 +506,6 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
         return insert(document, persistTo, replicateTo, 0, null);
     }
 
@@ -596,42 +595,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(final D document) {
+    public <D extends Document<?>> Observable<D> remove(final D document, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return deferAndWatch(new Func1<Subscriber, Observable<RemoveResponse>>() {
-            @Override
-            public Observable<RemoveResponse> call(Subscriber s) {
-                RemoveRequest request = new RemoveRequest(document.id(), document.cas(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<RemoveResponse, D>() {
-            @Override
-            public D call(final RemoveResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case NOT_EXISTS:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case EXISTS:
-                    case LOCKED:
-                        throw addDetails(new CASMismatchException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+        return Mutate.remove(document, environment, transcoder, core, bucket, timeout, timeUnit);
     }
 
     @Override
@@ -648,8 +614,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> remove(D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        return observeRemove(remove(document), persistTo, replicateTo);
+    public <D extends Document<?>> Observable<D> remove(D document, final PersistTo persistTo, final ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return observeRemove(remove(document, timeout, timeUnit), persistTo, replicateTo);
     }
 
     @Override
@@ -659,8 +625,69 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
-        final ReplicateTo replicateTo, Class<D> target) {
-        return observeRemove(remove(id, target), persistTo, replicateTo);
+        final ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return observeRemove(remove(id, target, timeout, timeUnit), persistTo, replicateTo);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(D document) {
+        return remove(document, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return remove(document, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return remove(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return remove(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> remove(String id, long timeout, TimeUnit timeUnit) {
+        return remove(id, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return remove(id, persistTo, replicateTo, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> remove(String id, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return remove(id, persistTo, ReplicateTo.NONE, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public Observable<JsonDocument> remove(String id, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return remove(id, PersistTo.NONE, replicateTo, JsonDocument.class, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(String id, Class<D> target, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(target);
+        return remove((D) transcoder.newDocument(id, 0, null, 0, null), timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target) {
+        return remove(id, persistTo, replicateTo, target, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return remove(id, persistTo, ReplicateTo.NONE, target, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
+        return remove(id, PersistTo.NONE, replicateTo, target, timeout, timeUnit);
     }
 
     /**

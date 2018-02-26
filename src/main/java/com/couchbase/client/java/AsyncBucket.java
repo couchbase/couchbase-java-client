@@ -1712,6 +1712,30 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> remove(D document);
 
     /**
+     * Removes a {@link Document} from the Server.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document to remove, with the ID extracted.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(D document, long timeout, TimeUnit timeUnit);
+
+    /**
      * Removes a {@link Document} from the Server and apply a durability requirement.
      *
      * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
@@ -1758,9 +1782,65 @@ public interface AsyncBucket {
      *
      * @param document the document to remove, with the ID extracted.
      * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+
+    /**
+     * Removes a {@link Document} from the Server and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document to remove, with the ID extracted.
+     * @param persistTo the persistence constraint to watch.
      * @return the document containing the ID.
      */
     <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo);
+
+    /**
+     * Removes a {@link Document} from the Server and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document to remove, with the ID extracted.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server and apply a durability requirement.
@@ -1788,6 +1868,33 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo);
 
     /**
+     * Removes a {@link Document} from the Server and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - A CAS value was set on the {@link Document} and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document to remove, with the ID extracted.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
      * Removes a {@link Document} from the Server identified by its ID.
      *
      * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
@@ -1807,6 +1914,29 @@ public interface AsyncBucket {
      * @return the document containing the ID.
      */
     Observable<JsonDocument> remove(String id);
+
+    /**
+     * Removes a {@link Document} from the Server identified by its ID.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    Observable<JsonDocument> remove(String id, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
@@ -1853,9 +1983,62 @@ public interface AsyncBucket {
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    Observable<JsonDocument> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param persistTo the persistence constraint to watch.
      * @return the document containing the ID.
      */
     Observable<JsonDocument> remove(String id, PersistTo persistTo);
+
+    /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    Observable<JsonDocument> remove(String id, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
@@ -1882,6 +2065,32 @@ public interface AsyncBucket {
     Observable<JsonDocument> remove(String id, ReplicateTo replicateTo);
 
     /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    Observable<JsonDocument> remove(String id, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
      * Removes a {@link Document} from the Server identified by its ID.
      *
      * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
@@ -1902,6 +2111,30 @@ public interface AsyncBucket {
      * @return the document containing the ID.
      */
     <D extends Document<?>> Observable<D> remove(String id, Class<D> target);
+
+    /**
+     * Removes a {@link Document} from the Server identified by its ID.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(String id, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
@@ -1949,10 +2182,65 @@ public interface AsyncBucket {
      *
      * @param id the id of the document to remove.
      * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param persistTo the persistence constraint to watch.
      * @param target the target document type to use.
      * @return the document containing the ID.
      */
     <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target);
+
+    /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param persistTo the persistence constraint to watch.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(String id, PersistTo persistTo, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
@@ -1978,6 +2266,33 @@ public interface AsyncBucket {
      * @return the document containing the ID.
      */
     <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target);
+
+    /**
+     * Removes a {@link Document} from the Server by its ID and apply a durability requirement.
+     *
+     * The {@link Document} returned just has the document ID and its CAS value set, since the value and all other
+     * associated properties have been removed from the server.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The document to remove does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to remove.
+     * @param replicateTo the replication constraint to watch.
+     * @param target the target document type to use.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return the document containing the ID.
+     */
+    <D extends Document<?>> Observable<D> remove(String id, ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit);
 
     /**
      * Queries a Couchbase Server {@link View}.
