@@ -885,6 +885,37 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> insert(D document);
 
     /**
+     * Insert a {@link Document} if it does not exist already.
+     *
+     * If the given {@link Document} (identified by its unique ID) already exists, the observable errors with a
+     * {@link DocumentAlreadyExistsException}. If the operation should also override the existing {@link Document},
+     * {@link #upsert(Document)} should be used instead. It will always either return a document or fail with an error.
+     *
+     * The returned {@link Document} contains original properties, but has the refreshed CAS value set.
+     *
+     * This operation will return successfully if the {@link Document} has been acknowledged in the managed cache layer
+     * on the master server node. If increased data durability is a concern,
+     * {@link #insert(Document, PersistTo, ReplicateTo)} should be used instead.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the {@link Document} to insert.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> insert(D document, long timeout, TimeUnit timeUnit);
+
+    /**
      * Insert a {@link Document} if it does not exist already and watch for durability constraints.
      *
      * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
@@ -949,9 +980,82 @@ public interface AsyncBucket {
      *
      * @param document the {@link Document} to insert.
      * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Insert a {@link Document} if it does not exist already and watch for durability constraints.
+     *
+     * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original insert has already happened, so the actual
+     * insert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to insert.
+     * @param persistTo the persistence constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo);
+
+    /**
+     * Insert a {@link Document} if it does not exist already and watch for durability constraints.
+     *
+     * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original insert has already happened, so the actual
+     * insert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to insert.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Insert a {@link Document} if it does not exist already and watch for durability constraints.
@@ -988,6 +1092,42 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo);
 
     /**
+     * Insert a {@link Document} if it does not exist already and watch for durability constraints.
+     *
+     * This method works exactly like {@link #insert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original insert failed because the document is already stored: {@link DocumentAlreadyExistsException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original insert has already happened, so the actual
+     * insert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to insert.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
      * Insert or overwrite a {@link Document}.
      *
      * If the given {@link Document} (identified by its unique ID) already exists, it will be overridden by the current
@@ -1014,6 +1154,36 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> upsert(D document);
+
+    /**
+     * Insert or overwrite a {@link Document}.
+     *
+     * If the given {@link Document} (identified by its unique ID) already exists, it will be overridden by the current
+     * one. The returned {@link Document} contains original properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document)} method needs to be used.
+     *
+     * This operation will return successfully if the {@link Document} has been acknowledged in the managed cache layer
+     * on the master server node. If increased data durability is a concern,
+     * {@link #upsert(Document, PersistTo, ReplicateTo)} should be used instead.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the {@link Document} to upsert.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> upsert(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Insert or overwrite a {@link Document} and watch for durability constraints.
@@ -1060,6 +1230,45 @@ public interface AsyncBucket {
      * properties, but has the refreshed CAS value set.
      *
      * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, PersistTo, ReplicateTo)} method needs to be used.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original upsert has already happened, so the actual
+     * upsert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to upsert.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
+     *
+     * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
      * this behavior is needed, the {@link #replace(Document, PersistTo)} method needs to be used.
      *
      * The returned {@link Observable} can error under the following conditions:
@@ -1087,6 +1296,44 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo);
+
+    /**
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
+     *
+     * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, PersistTo)} method needs to be used.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original upsert has already happened, so the actual
+     * upsert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to upsert.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Insert or overwrite a {@link Document} and watch for durability constraints.
@@ -1125,6 +1372,44 @@ public interface AsyncBucket {
     <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo);
 
     /**
+     * Insert or overwrite a {@link Document} and watch for durability constraints.
+     *
+     * This method works exactly like {@link #upsert(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * Please note that this method will not use the {@link Document#cas()} for optimistic concurrency checks. If
+     * this behavior is needed, the {@link #replace(Document, ReplicateTo)} method needs to be used.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original upsert has already happened, so the actual
+     * upsert and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to upsert.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
      * Replace a {@link Document} if it does already exist.
      *
      * If the given {@link Document} (identified by its unique ID) does not exist already, the method errors with a
@@ -1153,6 +1438,38 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> replace(D document);
+
+    /**
+     * Replace a {@link Document} if it does already exist.
+     *
+     * If the given {@link Document} (identified by its unique ID) does not exist already, the method errors with a
+     * {@link DocumentDoesNotExistException}. If the operation should also insert the {@link Document},
+     * {@link #upsert(Document)} should be used instead. It will always either return a document or fail with an error.
+     *
+     * The returned {@link Document} contains original properties, but has the refreshed CAS value set.
+     *
+     * This operation will return successfully if the {@link Document} has been acknowledged in the managed cache layer
+     * on the master server node. If increased data durability is a concern,
+     * {@link #replace(Document, PersistTo, ReplicateTo)} should be used instead.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the {@link Document} to replace.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> replace(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Replace a {@link Document} if it does exist and watch for durability constraints.
@@ -1221,9 +1538,84 @@ public interface AsyncBucket {
      *
      * @param document the {@link Document} to replace.
      * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Replace a {@link Document} if it does exist and watch for durability constraints.
+     *
+     * This method works exactly like {@link #replace(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original replace has already happened, so the actual
+     * replace and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to replace.
+     * @param persistTo the persistence constraint to watch.
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo);
+
+    /**
+     * Replace a {@link Document} if it does exist and watch for durability constraints.
+     *
+     * This method works exactly like {@link #replace(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original replace has already happened, so the actual
+     * replace and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to replace.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Replace a {@link Document} if it does exist and watch for durability constraints.
@@ -1259,6 +1651,43 @@ public interface AsyncBucket {
      * @return an {@link Observable} eventually containing a new {@link Document}.
      */
     <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo);
+
+    /**
+     * Replace a {@link Document} if it does exist and watch for durability constraints.
+     *
+     * This method works exactly like {@link #replace(Document)}, but afterwards watches the server states if the given
+     * durability constraints are met. If this is the case, a new document is returned which contains the original
+     * properties, but has the refreshed CAS value set.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The original replace failed because the document does not exist: {@link DocumentDoesNotExistException}
+     * - The request content is too big: {@link RequestTooBigException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - A CAS value was set and it did not match with the server: {@link CASMismatchException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original replace has already happened, so the actual
+     * replace and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param document the {@link Document} to replace.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return an {@link Observable} eventually containing a new {@link Document}.
+     */
+    <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Removes a {@link Document} from the Server.

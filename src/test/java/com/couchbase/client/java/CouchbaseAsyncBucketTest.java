@@ -39,7 +39,12 @@ import com.couchbase.client.core.message.kv.UpsertResponse;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.transcoder.Transcoder;
+import io.opentracing.Span;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import rx.Observable;
 import rx.plugins.RxJavaHooks;
@@ -54,17 +59,26 @@ import rx.subjects.Subject;
  */
 public class CouchbaseAsyncBucketTest {
 
+    private static final CouchbaseEnvironment ENV = DefaultCouchbaseEnvironment.create();
+
+    @AfterClass
+    public static void tearDown() {
+        ENV.shutdown();
+    }
+
     @Test
     public void shouldNotCallIntoObserveOnInsertWhenNotNeeded() {
         CouchbaseCore core = mock(CouchbaseCore.class);
         CouchbaseAsyncBucket bucket = new CouchbaseAsyncBucket(
-                core, null, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
+                core, ENV, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
         );
 
+        final CouchbaseRequest requestMock = mock(CouchbaseRequest.class);
+        when(requestMock.span()).thenReturn(mock(Span.class));
         Subject<CouchbaseResponse, CouchbaseResponse> response = AsyncSubject.create();
         response.onNext(new InsertResponse(
             ResponseStatus.SUCCESS, KeyValueStatus.SUCCESS.code(), 1234, "bucket", Unpooled.EMPTY_BUFFER,
-            null, mock(CouchbaseRequest.class)
+            null, requestMock
         ));
         response.onCompleted();
 
@@ -81,13 +95,15 @@ public class CouchbaseAsyncBucketTest {
     public void shouldNotCallIntoObserveOnUpsertWhenNotNeeded() {
         CouchbaseCore core = mock(CouchbaseCore.class);
         CouchbaseAsyncBucket bucket = new CouchbaseAsyncBucket(
-                core, null, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
+                core, ENV, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
         );
 
+        final CouchbaseRequest requestMock = mock(CouchbaseRequest.class);
+        when(requestMock.span()).thenReturn(mock(Span.class));
         Subject<CouchbaseResponse, CouchbaseResponse> response = AsyncSubject.create();
         response.onNext(new UpsertResponse(
             ResponseStatus.SUCCESS, KeyValueStatus.SUCCESS.code(), 1234, "bucket", Unpooled.EMPTY_BUFFER, null,
-            mock(CouchbaseRequest.class)
+            requestMock
         ));
         response.onCompleted();
 
@@ -104,13 +120,15 @@ public class CouchbaseAsyncBucketTest {
     public void shouldNotCallIntoObserveOnReplaceWhenNotNeeded() {
         CouchbaseCore core = mock(CouchbaseCore.class);
         CouchbaseAsyncBucket bucket = new CouchbaseAsyncBucket(
-                core, null, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
+                core, ENV, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
         );
 
+        final CouchbaseRequest requestMock = mock(CouchbaseRequest.class);
+        when(requestMock.span()).thenReturn(mock(Span.class));
         Subject<CouchbaseResponse, CouchbaseResponse> response = AsyncSubject.create();
         response.onNext(new ReplaceResponse(
             ResponseStatus.SUCCESS, KeyValueStatus.SUCCESS.code(), 1234, "bucket", Unpooled.EMPTY_BUFFER, null,
-            mock(CouchbaseRequest.class)
+            requestMock
         ));
         response.onCompleted();
 
@@ -127,12 +145,14 @@ public class CouchbaseAsyncBucketTest {
     public void shouldNotCallIntoObserveOnRemoveWhenNotNeeded() {
         CouchbaseCore core = mock(CouchbaseCore.class);
         CouchbaseAsyncBucket bucket = new CouchbaseAsyncBucket(
-                core, null, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
+                core, ENV, "bucket", "", Collections.<Transcoder<? extends Document, ?>>emptyList()
         );
 
+        final CouchbaseRequest requestMock = mock(CouchbaseRequest.class);
+        when(requestMock.span()).thenReturn(mock(Span.class));
         Subject<CouchbaseResponse, CouchbaseResponse> response = AsyncSubject.create();
         response.onNext(new RemoveResponse(
-            ResponseStatus.SUCCESS, KeyValueStatus.SUCCESS.code(), 1234, "bucket", Unpooled.EMPTY_BUFFER, null, mock(CouchbaseRequest.class)
+            ResponseStatus.SUCCESS, KeyValueStatus.SUCCESS.code(), 1234, "bucket", Unpooled.EMPTY_BUFFER, null, requestMock
         ));
         response.onCompleted();
 

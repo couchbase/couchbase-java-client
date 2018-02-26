@@ -307,7 +307,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.insert(document).single(), timeout, timeUnit);
+        return asyncBucket.insert(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -317,9 +317,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.insert(document, persistTo, replicateTo).single(), timeout, timeUnit
-        );
+        return asyncBucket.insert(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -329,7 +327,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.insert(document, persistTo).single(), timeout, timeUnit);
+        return asyncBucket.insert(document, persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -339,7 +337,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D insert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.insert(document, replicateTo).single(), timeout, timeUnit);
+        return asyncBucket.insert(document, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -349,7 +347,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.upsert(document).single(), timeout, timeUnit);
+        return asyncBucket.upsert(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -359,9 +357,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.upsert(document, persistTo, replicateTo).single(), timeout, timeUnit
-        );
+        return asyncBucket.upsert(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -371,7 +367,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.upsert(document, persistTo).single(), timeout, timeUnit);
+        return asyncBucket.upsert(document, persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -381,7 +377,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D upsert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.upsert(document, replicateTo).single(), timeout, timeUnit);
+        return asyncBucket.upsert(document, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -391,7 +387,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.replace(document).single(), timeout, timeUnit);
+        return asyncBucket.replace(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -401,9 +397,8 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(
-            asyncBucket.replace(document, persistTo, replicateTo).single(), timeout, timeUnit
-        );
+        return asyncBucket.replace(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
+
     }
 
     @Override
@@ -413,7 +408,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.replace(document, persistTo).single(), timeout, timeUnit);
+        return asyncBucket.replace(document, persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -423,7 +418,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D replace(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.replace(document, replicateTo).single(), timeout, timeUnit);
+        return asyncBucket.replace(document, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override

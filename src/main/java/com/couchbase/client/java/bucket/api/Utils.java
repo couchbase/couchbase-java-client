@@ -30,6 +30,7 @@ import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 @InterfaceAudience.Private
 @InterfaceStability.Uncommitted
@@ -53,9 +54,13 @@ public class Utils {
     }
 
     public static String formatTimeout(CouchbaseRequest request, long timeout) {
-        return "localId: " + request.lastLocalId() + ", opId" + request.operationId() + ", local: "
-            + request.lastLocalSocket()
-            + ", remote: " + request.lastRemoteSocket() + ", timeout: " + timeout + "us";
+        if (request != null) {
+            return "localId: " + request.lastLocalId() + ", opId: " + request.operationId() + ", local: "
+                + request.lastLocalSocket()
+                + ", remote: " + request.lastRemoteSocket() + ", timeout: " + timeout + "us";
+        } else {
+            return "localId: unknown, opId: unknown, local: unknown, remote: unknown, timeout: " + timeout + "us";
+        }
     }
 
     public static <T> Observable<T> applyTimeout(final Observable<T> input, final CouchbaseRequest request,
@@ -69,6 +74,29 @@ public class Utils {
                         if (t instanceof TimeoutException) {
                             return Observable.error(new TimeoutException(Utils.formatTimeout(
                                 request,
+                                timeUnit.toMicros(timeout)
+                            )));
+                        } else {
+                            return Observable.error(t);
+                        }
+                    }
+                });
+        } else {
+            return input;
+        }
+    }
+
+    public static <T> Observable<T> applyTimeout(final Observable<T> input, final AtomicReference<CouchbaseRequest> request,
+        final CouchbaseEnvironment environment, final long timeout, final TimeUnit timeUnit) {
+        if (timeout > 0) {
+            return input
+                .timeout(timeout, timeUnit, environment.scheduler())
+                .onErrorResumeNext(new Func1<Throwable, Observable<? extends T>>() {
+                    @Override
+                    public Observable<? extends T> call(Throwable t) {
+                        if (t instanceof TimeoutException) {
+                            return Observable.error(new TimeoutException(Utils.formatTimeout(
+                                request.get(),
                                 timeUnit.toMicros(timeout)
                             )));
                         } else {

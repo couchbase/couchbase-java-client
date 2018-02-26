@@ -67,6 +67,7 @@ import com.couchbase.client.java.bucket.DefaultAsyncBucketManager;
 import com.couchbase.client.java.bucket.ReplicaReader;
 import com.couchbase.client.java.bucket.api.Exists;
 import com.couchbase.client.java.bucket.api.Get;
+import com.couchbase.client.java.bucket.api.Mutate;
 import com.couchbase.client.java.bucket.api.Utils;
 import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.datastructures.ResultMappingUtils;
@@ -416,48 +417,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> insert(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-
-        return deferAndWatch(new Func1<Subscriber, Observable<InsertResponse>>() {
-            @Override
-            public Observable<InsertResponse> call(Subscriber s) {
-                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-                InsertRequest request = new InsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<InsertResponse, D>() {
-            @Override
-            public D call(InsertResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), document.expiry(),
-                        document.content(), response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case TOO_BIG:
-                        throw addDetails(new RequestTooBigException(), response);
-                    case EXISTS:
-                        throw addDetails(new DocumentAlreadyExistsException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+        return insert(document, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<D> insert(final D document, final PersistTo persistTo,
-        final ReplicateTo replicateTo) {
-        Observable<D> insertResult = insert(document);
+        final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<D> insertResult = insert(document, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return insertResult;
@@ -490,49 +456,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> upsert(final D document) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-
-        return deferAndWatch(new Func1<Subscriber, Observable<UpsertResponse>>() {
-            @Override
-            public Observable<UpsertResponse> call(Subscriber s) {
-                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-                UpsertRequest request = new UpsertRequest(document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<UpsertResponse, D>() {
-            @Override
-            public D call(UpsertResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), document.expiry(),
-                        document.content(), response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case TOO_BIG:
-                        throw addDetails(new RequestTooBigException(), response);
-                    case EXISTS:
-                    case LOCKED:
-                        throw addDetails(new CASMismatchException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+        return upsert(document, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<D> upsert(final D document, final PersistTo persistTo,
-        final ReplicateTo replicateTo) {
-        Observable<D> upsertResult = upsert(document);
+        final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<D> upsertResult = upsert(document, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return upsertResult;
@@ -565,52 +495,77 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> replace(final D document) {
+        return replace(document, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> insert(D document, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.insert(document, environment, transcoder, core, bucket, timeout, timeUnit);
+    }
 
-        return deferAndWatch(new Func1<Subscriber, Observable<ReplaceResponse>>() {
-            @Override
-            public Observable<ReplaceResponse> call(Subscriber s) {
-                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-                ReplaceRequest request = new ReplaceRequest(document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<ReplaceResponse, D>() {
-            @Override
-            public D call(ReplaceResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
+    @Override
+    public <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return insert(document, persistTo, replicateTo, 0, null);
+    }
 
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), document.expiry(),
-                        document.content(), response.cas(), response.mutationToken());
-                }
+    @Override
+    public <D extends Document<?>> Observable<D> insert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return insert(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
+    }
 
-                switch (response.status()) {
-                    case TOO_BIG:
-                        throw addDetails(new RequestTooBigException(), response);
-                    case NOT_EXISTS:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case EXISTS:
-                    case LOCKED:
-                        throw addDetails(new CASMismatchException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+    @Override
+    public <D extends Document<?>> Observable<D> insert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return insert(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> upsert(D document, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.upsert(document, environment, transcoder, core, bucket, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return upsert(document, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> upsert(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return upsert(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> upsert(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return upsert(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> replace(D document, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.replace(document, environment, transcoder, core, bucket, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return replace(document, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> replace(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return replace(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> replace(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return replace(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
     public <D extends Document<?>> Observable<D> replace(final D document, final PersistTo persistTo,
-        final ReplicateTo replicateTo) {
-        Observable<D> replaceResult = replace(document);
+        final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<D> replaceResult = replace(document, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return replaceResult;
