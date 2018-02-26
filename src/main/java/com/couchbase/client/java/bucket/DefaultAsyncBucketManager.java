@@ -51,6 +51,7 @@ import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.*;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
@@ -95,21 +96,23 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     private final String username;
     private final String password;
     private final N1qlQueryExecutor queryExecutor;
+    private final CouchbaseEnvironment env;
 
-    DefaultAsyncBucketManager(String bucket, String username, String password, ClusterFacade core) {
+    DefaultAsyncBucketManager(String bucket, String username, String password, ClusterFacade core, CouchbaseEnvironment env) {
         this.bucket = bucket;
         this.username = username;
         this.password = password;
         this.core = core;
         this.queryExecutor = new N1qlQueryExecutor(core, bucket, username, password);
+        this.env = env;
     }
 
-    public static DefaultAsyncBucketManager create(String bucket, String username, String password, ClusterFacade core) {
-        return new DefaultAsyncBucketManager(bucket, username, password, core);
+    public static DefaultAsyncBucketManager create(String bucket, String username, String password, ClusterFacade core, CouchbaseEnvironment env) {
+        return new DefaultAsyncBucketManager(bucket, username, password, core, env);
     }
 
-    public static DefaultAsyncBucketManager create(String bucket, String password, ClusterFacade core) {
-        return new DefaultAsyncBucketManager(bucket, bucket, password, core);
+    public static DefaultAsyncBucketManager create(String bucket, String password, ClusterFacade core, CouchbaseEnvironment env) {
+        return new DefaultAsyncBucketManager(bucket, bucket, password, core, env);
     }
 
     @Override
@@ -395,7 +398,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                 "Error while listing indexes: ");
 
         return queryExecutor.execute(
-                N1qlQuery.simple(listIndexes, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)))
+                N1qlQuery.simple(listIndexes, N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
                             .flatMap(new Func1<AsyncN1qlQueryResult, Observable<AsyncN1qlQueryRow>>() {
                                 @Override
                                 public Observable<AsyncN1qlQueryRow> call(final AsyncN1qlQueryResult aqr) {
@@ -424,7 +427,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             createIndex = usingWithPath;
         }
 
-        return queryExecutor.execute(N1qlQuery.simple(createIndex))
+        return queryExecutor.execute(N1qlQuery.simple(createIndex), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
             .compose(checkIndexCreation(ignoreIfExist, "Error creating primary index"));
     }
 
@@ -438,7 +441,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             createIndex = usingWithPath;
         }
 
-        return queryExecutor.execute(N1qlQuery.simple(createIndex))
+        return queryExecutor.execute(N1qlQuery.simple(createIndex), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
             .compose(checkIndexCreation(ignoreIfExist, "Error creating custom primary index " + customName));
     }
 
@@ -492,7 +495,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
             createIndex = usingWithPath;
         }
 
-        return queryExecutor.execute(N1qlQuery.simple(createIndex))
+        return queryExecutor.execute(N1qlQuery.simple(createIndex), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
                 .compose(checkIndexCreation(ignoreIfExist, "Error creating secondary index " + indexName));
     }
 
@@ -514,7 +517,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     }
 
     private Observable<Boolean> drop(final boolean ignoreIfNotExist, Statement dropIndex, final String errorPrefix) {
-        return queryExecutor.execute(N1qlQuery.simple(dropIndex))
+        return queryExecutor.execute(N1qlQuery.simple(dropIndex), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
                 .flatMap(new Func1<AsyncN1qlQueryResult, Observable<Boolean>>() {
                     @Override
                     public Observable<Boolean> call(final AsyncN1qlQueryResult aqr) {
@@ -580,7 +583,7 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
                                 .indexes(pendingIndexes)
                                 .using(IndexType.GSI);
 
-                        return queryExecutor.execute(N1qlQuery.simple(buildStatement))
+                        return queryExecutor.execute(N1qlQuery.simple(buildStatement), env, env.managementTimeout(), TimeUnit.MILLISECONDS)
                                 .flatMap(new Func1<AsyncN1qlQueryResult, Observable<List<String>>>() {
                                     @Override
                                     public Observable<List<String>> call(final AsyncN1qlQueryResult aqr) {

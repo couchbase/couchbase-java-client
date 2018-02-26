@@ -627,14 +627,10 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public N1qlQueryResult query(N1qlQuery query, final long timeout, final TimeUnit timeUnit) {
-        if (!query.params().hasServerSideTimeout()) {
-            query.params().serverSideTimeout(timeout, timeUnit);
-        }
-
-        return Blocking.blockForSingle(asyncBucket
-            .query(query)
+        return asyncBucket.query(query, timeout, timeUnit)
             .flatMap(N1qlQueryExecutor.ASYNC_RESULT_TO_SYNC)
-            .single(), timeout, timeUnit);
+            .toBlocking()
+            .single();
     }
 
     @Override

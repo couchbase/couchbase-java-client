@@ -33,7 +33,7 @@ public class DefaultBucketManager implements BucketManager {
 
     DefaultBucketManager(final CouchbaseEnvironment environment, final String bucket, final String username, final String password,
         final ClusterFacade core) {
-        asyncBucketManager = DefaultAsyncBucketManager.create(bucket, username, password, core);
+        asyncBucketManager = DefaultAsyncBucketManager.create(bucket, username, password, core, environment);
         this.timeout = environment.managementTimeout();
     }
 

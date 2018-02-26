@@ -144,7 +144,7 @@ public class AsyncRawQueryExecutor {
         return deferAndWatch(new Func1<Subscriber, Observable<RawQueryResponse>>() {
             @Override
             public Observable<RawQueryResponse> call(Subscriber s) {
-                RawQueryRequest request = RawQueryRequest.jsonQuery(query.n1ql().toString(), bucket, username, password);
+                RawQueryRequest request = RawQueryRequest.jsonQuery(query.n1ql().toString(), bucket, username, password, query.params().clientContextId());
                 return core.<RawQueryResponse>send(request);
             }
         }).map(new Func1<RawQueryResponse, T>() {

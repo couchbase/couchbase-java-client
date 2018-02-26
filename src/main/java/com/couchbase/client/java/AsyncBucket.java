@@ -2353,6 +2353,22 @@ public interface AsyncBucket {
     Observable<AsyncN1qlQueryResult> query(N1qlQuery query);
 
     /**
+     * Queries a N1QL secondary index with a custom timeout.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     *
+     * @param query the full {@link N1qlQuery}.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a result containing all found rows and additional information.
+     */
+    Observable<AsyncN1qlQueryResult> query(N1qlQuery query, long timeout, TimeUnit timeUnit);
+
+    /**
      * Queries a Full-Text Index
      *
      * The returned {@link Observable} can error under the following conditions:

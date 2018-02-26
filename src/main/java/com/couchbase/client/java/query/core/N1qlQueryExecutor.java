@@ -24,6 +24,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.config.NodeInfo;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.cluster.GetClusterConfigRequest;
 import com.couchbase.client.core.message.cluster.GetClusterConfigResponse;
 import com.couchbase.client.core.message.query.GenericQueryRequest;
@@ -32,8 +33,10 @@ import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.utils.Buffers;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.bucket.api.Utils;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.QueryExecutionException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
@@ -52,6 +55,7 @@ import com.couchbase.client.java.query.SimpleN1qlQuery;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import com.couchbase.client.java.util.LRUCache;
+import io.opentracing.tag.Tags;
 import rx.Observable;
 import rx.exceptions.CompositeException;
 import rx.functions.Func0;
@@ -66,8 +70,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
+import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 
 /**
  * A class used to execute various N1QL queries.
@@ -165,11 +171,11 @@ public class N1qlQueryExecutor {
         queryCache = Collections.synchronizedMap(lruCache);
     }
 
-    public Observable<AsyncN1qlQueryResult> execute(final N1qlQuery query) {
+    public Observable<AsyncN1qlQueryResult> execute(final N1qlQuery query, CouchbaseEnvironment env, long timeout, TimeUnit timeUnit) {
         if (query.params().isAdhoc()) {
-            return executeQuery(query);
+            return executeQuery(query, env, timeout, timeUnit);
         } else {
-            return dispatchPrepared(query);
+            return dispatchPrepared(query, env, timeout, timeUnit);
         }
     }
 
@@ -185,11 +191,17 @@ public class N1qlQueryExecutor {
      * @param query the full query as a Json String, including all necessary parameters.
      * @return a result containing all found rows and additional information.
      */
-    protected Observable<AsyncN1qlQueryResult> executeQuery(final N1qlQuery query) {
+    protected Observable<AsyncN1qlQueryResult> executeQuery(final N1qlQuery query,
+                                                            final CouchbaseEnvironment env, final long timeout, final TimeUnit timeUnit) {
         return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
             @Override
             public Observable<GenericQueryResponse> call() {
-                return core.send(createN1qlRequest(query, bucket, username, password, null));
+                GenericQueryRequest request = createN1qlRequest(query, bucket, username, password, null);
+                Utils.addRequestSpan(env, request, "n1ql");
+                if (env.tracingEnabled()) {
+                    request.span().setTag(Tags.DB_STATEMENT.getKey(), query.statement().toString());
+                }
+                return applyTimeout(core.<GenericQueryResponse>send(request), request, env, timeout, timeUnit);
             }
         }).flatMap(new Func1<GenericQueryResponse, Observable<AsyncN1qlQueryResult>>() {
             @Override
@@ -339,23 +351,23 @@ public class N1qlQueryExecutor {
         }
     };
 
-    protected Observable<AsyncN1qlQueryResult> dispatchPrepared(final N1qlQuery query) {
+    protected Observable<AsyncN1qlQueryResult> dispatchPrepared(final N1qlQuery query, final CouchbaseEnvironment env, final long timeout, final TimeUnit timeUnit) {
         PreparedPayload payload = queryCache.get(query.statement().toString());
         Func1<Throwable, Observable<AsyncN1qlQueryResult>> retryFunction = new Func1<Throwable, Observable<AsyncN1qlQueryResult>>() {
             @Override
             public Observable<AsyncN1qlQueryResult> call(Throwable throwable) {
-                return retryPrepareAndExecuteOnce(throwable, query);
+                return retryPrepareAndExecuteOnce(throwable, query, env, timeout, timeUnit);
             }
         };
 
         if (payload != null) {
             //EXECUTE, if relevant error PREPARE + EXECUTE
-            return executePrepared(query, payload)
+            return executePrepared(query, payload, env, timeout, timeUnit)
                     .flatMap(QUERY_RESULT_PEEK_FOR_RETRY)
                     .onErrorResumeNext(retryFunction);
         } else {
             //PREPARE, EXECUTE, if relevant error, PREPARE again + EXECUTE
-            return prepareAndExecute(query)
+            return prepareAndExecute(query, env, timeout, timeUnit)
                 .flatMap(QUERY_RESULT_PEEK_FOR_RETRY)
                 .onErrorResumeNext(retryFunction);
         }
@@ -366,11 +378,11 @@ public class N1qlQueryExecutor {
      * of the cache and an EXECUTE.
      * Any failure in the EXECUTE won't continue the retry cycle.
      */
-    protected Observable<AsyncN1qlQueryResult> retryPrepareAndExecuteOnce(Throwable error, N1qlQuery query) {
+    protected Observable<AsyncN1qlQueryResult> retryPrepareAndExecuteOnce(Throwable error, N1qlQuery query, CouchbaseEnvironment env, long timeout, TimeUnit timeUnit) {
         if (error instanceof QueryExecutionException &&
                 shouldRetry(((QueryExecutionException) error).getN1qlError())) {
             queryCache.remove(query.statement().toString());
-            return prepareAndExecute(query);
+            return prepareAndExecute(query, env, timeout, timeUnit);
         }
         return Observable.error(error);
     }
@@ -378,13 +390,13 @@ public class N1qlQueryExecutor {
     /**
      * Issues a N1QL PREPARE, puts the plan in cache then EXECUTE it.
      */
-    protected Observable<AsyncN1qlQueryResult> prepareAndExecute(final N1qlQuery query) {
+    protected Observable<AsyncN1qlQueryResult> prepareAndExecute(final N1qlQuery query, final CouchbaseEnvironment env, final long timeout, final TimeUnit timeUnit) {
         return prepare(query.statement())
                 .flatMap(new Func1<PreparedPayload, Observable<AsyncN1qlQueryResult>>() {
                     @Override
                     public Observable<AsyncN1qlQueryResult> call(PreparedPayload payload) {
                         queryCache.put(query.statement().toString(), payload);
-                        return executePrepared(query, payload);
+                        return executePrepared(query, payload, env, timeout, timeUnit);
                     }
                 });
     }
@@ -392,7 +404,7 @@ public class N1qlQueryExecutor {
     /**
      * Issues a proper N1QL EXECUTE, detecting if parameters must be added to it.
      */
-    protected Observable<AsyncN1qlQueryResult> executePrepared(final N1qlQuery query, PreparedPayload payload) {
+    protected Observable<AsyncN1qlQueryResult> executePrepared(final N1qlQuery query, PreparedPayload payload, CouchbaseEnvironment env, long timeout, TimeUnit timeUnit) {
         PreparedN1qlQuery preparedQuery;
         if (query instanceof ParameterizedN1qlQuery) {
             ParameterizedN1qlQuery pq = (ParameterizedN1qlQuery) query;
@@ -406,7 +418,7 @@ public class N1qlQueryExecutor {
         }
         preparedQuery.setEncodedPlanEnabled(isEncodedPlanEnabled());
 
-        return executeQuery(preparedQuery);
+        return executeQuery(preparedQuery, env, timeout, timeUnit);
     }
 
     /**
@@ -555,9 +567,9 @@ public class N1qlQueryExecutor {
           "`" + bucket + "`"
         );
         if (targetNode != null) {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, targetNode);
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, targetNode, query.params().clientContextId());
         } else {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password);
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, query.params().clientContextId());
         }
     }
 

@@ -444,6 +444,13 @@ public class N1qlParams implements Serializable {
     }
 
     /**
+     * Helper method to check if a client context ID is set.
+     */
+    public String clientContextId() {
+        return clientContextId;
+    }
+
+    /**
      * True if this query is adhoc, false otherwise.
      *
      * @return true if adhoc false otherwise.

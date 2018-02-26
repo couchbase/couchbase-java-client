@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -115,7 +116,7 @@ public class N1qlPreparedTest {
     }
 
     public static N1qlQueryResult query(N1qlQuery query) {
-        return executor.execute(query)
+        return executor.execute(query, ctx.env(), ctx.env().queryTimeout(), TimeUnit.MILLISECONDS)
                 .flatMap(new Func1<AsyncN1qlQueryResult, Observable<N1qlQueryResult>>() {
                     @Override
                     public Observable<N1qlQueryResult> call(AsyncN1qlQueryResult aqr) {

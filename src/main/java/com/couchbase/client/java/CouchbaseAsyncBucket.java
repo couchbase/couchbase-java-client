@@ -135,6 +135,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -220,7 +221,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             transcoders.put(custom.documentType(), custom);
         }
 
-        bucketManager = DefaultAsyncBucketManager.create(bucket, username, password, core);
+        bucketManager = DefaultAsyncBucketManager.create(bucket, username, password, core, environment);
 
         boolean n1qlPreparedEncodedPlanEnabled = "true".equalsIgnoreCase(System.getProperty(N1qlQueryExecutor.ENCODED_PLAN_ENABLED_PROPERTY, "true")); //active by default
         n1qlQueryExecutor = new N1qlQueryExecutor(core, bucket, username, password, n1qlPreparedEncodedPlanEnabled);
@@ -816,10 +817,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncN1qlQueryResult> query(final N1qlQuery query) {
+        return query(query, environment.queryTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<AsyncN1qlQueryResult> query(N1qlQuery query, long timeout, TimeUnit timeUnit) {
         if (!query.params().hasServerSideTimeout()) {
-            query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
+            query.params().serverSideTimeout(timeout, timeUnit);
         }
-        return n1qlQueryExecutor.execute(query);
+        if (query.params().clientContextId() == null || query.params().clientContextId().isEmpty()) {
+            query.params().withContextId(UUID.randomUUID().toString());
+        }
+        return n1qlQueryExecutor.execute(query, environment, timeout, timeUnit);
     }
 
     public Observable<AsyncAnalyticsQueryResult> query(final AnalyticsQuery query) {

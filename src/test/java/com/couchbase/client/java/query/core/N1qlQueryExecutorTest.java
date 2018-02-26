@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -29,9 +30,12 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.CouchbaseCore;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.QueryExecutionException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
@@ -45,6 +49,8 @@ import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.Select;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.util.LRUCache;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ReturnsElementsOf;
 import rx.Observable;
@@ -56,6 +62,13 @@ import rx.Observable;
  * @since 2.2
  */
 public class N1qlQueryExecutorTest {
+
+    private static final CouchbaseEnvironment ENV = DefaultCouchbaseEnvironment.create();
+
+    @AfterClass
+    public static void tearDown() {
+        ENV.shutdown();
+    }
 
     @Test
     public void testPreparedStatementInCacheBypassesPreparation() throws Exception {
@@ -70,19 +83,19 @@ public class N1qlQueryExecutorTest {
         //put the statement in cache
         cache.put(st.toString(), payloadInCache);
 
-        doReturn(Observable.empty()).when(executor).executeQuery(any(N1qlQuery.class));
+        doReturn(Observable.empty()).when(executor).executeQuery(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         doReturn(Observable.just(payloadFromServer)).when(executor).prepare(any(Statement.class));
         doReturn(Observable.<AsyncN1qlQueryResult>empty()).when(executor)
-                                                      .executePrepared(any(N1qlQuery.class), any(PreparedPayload.class));
+                                                      .executePrepared(any(N1qlQuery.class), any(PreparedPayload.class),  eq(ENV), any(Integer.class), any(TimeUnit.class));
 
-        executor.execute(q).toBlocking().firstOrDefault(null);
+        executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null);
 
-        verify(executor).dispatchPrepared(any(N1qlQuery.class));
+        verify(executor).dispatchPrepared(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         verify(executor, never()).prepare(any(Statement.class));
-        verify(executor).executePrepared(q, payloadInCache);
-        verify(executor, never()).executePrepared(q, payloadFromServer);
-        verify(executor, never()).prepareAndExecute(any(N1qlQuery.class));
-        verify(executor, never()).retryPrepareAndExecuteOnce(any(QueryExecutionException.class), any(N1qlQuery.class));
+        verify(executor).executePrepared(q, payloadInCache, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, never()).executePrepared(q, payloadFromServer, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, never()).prepareAndExecute(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
+        verify(executor, never()).retryPrepareAndExecuteOnce(any(QueryExecutionException.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         assertEquals(1, cache.size());
     }
 
@@ -98,16 +111,16 @@ public class N1qlQueryExecutorTest {
 
         doReturn(Observable.just(payloadFromServer)).when(executor).prepare(any(Statement.class));
         doReturn(Observable.<AsyncN1qlQueryResult>empty()).when(executor)
-                                                      .executePrepared(any(N1qlQuery.class), any(PreparedPayload.class));
+                                                      .executePrepared(any(N1qlQuery.class), any(PreparedPayload.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
 
         assertEquals(0, cache.size());
-        executor.execute(q).toBlocking().firstOrDefault(null);
+        executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null);
 
-        verify(executor).dispatchPrepared(any(N1qlQuery.class));
+        verify(executor).dispatchPrepared(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         verify(executor).prepare(any(Statement.class));
-        verify(executor).executePrepared(q, payloadFromServer);
-        verify(executor).prepareAndExecute(any(N1qlQuery.class));
-        verify(executor, never()).retryPrepareAndExecuteOnce(any(QueryExecutionException.class), any(N1qlQuery.class));
+        verify(executor).executePrepared(q, payloadFromServer, ENV, 1, TimeUnit.SECONDS);
+        verify(executor).prepareAndExecute(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
+        verify(executor, never()).retryPrepareAndExecuteOnce(any(QueryExecutionException.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         assertEquals(1, cache.size());
 
         //also check how the plan is used in a PreparedN1qlQuery
@@ -161,17 +174,17 @@ public class N1qlQueryExecutorTest {
 
         cache.put(st.toString(), payloadFromCache);
         doReturn(Observable.just(payloadFromServer)).when(executor).prepare(any(Statement.class));
-        doReturn(Observable.just(result4050)).when(executor).executeQuery(any(PreparedN1qlQuery.class));
+        doReturn(Observable.just(result4050)).when(executor).executeQuery(any(PreparedN1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
 
         assertEquals(1, cache.size());
         assertEquals(payloadFromCache, cache.values().iterator().next());
 
-        executor.execute(q).toBlocking().firstOrDefault(null);
+        executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null);
 
-        verify(executor).dispatchPrepared(any(N1qlQuery.class));
-        verify(executor, times(1)).executePrepared(q, payloadFromCache);
-        verify(executor, times(1)).executePrepared(q, payloadFromServer);
-        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class));
+        verify(executor).dispatchPrepared(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
+        verify(executor, times(1)).executePrepared(q, payloadFromCache, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).executePrepared(q, payloadFromServer, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         verify(executor, times(1)).prepare(any(Statement.class));
         assertEquals(1, cache.size());
         assertEquals(payloadFromServer, cache.values().iterator().next());
@@ -209,18 +222,18 @@ public class N1qlQueryExecutorTest {
 
         doAnswer(new ReturnsElementsOf(payloads)).when(executor).prepare(any(Statement.class));
         doAnswer(new ReturnsElementsOf(Arrays.asList(result4050, resultOk))).when(executor).executeQuery(
-                any(PreparedN1qlQuery.class));
+                any(PreparedN1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
 
         assertEquals(0, cache.size());
 
-        AsyncN1qlQueryResult result = executor.execute(q).toBlocking().firstOrDefault(null);
+        AsyncN1qlQueryResult result = executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null);
         List<JsonObject> errors = result.errors().toList().toBlocking().first();
         boolean success = result.finalSuccess().toBlocking().first();
 
-        verify(executor).dispatchPrepared(any(N1qlQuery.class));
-        verify(executor, times(1)).executePrepared(q, payloadFromServer1);
-        verify(executor, times(1)).executePrepared(q, payloadFromServer2);
-        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class));
+        verify(executor).dispatchPrepared(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
+        verify(executor, times(1)).executePrepared(q, payloadFromServer1, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).executePrepared(q, payloadFromServer2, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         verify(executor, times(2)).prepare(any(Statement.class));
         assertEquals(1, cache.size());
         assertEquals(payloadFromServer2, cache.values().iterator().next());
@@ -266,18 +279,18 @@ public class N1qlQueryExecutorTest {
                 result4050,
                 result4050,
                 resultOk
-        ))).when(executor).executeQuery(any(PreparedN1qlQuery.class));
+        ))).when(executor).executeQuery(any(PreparedN1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
 
         assertEquals(0, cache.size());
 
-        AsyncN1qlQueryResult result = executor.execute(q).toBlocking().firstOrDefault(null);
+        AsyncN1qlQueryResult result = executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null);
         List<JsonObject> errors = result.errors().toList().toBlocking().first();
         boolean success = result.finalSuccess().toBlocking().first();
 
-        verify(executor).dispatchPrepared(any(N1qlQuery.class));
-        verify(executor, times(1)).executePrepared(q, payloadFromServer1);
-        verify(executor, times(1)).executePrepared(q, payloadFromServer2);
-        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class));
+        verify(executor).dispatchPrepared(any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
+        verify(executor, times(1)).executePrepared(q, payloadFromServer1, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).executePrepared(q, payloadFromServer2, ENV, 1, TimeUnit.SECONDS);
+        verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
         verify(executor, times(2)).prepare(any(Statement.class));
         assertEquals(1, cache.size());
         assertEquals(payloadFromServer2, cache.values().iterator().next());
@@ -323,22 +336,22 @@ public class N1qlQueryExecutorTest {
         doAnswer(new ReturnsElementsOf(Arrays.asList(
                 resultRetry,
                 resultOk
-        ))).when(executor).executeQuery(any(PreparedN1qlQuery.class));
+        ))).when(executor).executeQuery(any(PreparedN1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
 
         assertEquals(0, cache.size());
 
-        AsyncN1qlQueryResult result = executor.execute(q).toBlocking().firstOrDefault(null); //ok
+        AsyncN1qlQueryResult result = executor.execute(q, ENV, 1, TimeUnit.SECONDS).toBlocking().firstOrDefault(null); //ok
         List<JsonObject> errors = result.errors().toList().toBlocking().first();
         boolean success = result.finalSuccess().toBlocking().first();
 
         if (retryExpected) {
-            verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class));
+            verify(executor, times(1)).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
             assertTrue(success);
             assertEquals(0, errors.size());
             assertEquals(1, cache.size());
             assertEquals(payloadFromServer2, cache.values().iterator().next());
         } else {
-            verify(executor, never()).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class));
+            verify(executor, never()).retryPrepareAndExecuteOnce(any(Throwable.class), any(N1qlQuery.class), eq(ENV), any(Integer.class), any(TimeUnit.class));
             assertFalse(success);
             assertEquals(1, errors.size());
             assertEquals(new Integer(code), errors.get(0).getInt("code"));

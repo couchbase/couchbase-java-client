@@ -101,7 +101,8 @@ public class N1qlQueryTest {
         assertNotNull(result.errors());
         assertTrue(result.errors().isEmpty());
 
-        assertEquals("", result.clientContextId());
+        assertNotNull(result.clientContextId());
+        assertFalse(result.clientContextId().isEmpty());
         assertNotNull(result.requestId());
         assertTrue(result.requestId().length() > 0);
 
