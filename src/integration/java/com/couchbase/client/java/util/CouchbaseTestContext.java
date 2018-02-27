@@ -441,7 +441,19 @@ public class CouchbaseTestContext {
             BucketManager bucketManager = bucket.bucketManager();
 
             if (flushOnInit && isFlushEnabled && existing) {
-                bucketManager.flush();
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        bucketManager.flush();
+                        break;
+                    } catch (CouchbaseException ex) {
+                        // because of a server bug, retry couple times
+                        if (ex.getMessage() != null && ex.getMessage().contains("Flush failed with unexpected error")) {
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
 
             return new CouchbaseTestContext(bucket, bucketPassword, bucketManager, cluster, clusterManager, seedNode,                               adminName, adminPassword, env, createAdhocBucket, isFlushEnabled, authed, couchbaseMock);

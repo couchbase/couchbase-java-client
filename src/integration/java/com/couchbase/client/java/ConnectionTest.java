@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.error.MixedAuthenticationException;
 import com.couchbase.client.java.util.TestProperties;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.Test;
@@ -78,8 +79,18 @@ public class ConnectionTest  {
     @Test
     public void shouldCacheBucketReference() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
-        Bucket bucket1 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
-        Bucket bucket2 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        Bucket bucket1;
+        Bucket bucket2;
+
+        try {
+            bucket1 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+            bucket2 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        } catch (InvalidPasswordException ex) {
+            // rbac hack
+            cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
+            bucket1 = cluster.openBucket(TestProperties.bucket());
+            bucket2 = cluster.openBucket(TestProperties.bucket());
+        }
 
         assertEquals(bucket1.hashCode(), bucket2.hashCode());
 
@@ -89,10 +100,15 @@ public class ConnectionTest  {
         assertTrue(bucket1.isClosed());
         assertTrue(bucket2.isClosed());
 
-        Bucket bucket3 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        Bucket bucket3;
+        try {
+            bucket3 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        } catch(MixedAuthenticationException ex) {
+            // rbac hack
+            bucket3 = cluster.openBucket(TestProperties.bucket());
+        }
 
         assertNotEquals(bucket1.hashCode(), bucket3.hashCode());
-
         assertFalse(bucket3.isClosed());
     }
 }

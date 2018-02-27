@@ -33,6 +33,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.core.encryption.EncryptionConfig;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.repository.annotation.EncryptedField;
 import com.couchbase.client.java.repository.annotation.Id;
 import com.couchbase.client.java.util.TestProperties;
@@ -89,7 +90,13 @@ public class FieldLevelEncryptionKeyValueTest {
                 .encryptionConfig(encryptionConfig)
                 .build();
         cluster = CouchbaseCluster.create(environment, TestProperties.seedNode());
-        bucket = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        try {
+            bucket = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+        } catch (InvalidPasswordException ex) {
+            // quick hack for RBAC
+            cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
+            bucket = cluster.openBucket(TestProperties.bucket());
+        }
     }
 
     @AfterClass
