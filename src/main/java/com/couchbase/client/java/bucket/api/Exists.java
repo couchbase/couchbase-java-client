@@ -24,6 +24,7 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
@@ -45,33 +46,36 @@ public class Exists {
     public static Observable<Boolean> exists(final String id, final CouchbaseEnvironment environment,
         final ClusterFacade core, final String bucket, final long timeout,
         final TimeUnit timeUnit) {
-        return deferAndWatch(new Func1<Subscriber, Observable<Boolean>>() {
+        return Observable.defer(new Func0<Observable<Boolean>>() {
             @Override
-            public Observable<Boolean> call(Subscriber s) {
+            public Observable<Boolean> call() {
                 final ObserveRequest request = new ObserveRequest(id, 0, true, (short) 0, bucket);
                 addRequestSpan(environment, request, "exists");
-                request.subscriber(s);
-                Observable<Boolean> result = core.<ObserveResponse>send(request)
-                    .map(new Func1<ObserveResponse, Boolean>() {
-                        @Override
-                        public Boolean call(ObserveResponse response) {
-                            ByteBuf content = response.content();
-                            if (content != null && content.refCnt() > 0) {
-                                content.release();
-                            }
-
-                            if (environment.tracingEnabled()) {
-                                environment.tracer().scopeManager()
-                                    .activate(response.request().span(), true)
-                                    .close();
-                            }
-
-                            ObserveResponse.ObserveStatus foundStatus = response.observeStatus();
-                            return foundStatus == ObserveResponse.ObserveStatus.FOUND_PERSISTED
-                                || foundStatus == ObserveResponse.ObserveStatus.FOUND_NOT_PERSISTED;
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<ObserveResponse>>() {
+                    @Override
+                    public Observable<ObserveResponse> call(Subscriber s) {
+                        request.subscriber(s);
+                        return core.send(request);
+                    }
+                }) .map(new Func1<ObserveResponse, Boolean>() {
+                    @Override
+                    public Boolean call(ObserveResponse response) {
+                        ByteBuf content = response.content();
+                        if (content != null && content.refCnt() > 0) {
+                            content.release();
                         }
-                    });
-                return applyTimeout(result, request, environment, timeout, timeUnit);
+
+                        if (environment.tracingEnabled()) {
+                            environment.tracer().scopeManager()
+                                .activate(response.request().span(), true)
+                                .close();
+                        }
+
+                        ObserveResponse.ObserveStatus foundStatus = response.observeStatus();
+                        return foundStatus == ObserveResponse.ObserveStatus.FOUND_PERSISTED
+                            || foundStatus == ObserveResponse.ObserveStatus.FOUND_NOT_PERSISTED;
+                    }
+                }), request, environment, timeout, timeUnit);
             }
         });
     }

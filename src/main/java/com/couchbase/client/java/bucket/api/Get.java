@@ -33,6 +33,7 @@ import com.couchbase.client.java.transcoder.Transcoder;
 import io.opentracing.Scope;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.util.Map;
@@ -57,16 +58,20 @@ public class Get {
         final CouchbaseEnvironment environment, final String bucket, final ClusterFacade core,
         final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders,
         final long timeout, final TimeUnit timeUnit) {
-        return deferAndWatch(new Func1<Subscriber, Observable<? extends D>>() {
+        return Observable.defer(new Func0<Observable<D>>() {
             @Override
-            public Observable<? extends D> call(Subscriber s) {
+            public Observable<D> call() {
                 final GetRequest request = new GetRequest(id, bucket);
                 addRequestSpan(environment, request, "get");
-                request.subscriber(s);
-                Observable<D> result = core.<GetResponse>send(request)
-                    .filter(new GetFilter(environment))
-                    .map(new GetMap<D>(environment, transcoders, target, id));
-                return applyTimeout(result, request, environment, timeout, timeUnit);
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
+                        @Override
+                        public Observable<GetResponse> call(Subscriber s) {
+                            request.subscriber(s);
+                            return core.send(request);
+                        }
+                    }).filter(new GetFilter(environment))
+                        .map(new GetMap<D>(environment, transcoders, target, id)),
+                request, environment, timeout, timeUnit);
             }
         });
     }
@@ -75,16 +80,20 @@ public class Get {
         final CouchbaseEnvironment environment, final String bucket, final ClusterFacade core,
         final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders, final int lockTime,
         final long timeout, final TimeUnit timeUnit) {
-        return deferAndWatch(new Func1<Subscriber, Observable<? extends D>>() {
+        return Observable.defer(new Func0<Observable<D>>() {
             @Override
-            public Observable<? extends D> call(Subscriber s) {
-                GetRequest request = new GetRequest(id, bucket, true, false, lockTime);
+            public Observable<D> call() {
+                final GetRequest request = new GetRequest(id, bucket, true, false, lockTime);
                 addRequestSpan(environment, request, "get_and_lock");
-                request.subscriber(s);
-                Observable<D> result = core.<GetResponse>send(request)
-                    .filter(new GetAndLockFilter(environment))
-                    .map(new GetMap<D>(environment, transcoders, target, id));
-                return applyTimeout(result, request, environment, timeout, timeUnit);
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
+                        @Override
+                        public Observable<GetResponse> call(Subscriber s) {
+                            request.subscriber(s);
+                            return core.send(request);
+                        }
+                    }).filter(new GetAndLockFilter(environment))
+                        .map(new GetMap<D>(environment, transcoders, target, id)),
+                request, environment, timeout, timeUnit);
             }
         });
     }
@@ -93,16 +102,20 @@ public class Get {
         final CouchbaseEnvironment environment, final String bucket, final ClusterFacade core,
         final Map<Class<? extends Document>, Transcoder<? extends Document, ?>> transcoders, final int expiry,
         final long timeout, final TimeUnit timeUnit) {
-        return deferAndWatch(new Func1<Subscriber, Observable<? extends D>>() {
+        return Observable.defer(new Func0<Observable<D>>() {
             @Override
-            public Observable<? extends D> call(Subscriber s) {
-                GetRequest request = new GetRequest(id, bucket, false, true, expiry);
+            public Observable<D> call() {
+                final GetRequest request = new GetRequest(id, bucket, false, true, expiry);
                 addRequestSpan(environment, request, "get_and_touch");
-                request.subscriber(s);
-                Observable<D> result = core.<GetResponse>send(request)
-                    .filter(new GetAndTouchFilter(environment))
-                    .map(new GetMap<D>(environment, transcoders, target, id));
-                return applyTimeout(result, request, environment, timeout, timeUnit);
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
+                        @Override
+                        public Observable<GetResponse> call(Subscriber s) {
+                            request.subscriber(s);
+                            return core.send(request);
+                        }
+                    }).filter(new GetAndTouchFilter(environment))
+                        .map(new GetMap<D>(environment, transcoders, target, id)),
+                    request, environment, timeout, timeUnit);
             }
         });
     }
