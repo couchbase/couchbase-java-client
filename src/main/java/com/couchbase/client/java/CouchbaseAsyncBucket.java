@@ -448,7 +448,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }
@@ -488,7 +490,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }
@@ -589,7 +593,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }
@@ -616,7 +622,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(D document, final PersistTo persistTo, final ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return observeRemove(remove(document, timeout, timeUnit), persistTo, replicateTo);
+        return observeRemove(remove(document, timeout, timeUnit), persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
@@ -627,7 +633,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
         final ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return observeRemove(remove(id, target, timeout, timeUnit), persistTo, replicateTo);
+        return observeRemove(remove(id, target, timeout, timeUnit), persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
@@ -701,7 +707,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
      * @return an observable reporting success or error of the observe operation.
      */
     private <D extends Document<?>> Observable<D> observeRemove(Observable<D> removeResult,
-        final PersistTo persistTo, final ReplicateTo replicateTo) {
+        final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return removeResult;
         }
@@ -725,7 +731,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }

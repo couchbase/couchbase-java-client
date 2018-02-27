@@ -20,7 +20,6 @@ import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.lang.Tuple2;
-import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.kv.InsertRequest;
 import com.couchbase.client.core.message.kv.InsertResponse;
 import com.couchbase.client.core.message.kv.RemoveRequest;
@@ -49,7 +48,6 @@ import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.couchbase.client.java.bucket.api.Utils.addDetails;
 import static com.couchbase.client.java.bucket.api.Utils.addRequestSpan;
@@ -71,46 +69,45 @@ public class Mutate {
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
         final long timeout, final TimeUnit timeUnit) {
         return Observable.defer(new Func0<Observable<D>>() {
-            final AtomicReference<CouchbaseRequest> r = new AtomicReference<CouchbaseRequest>();
             @Override
             public Observable<D> call() {
+                Span requestSpan = null;
+                if (env.tracingEnabled()) {
+                    Scope scope = env.tracer()
+                        .buildSpan("insert")
+                        .startActive(false);
+                    requestSpan = scope.span();
+                    scope.close();
+                }
+
+                Scope encodeScope = null;
+                if (requestSpan != null) {
+                    encodeScope = env.tracer()
+                        .buildSpan("request_encoding")
+                        .asChildOf(requestSpan)
+                        .startActive(true);
+                }
+
+                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
+
+                if (encodeScope != null) {
+                    encodeScope.close();
+                    if (encodeScope.span() instanceof ThresholdLogSpan) {
+                        encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
+                            Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
+                        );
+                    }
+                }
+
+                final InsertRequest request = new InsertRequest(
+                    document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket
+                );
+                if (requestSpan != null) {
+                    request.span(requestSpan, env);
+                }
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<InsertResponse>>() {
                     @Override
                     public Observable<InsertResponse> call(Subscriber s) {
-                        Span requestSpan = null;
-                        if (env.tracingEnabled()) {
-                            Scope scope = env.tracer()
-                                .buildSpan("insert")
-                                .startActive(false);
-                            requestSpan = scope.span();
-                            scope.close();
-                        }
-
-                        Scope encodeScope = null;
-                        if (requestSpan != null) {
-                            encodeScope = env.tracer()
-                                .buildSpan("request_encoding")
-                                .asChildOf(requestSpan)
-                                .startActive(true);
-                        }
-
-                        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-
-                        if (encodeScope != null) {
-                            encodeScope.close();
-                            if (encodeScope.span() instanceof ThresholdLogSpan) {
-                                encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
-                                    Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
-                                );
-                            }
-                        }
-
-                        InsertRequest request = new InsertRequest(
-                            document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket
-                        );
-                        if (requestSpan != null) {
-                            request.span(requestSpan, env);
-                        }
                         request.subscriber(s);
                         return core.send(request);
                     }
@@ -146,7 +143,7 @@ public class Mutate {
                                 throw addDetails(new CouchbaseException(response.status().toString()), response);
                         }
                     }
-                }), r, env, timeout, timeUnit);
+                }), request, env, timeout, timeUnit);
             }
         });
     }
@@ -158,45 +155,44 @@ public class Mutate {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
-                final AtomicReference<CouchbaseRequest> r = new AtomicReference<CouchbaseRequest>();
+                Span requestSpan = null;
+                if (env.tracingEnabled()) {
+                    Scope scope = env.tracer()
+                        .buildSpan("upsert")
+                        .startActive(false);
+                    requestSpan = scope.span();
+                    scope.close();
+                }
+
+                Scope encodeScope = null;
+                if (requestSpan != null) {
+                    encodeScope = env.tracer()
+                        .buildSpan("request_encoding")
+                        .asChildOf(requestSpan)
+                        .startActive(true);
+                }
+
+                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
+
+                if (encodeScope != null) {
+                    encodeScope.close();
+                    if (encodeScope.span() instanceof ThresholdLogSpan) {
+                        encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
+                            Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
+                        );
+                    }
+                }
+
+                final UpsertRequest request = new UpsertRequest(
+                    document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket
+                );
+                if (requestSpan != null) {
+                    request.span(requestSpan, env);
+                }
+
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<UpsertResponse>>() {
                     @Override
                     public Observable<UpsertResponse> call(Subscriber s) {
-                        Span requestSpan = null;
-                        if (env.tracingEnabled()) {
-                            Scope scope = env.tracer()
-                                .buildSpan("upsert")
-                                .startActive(false);
-                            requestSpan = scope.span();
-                            scope.close();
-                        }
-
-                        Scope encodeScope = null;
-                        if (requestSpan != null) {
-                            encodeScope = env.tracer()
-                                .buildSpan("request_encoding")
-                                .asChildOf(requestSpan)
-                                .startActive(true);
-                        }
-
-                        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-
-                        if (encodeScope != null) {
-                            encodeScope.close();
-                            if (encodeScope.span() instanceof ThresholdLogSpan) {
-                                encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
-                                    Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
-                                );
-                            }
-                        }
-
-                        UpsertRequest request = new UpsertRequest(
-                            document.id(), encoded.value1(), document.expiry(), encoded.value2(), bucket
-                        );
-                        r.set(request);
-                        if (requestSpan != null) {
-                            request.span(requestSpan, env);
-                        }
                         request.subscriber(s);
                         return core.send(request);
                     }
@@ -233,7 +229,7 @@ public class Mutate {
                                 throw addDetails(new CouchbaseException(response.status().toString()), response);
                         }
                     }
-                }), r, env, timeout, timeUnit);
+                }), request, env, timeout, timeUnit);
             }
         });
     }
@@ -245,44 +241,43 @@ public class Mutate {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
-                final AtomicReference<CouchbaseRequest> r = new AtomicReference<CouchbaseRequest>();
+                Span requestSpan = null;
+                if (env.tracingEnabled()) {
+                    Scope scope = env.tracer()
+                        .buildSpan("replace")
+                        .startActive(false);
+                    requestSpan = scope.span();
+                    scope.close();
+                }
+
+                Scope encodeScope = null;
+                if (requestSpan != null) {
+                    encodeScope = env.tracer()
+                        .buildSpan("request_encoding")
+                        .asChildOf(requestSpan)
+                        .startActive(true);
+                }
+
+                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
+
+                if (encodeScope != null) {
+                    encodeScope.close();
+                    if (encodeScope.span() instanceof ThresholdLogSpan) {
+                        encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
+                            Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
+                        );
+                    }
+                }
+
+                final ReplaceRequest request = new ReplaceRequest(
+                    document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(), bucket
+                );
+                if (requestSpan != null) {
+                    request.span(requestSpan, env);
+                }
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<ReplaceResponse>>() {
                     @Override
                     public Observable<ReplaceResponse> call(Subscriber s) {
-                        Span requestSpan = null;
-                        if (env.tracingEnabled()) {
-                            Scope scope = env.tracer()
-                                .buildSpan("replace")
-                                .startActive(false);
-                            requestSpan = scope.span();
-                            scope.close();
-                        }
-
-                        Scope encodeScope = null;
-                        if (requestSpan != null) {
-                            encodeScope = env.tracer()
-                                .buildSpan("request_encoding")
-                                .asChildOf(requestSpan)
-                                .startActive(true);
-                        }
-
-                        Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-
-                        if (encodeScope != null) {
-                            encodeScope.close();
-                            if (encodeScope.span() instanceof ThresholdLogSpan) {
-                                encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
-                                    Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
-                                );
-                            }
-                        }
-
-                        ReplaceRequest request = new ReplaceRequest(
-                            document.id(), encoded.value1(), document.cas(), document.expiry(), encoded.value2(), bucket
-                        );
-                        if (requestSpan != null) {
-                            request.span(requestSpan, env);
-                        }
                         request.subscriber(s);
                         return core.send(request);
                     }
@@ -321,7 +316,7 @@ public class Mutate {
                                 throw addDetails(new CouchbaseException(response.status().toString()), response);
                         }
                     }
-                }), r, env, timeout, timeUnit);
+                }), request, env, timeout, timeUnit);
             }
         });
     }
@@ -335,12 +330,11 @@ public class Mutate {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
-                final AtomicReference<CouchbaseRequest> r = new AtomicReference<CouchbaseRequest>();
+                final RemoveRequest request = new RemoveRequest(document.id(), document.cas(), bucket);
+                addRequestSpan(env, request, "remove");
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<RemoveResponse>>() {
                     @Override
                     public Observable<RemoveResponse> call(Subscriber s) {
-                        RemoveRequest request = new RemoveRequest(document.id(), document.cas(), bucket);
-                        addRequestSpan(env, request, "remove");
                         request.subscriber(s);
                         return core.send(request);
                     }
@@ -376,7 +370,7 @@ public class Mutate {
                                 throw addDetails(new CouchbaseException(response.status().toString()), response);
                         }
                     }
-                }), r, env, timeout, timeUnit);
+                }), request, env, timeout, timeUnit);
             }
         });
     }
