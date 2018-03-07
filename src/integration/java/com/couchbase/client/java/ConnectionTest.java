@@ -76,6 +76,12 @@ public class ConnectionTest  {
     }
 
     @Test
+    public void shouldBootstrapWithBadHost() {
+        Cluster cluster = CouchbaseCluster.create("badnode", TestProperties.seedNode());
+        cluster.openBucket(TestProperties.bucket(), TestProperties.password());
+    }
+
+    @Test
     public void shouldCacheBucketReference() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
         Bucket bucket1 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
