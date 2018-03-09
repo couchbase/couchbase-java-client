@@ -2026,6 +2026,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                     .map(new Func1<E, DocumentFragment<Mutation>>() {
                                                         @Override
                                                         public DocumentFragment<Mutation> call(E element) {
+                                                            if (element == null) {
+                                                                throw new CASMismatchException();
+                                                            }
                                                             return ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, element);
                                                         }
                                                     });
