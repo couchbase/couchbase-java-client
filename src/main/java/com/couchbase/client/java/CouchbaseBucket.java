@@ -690,17 +690,17 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonLongDocument counter(String id, long delta, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta).single(), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta, initial).single(), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, initial, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta, initial, expiry).single(), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, initial, expiry, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -814,17 +814,17 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public JsonLongDocument counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta, persistTo, replicateTo), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta, initial, persistTo, replicateTo), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, initial, persistTo, replicateTo).toBlocking().single();
     }
 
     @Override
     public JsonLongDocument counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.counter(id, delta, initial, expiry, persistTo, replicateTo), timeout, timeUnit);
+        return asyncBucket.counter(id, delta, initial, expiry, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override

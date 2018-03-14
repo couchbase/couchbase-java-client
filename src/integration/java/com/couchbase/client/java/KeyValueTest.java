@@ -624,7 +624,7 @@ public class KeyValueTest extends ClusterDependentTest {
         bucket().upsert(JsonLongDocument.create(key, 0L));
         for (int i=0; i< incrementCount; i++) {
             try {
-                bucket().counter(key, 1, 0, TimeUnit.SECONDS);
+                bucket().counter(key, 1, 1, TimeUnit.MICROSECONDS);
             } catch(RuntimeException ex) {
                 //ignore
             }

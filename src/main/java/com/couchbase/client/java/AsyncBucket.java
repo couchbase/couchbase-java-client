@@ -2596,6 +2596,30 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
@@ -2626,6 +2650,45 @@ public interface AsyncBucket {
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo);
+
+    /**
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
@@ -2688,11 +2751,82 @@ public interface AsyncBucket {
      *
      * @param id the id of the document.
      * @param delta the increment or decrement amount.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
      * @param persistTo the persistence constraint to watch.
      * @param replicateTo the replication constraint to watch.
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value or throw an exception if it does not
+     * exist yet.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - If the document does not exist: {@link DocumentDoesNotExistException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
@@ -2727,6 +2861,29 @@ public interface AsyncBucket {
      *   retrying: {@link RequestCancelledException}
      * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
      * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
      * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
      *   {@link DurabilityException}.
      * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
@@ -2746,6 +2903,40 @@ public interface AsyncBucket {
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, long timeout, TimeUnit timeUnit);
 
 
     /**
@@ -2779,6 +2970,40 @@ public interface AsyncBucket {
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
 
     /**
@@ -2817,6 +3042,41 @@ public interface AsyncBucket {
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
+     * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
      * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
      * will bring the actual value below zero.
      *
@@ -2840,6 +3100,35 @@ public interface AsyncBucket {
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param expiry the new expiration time for the document, only used on creation.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
@@ -2912,10 +3201,90 @@ public interface AsyncBucket {
      * @param delta the increment or decrement amount.
      * @param initial the initial value to use if the document does not exist yet.
      * @param expiry the new expiration time for the document, only used on creation.
+     * @param persistTo the persistence constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param expiry the new expiration time for the document, only used on creation.
      * @param replicateTo the replication constraint to watch.
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param expiry the new expiration time for the document, only used on creation.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
@@ -2955,6 +3324,47 @@ public interface AsyncBucket {
      * @return a {@link Document} containing the resulting value.
      */
     Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo);
+
+    /**
+     * Increment or decrement a counter with the given value and a initial value if it does not exist.
+     *
+     * This method allows to set an expiration time for the document as well. It is not allowed that the delta value
+     * will bring the actual value below zero.
+     *
+     * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
+     * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
+     * based counters!
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - The durability constraint could not be fulfilled because of a temporary or persistent problem:
+     *   {@link DurabilityException}.
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * constraint cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original increment/decrement has already happened, so the actual
+     * increment/decrement and the watching for durability constraints are two separate tasks internally.**
+     *
+     * @param id the id of the document.
+     * @param delta the increment or decrement amount.
+     * @param initial the initial value to use if the document does not exist yet.
+     * @param expiry the new expiration time for the document, only used on creation.
+     * @param persistTo the persistence constraint to watch.
+     * @param replicateTo the replication constraint to watch.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a {@link Document} containing the resulting value.
+     */
+    Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit);
 
     /**
      * Append a {@link Document}s content to an existing one.

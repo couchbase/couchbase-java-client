@@ -145,7 +145,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseAsyncBucket.class);
 
-    private static final int COUNTER_NOT_EXISTS_EXPIRY = 0xffffffff;
+    public static final int COUNTER_NOT_EXISTS_EXPIRY = 0xffffffff;
 
     private static final int MAX_CAS_RETRIES_DATASTRUCTURES = Integer.parseInt(System.getProperty("com.couchbase.datastructureCASRetryLimit", "10"));
 
@@ -849,51 +849,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta) {
-        return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY);
+    public Observable<JsonLongDocument> counter(String id, long delta, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial) {
-        return counter(id, delta, initial, 0);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, 0, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry) {
-        return deferAndWatch(new Func1<Subscriber, Observable<CounterResponse>>() {
-            @Override
-            public Observable<CounterResponse> call(Subscriber s) {
-                CounterRequest request = new CounterRequest(id, initial, delta, expiry, bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<CounterResponse, JsonLongDocument>() {
-            @Override
-            public JsonLongDocument call(CounterResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    int returnedExpiry = expiry == COUNTER_NOT_EXISTS_EXPIRY ? 0 : expiry;
-                    return JsonLongDocument.create(id, returnedExpiry, response.value(),
-                        response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case NOT_EXISTS:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                    case LOCKED:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+    public Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry, long timeout, TimeUnit timeUnit) {
+        return Mutate.counter(id, delta, initial, expiry, environment, core, bucket, timeout, timeUnit);
     }
 
     @Override
@@ -1089,49 +1056,49 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo) {
-        return counter(id, delta, persistTo, ReplicateTo.NONE);
+    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, ReplicateTo replicateTo) {
-        return counter(id, delta, PersistTo.NONE, replicateTo);
+    public Observable<JsonLongDocument> counter(String id, long delta, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo) {
-        return counter(id, delta, initial, persistTo, ReplicateTo.NONE);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, ReplicateTo replicateTo) {
-        return counter(id, delta, initial, PersistTo.NONE, replicateTo);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo) {
-        return counter(id, delta, initial, expiry, persistTo, ReplicateTo.NONE);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, expiry, persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo) {
-        return counter(id, delta, initial, expiry, PersistTo.NONE, replicateTo);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, expiry, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo) {
-        return counter(id, delta, initial, 0, persistTo, replicateTo);
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, initial, 0, persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo) {
-        return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY, persistTo, replicateTo);
+    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return counter(id, delta, 0, COUNTER_NOT_EXISTS_EXPIRY, persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, final PersistTo persistTo, final ReplicateTo replicateTo) {
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
 
-        Observable<JsonLongDocument> counterResult = counter(id, delta, initial, expiry);
+        Observable<JsonLongDocument> counterResult = counter(id, delta, initial, expiry, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return counterResult;
@@ -1157,9 +1124,71 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta) {
+        return counter(id, delta, 0, (TimeUnit) null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo) {
+        return counter(id, delta, persistTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, ReplicateTo replicateTo) {
+        return counter(id, delta, replicateTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, PersistTo persistTo, ReplicateTo replicateTo) {
+        return counter(id, delta, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial) {
+        return counter(id, delta, initial, 0, (TimeUnit) null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo) {
+        return counter(id, delta, initial, persistTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, ReplicateTo replicateTo) {
+        return counter(id, delta, initial, replicateTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, PersistTo persistTo, ReplicateTo replicateTo) {
+        return counter(id, delta, initial, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry) {
+        return counter(id, delta, initial, expiry, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo) {
+        return counter(id, delta, initial, expiry, persistTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, ReplicateTo replicateTo) {
+        return counter(id, delta, initial, expiry, replicateTo, 0, null);
+    }
+
+    @Override
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, PersistTo persistTo, ReplicateTo replicateTo) {
+        return counter(id, delta, initial, expiry, persistTo, replicateTo, 0, null);
     }
 
     @Override
