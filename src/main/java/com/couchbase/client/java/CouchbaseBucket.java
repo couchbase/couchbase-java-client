@@ -645,12 +645,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Boolean unlock(String id, long cas, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.unlock(id, cas).single(), timeout, timeUnit);
+        return asyncBucket.unlock(id, cas, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> Boolean unlock(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.unlock(document).single(), timeout, timeUnit);
+        return asyncBucket.unlock(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -665,12 +665,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public Boolean touch(String id, int expiry, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.touch(id, expiry).single(), timeout, timeUnit);
+        return asyncBucket.touch(id, expiry, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> Boolean touch(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.touch(document).single(), timeout, timeUnit);
+        return asyncBucket.touch(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override

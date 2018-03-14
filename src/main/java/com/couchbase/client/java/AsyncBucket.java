@@ -2417,6 +2417,28 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document to unlock.
+     * @param cas the CAS value which is mandatory to unlock it.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a Boolean indicating if the unlock was successful or not.
+     */
+    Observable<Boolean> unlock(String id, long cas, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Unlocks a write-locked {@link Document}.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
      * - The document doesn't exist: {@link DocumentDoesNotExistException}
      * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2432,6 +2454,29 @@ public interface AsyncBucket {
      * raise an exception)
      */
     <D extends Document<?>> Observable<Boolean> unlock(D document);
+
+    /**
+     * Unlocks a write-locked {@link Document}.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
+     * - A transient error happened, most likely the CAS value was not correct: {@link TemporaryLockFailureException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The document does not exist: {@link DocumentDoesNotExistException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document where ID and CAS are extracted from.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a Boolean indicating if the unlock was successful. (note that unsuccessful touch will rather
+     * raise an exception)
+     */
+    <D extends Document<?>> Observable<Boolean> unlock(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Renews the expiration time of a {@link Document}.
@@ -2464,6 +2509,31 @@ public interface AsyncBucket {
      *
      * The returned {@link Observable} can error under the following conditions:
      *
+     * - The document doesn't exist: {@link DocumentDoesNotExistException}
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param id the id of the document.
+     * @param expiry the new expiration time. 0 means no expiry.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a Boolean indicating if the touch had been successful. (note that unsuccessful touch will rather
+     * raise an exception)
+     */
+    Observable<Boolean> touch(String id, int expiry, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Renews the expiration time of a {@link Document}.
+     *
+     * Compared to {@link #getAndTouch(Document)}, this method does not actually fetch the document from the server,
+     * but it just resets its expiration time to the given value.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
      * - The producer outpaces the SDK: {@link BackpressureException}
      * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
      *   retrying: {@link RequestCancelledException}
@@ -2475,6 +2545,28 @@ public interface AsyncBucket {
      * @return a copy of the document inserted.
      */
     <D extends Document<?>> Observable<Boolean> touch(D document);
+
+    /**
+     * Renews the expiration time of a {@link Document}.
+     *
+     * Compared to {@link #getAndTouch(Document)}, this method does not actually fetch the document from the server,
+     * but it just resets its expiration time to the given value.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - The server is currently not able to process the request, retrying may help: {@link TemporaryFailureException}
+     * - The server is out of memory: {@link CouchbaseOutOfMemoryException}
+     * - Unexpected errors are caught and contained in a generic {@link CouchbaseException}.
+     *
+     * @param document the document to extract the ID and expiry from.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a copy of the document inserted.
+     */
+    <D extends Document<?>> Observable<Boolean> touch(D document, long timeout, TimeUnit timeUnit);
 
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not

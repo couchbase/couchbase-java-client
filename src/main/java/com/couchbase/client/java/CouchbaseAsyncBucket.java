@@ -897,86 +897,43 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<Boolean> unlock(final String id, final long cas) {
-        return deferAndWatch(new Func1<Subscriber, Observable<UnlockResponse>>() {
-            @Override
-            public Observable<UnlockResponse> call(Subscriber s) {
-                UnlockRequest request = new UnlockRequest(id, cas, bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<UnlockResponse, Boolean>() {
-            @Override
-            public Boolean call(UnlockResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
+    public Observable<Boolean> unlock(final String id, final long cas, long timeout, TimeUnit timeUnit) {
+        return Mutate.unlock(id, cas, environment, core, bucket, timeout, timeUnit);
+    }
 
-                if (response.status().isSuccess()) {
-                    return true;
-                }
+    @Override
+    public <D extends Document<?>> Observable<Boolean> unlock(D document, long timeout, TimeUnit timeUnit) {
+        return unlock(document.id(), document.cas(), timeout, timeUnit);
+    }
 
-                switch (response.status()) {
-                    case NOT_EXISTS:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case TEMPORARY_FAILURE:
-                    case LOCKED:
-                        throw addDetails(new TemporaryLockFailureException(), response);
-                    case SERVER_BUSY:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+    @Override
+    public Observable<Boolean> unlock(String id, long cas) {
+        return unlock(id, cas, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<Boolean> unlock(D document) {
-        return unlock(document.id(), document.cas());
+        return unlock(document, 0, null);
     }
 
     @Override
-    public Observable<Boolean> touch(final String id, final int expiry) {
-        return deferAndWatch(new Func1<Subscriber, Observable<TouchResponse>>() {
-            @Override
-            public Observable<TouchResponse> call(Subscriber s) {
-                TouchRequest request = new TouchRequest(id, expiry, bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<TouchResponse, Boolean>() {
-            @Override
-            public Boolean call(TouchResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
+    public Observable<Boolean> touch(final String id, final int expiry, long timeout, TimeUnit timeUnit) {
+        return Mutate.touch(id, expiry, environment, core, bucket, timeout, timeUnit);
+    }
 
-                if (response.status().isSuccess()) {
-                    return true;
-                }
+    @Override
+    public <D extends Document<?>> Observable<Boolean> touch(D document, long timeout, TimeUnit timeUnit) {
+        return touch(document.id(), document.expiry(), timeout, timeUnit);
+    }
 
-                switch (response.status()) {
-                    case NOT_EXISTS:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                    case LOCKED:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+    @Override
+    public Observable<Boolean> touch(String id, int expiry) {
+        return touch(id, expiry, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<Boolean> touch(D document) {
-        return touch(document.id(), document.expiry());
+        return touch(document, 0, null);
     }
 
     @Override
