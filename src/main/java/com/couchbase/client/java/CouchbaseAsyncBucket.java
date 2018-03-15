@@ -905,89 +905,16 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> append(final D document) {
+    public <D extends Document<?>> Observable<D> append(final D document, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-
-        return deferAndWatch(new Func1<Subscriber, Observable<AppendResponse>>() {
-            @Override
-            public Observable<AppendResponse> call(Subscriber s) {
-                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-                AppendRequest request = new AppendRequest(document.id(), document.cas(), encoded.value1(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<AppendResponse, D>() {
-            @Override
-            public D call(final AppendResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case TOO_BIG:
-                        throw addDetails(new RequestTooBigException(), response);
-                    case NOT_STORED:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                    case LOCKED:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    case EXISTS:
-                        throw addDetails(new CASMismatchException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+        return Mutate.append(document, environment, transcoder, core, bucket, timeout, timeUnit);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <D extends Document<?>> Observable<D> prepend(final D document) {
+    public <D extends Document<?>> Observable<D> prepend(final D document, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return deferAndWatch(new Func1<Subscriber, Observable<PrependResponse>>() {
-            @Override
-            public Observable<PrependResponse> call(Subscriber s) {
-                Tuple2<ByteBuf, Integer> encoded = transcoder.encode((Document<Object>) document);
-                PrependRequest request = new PrependRequest(document.id(), document.cas(), encoded.value1(), bucket);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<PrependResponse, D>() {
-            @Override
-            public D call(final PrependResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                if (response.status().isSuccess()) {
-                    return (D) transcoder.newDocument(document.id(), 0, null, response.cas(), response.mutationToken());
-                }
-
-                switch (response.status()) {
-                    case TOO_BIG:
-                        throw addDetails(new RequestTooBigException(), response);
-                    case NOT_STORED:
-                        throw addDetails(new DocumentDoesNotExistException(), response);
-                    case TEMPORARY_FAILURE:
-                    case SERVER_BUSY:
-                    case LOCKED:
-                        throw addDetails(new TemporaryFailureException(), response);
-                    case OUT_OF_MEMORY:
-                        throw addDetails(new CouchbaseOutOfMemoryException(), response);
-                    case EXISTS:
-                        throw addDetails(new CASMismatchException(), response);
-                    default:
-                        throw addDetails(new CouchbaseException(response.status().toString()), response);
-                }
-            }
-        });
+        return Mutate.prepend(document, environment, transcoder, core, bucket, timeout, timeUnit);
     }
 
     @Override
@@ -1192,18 +1119,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> append(D document, PersistTo persistTo) {
-        return append(document, persistTo, ReplicateTo.NONE);
+    public <D extends Document<?>> Observable<D> append(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return append(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> append(D document, ReplicateTo replicateTo) {
-        return append(document, PersistTo.NONE, replicateTo);
+    public <D extends Document<?>> Observable<D> append(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return append(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> append(D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        Observable<D> appendResult = append(document);
+    public <D extends Document<?>> Observable<D> append(D document, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<D> appendResult = append(document, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return appendResult;
@@ -1227,24 +1154,26 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> prepend(D document, PersistTo persistTo) {
-        return prepend(document, persistTo, ReplicateTo.NONE);
+    public <D extends Document<?>> Observable<D> prepend(D document, PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return prepend(document, persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> prepend(D document, ReplicateTo replicateTo) {
-        return prepend(document, PersistTo.NONE, replicateTo);
+    public <D extends Document<?>> Observable<D> prepend(D document, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return prepend(document, PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
     @Override
-    public <D extends Document<?>> Observable<D> prepend(D document, final PersistTo persistTo, final ReplicateTo replicateTo) {
-        Observable<D> prependResult = prepend(document);
+    public <D extends Document<?>> Observable<D> prepend(D document, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<D> prependResult = prepend(document, timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return prependResult;
@@ -1268,9 +1197,51 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    // we need a timeout here since observe doesn't have one yet
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> append(D document) {
+        return append(document, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> append(D document, PersistTo persistTo) {
+        return append(document, persistTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> append(D document, ReplicateTo replicateTo) {
+        return append(document, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> append(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return append(document, persistTo, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> prepend(D document) {
+        return prepend(document, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> prepend(D document, PersistTo persistTo) {
+        return prepend(document, persistTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> prepend(D document, ReplicateTo replicateTo) {
+        return prepend(document, replicateTo, 0, null);
+    }
+
+    @Override
+    public <D extends Document<?>> Observable<D> prepend(D document, PersistTo persistTo, ReplicateTo replicateTo) {
+        return prepend(document, persistTo, replicateTo, 0, null);
     }
 
     /*---------------------------*

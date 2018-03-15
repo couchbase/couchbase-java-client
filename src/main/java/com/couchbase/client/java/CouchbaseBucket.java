@@ -729,12 +729,12 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D append(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.append(document).single(), timeout, timeUnit);
+        return asyncBucket.append(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
     public <D extends Document<?>> D prepend(D document, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.prepend(document).single(), timeout, timeUnit);
+        return asyncBucket.prepend(document, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -854,7 +854,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D append(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.append(document, persistTo, replicateTo), timeout, timeUnit);
+        return asyncBucket.append(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     @Override
@@ -884,7 +884,7 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public <D extends Document<?>> D prepend(D document, PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket.prepend(document, persistTo, replicateTo), timeout, timeUnit);
+        return asyncBucket.prepend(document, persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     /*---------------------------*
