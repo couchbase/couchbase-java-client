@@ -40,6 +40,8 @@ import com.couchbase.client.core.message.kv.subdoc.simple.SubDictAddRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubDictUpsertRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubReplaceRequest;
 import com.couchbase.client.core.message.observe.Observe;
+import com.couchbase.client.core.tracing.ThresholdLogReporter;
+import com.couchbase.client.core.tracing.ThresholdLogSpan;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.deps.io.netty.util.internal.StringUtil;
@@ -65,8 +67,11 @@ import com.couchbase.client.java.error.subdoc.PathNotFoundException;
 import com.couchbase.client.java.error.subdoc.SubDocumentException;
 import com.couchbase.client.java.error.subdoc.XattrOrderingException;
 import com.couchbase.client.java.transcoder.subdoc.FragmentTranscoder;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -76,8 +81,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.core.logging.RedactableArgument.user;
+import static com.couchbase.client.java.bucket.api.Utils.addRequestSpan;
+import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
@@ -171,13 +179,49 @@ public class AsyncMutateInBuilder {
      * Note that some individual results could also bear a value, like counter operations.
      */
     public Observable<DocumentFragment<Mutation>> execute() {
+        return execute(0, null);
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}.
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * @param timeout the specific timeout to apply for the operation.
+     * @param timeUnit the time unit for the timeout.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(long timeout, TimeUnit timeUnit) {
         if (mutationSpecs.isEmpty()) {
             throw new IllegalArgumentException("Execution of a subdoc mutation requires at least one operation");
         } else if (mutationSpecs.size() == 1) { //FIXME implement single path optim
             //single path optimization
-            return doSingleMutate(mutationSpecs.get(0));
+            return doSingleMutate(mutationSpecs.get(0), timeout, timeUnit);
         } else {
-            return doMultiMutate();
+            return doMultiMutate(timeout, timeUnit);
         }
     }
 
@@ -225,7 +269,56 @@ public class AsyncMutateInBuilder {
      * Note that some individual results could also bear a value, like counter operations.
      */
     public Observable<DocumentFragment<Mutation>> execute(final PersistTo persistTo, final ReplicateTo replicateTo) {
-        Observable<DocumentFragment<Mutation>> mutationResult = execute();
+        return execute(persistTo, replicateTo, 0, null);
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param persistTo the persistence requirement to watch.
+     * @param replicateTo the replication requirement to watch.
+     * @param timeout the specific timeout to apply for the operation.
+     * @param timeUnit the time unit for the timeout.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
+        Observable<DocumentFragment<Mutation>> mutationResult = execute(timeout, timeUnit);
 
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return mutationResult;
@@ -249,7 +342,8 @@ public class AsyncMutateInBuilder {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
 
@@ -299,7 +393,55 @@ public class AsyncMutateInBuilder {
      * Note that some individual results could also bear a value, like counter operations.
      */
     public Observable<DocumentFragment<Mutation>> execute(PersistTo persistTo) {
-        return execute(persistTo, ReplicateTo.NONE);
+        return execute(persistTo, ReplicateTo.NONE, 0, null);
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param persistTo the persistence requirement to watch.
+     * @param timeout the specific timeout to apply for the operation.
+     * @param timeUnit the time unit for the timeout.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(PersistTo persistTo, long timeout, TimeUnit timeUnit) {
+        return execute(persistTo, ReplicateTo.NONE, timeout, timeUnit);
     }
 
     /**
@@ -345,7 +487,55 @@ public class AsyncMutateInBuilder {
      * Note that some individual results could also bear a value, like counter operations.
      */
     public Observable<DocumentFragment<Mutation>> execute(ReplicateTo replicateTo) {
-        return execute(PersistTo.NONE, replicateTo);
+        return execute(PersistTo.NONE, replicateTo, 0, null);
+    }
+
+    /**
+     * Perform several {@link Mutation mutation} operations inside a single existing {@link JsonDocument JSON document}
+     * and watch for durability requirements.
+     *
+     * The list of mutations and paths to mutate in the JSON is added through builder methods like
+     * {@link #arrayInsert(String, Object)}.
+     *
+     * Multi-mutations are applied as a whole, atomically at the document level. That means that if one of the mutations
+     * fails, none of the mutations are applied. Otherwise, all mutations can be considered successful and the whole
+     * operation will receive a {@link DocumentFragment} with the updated cas (and optionally {@link MutationToken}).
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you want to mutate
+     * on the wire, instead of the whole document.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No mutation was defined through the builder API: {@link IllegalArgumentException}
+     *  - A mutation spec couldn't be encoded and the whole operation was cancelled: {@link TranscodingException}
+     *  - The multi-mutation failed: {@link MultiMutationException}
+     *  - The durability constraint could not be fulfilled because of a temporary or persistent problem: {@link DurabilityException}
+     *  - CAS was provided but optimistic locking failed: {@link CASMismatchException}
+     *
+     * When receiving a {@link MultiMutationException}, one can inspect the exception to find the zero-based index and
+     * error {@link ResponseStatus status code} of the first failing {@link Mutation}. Subsequent mutations may have
+     * also failed had they been attempted, but a single spec failing causes the whole operation to be cancelled.
+     *
+     * Other top-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#replace(Document)}.
+     *
+     * A {@link DurabilityException} typically happens if the given amount of replicas needed to fulfill the durability
+     * requirement cannot be met because either the bucket does not have enough replicas configured or they are not
+     * available in a failover event. As an example, if one replica is configured and {@link ReplicateTo#TWO} is used,
+     * the observable is errored with a  {@link DurabilityException}. The same can happen if one replica is configured,
+     * but one node has been failed over and not yet rebalanced (hence, on a subset of the partitions there is no
+     * replica available). **It is important to understand that the original execute has already happened, so the actual
+     * execute and the watching for durability requirements are two separate tasks internally.**
+     *
+     * @param replicateTo the replication requirement to watch.
+     * @param timeout the specific timeout to apply for the operation.
+     * @param timeUnit the time unit for the timeout.
+     * @return an {@link Observable} of a single {@link DocumentFragment} (if successful) containing updated cas metadata.
+     * Note that some individual results could also bear a value, like counter operations.
+     */
+    public Observable<DocumentFragment<Mutation>> execute(ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
+        return execute(PersistTo.NONE, replicateTo, timeout, timeUnit);
     }
 
 
@@ -1025,7 +1215,7 @@ public class AsyncMutateInBuilder {
 
     //==============================
     //multi operation implementation
-    protected Observable<DocumentFragment<Mutation>> doMultiMutate() {
+    protected Observable<DocumentFragment<Mutation>> doMultiMutate(final long timeout, final TimeUnit timeUnit) {
         if (mutationSpecs.isEmpty()) {
             throw new IllegalArgumentException("At least one Mutation Spec is necessary for mutateIn");
         }
@@ -1038,9 +1228,9 @@ public class AsyncMutateInBuilder {
             }
         }
 
-        Observable<DocumentFragment<Mutation>> mutations = Observable.defer(new Func0<Observable<MutationCommand>>() {
+        Observable<DocumentFragment<Mutation>> mutations = Observable.defer(new Func0<Observable<DocumentFragment<Mutation>>>() {
             @Override
-            public Observable<MutationCommand> call() {
+            public Observable<DocumentFragment<Mutation>> call() {
                 List<ByteBuf> bufList = new ArrayList<ByteBuf>(mutationSpecs.size());
                 final List<MutationCommand> commands = new ArrayList<MutationCommand>(mutationSpecs.size());
 
@@ -1063,107 +1253,118 @@ public class AsyncMutateInBuilder {
                         }
                     }
                 }
-                return Observable.from(commands);
-            }
-        }).toList()
-        .flatMap(new Func1<List<MutationCommand>, Observable<MultiMutationResponse>>(){
-            @Override
-            public Observable<MultiMutationResponse> call(List<MutationCommand> mutationCommands) {
-                return core.send(new SubMultiMutationRequest(docId, bucketName,
-                        expiry, cas, SubMultiMutationDocOptionsBuilder.builder().upsertDocument(upsertDocument).insertDocument(insertDocument),
-                        mutationCommands));
-            }
-        }).flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
-            @Override
-            public Observable<DocumentFragment<Mutation>> call(MultiMutationResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
 
-                if (response.status().isSuccess()) {
-                    int resultSize = response.responses().size();
-                    List<SubdocOperationResult<Mutation>> results = new ArrayList<SubdocOperationResult<Mutation>>(resultSize);
-                    for (MultiResult<Mutation> result : response.responses()) {
-                        try {
-                            Object content = null;
-                            if (result.value().isReadable()) {
-                                //generic, so will transform dictionaries into JsonObject and arrays into JsonArray
-                                content = subdocumentTranscoder.decode(result.value(), Object.class);
+                final SubMultiMutationRequest req = new SubMultiMutationRequest(
+                    docId,
+                    bucketName,
+                    expiry,
+                    cas,
+                    SubMultiMutationDocOptionsBuilder.builder()
+                        .upsertDocument(upsertDocument)
+                        .insertDocument(insertDocument),
+                    commands
+                );
+                addRequestSpan(environment, req, "subdoc_multi_mutate");
+                return applyTimeout(core.<MultiMutationResponse>send(req)
+                    .flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
+                        @Override
+                        public Observable<DocumentFragment<Mutation>> call(MultiMutationResponse response) {
+                            if (response.content() != null && response.content().refCnt() > 0) {
+                                response.content().release();
                             }
-                            results.add(SubdocOperationResult
-                                    .createResult(result.path(), result.operation(), result.status(), content));
-                        } catch (TranscodingException e) {
-                            LOGGER.error(
-                              "Couldn't decode multi-mutation {} for {}/{}",
-                              user(result),
-                              user(docId),
-                              user(result.path()),
-                              e
-                            );
-                            results.add(SubdocOperationResult.createFatal(result.path(), result.operation(), e));
-                        } finally {
-                            if (result.value() != null) {
-                                result.value().release();
+
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(req.span(), true)
+                                    .close();
+                            }
+
+                            if (response.status().isSuccess()) {
+                                int resultSize = response.responses().size();
+                                List<SubdocOperationResult<Mutation>> results = new ArrayList<SubdocOperationResult<Mutation>>(resultSize);
+                                for (MultiResult<Mutation> result : response.responses()) {
+                                    try {
+                                        Object content = null;
+                                        if (result.value().isReadable()) {
+                                            //generic, so will transform dictionaries into JsonObject and arrays into JsonArray
+                                            content = subdocumentTranscoder.decode(result.value(), Object.class);
+                                        }
+                                        results.add(SubdocOperationResult
+                                            .createResult(result.path(), result.operation(), result.status(), content));
+                                    } catch (TranscodingException e) {
+                                        LOGGER.error(
+                                            "Couldn't decode multi-mutation {} for {}/{}",
+                                            user(result),
+                                            user(docId),
+                                            user(result.path()),
+                                            e
+                                        );
+                                        results.add(SubdocOperationResult.createFatal(result.path(), result.operation(), e));
+                                    } finally {
+                                        if (result.value() != null) {
+                                            result.value().release();
+                                        }
+                                    }
+                                }
+                                return Observable.just(
+                                    new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), results));
+                            }
+
+                            switch(response.status()) {
+                                case SUBDOC_MULTI_PATH_FAILURE:
+                                    int index = response.firstErrorIndex();
+                                    ResponseStatus errorStatus = response.firstErrorStatus();
+                                    String errorPath = mutationSpecs.get(index).path();
+                                    CouchbaseException errorException = SubdocHelper.commonSubdocErrors(errorStatus, docId, errorPath);
+
+                                    return Observable
+                                        .error(new MultiMutationException(index, errorStatus, mutationSpecs, errorException));
+                                default:
+                                    return Observable.error(SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-MUTATION"));
                             }
                         }
-                    }
-                    return Observable.just(
-                            new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), results));
-                }
-
-                switch(response.status()) {
-                    case SUBDOC_MULTI_PATH_FAILURE:
-                    int index = response.firstErrorIndex();
-                    ResponseStatus errorStatus = response.firstErrorStatus();
-                    String errorPath = mutationSpecs.get(index).path();
-                    CouchbaseException errorException = SubdocHelper.commonSubdocErrors(errorStatus, docId, errorPath);
-
-                    return Observable
-                            .error(new MultiMutationException(index, errorStatus, mutationSpecs, errorException));
-                    default:
-                    return Observable.error(SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-MUTATION"));
-                }
+                    }), req, environment, timeout, timeUnit);
             }
         });
 
-        return subdocObserveMutation(mutations);
+        return subdocObserveMutation(mutations, timeout, timeUnit);
     }
 
     //================================
     //Single operation implementations
-    protected Observable<DocumentFragment<Mutation>> doSingleMutate(MutationSpec spec) {
+    protected Observable<DocumentFragment<Mutation>> doSingleMutate(MutationSpec spec, long timeout, TimeUnit timeUnit) {
         Observable<DocumentFragment<Mutation>> mutation;
         switch (spec.type()) {
             case DICT_UPSERT:
-                mutation = doSingleMutate(spec, DICT_UPSERT_FACTORY, DICT_UPSERT_EVALUATOR);
+                mutation = doSingleMutate(spec, DICT_UPSERT_FACTORY, DICT_UPSERT_EVALUATOR, timeout, timeUnit);
                 break;
             case DICT_ADD:
-                mutation = doSingleMutate(spec, DICT_ADD_FACTORY, DICT_ADD_EVALUATOR);
+                mutation = doSingleMutate(spec, DICT_ADD_FACTORY, DICT_ADD_EVALUATOR, timeout, timeUnit);
                 break;
             case REPLACE:
-                mutation = doSingleMutate(spec, REPLACE_FACTORY, REPLACE_EVALUATOR);
+                mutation = doSingleMutate(spec, REPLACE_FACTORY, REPLACE_EVALUATOR, timeout, timeUnit);
                 break;
             case ARRAY_PUSH_FIRST:
             case ARRAY_PUSH_LAST:
-                mutation = doSingleMutate(spec, ARRAY_EXTEND_FACTORY, ARRAY_EXTEND_EVALUATOR);
+                mutation = doSingleMutate(spec, ARRAY_EXTEND_FACTORY, ARRAY_EXTEND_EVALUATOR, timeout, timeUnit);
                 break;
             case ARRAY_INSERT:
-                mutation = doSingleMutate(spec, ARRAY_INSERT_FACTORY, ARRAY_INSERT_EVALUATOR);
+                mutation = doSingleMutate(spec, ARRAY_INSERT_FACTORY, ARRAY_INSERT_EVALUATOR, timeout, timeUnit);
                 break;
             case ARRAY_ADD_UNIQUE:
-                mutation = doSingleMutate(spec, ARRAY_ADDUNIQUE_FACTORY, ARRAY_ADDUNIQUE_EVALUATOR);
+                mutation = doSingleMutate(spec, ARRAY_ADDUNIQUE_FACTORY, ARRAY_ADDUNIQUE_EVALUATOR, timeout, timeUnit);
                 break;
             case COUNTER:
-                mutation = counterIn(spec);
+                mutation = counterIn(spec, timeout, timeUnit);
                 break;
             case DELETE:
-                mutation = removeIn(spec);
+                mutation = removeIn(spec, timeout, timeUnit);
                 break;
             default:
                 mutation = Observable.error(new UnsupportedOperationException());
                 break;
         }
-        return subdocObserveMutation(mutation);
+        return subdocObserveMutation(mutation, timeout, timeUnit);
     }
 
 
@@ -1359,61 +1560,59 @@ public class AsyncMutateInBuilder {
             };
 
     private Observable<DocumentFragment<Mutation>> doSingleMutate(final MutationSpec spec,
-            final Func2<MutationSpec, ByteBuf, ? extends AbstractSubdocMutationRequest> requestFactory,
-            final Func3<ResponseStatus, String, String, Object> responseStatusDocIdAndPathToValueEvaluator) {
-        return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+        final Func2<MutationSpec, ByteBuf, ? extends AbstractSubdocMutationRequest> requestFactory,
+        final Func3<ResponseStatus, String, String, Object> responseStatusDocIdAndPathToValueEvaluator,
+        final long timeout, final TimeUnit timeUnit) {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Mutation>>>() {
             @Override
-            public Observable<SimpleSubdocResponse> call(Subscriber s) {
+            public Observable<DocumentFragment<Mutation>> call() {
+                Span requestSpan = null;
+                if (environment.tracingEnabled()) {
+                    Scope scope = environment.tracer()
+                        .buildSpan("subdoc_mutate")
+                        .startActive(false);
+                    requestSpan = scope.span();
+                    scope.close();
+                }
+
+
+                Scope encodeScope = null;
+                if (requestSpan != null) {
+                    encodeScope = environment.tracer()
+                        .buildSpan("request_encoding")
+                        .asChildOf(requestSpan)
+                        .startActive(true);
+                }
+
                 ByteBuf buf;
                 try {
                     buf = subdocumentTranscoder.encodeWithMessage(spec.fragment(),
-                            "Couldn't encode subdoc fragment " + docId + "/" + spec.path() +
+                        "Couldn't encode subdoc fragment " + docId + "/" + spec.path() +
                             " \"" + spec.fragment() + "\"");
                 } catch (TranscodingException e) {
                     return Observable.error(e);
                 }
 
-                AbstractSubdocMutationRequest request = requestFactory.call(spec, buf);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Mutation>>() {
-            @Override
-            public DocumentFragment<Mutation> call(SimpleSubdocResponse response) {
-                //empty response for mutations
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                ResponseStatus responseStatus = response.status();
-                try {
-                    Object value = responseStatusDocIdAndPathToValueEvaluator.call(responseStatus, docId, spec.path());
-                    SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
-                        .createResult(spec.path(), spec.type(), response.status(), value);
-                    return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
-                } catch (SubDocumentException e) {
-                    if (SubdocHelper.isSubdocLevelError(responseStatus)) {
-                        throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), e);
-                    } else {
-                        throw e;
+                if (encodeScope != null) {
+                    encodeScope.close();
+                    if (encodeScope.span() instanceof ThresholdLogSpan) {
+                        encodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_ENCODE_MICROS,
+                            Long.toString(((ThresholdLogSpan) encodeScope.span()).durationMicros())
+                        );
                     }
                 }
-            }
-        });
-    }
 
-    private Observable<DocumentFragment<Mutation>> removeIn(final MutationSpec spec) {
-        return deferAndWatch(
-                new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+                final AbstractSubdocMutationRequest request = requestFactory.call(spec, buf);
+                if (requestSpan != null) {
+                    request.span(requestSpan, environment);
+                }
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
                     @Override
                     public Observable<SimpleSubdocResponse> call(Subscriber s) {
-                        SubDeleteRequest request = new SubDeleteRequest(docId, spec.path(), bucketName, expiry, cas);
                         request.subscriber(s);
-                        request.xattr(spec.xattr());
                         return core.send(request);
                     }
-                })
-                .map(new Func1<SimpleSubdocResponse, DocumentFragment<Mutation>>() {
+                }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Mutation>>() {
                     @Override
                     public DocumentFragment<Mutation> call(SimpleSubdocResponse response) {
                         //empty response for mutations
@@ -1422,24 +1621,74 @@ public class AsyncMutateInBuilder {
                         }
 
                         ResponseStatus responseStatus = response.status();
-                        if (!responseStatus.isSuccess()) {
-                            //propagate subdocument level error inside a MultiMutationException
-                            CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                        try {
+                            Object value = responseStatusDocIdAndPathToValueEvaluator.call(responseStatus, docId, spec.path());
+                            SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
+                                .createResult(spec.path(), spec.type(), response.status(), value);
+                            return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
+                        } catch (SubDocumentException e) {
                             if (SubdocHelper.isSubdocLevelError(responseStatus)) {
-                                throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), subdocError);
+                                throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), e);
                             } else {
-                                throw subdocError;
+                                throw e;
                             }
                         }
-
-                        SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
-                                .createResult(spec.path(), spec.type(), response.status(), null);
-                        return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
                     }
-                });
+                }), request, environment, timeout, timeUnit);
+            }
+        });
     }
 
-    private Observable<DocumentFragment<Mutation>> counterIn(final MutationSpec spec) {
+    private Observable<DocumentFragment<Mutation>> removeIn(final MutationSpec spec, final long timeout, final TimeUnit timeUnit) {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Mutation>>>() {
+            @Override
+            public Observable<DocumentFragment<Mutation>> call() {
+                final SubDeleteRequest request = new SubDeleteRequest(docId, spec.path(), bucketName, expiry, cas);
+                request.xattr(spec.xattr());
+                addRequestSpan(environment, request, "subdoc_remove");
+                return applyTimeout(deferAndWatch(
+                    new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+                        @Override
+                        public Observable<SimpleSubdocResponse> call(Subscriber s) {
+                            request.subscriber(s);
+                            return core.send(request);
+                        }
+                    })
+                    .map(new Func1<SimpleSubdocResponse, DocumentFragment<Mutation>>() {
+                        @Override
+                        public DocumentFragment<Mutation> call(SimpleSubdocResponse response) {
+                            //empty response for mutations
+                            if (response.content() != null && response.content().refCnt() > 0) {
+                                response.content().release();
+                            }
+
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(response.request().span(), true)
+                                    .close();
+                            }
+
+                            ResponseStatus responseStatus = response.status();
+                            if (!responseStatus.isSuccess()) {
+                                //propagate subdocument level error inside a MultiMutationException
+                                CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                                if (SubdocHelper.isSubdocLevelError(responseStatus)) {
+                                    throw new MultiMutationException(0, responseStatus, Collections.singletonList(spec), subdocError);
+                                } else {
+                                    throw subdocError;
+                                }
+                            }
+
+                            SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
+                                .createResult(spec.path(), spec.type(), response.status(), null);
+                            return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
+                        }
+                    }), request, environment, timeout, timeUnit);
+            }
+        });
+    }
+
+    private Observable<DocumentFragment<Mutation>> counterIn(final MutationSpec spec, final long timeout, final TimeUnit timeUnit) {
         //these are repeated guards, the builder shouldn't allow to produce a non-long or 0-valued delta
         //shortcircuit if fragment is of bad type
         if (spec.fragment() != null && !(spec.fragment() instanceof Number)) {
@@ -1453,58 +1702,71 @@ public class AsyncMutateInBuilder {
 
         final long delta = fragment.longValue();
 
-        return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Mutation>>>() {
+            @Override
+            public Observable<DocumentFragment<Mutation>> call() {
+                final SubCounterRequest request = new SubCounterRequest(docId, spec.path(), delta, bucketName, expiry, cas);
+                request.createIntermediaryPath(spec.createPath());
+                request.xattr(spec.xattr());
+                request.upsertDocument(upsertDocument);
+                request.insertDocument(insertDocument);
+                addRequestSpan(environment, request, "subdoc_counter");
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
                     @Override
                     public Observable<SimpleSubdocResponse> call(Subscriber s) {
-                        SubCounterRequest request = new SubCounterRequest(docId, spec.path(), delta, bucketName, expiry, cas);
-                        request.createIntermediaryPath(spec.createPath());
-                        request.xattr(spec.xattr());
                         request.subscriber(s);
-                        request.upsertDocument(upsertDocument);
-                        request.insertDocument(insertDocument);
                         return core.send(request);
                     }
                 })
                 .map(new Func1<SimpleSubdocResponse, DocumentFragment<Mutation>>() {
                     @Override
                     public DocumentFragment<Mutation> call(SimpleSubdocResponse response) {
-
-                        ResponseStatus status = response.status();
-                        Object value;
-                        if (status.isSuccess()) {
-                            try {
-                                value = Long.parseLong(response.content().toString(CharsetUtil.UTF_8));
-                                SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
+                        try {
+                            ResponseStatus status = response.status();
+                            Object value;
+                            if (status.isSuccess()) {
+                                try {
+                                    value = Long.parseLong(response.content().toString(CharsetUtil.UTF_8));
+                                    SubdocOperationResult<Mutation> singleResult = SubdocOperationResult
                                         .createResult(spec.path(), spec.type(), status, value);
-                                return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
-                            } catch (NumberFormatException e) {
-                                throw new TranscodingException("Couldn't parse counter response into a long", e);
-                            } finally {
+                                    return new DocumentFragment<Mutation>(docId, response.cas(), response.mutationToken(), Collections.singletonList(singleResult));
+                                } catch (NumberFormatException e) {
+                                    throw new TranscodingException("Couldn't parse counter response into a long", e);
+                                } finally {
+                                    if (response.content() != null) {
+                                        response.content().release();
+                                    }
+                                }
+                            } else {
                                 if (response.content() != null) {
                                     response.content().release();
                                 }
-                            }
-                        } else {
-                            if (response.content() != null) {
-                                response.content().release();
-                            }
 
-                            //propagate errors that are subdocument level in a MultiMutationException
-                            CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
-                            if (SubdocHelper.isSubdocLevelError(status)) {
-                                throw new MultiMutationException(0, status, Collections.singletonList(spec), subdocError);
-                            } else {
-                                throw subdocError;
+                                //propagate errors that are subdocument level in a MultiMutationException
+                                CouchbaseException subdocError = SubdocHelper.commonSubdocErrors(response.status(), docId, spec.path());
+                                if (SubdocHelper.isSubdocLevelError(status)) {
+                                    throw new MultiMutationException(0, status, Collections.singletonList(spec), subdocError);
+                                } else {
+                                    throw subdocError;
+                                }
+                            }
+                        } finally {
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(response.request().span(), true)
+                                    .close();
                             }
                         }
                     }
-                });
+                }), request, environment, timeout, timeUnit);
+            }
+        });
     }
 
     //=============================
     //utility methods for mutations
 
-    private <T> Observable<DocumentFragment<T>> subdocObserveMutation(Observable<DocumentFragment<T>> mutation) {
+    private <T> Observable<DocumentFragment<T>> subdocObserveMutation(Observable<DocumentFragment<T>> mutation, final long timeout, final TimeUnit timeUnit) {
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
             return mutation;
         }
@@ -1528,7 +1790,8 @@ public class AsyncMutateInBuilder {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    });
+                    })
+                    .timeout(timeout, timeUnit, environment.scheduler());
             }
         });
     }

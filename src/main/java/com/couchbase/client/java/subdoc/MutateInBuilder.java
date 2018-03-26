@@ -277,7 +277,7 @@ public class MutateInBuilder {
      * results could also bear a value, like counter operations.
      */
     public DocumentFragment<Mutation> execute(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBuilder.execute(), timeout, timeUnit);
+        return asyncBuilder.execute(timeout, timeUnit).toBlocking().single();
     }
 
     /**
@@ -326,7 +326,7 @@ public class MutateInBuilder {
      * results could also bear a value, like counter operations.
      */
     public DocumentFragment<Mutation> execute(PersistTo persistTo, ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBuilder.execute(persistTo, replicateTo), timeout, timeUnit);
+        return asyncBuilder.execute(persistTo, replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     /**
@@ -374,7 +374,7 @@ public class MutateInBuilder {
      * results could also bear a value, like counter operations.
      */
     public DocumentFragment<Mutation> execute(PersistTo persistTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBuilder.execute(persistTo), timeout, timeUnit);
+        return asyncBuilder.execute(persistTo, timeout, timeUnit).toBlocking().single();
     }
 
     /**
@@ -422,7 +422,7 @@ public class MutateInBuilder {
      * results could also bear a value, like counter operations.
      */
     public DocumentFragment<Mutation> execute(ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBuilder.execute(replicateTo), timeout, timeUnit);
+        return asyncBuilder.execute(replicateTo, timeout, timeUnit).toBlocking().single();
     }
 
     //==== DOCUMENT level modifiers ====

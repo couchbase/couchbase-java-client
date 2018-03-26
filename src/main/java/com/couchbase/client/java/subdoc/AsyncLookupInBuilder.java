@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.annotations.InterfaceAudience;
@@ -36,6 +37,8 @@ import com.couchbase.client.core.message.kv.subdoc.simple.SimpleSubdocResponse;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubExistRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubGetCountRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubGetRequest;
+import com.couchbase.client.core.tracing.ThresholdLogReporter;
+import com.couchbase.client.core.tracing.ThresholdLogSpan;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.deps.io.netty.util.internal.StringUtil;
 import com.couchbase.client.java.AsyncBucket;
@@ -48,12 +51,16 @@ import com.couchbase.client.java.error.subdoc.SubDocumentException;
 import com.couchbase.client.java.error.subdoc.XattrOrderingException;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import com.couchbase.client.java.transcoder.subdoc.FragmentTranscoder;
+import io.opentracing.Scope;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
 import static com.couchbase.client.core.logging.RedactableArgument.user;
+import static com.couchbase.client.java.bucket.api.Utils.addRequestSpan;
+import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
@@ -117,7 +124,6 @@ public class AsyncLookupInBuilder {
         return this;
     }
 
-
     /**
      * Perform several {@link Lookup lookup} operations inside a single existing {@link JsonDocument JSON document}.
      * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String...)} and
@@ -159,13 +165,58 @@ public class AsyncLookupInBuilder {
      *        each spec), unless a document-level error happened (in which case an exception is propagated).
      */
     public Observable<DocumentFragment<Lookup>> execute() {
+        return execute(0, null);
+    }
+
+    /**
+     * Perform several {@link Lookup lookup} operations inside a single existing {@link JsonDocument JSON document}.
+     * The list of path to look for inside the JSON is constructed through builder methods {@link #get(String...)} and
+     * {@link #exists(String...)}.
+     *
+     * The subdocument API has the benefit of only transmitting the fragment of the document you work with
+     * on the wire, instead of the whole document.
+     *
+     * If multiple operations are specified, each spec will receive an answer, overall contained in a
+     * {@link DocumentFragment}, meaning that if sub-document level error conditions happen (like the path is malformed
+     * or doesn't exist), the whole operation still succeeds.
+     *
+     * If a single operation is specified, then any error other that a path not found will cause the Observable to
+     * fail with the corresponding {@link SubDocumentException}. Otherwise a {@link DocumentFragment} is returned.
+     *
+     * Calling {@link DocumentFragment#content(String)} or one of its variants on a failed spec/path will throw the
+     * corresponding {@link SubDocumentException}. For successful gets, it will return the value (or null in the case
+     * of a path not found, and only in this case). For exists, it will return true (or false for a path not found).
+     *
+     * To check for any error without throwing an exception, use {@link DocumentFragment#status(String)}
+     * (or its index-based variant).
+     *
+     * To check that a given path (or index) is valid for calling {@link DocumentFragment#content(String) content()} on
+     * it without raising an Exception, use {@link DocumentFragment#exists(String)}.
+     *
+     * One special fatal error can also happen, when the value couldn't be decoded from JSON. In that case,
+     * the ResponseStatus for the path is {@link ResponseStatus#FAILURE} and the content(path) will throw a
+     * {@link TranscodingException}.
+     *
+     * This Observable most notable error conditions are:
+     *
+     *  - The enclosing document does not exist: {@link DocumentDoesNotExistException}
+     *  - The enclosing document is not JSON: {@link DocumentNotJsonException}
+     *  - No lookup was defined through the builder API: {@link IllegalArgumentException}
+     *
+     * Other document-level error conditions are similar to those encountered during a document-level {@link AsyncBucket#get(String)}.
+     * @param timeout the specific timeout to apply for the operation.
+     * @param timeUnit the time unit for the timeout.
+     * @return an {@link Observable} of a single {@link DocumentFragment} representing the whole list of results (1 for
+     *        each spec), unless a document-level error happened (in which case an exception is propagated).
+     */
+    public Observable<DocumentFragment<Lookup>> execute(long timeout, TimeUnit timeUnit) {
         if (specs.isEmpty()) {
             throw new IllegalArgumentException("Execution of a subdoc lookup requires at least one operation");
         } else if (specs.size() == 1) {
             //single path optimization
-            return doSingleLookup(specs.get(0));
+            return doSingleLookup(specs.get(0), timeout, timeUnit);
         } else {
-            return doMultiLookup();
+            return doMultiLookup(timeout, timeUnit);
         }
     }
 
@@ -389,13 +440,13 @@ public class AsyncLookupInBuilder {
         return this;
     }
 
-    protected Observable<DocumentFragment<Lookup>> doSingleLookup(LookupSpec spec) {
+    protected Observable<DocumentFragment<Lookup>> doSingleLookup(LookupSpec spec, long timeout, TimeUnit timeUnit) {
         if (spec.lookup() == Lookup.GET) {
-            return getIn(docId, spec, Object.class);
+            return getIn(docId, spec, Object.class, timeout, timeUnit);
         } else if (spec.lookup() == Lookup.EXIST) {
-            return existsIn(docId, spec);
+            return existsIn(docId, spec, timeout, timeUnit);
         } else if (spec.lookup() == Lookup.GET_COUNT) {
-            return getCountIn(docId, spec);
+            return getCountIn(docId, spec, timeout, timeUnit);
         }
         return Observable.error(new UnsupportedOperationException("Lookup type " + spec.lookup() + " unknown"));
     }
@@ -457,7 +508,10 @@ public class AsyncLookupInBuilder {
         }
     };
 
-    protected Observable<DocumentFragment<Lookup>> doMultiLookup() {
+    /**
+     * Helper method to perform a multi path lookup.
+     */
+    protected Observable<DocumentFragment<Lookup>> doMultiLookup(final long timeout, final TimeUnit timeUnit) {
         if (specs.isEmpty()) {
             throw new IllegalArgumentException("At least one Lookup Command is necessary for lookupIn");
         }
@@ -471,161 +525,252 @@ public class AsyncLookupInBuilder {
         }
         final LookupSpec[] lookupSpecs = specs.toArray(new LookupSpec[specs.size()]);
 
-        return deferAndWatch(new Func1<Subscriber, Observable<MultiLookupResponse>>() {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Lookup>>>() {
             @Override
-            public Observable<MultiLookupResponse> call(Subscriber s) {
-                SubMultiLookupRequest request = new SubMultiLookupRequest(docId, bucketName, SubMultiLookupDocOptionsBuilder.builder().accessDeleted(accessDeleted), lookupSpecs);
-                request.subscriber(s);
-                return core.send(request);
-            }
-        }).filter(new Func1<MultiLookupResponse, Boolean>() {
-            @Override
-            public Boolean call(MultiLookupResponse response) {
-                if (response.status().isSuccess() || response.status() == ResponseStatus.SUBDOC_MULTI_PATH_FAILURE) {
-                    return true;
-                }
-
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
-
-                throw SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-LOOKUP");
-            }
-        }).flatMap(new Func1<MultiLookupResponse, Observable<DocumentFragment<Lookup>>>() {
-            @Override
-            public Observable<DocumentFragment<Lookup>> call(final MultiLookupResponse mlr) {
-                return Observable
-                    .from(mlr.responses()).map(multiCoreResultToLookupResult)
-                    .toList()
-                    .map(new Func1<List<SubdocOperationResult<Lookup>>, DocumentFragment<Lookup>>() {
-                        @Override
-                        public DocumentFragment<Lookup> call(List<SubdocOperationResult<Lookup>> lookupResults) {
-                            return new DocumentFragment<Lookup>(docId, mlr.cas(), null, lookupResults);
+            public Observable<DocumentFragment<Lookup>> call() {
+                final SubMultiLookupRequest request = new SubMultiLookupRequest(
+                    docId, bucketName, SubMultiLookupDocOptionsBuilder.builder().accessDeleted(accessDeleted), lookupSpecs
+                );
+                addRequestSpan(environment, request, "subdoc_multi_lookup");
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<MultiLookupResponse>>() {
+                    @Override
+                    public Observable<MultiLookupResponse> call(Subscriber s) {
+                        request.subscriber(s);
+                        return core.send(request);
+                    }
+                }).filter(new Func1<MultiLookupResponse, Boolean>() {
+                    @Override
+                    public Boolean call(MultiLookupResponse response) {
+                        if (response.status().isSuccess() || response.status() == ResponseStatus.SUBDOC_MULTI_PATH_FAILURE) {
+                            return true;
                         }
-                    });
-            }
-        });
-    }
 
-
-    private <T> Observable<DocumentFragment<Lookup>> getIn(final String id, final LookupSpec spec, final Class<T> fragmentType) {
-        return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
-            @Override
-            public Observable<SimpleSubdocResponse> call(Subscriber s) {
-                SubGetRequest request = new SubGetRequest(id, spec.path(), bucketName);
-                request.subscriber(s);
-                request.xattr(spec.xattr());
-                request.accessDeleted(accessDeleted);
-                return core.send(request);
-            }
-        }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
-            @Override
-            public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
-                if (response.status().isSuccess()) {
-                    try {
-                        byte[] raw = null;
-                        if (isIncludeRaw()) {
-                            TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(response.content());
-                            raw = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
-                        }
-                        T content = subdocumentTranscoder.decodeWithMessage(response.content(), fragmentType,
-                                "Couldn't decode subget fragment for " + id + "/" + spec.path());
-                        SubdocOperationResult<Lookup> single = SubdocOperationResult
-                                .createResult(spec.path(), Lookup.GET, response.status(), content, raw);
-                        return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(),
-                                Collections.singletonList(single));
-                    } finally {
-                        if (response.content() != null) {
+                        if (response.content() != null && response.content().refCnt() > 0) {
                             response.content().release();
                         }
-                    }
-                } else {
-                    if (response.content() != null && response.content().refCnt() > 0) {
-                        response.content().release();
-                    }
 
-                    if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
-                        SubdocOperationResult<Lookup> single = SubdocOperationResult
-                                .createResult(spec.path(), Lookup.GET, response.status(), null);
-                        return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(), Collections.singletonList(single));
-                    } else {
-                        throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
+                        throw SubdocHelper.commonSubdocErrors(response.status(), docId, "MULTI-LOOKUP");
                     }
-                }
+                }).flatMap(new Func1<MultiLookupResponse, Observable<DocumentFragment<Lookup>>>() {
+                    @Override
+                    public Observable<DocumentFragment<Lookup>> call(final MultiLookupResponse mlr) {
+                        return Observable
+                            .from(mlr.responses()).map(multiCoreResultToLookupResult)
+                            .toList()
+                            .map(new Func1<List<SubdocOperationResult<Lookup>>, DocumentFragment<Lookup>>() {
+                                @Override
+                                public DocumentFragment<Lookup> call(List<SubdocOperationResult<Lookup>> lookupResults) {
+                                    return new DocumentFragment<Lookup>(docId, mlr.cas(), null, lookupResults);
+                                }
+                            }).doOnTerminate(new Action0() {
+                                @Override
+                                public void call() {
+                                    if (environment.tracingEnabled()) {
+                                        environment.tracer().scopeManager()
+                                            .activate(mlr.request().span(), true)
+                                            .close();
+                                    }
+                                }
+                            });
+                    }
+                }), request, environment, timeout, timeUnit);
             }
         });
     }
 
-    private Observable<DocumentFragment<Lookup>> existsIn(final String id, final LookupSpec spec) {
-        return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+    /**
+     * Helper method to perform the actual get operation.
+     */
+    private <T> Observable<DocumentFragment<Lookup>> getIn(final String id, final LookupSpec spec,
+        final Class<T> fragmentType, long timeout, TimeUnit timeUnit) {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Lookup>>>() {
             @Override
-            public Observable<SimpleSubdocResponse> call(Subscriber s) {
-                SubExistRequest request = new SubExistRequest(id, spec.path(), bucketName);
-                request.subscriber(s);
+            public Observable<DocumentFragment<Lookup>> call() {
+                final SubGetRequest request = new SubGetRequest(id, spec.path(), bucketName);
                 request.xattr(spec.xattr());
                 request.accessDeleted(accessDeleted);
-                return core.send(request);
-            }
-        }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
-            @Override
-            public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
-                if (response.content() != null && response.content().refCnt() > 0) {
-                    response.content().release();
-                }
+                addRequestSpan(environment, request, "subdoc_get");
+                return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+                    @Override
+                    public Observable<SimpleSubdocResponse> call(Subscriber s) {
+                        request.subscriber(s);
+                        return core.send(request);
+                    }
+                }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
+                    @Override
+                    public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
+                        try {
+                            if (response.status().isSuccess()) {
+                                try {
+                                    byte[] raw = null;
+                                    if (isIncludeRaw()) {
+                                        TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(response.content());
+                                        raw = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
+                                    }
 
-                if (response.status().isSuccess()) {
-                    SubdocOperationResult<Lookup> result = SubdocOperationResult
-                            .createResult(spec.path(), Lookup.EXIST, response.status(), true);
-                    return new DocumentFragment<Lookup>(docId, response.cas(), response.mutationToken(), Collections.singletonList(result));
-                } else if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
-                    SubdocOperationResult<Lookup> result = SubdocOperationResult
-                            .createResult(spec.path(), Lookup.EXIST, response.status(), false);
-                    return new DocumentFragment<Lookup>(docId, response.cas(), response.mutationToken(), Collections.singletonList(result));
-                }
+                                    Scope decodeScope = null;
+                                    if (environment.tracingEnabled()) {
+                                        decodeScope = environment.tracer()
+                                            .buildSpan("response_decoding")
+                                            .asChildOf(response.request().span())
+                                            .startActive(true);
+                                    }
 
-                throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
-            }
-        });
-    }
+                                    T content = subdocumentTranscoder.decodeWithMessage(response.content(), fragmentType,
+                                        "Couldn't decode subget fragment for " + id + "/" + spec.path());
 
-    private <T> Observable<DocumentFragment<Lookup>> getCountIn(final String id, final LookupSpec spec) {
-        return deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
-            @Override
-            public Observable<SimpleSubdocResponse> call(Subscriber s) {
-                SubGetCountRequest request = new SubGetCountRequest(id, spec.path(), bucketName);
-                request.subscriber(s);
-                request.xattr(spec.xattr());
-                request.accessDeleted(accessDeleted);
-                return core.send(request);
-            }
-        }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
-            @Override
-            public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
-                if (response.status().isSuccess()) {
-                    try {
-                        long count = subdocumentTranscoder.decode(response.content(), Long.class);
-                        SubdocOperationResult<Lookup> single = SubdocOperationResult
-                            .createResult(spec.path(), Lookup.GET_COUNT, response.status(), count);
-                        return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(),
-                            Collections.singletonList(single));
-                    } finally {
-                        if (response.content() != null) {
-                            response.content().release();
+                                    if (environment.tracingEnabled() && decodeScope != null) {
+                                        decodeScope.close();
+                                        if (decodeScope.span() instanceof ThresholdLogSpan) {
+                                            decodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_DECODE_MICROS,
+                                                Long.toString(((ThresholdLogSpan) decodeScope.span()).durationMicros())
+                                            );
+                                        }
+                                    }
+
+                                    SubdocOperationResult<Lookup> single = SubdocOperationResult
+                                        .createResult(spec.path(), Lookup.GET, response.status(), content, raw);
+                                    return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(),
+                                        Collections.singletonList(single));
+                                } finally {
+                                    if (response.content() != null) {
+                                        response.content().release();
+                                    }
+                                }
+                            } else {
+                                if (response.content() != null && response.content().refCnt() > 0) {
+                                    response.content().release();
+                                }
+
+                                if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
+                                    SubdocOperationResult<Lookup> single = SubdocOperationResult
+                                        .createResult(spec.path(), Lookup.GET, response.status(), null);
+                                    return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(), Collections.singletonList(single));
+                                } else {
+                                    throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
+                                }
+                            }
+                        } finally {
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(response.request().span(), true)
+                                    .close();
+                            }
                         }
                     }
-                } else {
-                    if (response.content() != null && response.content().refCnt() > 0) {
-                        response.content().release();
-                    }
+                });
+            }
+        });
+    }
 
-                    if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
-                        SubdocOperationResult<Lookup> single = SubdocOperationResult
-                            .createResult(spec.path(), Lookup.GET_COUNT, response.status(), null);
-                        return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(), Collections.singletonList(single));
-                    } else {
-                        throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
+    /**
+     * Helper method to actually perform the subdoc exists operation.
+     */
+    private Observable<DocumentFragment<Lookup>> existsIn(final String id, final LookupSpec spec,
+        final long timeout, final TimeUnit timeUnit) {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Lookup>>>() {
+            @Override
+            public Observable<DocumentFragment<Lookup>> call() {
+                final SubExistRequest request = new SubExistRequest(id, spec.path(), bucketName);
+                request.xattr(spec.xattr());
+                request.accessDeleted(accessDeleted);
+                addRequestSpan(environment, request, "subdoc_exists");
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+                    @Override
+                    public Observable<SimpleSubdocResponse> call(Subscriber s) {
+                        request.subscriber(s);
+                        return core.send(request);
                     }
-                }
+                }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
+                    @Override
+                    public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
+                        try {
+                            if (response.content() != null && response.content().refCnt() > 0) {
+                                response.content().release();
+                            }
+
+                            if (response.status().isSuccess()) {
+                                SubdocOperationResult<Lookup> result = SubdocOperationResult
+                                    .createResult(spec.path(), Lookup.EXIST, response.status(), true);
+                                return new DocumentFragment<Lookup>(docId, response.cas(),
+                                    response.mutationToken(), Collections.singletonList(result));
+                            } else if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
+                                SubdocOperationResult<Lookup> result = SubdocOperationResult
+                                    .createResult(spec.path(), Lookup.EXIST, response.status(), false);
+                                return new DocumentFragment<Lookup>(docId, response.cas(),
+                                    response.mutationToken(), Collections.singletonList(result));
+                            }
+
+                            throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
+                        } finally {
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(response.request().span(), true)
+                                    .close();
+                            }
+                        }
+                    }
+                }), request, environment, timeout, timeUnit);
+            }
+        });
+    }
+
+    /**
+     * Helper method to actually perform the subdoc get count operation.
+     */
+    private Observable<DocumentFragment<Lookup>> getCountIn(final String id, final LookupSpec spec,
+        final long timeout, final TimeUnit timeUnit) {
+        return Observable.defer(new Func0<Observable<DocumentFragment<Lookup>>>() {
+            @Override
+            public Observable<DocumentFragment<Lookup>> call() {
+                final SubGetCountRequest request = new SubGetCountRequest(id, spec.path(), bucketName);
+                request.xattr(spec.xattr());
+                request.accessDeleted(accessDeleted);
+                addRequestSpan(environment, request, "subdoc_count");
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<SimpleSubdocResponse>>() {
+                    @Override
+                    public Observable<SimpleSubdocResponse> call(Subscriber s) {
+                        request.subscriber(s);
+                        return core.send(request);
+                    }
+                }).map(new Func1<SimpleSubdocResponse, DocumentFragment<Lookup>>() {
+                    @Override
+                    public DocumentFragment<Lookup> call(SimpleSubdocResponse response) {
+                        try {
+                            if (response.status().isSuccess()) {
+                                try {
+                                    long count = subdocumentTranscoder.decode(response.content(), Long.class);
+                                    SubdocOperationResult<Lookup> single = SubdocOperationResult
+                                        .createResult(spec.path(), Lookup.GET_COUNT, response.status(), count);
+                                    return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(),
+                                        Collections.singletonList(single));
+                                } finally {
+                                    if (response.content() != null) {
+                                        response.content().release();
+                                    }
+                                }
+                            } else {
+                                if (response.content() != null && response.content().refCnt() > 0) {
+                                    response.content().release();
+                                }
+
+                                if (response.status() == ResponseStatus.SUBDOC_PATH_NOT_FOUND) {
+                                    SubdocOperationResult<Lookup> single = SubdocOperationResult
+                                        .createResult(spec.path(), Lookup.GET_COUNT, response.status(), null);
+                                    return new DocumentFragment<Lookup>(id, response.cas(), response.mutationToken(), Collections.singletonList(single));
+                                } else {
+                                    throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
+                                }
+                            }
+                        } finally {
+                            if (environment.tracingEnabled()) {
+                                environment.tracer().scopeManager()
+                                    .activate(response.request().span(), true)
+                                    .close();
+                            }
+                        }
+                    }
+                }), request, environment, timeout, timeUnit);
             }
         });
     }

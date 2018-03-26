@@ -162,7 +162,7 @@ public class LookupInBuilder {
      * document-level error happened (in which case an exception is thrown).
      */
     public DocumentFragment<Lookup> execute(long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(this.async.execute(), timeout, timeUnit);
+        return this.async.execute(timeout, timeUnit).toBlocking().single();
     }
 
     /**
