@@ -563,10 +563,10 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public SearchQueryResult query(SearchQuery query, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket
-            .query(query)
+        return asyncBucket.query(query, timeout, timeUnit)
             .flatMap(DefaultSearchQueryResult.FROM_ASYNC)
-            .single(), timeout, timeUnit);
+            .toBlocking()
+            .single();
     }
 
     @Override
@@ -576,10 +576,10 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public AnalyticsQueryResult query(AnalyticsQuery query, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket
-            .query(query)
+        return asyncBucket.query(query, timeout, timeUnit)
             .flatMap(AnalyticsQueryExecutor.ASYNC_RESULT_TO_SYNC)
-            .single(), timeout, timeUnit);
+            .toBlocking()
+            .single();
     }
 
     @Override
@@ -589,8 +589,8 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public ViewResult query(ViewQuery query, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket
-            .query(query)
+        return asyncBucket
+            .query(query, timeout, timeUnit)
             .map(new Func1<AsyncViewResult, ViewResult>() {
                 @Override
                 public ViewResult call(AsyncViewResult asyncViewResult) {
@@ -600,14 +600,14 @@ public class CouchbaseBucket implements Bucket {
                     );
                 }
             })
-            .single(), timeout, timeUnit);
+            .toBlocking()
+            .single();
     }
-
 
     @Override
     public SpatialViewResult query(SpatialViewQuery query, long timeout, TimeUnit timeUnit) {
-        return Blocking.blockForSingle(asyncBucket
-            .query(query)
+        return asyncBucket
+            .query(query, timeout, timeUnit)
             .map(new Func1<AsyncSpatialViewResult, SpatialViewResult>() {
                 @Override
                 public SpatialViewResult call(AsyncSpatialViewResult asyncSpatialViewResult) {
@@ -617,7 +617,8 @@ public class CouchbaseBucket implements Bucket {
                     );
                 }
             })
-            .single(), timeout, timeUnit);
+            .toBlocking()
+            .single();
     }
 
     @Override

@@ -2324,6 +2324,41 @@ public interface AsyncBucket {
      */
     Observable<AsyncSpatialViewResult> query(SpatialViewQuery query);
 
+
+    /**
+     * Queries a Couchbase Server {@link View}.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - If the design document or view is not found: {@link ViewDoesNotExistException}
+     *
+     * @param query the query to perform.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a result containing all the found rows and additional information.
+     */
+    Observable<AsyncViewResult> query(ViewQuery query, long timeout, TimeUnit timeUnit);
+
+    /**
+     * Queries a Couchbase Server Spatial {@link View}.
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     * - If the design document or view is not found: {@link ViewDoesNotExistException}
+     *
+     * @param query the spatial query to perform.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a result containing all the found rows and additional information.
+     */
+    Observable<AsyncSpatialViewResult> query(SpatialViewQuery query, long timeout, TimeUnit timeUnit);
+
     /**
      * Queries a N1QL secondary index with a simple {@link Statement}.
      *
@@ -2384,6 +2419,23 @@ public interface AsyncBucket {
     Observable<AsyncSearchQueryResult> query(SearchQuery query);
 
     /**
+     * Queries a Full-Text Index
+     *
+     * The returned {@link Observable} can error under the following conditions:
+     *
+     * - The producer outpaces the SDK: {@link BackpressureException}
+     * - The operation had to be cancelled while on the wire or the retry strategy cancelled it instead of
+     *   retrying: {@link RequestCancelledException}
+     *
+     * @param query the query builder.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a query result containing the matches and additional information.
+     */
+    @InterfaceStability.Committed
+    Observable<AsyncSearchQueryResult> query(SearchQuery query, long timeout, TimeUnit timeUnit);
+
+    /**
      * Uncommitted: Queries Couchbase Analytics
      *
      * @param query the query builder.
@@ -2391,6 +2443,17 @@ public interface AsyncBucket {
      */
     @InterfaceStability.Uncommitted
     Observable<AsyncAnalyticsQueryResult> query(AnalyticsQuery query);
+
+    /**
+     * Uncommitted: Queries Couchbase Analytics
+     *
+     * @param query the query builder.
+     * @param timeout the custom timeout.
+     * @param timeUnit the unit for the timeout.
+     * @return a query result containing the rows and additional information.
+     */
+    @InterfaceStability.Uncommitted
+    Observable<AsyncAnalyticsQueryResult> query(AnalyticsQuery query, long timeout, TimeUnit timeUnit);
 
     /**
      * Unlocks a write-locked {@link Document}.

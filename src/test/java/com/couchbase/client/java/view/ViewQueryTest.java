@@ -483,7 +483,7 @@ public class ViewQueryTest {
 
         //this simulates a view response with the preconstructed buffers above, and calls the view result
         //mapper so that it uses the mock get for its includeDocs calls.
-        when(spyBucket.query(any(ViewQuery.class))).thenAnswer(new Answer<Object>() {
+        when(spyBucket.query(any(ViewQuery.class), any(Long.class), any(TimeUnit.class))).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 final ViewQuery query = (ViewQuery) invocation.getArguments()[0];

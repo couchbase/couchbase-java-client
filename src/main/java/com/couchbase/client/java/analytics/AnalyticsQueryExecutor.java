@@ -19,9 +19,12 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.message.analytics.GenericAnalyticsRequest;
 import com.couchbase.client.core.message.analytics.GenericAnalyticsResponse;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.java.bucket.api.Utils;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
+import io.opentracing.tag.Tags;
 import rx.Observable;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -29,8 +32,10 @@ import rx.functions.Func6;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
+import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 
 public class AnalyticsQueryExecutor {
 
@@ -46,11 +51,18 @@ public class AnalyticsQueryExecutor {
         this.password = password;
     }
 
-    public Observable<AsyncAnalyticsQueryResult> execute(final AnalyticsQuery query) {
+    public Observable<AsyncAnalyticsQueryResult> execute(final AnalyticsQuery query, final CouchbaseEnvironment env,
+                                                         final long timeout, final TimeUnit timeUnit) {
         return Observable.defer(new Func0<Observable<GenericAnalyticsResponse>>() {
             @Override
             public Observable<GenericAnalyticsResponse> call() {
-                return core.send(GenericAnalyticsRequest.jsonQuery(query.query().toString(), bucket, username, password));
+                GenericAnalyticsRequest request = GenericAnalyticsRequest
+                    .jsonQuery(query.query().toString(), bucket, username, password);
+                Utils.addRequestSpan(env, request, "analytics");
+                if (env.tracingEnabled()) {
+                    request.span().setTag(Tags.DB_STATEMENT.getKey(), query.statement());
+                }
+                return applyTimeout(core.<GenericAnalyticsResponse>send(request), request, env, timeout, timeUnit);
             }
         }).flatMap(new Func1<GenericAnalyticsResponse, Observable<AsyncAnalyticsQueryResult>>() {
             @Override

@@ -139,6 +139,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.couchbase.client.java.bucket.api.Utils.addRequestSpan;
+import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 public class CouchbaseAsyncBucket implements AsyncBucket {
@@ -740,12 +742,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncViewResult> query(final ViewQuery query) {
+        return query(query, environment.viewTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<AsyncViewResult> query(final ViewQuery query, final long timeout, final TimeUnit timeUnit) {
         Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
             @Override
             public Observable<ViewQueryResponse> call() {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
                     query.isDevelopment(), query.toQueryString(), query.getKeys(), bucket, username, password);
-                return core.send(request);
+                Utils.addRequestSpan(environment, request, "view");
+                return applyTimeout(core.<ViewQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });
 
@@ -760,7 +768,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<AsyncSearchQueryResult> query(final SearchQuery query) {
+    public Observable<AsyncSearchQueryResult> query(SearchQuery query) {
+        return query(query, environment.searchTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<AsyncSearchQueryResult> query(final SearchQuery query, final long timeout, final TimeUnit timeUnit) {
         final String indexName = query.indexName();
 
         //always set a server side timeout. if not explicit, set it to the client side timeout
@@ -773,7 +786,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             public Observable<SearchQueryResponse> call() {
                 final SearchQueryRequest request =
                     new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
-                return core.send(request);
+                Utils.addRequestSpan(environment, request, "search");
+                return applyTimeout(core.<SearchQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });
 
@@ -799,12 +813,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncSpatialViewResult> query(final SpatialViewQuery query) {
+        return query(query, environment.viewTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<AsyncSpatialViewResult> query(final SpatialViewQuery query, final long timeout, final TimeUnit timeUnit) {
         Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
             @Override
             public Observable<ViewQueryResponse> call() {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
                     query.isDevelopment(), true, query.toString(), null, bucket, username, password);
-                return core.send(request);
+                addRequestSpan(environment, request, "spatial_view");
+                return applyTimeout(core.<ViewQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });
 
@@ -839,13 +859,19 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return n1qlQueryExecutor.execute(query, environment, timeout, timeUnit);
     }
 
+    @Override
     public Observable<AsyncAnalyticsQueryResult> query(final AnalyticsQuery query) {
+        return query(query, environment.analyticsTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<AsyncAnalyticsQueryResult> query(final AnalyticsQuery query, long timeout, TimeUnit timeUnit) {
       /* TODO once exposed on the server
         if (!query.params().hasServerSideTimeout()) {
             query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
         }
         */
-        return analyticsQueryExecutor.execute(query);
+        return analyticsQueryExecutor.execute(query, environment, timeout, timeUnit);
     }
 
     @Override
