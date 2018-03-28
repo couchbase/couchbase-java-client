@@ -124,6 +124,7 @@ import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewQueryResponseMapper;
 import com.couchbase.client.java.view.ViewRetryHandler;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import rx.Observable;
 import rx.Single;
 import rx.Subscriber;
@@ -419,25 +420,25 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> insert(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
         return insert(document, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<D> insert(final D document, final PersistTo persistTo,
         final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-        Observable<D> insertResult = insert(document, timeout, timeUnit);
-
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return insertResult;
+            return insert(document, timeout, timeUnit);
         }
 
-        return insertResult.flatMap(new Func1<D, Observable<D>>() {
+
+        final Span parent = startTracing("insert_with_durability");
+        return insert(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
+                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
+                        persistTo.value(), replicateTo.value(),
+                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -454,49 +455,51 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     // we need a timeout here since observe doesn't have one yet
                     .timeout(timeout, timeUnit, environment.scheduler());
             }
-        });
+        }).doOnTerminate(stopTracing(parent));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> upsert(final D document) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
         return upsert(document, 0, null);
     }
 
     @Override
     public <D extends Document<?>> Observable<D> upsert(final D document, final PersistTo persistTo,
         final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-        Observable<D> upsertResult = upsert(document, timeout, timeUnit);
-
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return upsertResult;
+            return upsert(document, timeout, timeUnit);
         }
 
-        return upsertResult.flatMap(new Func1<D, Observable<D>>() {
-            @Override
-            public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    })
-                    .onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
-            }
-        });
+
+        final Span parent = startTracing("upsert_with_durability");
+        return upsert(document, parent, timeout, timeUnit)
+            .flatMap(new Func1<D, Observable<D>>() {
+                @Override
+                public Observable<D> call(final D doc) {
+                    return Observe
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
+                            persistTo.value(), replicateTo.value(),
+                            environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        })
+                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                    "Durability requirement failed: " + throwable.getMessage(),
+                                    throwable));
+                            }
+                        })
+                        // we need a timeout here since observe doesn't have one yet
+                        .timeout(timeout, timeUnit, environment.scheduler());
+                }
+            })
+            .doOnTerminate(stopTracing(parent));
     }
 
     @Override
@@ -507,8 +510,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> insert(D document, long timeout, TimeUnit timeUnit) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.insert(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return insert(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <D extends Document<?>> Observable<D> insert(D document, Span parent, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder =
+            (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.insert(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -528,8 +537,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> upsert(D document, long timeout, TimeUnit timeUnit) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.upsert(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return upsert(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <D extends Document<?>> Observable<D> upsert(D document, Span parent, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder =
+            (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.upsert(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -549,8 +564,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> replace(D document, long timeout, TimeUnit timeUnit) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.replace(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return replace(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <D extends Document<?>> Observable<D> replace(D document, Span parent, long timeout, TimeUnit timeUnit) {
+        final  Transcoder<Document<Object>, Object> transcoder =
+            (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.replace(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -571,18 +592,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     public <D extends Document<?>> Observable<D> replace(final D document, final PersistTo persistTo,
         final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-        Observable<D> replaceResult = replace(document, timeout, timeUnit);
-
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return replaceResult;
+            return replace(document, timeout, timeUnit);
         }
 
-        return replaceResult.flatMap(new Func1<D, Observable<D>>() {
+        final Span parent = startTracing("replace_with_durability");
+        return replace(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
+                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(),
+                        replicateTo.value(), environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -599,14 +619,20 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     // we need a timeout here since observe doesn't have one yet
                     .timeout(timeout, timeUnit, environment.scheduler());
             }
-        });
+        }).doOnTerminate(stopTracing(parent));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(final D document, long timeout, TimeUnit timeUnit) {
-        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.remove(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return remove(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <D extends Document<?>> Observable<D> remove(final D document, Span parent, long timeout, TimeUnit timeUnit) {
+        final Transcoder<Document<Object>, Object> transcoder =
+            (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
+        return Mutate.remove(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -624,7 +650,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> remove(D document, final PersistTo persistTo, final ReplicateTo replicateTo, long timeout, TimeUnit timeUnit) {
-        return observeRemove(remove(document, timeout, timeUnit), persistTo, replicateTo, timeout, timeUnit);
+        return observeRemove(document, persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
@@ -633,9 +659,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
+    @SuppressWarnings({"unchecked"})
     public <D extends Document<?>> Observable<D> remove(String id, final PersistTo persistTo,
         final ReplicateTo replicateTo, Class<D> target, long timeout, TimeUnit timeUnit) {
-        return observeRemove(remove(id, target, timeout, timeUnit), persistTo, replicateTo, timeout, timeUnit);
+        final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(target);
+        return observeRemove((D) transcoder.newDocument(id, 0, null, 0, null), persistTo, replicateTo, timeout, timeUnit);
     }
 
     @Override
@@ -703,24 +731,25 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
      * Helper method to observe the result of a remove operation with the given durability
      * requirements.
      *
-     * @param removeResult the original result of the actual remove operation.
+     * @param document the document that needs to be removed.
      * @param persistTo the persistence requirement given.
      * @param replicateTo the replication requirement given.
      * @return an observable reporting success or error of the observe operation.
      */
-    private <D extends Document<?>> Observable<D> observeRemove(Observable<D> removeResult,
+    private <D extends Document<?>> Observable<D> observeRemove(D document,
         final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return removeResult;
+            return remove(document, timeout, timeUnit);
         }
 
-        return removeResult.flatMap(new Func1<D, Observable<D>>() {
+        final Span parent = startTracing("remove_with_durability");
+        return remove(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), true, doc.mutationToken(),
                         persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
+                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -737,7 +766,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     // we need a timeout here since observe doesn't have one yet
                     .timeout(timeout, timeUnit, environment.scheduler());
             }
-        });
+        }).doOnTerminate(stopTracing(parent));
     }
 
     @Override
@@ -886,7 +915,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry, long timeout, TimeUnit timeUnit) {
-        return Mutate.counter(id, delta, initial, expiry, environment, core, bucket, timeout, timeUnit);
+        return counter(id, delta, initial, expiry, (Span) null, timeout, timeUnit);
+    }
+
+    private Observable<JsonLongDocument> counter(final String id, final long delta, final long initial, final int expiry, Span parent, long timeout, TimeUnit timeUnit) {
+        return Mutate.counter(id, delta, initial, expiry, environment, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -932,15 +965,25 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> append(final D document, long timeout, TimeUnit timeUnit) {
+        return append(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <D extends Document<?>> Observable<D> append(final D document, Span parent, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.append(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return Mutate.append(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <D extends Document<?>> Observable<D> prepend(final D document, long timeout, TimeUnit timeUnit) {
+        return prepend(document, (Span) null, timeout, timeUnit);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <D extends Document<?>> Observable<D> prepend(final D document, Span parent, long timeout, TimeUnit timeUnit) {
         final  Transcoder<Document<Object>, Object> transcoder = (Transcoder<Document<Object>, Object>) transcoders.get(document.getClass());
-        return Mutate.prepend(document, environment, transcoder, core, bucket, timeout, timeUnit);
+        return Mutate.prepend(document, environment, transcoder, core, bucket, timeout, timeUnit, parent);
     }
 
     @Override
@@ -1049,39 +1092,40 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     }
 
     @Override
-    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-
-        Observable<JsonLongDocument> counterResult = counter(id, delta, initial, expiry, timeout, timeUnit);
-
+    public Observable<JsonLongDocument> counter(String id, long delta, long initial, int expiry,
+        final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return counterResult;
+            return counter(id, delta, initial, expiry, timeout, timeUnit);
         }
 
-        return counterResult.flatMap(new Func1<JsonLongDocument, Observable<JsonLongDocument>>() {
-            @Override
-            public Observable<JsonLongDocument> call(final JsonLongDocument doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
-                        persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
-                    .map(new Func1<Boolean, JsonLongDocument>() {
-                        @Override
-                        public JsonLongDocument call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    })
-                    .onErrorResumeNext(new Func1<Throwable, Observable<? extends JsonLongDocument>>() {
-                        @Override
-                        public Observable<? extends JsonLongDocument> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
-            }
-        });
+        final Span parent = startTracing("counter_with_durability");
+        return counter(id, delta, initial, expiry, parent, timeout, timeUnit)
+            .flatMap(new Func1<JsonLongDocument, Observable<JsonLongDocument>>() {
+                @Override
+                public Observable<JsonLongDocument> call(final JsonLongDocument doc) {
+                    return Observe
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
+                            persistTo.value(), replicateTo.value(),
+                            environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                        .map(new Func1<Boolean, JsonLongDocument>() {
+                            @Override
+                            public JsonLongDocument call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        })
+                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends JsonLongDocument>>() {
+                            @Override
+                            public Observable<? extends JsonLongDocument> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                    "Durability requirement failed: " + throwable.getMessage(),
+                                    throwable));
+                            }
+                        })
+                        // we need a timeout here since observe doesn't have one yet
+                        .timeout(timeout, timeUnit, environment.scheduler());
+                }
+            })
+            .doOnTerminate(stopTracing(parent));
     }
 
     @Override
@@ -1156,18 +1200,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> append(D document, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-        Observable<D> appendResult = append(document, timeout, timeUnit);
-
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return appendResult;
+            return append(document, timeout, timeUnit);
         }
 
-        return appendResult.flatMap(new Func1<D, Observable<D>>() {
+        final Span parent = startTracing("append_with_durability");
+        return append(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
+                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -1184,7 +1227,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     // we need a timeout here since observe doesn't have one yet
                     .timeout(timeout, timeUnit, environment.scheduler());
             }
-        });
+        }).doOnTerminate(stopTracing(parent));
     }
 
     @Override
@@ -1199,18 +1242,17 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public <D extends Document<?>> Observable<D> prepend(D document, final PersistTo persistTo, final ReplicateTo replicateTo, final long timeout, final TimeUnit timeUnit) {
-        Observable<D> prependResult = prepend(document, timeout, timeUnit);
-
         if (persistTo == PersistTo.NONE && replicateTo == ReplicateTo.NONE) {
-            return prependResult;
+            return prepend(document, timeout, timeUnit);
         }
 
-        return prependResult.flatMap(new Func1<D, Observable<D>>() {
+        final Span parent = startTracing("prepend_with_durability");
+        return prepend(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
                 return Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy())
+                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
                         @Override
                         public D call(Boolean aBoolean) {
@@ -1227,7 +1269,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                     // we need a timeout here since observe doesn't have one yet
                     .timeout(timeout, timeUnit, environment.scheduler());
             }
-        });
+        }).doOnTerminate(stopTracing(parent));
     }
 
     @Override
@@ -2043,6 +2085,37 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     public Single<PingReport> ping(String reportId, Collection<ServiceType> services, long timeout, TimeUnit timeUnit) {
         return HealthPinger.ping(environment, bucket, password, core, reportId, timeout, timeUnit,
           services.toArray(new ServiceType[services.size()]));
+    }
+
+    /**
+     * Helper method to start tracing and return the span.
+     */
+    private Span startTracing(String spanName) {
+        if (!environment.tracingEnabled()) {
+            return null;
+        }
+        Scope scope = environment.tracer()
+            .buildSpan(spanName)
+            .startActive(false);
+        Span parent = scope.span();
+        scope.close();
+        return parent;
+    }
+
+    /**
+     * Helper method to stop tracing for the parent span given.
+     */
+    private Action0 stopTracing(final Span parent) {
+        return new Action0() {
+            @Override
+            public void call() {
+                if (parent != null) {
+                    environment.tracer().scopeManager()
+                        .activate(parent, true)
+                        .close();
+                }
+            }
+        };
     }
 
     /**

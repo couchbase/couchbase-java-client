@@ -54,6 +54,7 @@ import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.transcoder.Transcoder;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func0;
@@ -64,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 import static com.couchbase.client.java.CouchbaseAsyncBucket.COUNTER_NOT_EXISTS_EXPIRY;
 import static com.couchbase.client.java.bucket.api.Utils.addDetails;
 import static com.couchbase.client.java.bucket.api.Utils.addRequestSpan;
+import static com.couchbase.client.java.bucket.api.Utils.addRequestSpanWithParent;
 import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
@@ -80,15 +82,18 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> insert(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
                 if (env.tracingEnabled()) {
-                    Scope scope = env.tracer()
-                        .buildSpan("insert")
-                        .startActive(false);
+                    Tracer.SpanBuilder spanBuilder = env.tracer()
+                        .buildSpan("insert");
+                    if (parent != null) {
+                        spanBuilder = spanBuilder.asChildOf(parent);
+                    }
+                    Scope scope = spanBuilder.startActive(false);
                     requestSpan = scope.span();
                     scope.close();
                 }
@@ -164,15 +169,18 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> upsert(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
                 if (env.tracingEnabled()) {
-                    Scope scope = env.tracer()
-                        .buildSpan("upsert")
-                        .startActive(false);
+                    Tracer.SpanBuilder spanBuilder = env.tracer()
+                        .buildSpan("upsert");
+                    if (parent != null) {
+                        spanBuilder = spanBuilder.asChildOf(parent);
+                    }
+                    Scope scope = spanBuilder.startActive(false);
                     requestSpan = scope.span();
                     scope.close();
                 }
@@ -250,15 +258,18 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> replace(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
                 if (env.tracingEnabled()) {
-                    Scope scope = env.tracer()
-                        .buildSpan("replace")
-                        .startActive(false);
+                    Tracer.SpanBuilder spanBuilder = env.tracer()
+                        .buildSpan("replace");
+                    if (parent != null) {
+                        spanBuilder = spanBuilder.asChildOf(parent);
+                    }
+                    Scope scope = spanBuilder.startActive(false);
                     requestSpan = scope.span();
                     scope.close();
                 }
@@ -337,13 +348,17 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> remove(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
 
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 final RemoveRequest request = new RemoveRequest(document.id(), document.cas(), bucket);
-                addRequestSpan(env, request, "remove");
+                if (parent == null) {
+                    addRequestSpan(env, request, "remove");
+                } else {
+                    addRequestSpanWithParent(env, parent, request, "remove");
+                }
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<RemoveResponse>>() {
                     @Override
                     public Observable<RemoveResponse> call(Subscriber s) {
@@ -490,12 +505,16 @@ public class Mutate {
 
     public static Observable<JsonLongDocument> counter(final String id, final long delta, final long initial,
         final int expiry, final CouchbaseEnvironment env, final ClusterFacade core,
-        final String bucket, final long timeout, final TimeUnit timeUnit) {
+        final String bucket, final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<JsonLongDocument>>() {
             @Override
             public Observable<JsonLongDocument> call() {
                 final CounterRequest request = new CounterRequest(id, initial, delta, expiry, bucket);
-                addRequestSpan(env, request, "counter");
+                if (parent == null) {
+                    addRequestSpan(env, request, "counter");
+                } else {
+                    addRequestSpanWithParent(env, parent, request, "counter");
+                }
                 return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<CounterResponse>>() {
                     @Override
                     public Observable<CounterResponse> call(Subscriber s) {
@@ -542,15 +561,18 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> append(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
                 if (env.tracingEnabled()) {
-                    Scope scope = env.tracer()
-                        .buildSpan("append")
-                        .startActive(false);
+                    Tracer.SpanBuilder spanBuilder = env.tracer()
+                        .buildSpan("append");
+                    if (parent != null) {
+                        spanBuilder = spanBuilder.asChildOf(parent);
+                    }
+                    Scope scope = spanBuilder.startActive(false);
                     requestSpan = scope.span();
                     scope.close();
                 }
@@ -623,15 +645,18 @@ public class Mutate {
     @SuppressWarnings({ "unchecked" })
     public static <D extends Document<?>> Observable<D> prepend(final D document, final CouchbaseEnvironment env,
         final Transcoder<Document<Object>, Object> transcoder, final ClusterFacade core, final String bucket,
-        final long timeout, final TimeUnit timeUnit) {
+        final long timeout, final TimeUnit timeUnit, final Span parent) {
         return Observable.defer(new Func0<Observable<D>>() {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
                 if (env.tracingEnabled()) {
-                    Scope scope = env.tracer()
-                        .buildSpan("prepend")
-                        .startActive(false);
+                    Tracer.SpanBuilder spanBuilder = env.tracer()
+                        .buildSpan("prepend");
+                    if (parent != null) {
+                        spanBuilder = spanBuilder.asChildOf(parent);
+                    }
+                    Scope scope = spanBuilder.startActive(false);
                     requestSpan = scope.span();
                     scope.close();
                 }
