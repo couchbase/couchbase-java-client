@@ -18,6 +18,7 @@ package com.couchbase.client.java.env;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.env.CoreEnvironment;
+import com.couchbase.client.crypto.EncryptionConfig;
 import com.couchbase.client.java.Cluster;
 
 /**
@@ -109,4 +110,12 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
      * @see #coreBuild() for the same information but relative to the core layer.
      */
     String clientBuild();
+
+
+    /**
+     * Returns the encryption configuration set.
+     */
+    @InterfaceStability.Uncommitted
+    @InterfaceAudience.Public
+    EncryptionConfig encryptionConfig();
 }

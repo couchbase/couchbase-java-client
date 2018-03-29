@@ -23,14 +23,16 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import com.couchbase.client.core.encryption.AES128CryptoProvider;
-import com.couchbase.client.core.encryption.JceksKeyStoreProvider;
-import com.couchbase.client.core.encryption.RSACryptoProvider;
+import com.couchbase.client.crypto.AES128CryptoProvider;
+import com.couchbase.client.crypto.JceksKeyStoreProvider;
+import com.couchbase.client.crypto.RSACryptoProvider;
 import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.core.encryption.EncryptionConfig;
+import com.couchbase.client.crypto.EncryptionConfig;
+import com.couchbase.client.java.document.json.ValueEncryptionConfig;
+import com.couchbase.client.java.encryption.EncryptionProvider;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.InvalidPasswordException;
@@ -55,6 +57,10 @@ public class FieldLevelEncryptionKeyValueTest {
 
     private static AES128CryptoProvider aes128CryptoProvider;
 
+    private ValueEncryptionConfig aesConfig =  new ValueEncryptionConfig(EncryptionProvider.AES128);
+
+    private ValueEncryptionConfig rsaConfig = new ValueEncryptionConfig(EncryptionProvider.RSA);
+
     @BeforeClass
     public static void setup() throws Exception {
         JceksKeyStoreProvider kp = new JceksKeyStoreProvider("secret");
@@ -74,11 +80,12 @@ public class FieldLevelEncryptionKeyValueTest {
         SecretKey secretKey = keyGen.generateKey();
         kp.storeKey(aesKeyName, secretKey.getEncoded());
 
-        rsaCryptoProvider = new RSACryptoProvider();
+        rsaCryptoProvider = new RSACryptoProvider(rsaKeyName);
         rsaCryptoProvider.setKeyName(rsaKeyName);
         rsaCryptoProvider.setKeyStoreProvider(kp);
 
-        aes128CryptoProvider = new AES128CryptoProvider();
+        aes128CryptoProvider = new AES128CryptoProvider(kp, aesKeyName);
+
         aes128CryptoProvider.setKeyName(aesKeyName);
         aes128CryptoProvider.setKeyStoreProvider(kp);
 
@@ -107,7 +114,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testStringEncryptAES() {
         JsonDocument document = JsonDocument.create("testStringEncryptAES",
-                JsonObject.create().put("foo", "bar", aes128CryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", "bar", aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -117,7 +124,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testStringEncryptRSA() {
         JsonDocument document = JsonDocument.create("testStringEncryptRSA",
-                JsonObject.create().put("foo", "bar", rsaCryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", "bar", rsaConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -127,7 +134,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testBooleanEncryptAES() {
         JsonDocument document = JsonDocument.create("testBooleanEncryptAES",
-                JsonObject.create().put("foo", true, aes128CryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", true, aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -137,7 +144,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testBooleanEncryptRSA() {
         JsonDocument document = JsonDocument.create("testBooleanEncryptRSA",
-                JsonObject.create().put("foo", true, rsaCryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", true, rsaConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -147,7 +154,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testNullEncryptAES() {
         JsonDocument document = JsonDocument.create("testNullEncryptAES",
-                JsonObject.create().putNull("foo", aes128CryptoProvider.getProviderName()));
+                JsonObject.create().putNull("foo", aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -157,7 +164,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testNullEncryptRSA() {
         JsonDocument document = JsonDocument.create("testNullEncryptRSA",
-                JsonObject.create().putNull("foo", rsaCryptoProvider.getProviderName()));
+                JsonObject.create().putNull("foo", rsaConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -167,7 +174,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testDoubleEncryptAES() {
         JsonDocument document = JsonDocument.create("testDoubleEncryptAES",
-                JsonObject.create().put("foo", (double) 1, aes128CryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", (double) 1, aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -177,7 +184,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testDoubleEncryptRSA() {
         JsonDocument document = JsonDocument.create("testDoubleEncryptRSA",
-                JsonObject.create().put("foo", (double) 1, rsaCryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", (double) 1, rsaConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -187,7 +194,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testIntEncryptAES() {
         JsonDocument document = JsonDocument.create("testIntEncryptAES",
-                JsonObject.create().put("foo", 1, aes128CryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", 1, aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -197,7 +204,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testIntEncryptRSA() {
         JsonObject content =
-                JsonObject.create().put("foo", 1, rsaCryptoProvider.getProviderName());
+                JsonObject.create().put("foo", 1, rsaConfig);
 
         JsonDocument document = JsonDocument.create("testIntEncryptRSA", content);
         bucket.upsert(document);
@@ -209,7 +216,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testLongEncryptAES() {
         JsonDocument document = JsonDocument.create("testLongEncryptAES",
-                JsonObject.create().put("foo", 1L, aes128CryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", 1L, aesConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -219,7 +226,7 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testLongEncryptRSA() {
         JsonDocument document = JsonDocument.create("testLongEncryptRSA",
-                JsonObject.create().put("foo", 1L, rsaCryptoProvider.getProviderName()));
+                JsonObject.create().put("foo", 1L, rsaConfig));
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
         Assert.assertTrue(stored.content().isEncrypted("foo"));
@@ -228,7 +235,8 @@ public class FieldLevelEncryptionKeyValueTest {
 
     @Test
     public void testJsonObjectEncryptAES() {
-        JsonObject content = JsonObject.create().put("foo", JsonObject.create().put("bar", "baz"), aes128CryptoProvider.getProviderName());
+        JsonObject content = JsonObject.create().put("foo", JsonObject.create().put("bar", "baz"),
+                aesConfig);
         JsonDocument document = JsonDocument.create("testJsonObjectEncryptAES",
                 content);
         bucket.upsert(document);
@@ -239,7 +247,8 @@ public class FieldLevelEncryptionKeyValueTest {
 
     @Test
     public void testJsonObjectEncryptRSA() {
-        JsonObject content = JsonObject.create().put("foo", JsonObject.create().put("bar", "baz"), rsaCryptoProvider.getProviderName());
+        JsonObject content = JsonObject.create().put("foo", JsonObject.create().put("bar", "baz"),
+                rsaConfig);
         JsonDocument document = JsonDocument.create("testJsonObjectEncryptRSA",
                 content);
         bucket.upsert(document);
@@ -250,7 +259,8 @@ public class FieldLevelEncryptionKeyValueTest {
 
     @Test
     public void testJsonArrayEncryptAES() {
-        JsonObject content = JsonObject.create().put("foo", JsonArray.create().add("bar").add("baz"), aes128CryptoProvider.getProviderName());
+        JsonObject content = JsonObject.create().put("foo", JsonArray.create().add("bar").add("baz"),
+                aesConfig);
         JsonDocument document = JsonDocument.create("testJsonArrayEncryptAES", content);
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
@@ -260,7 +270,8 @@ public class FieldLevelEncryptionKeyValueTest {
 
     @Test
     public void testJsonArrayEncryptRSA() {
-        JsonObject content = JsonObject.create().put("foo", JsonArray.create().add("bar").add("baz"), rsaCryptoProvider.getProviderName());
+        JsonObject content = JsonObject.create().put("foo", JsonArray.create().add("bar").add("baz"),
+                rsaConfig);
         JsonDocument document = JsonDocument.create("testJsonArrayEncryptRSA", content);
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
@@ -271,7 +282,8 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testNestedJsonObjectEncryptAES() {
         JsonObject content = JsonObject.create().put("foo1", JsonObject.create().put("foo2",
-                JsonObject.create().put("foo3", JsonObject.create().put("foo4", "bar"), aes128CryptoProvider.getProviderName())));
+                JsonObject.create().put("foo3", JsonObject.create().put("foo4", "bar"),
+                        aesConfig)));
         JsonDocument document = JsonDocument.create("testNestedJsonObjectEncryptAES",
                 content);
         bucket.upsert(document);
@@ -282,8 +294,8 @@ public class FieldLevelEncryptionKeyValueTest {
     @Test
     public void testNestedJsonObjectEncryptRSA() {
         JsonObject content = JsonObject.create().put("foo1", JsonObject.create().put("foo2",
-                JsonObject.create().put("foo3", JsonObject.create().put("foo4", "bar", rsaCryptoProvider.getProviderName()))));
-
+                JsonObject.create().put("foo3", JsonObject.create().put("foo4", "bar",
+                        rsaConfig))));
         JsonDocument document = JsonDocument.create("testNestedJsonObjectEncryptRSA", content);
         bucket.upsert(document);
         JsonDocument stored = bucket.get(document);
@@ -312,22 +324,22 @@ public class FieldLevelEncryptionKeyValueTest {
         @Id
         public String id;
 
-        @EncryptedField(provider = "AES-128")
+        @EncryptedField(provider = EncryptionProvider.AES128)
         public String stringa;
 
-        @EncryptedField(provider = "RSA")
+        @EncryptedField(provider = EncryptionProvider.RSA)
         public String stringr;
 
-        @EncryptedField(provider = "AES-128")
+        @EncryptedField(provider = EncryptionProvider.AES128)
         public boolean boola;
 
-        @EncryptedField(provider = "RSA")
+        @EncryptedField(provider = EncryptionProvider.RSA)
         public boolean boolr;
 
-        @EncryptedField(provider = "AES-128")
+        @EncryptedField(provider = EncryptionProvider.AES128)
         public long ia;
 
-        @EncryptedField(provider = "RSA")
+        @EncryptedField(provider = EncryptionProvider.RSA)
         public long ir;
     }
 }

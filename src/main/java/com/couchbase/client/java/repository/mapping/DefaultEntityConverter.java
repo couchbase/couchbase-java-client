@@ -18,6 +18,7 @@ package com.couchbase.client.java.repository.mapping;
 import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.document.json.ValueEncryptionConfig;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +54,7 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             String name = propertyMetadata.name();
             Class<?> type = propertyMetadata.type();
             Object value = propertyMetadata.get(document);
-            String encryptionProvider = propertyMetadata.encryptionProvider();
+            ValueEncryptionConfig valueEncryptionConfig = propertyMetadata.valueEncryptionConfig();
 
             if (value == null
                 || value instanceof String
@@ -61,8 +62,8 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
                 || value instanceof Integer
                 || value instanceof Long
                 || value instanceof Double) {
-                if (encryptionProvider != null) {
-                    content.put(name, value, encryptionProvider);
+                if (valueEncryptionConfig != null) {
+                    content.put(name, value, valueEncryptionConfig);
                 } else {
                     content.put(name, value);
                 }

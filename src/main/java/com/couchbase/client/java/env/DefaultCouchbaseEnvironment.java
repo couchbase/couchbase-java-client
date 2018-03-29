@@ -33,6 +33,7 @@ import com.couchbase.client.core.metrics.MetricsCollectorConfig;
 import com.couchbase.client.core.node.MemcachedHashingStrategy;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.time.Delay;
+import com.couchbase.client.crypto.EncryptionConfig;
 import com.couchbase.client.deps.com.lmax.disruptor.WaitStrategy;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
 import com.couchbase.client.java.AsyncCluster;
@@ -79,6 +80,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long kvTimeout;
     private final long connectTimeout;
     private final boolean dnsSrvEnabled;
+    private final EncryptionConfig encryptionConfig;
 
     protected static String CLIENT_VERSION;
     protected static String CLIENT_GIT_VERSION;
@@ -143,6 +145,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         analyticsTimeout = longPropertyOr("analyticsTimeout", builder.analyticsTimeout);
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout);
         dnsSrvEnabled = booleanPropertyOr("dnsSrvEnabled", builder.dnsSrvEnabled);
+        encryptionConfig = builder.encryptionConfig;
 
         if (queryTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured query timeout is greater than the maximum request lifetime. " +
@@ -198,6 +201,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long analyticsTimeout = ANALYTICS_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
+        private EncryptionConfig encryptionConfig;
 
         public Builder() {
             super();
@@ -244,6 +248,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
 
         public Builder dnsSrvEnabled(boolean dnsSrvEnabled) {
             this.dnsSrvEnabled = dnsSrvEnabled;
+            return this;
+        }
+
+        public Builder encryptionConfig(EncryptionConfig encryptionConfig) {
+            this.encryptionConfig = encryptionConfig;
             return this;
         }
 
@@ -305,6 +314,9 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     }
 
     @Override
+    public EncryptionConfig encryptionConfig() { return encryptionConfig; }
+
+    @Override
     protected StringBuilder dumpParameters(StringBuilder sb) {
         //first dump core's parameters
         super.dumpParameters(sb);
@@ -316,6 +328,9 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         sb.append(", kvTimeout=").append(this.kvTimeout);
         sb.append(", connectTimeout=").append(this.connectTimeout);
         sb.append(", dnsSrvEnabled=").append(this.dnsSrvEnabled);
+        if (this.encryptionConfig() != null) {
+            sb.append(", encryptionConfig=").append(this.encryptionConfig.toString());
+        }
         return sb;
     }
 

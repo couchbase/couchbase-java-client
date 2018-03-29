@@ -15,9 +15,11 @@
  */
 package com.couchbase.client.java.repository.mapping;
 
+import com.couchbase.client.java.document.json.ValueEncryptionConfig;
 import com.couchbase.client.java.repository.annotation.EncryptedField;
 import com.couchbase.client.java.repository.annotation.Id;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 /**
@@ -31,7 +33,7 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
     private final Field fieldReference;
     private final boolean isId;
     private final boolean isField;
-    private String encryptionProvider = null;
+    private ValueEncryptionConfig valueEncryptionConfig;
     private final String name;
     private final String realName;
 
@@ -41,7 +43,14 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
         isId = fieldReference.isAnnotationPresent(Id.class);
         isField = fieldReference.isAnnotationPresent(com.couchbase.client.java.repository.annotation.Field.class);
         if (fieldReference.isAnnotationPresent(EncryptedField.class)) {
-            this.encryptionProvider = fieldReference.getAnnotation(EncryptedField.class).provider();
+            EncryptedField encryptedField = fieldReference.getAnnotation(EncryptedField.class);
+            this.valueEncryptionConfig = new ValueEncryptionConfig(encryptedField.provider());
+            if (!encryptedField.key().isEmpty()) {
+                this.valueEncryptionConfig.addKey(encryptedField.key());
+            }
+            if (!encryptedField.hmac().isEmpty()) {
+                this.valueEncryptionConfig.addHMACKey(encryptedField.hmac());
+            }
         }
         realName = fieldReference.getName();
         name = extractName(fieldReference);
@@ -60,8 +69,8 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
     }
 
     @Override
-    public String encryptionProvider() {
-        return encryptionProvider;
+    public ValueEncryptionConfig valueEncryptionConfig() {
+        return valueEncryptionConfig;
     }
 
     @Override

@@ -17,11 +17,14 @@ package com.couchbase.client.java.document.json;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.encryption.CryptoProvider;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.crypto.AESCryptoProviderBase;
+import com.couchbase.client.crypto.CryptoProvider;
 import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.core.encryption.EncryptionConfig;
+import com.couchbase.client.crypto.EncryptionConfig;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.Serializable;
@@ -50,6 +53,8 @@ public class JsonObject extends JsonValue implements Serializable {
 
     private static final long serialVersionUID = 8817717605659870262L;
 
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(JsonObject.class);
+
     /**
      * The backing {@link Map} for the object.
      */
@@ -58,7 +63,7 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Encryption meta information for the Json values
      */
-    private final Map<String, String> encryptionPathInfo;
+    private final Map<String, ValueEncryptionConfig> encryptionPathInfo;
 
     /**
      * Configuration for decryption, set using the environment
@@ -68,7 +73,7 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Encryption prefix
      */
-    public static final String ENCRYPTION_PREFIX = "__encrypt_";
+    public static final String ENCRYPTION_PREFIX = "__crypt_";
 
     /**
      * Private constructor to create the object.
@@ -77,7 +82,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     private JsonObject() {
         content = new HashMap<String, Object>();
-        encryptionPathInfo = new HashMap<String, String>();
+        encryptionPathInfo = new HashMap<String, ValueEncryptionConfig>();
     }
 
     /**
@@ -85,7 +90,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     private JsonObject(int initialCapacity) {
         content = new HashMap<String, Object>(initialCapacity);
-        encryptionPathInfo = new HashMap<String, String>();
+        encryptionPathInfo = new HashMap<String, ValueEncryptionConfig>();
     }
 
     /**
@@ -222,12 +227,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(final String name, final Object value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(final String name, final Object value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         } else if (value == JsonValue.NULL) {
@@ -250,26 +255,55 @@ public class JsonObject extends JsonValue implements Serializable {
         try {
             String key = object.getString("kid");
             String alg = object.getString("alg");
-            String encrypted = object.getString("payload");
+
             CryptoProvider provider = this.encryptionConfig.getCryptoProvider(alg);
-            if (provider == null && provider.getKeyName().contentEquals(key)) {
+
+            if (provider == null || provider.getProviderName().contentEquals(key)) {
                 throw new Exception("Crypto provider mismatch");
             }
 
-            byte[] decryptedBytes = provider.decrypt(Base64.decode(encrypted));
+            byte[] encryptedBytes;
+            String encryptedValueWithConfig;
+
+            if (object.containsKey("iv")) {
+                encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
+                        + object.getString("iv") + object.getString("ciphertext");
+
+                byte[] encrypted = Base64.decode(object.getString("ciphertext"));
+                byte[] iv = Base64.decode(object.getString("iv"));
+                encryptedBytes = new byte[iv.length + encrypted.length];
+                System.arraycopy(iv, 0, encryptedBytes, 0, iv.length);
+                System.arraycopy(encrypted, 0, encryptedBytes, iv.length, encrypted.length);
+            } else {
+                encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
+                        + object.getString("ciphertext");
+                encryptedBytes = Base64.decode(object.getString("ciphertext"));
+            }
+
+            byte[] signature = Base64.decode(object.getString("sig"));
+            String signatureKey = key;
+            if (provider instanceof AESCryptoProviderBase) {
+                signatureKey = ((AESCryptoProviderBase) provider).getHMACKeyName();
+            }
+
+            if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature, signatureKey)) {
+                throw new SecurityException("Signature check for data integrity failed");
+            }
+
+            byte[] decryptedBytes = provider.decrypt(encryptedBytes);
             String decryptedString = new String(decryptedBytes, Charset.forName("UTF-8"));
             decrypted = JacksonTransformers.MAPPER.readValue(decryptedString, Object.class);
             if (decrypted instanceof Map) {
-                decrypted = JsonObject.from((Map<String, ?>)decrypted);
+                decrypted = JsonObject.from((Map<String, ?>) decrypted);
             } else if (decrypted instanceof List) {
-                decrypted = JsonArray.from((List<?>)decrypted);
+                decrypted = JsonArray.from((List<?>) decrypted);
             }
             return decrypted;
         } catch (Exception ex) {
+            LOGGER.error("Could not decrypt value", ex);
         }
         return decrypted;
     }
-
 
     /**
      * Retrieves the (potential null) content and not casting its type.
@@ -302,12 +336,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(final String name, final String value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(final String name, final String value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -339,12 +373,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, int value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, int value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -386,12 +420,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, long value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, long value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -434,12 +468,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, double value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, double value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -481,12 +515,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, boolean value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, boolean value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -514,10 +548,10 @@ public class JsonObject extends JsonValue implements Serializable {
         }
         content.put(name, value);
         if (value != null) {
-            Map<String, String> paths = value.encryptionPathInfo();
+            Map<String, ValueEncryptionConfig> paths = value.encryptionPathInfo();
             if (paths.size() > 0) {
-                for (Map.Entry<String, String> entry : paths.entrySet()) {
-                    this.encryptionPathInfo.put(name + "/" + entry.getKey(), entry.getValue());
+                for (Map.Entry<String, ValueEncryptionConfig> entry : paths.entrySet()) {
+                    this.encryptionPathInfo.put(name.replace("~", "~0").replace("/", "~1") + "/" + entry.getKey(), entry.getValue());
                 }
                 value.clearEncryptionPaths();
             }
@@ -531,12 +565,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, JsonObject value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, JsonObject value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         }
@@ -561,13 +595,13 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider encryption config.
      * @return the {@link JsonObject}.
      * @see #from(Map)
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, Map<String, ?> value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, Map<String, ?> value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         return put(name, JsonObject.from(value));
     }
 
@@ -599,12 +633,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, JsonArray value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, JsonArray value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -626,12 +660,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, Number value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, Number value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, value);
         return this;
     }
@@ -652,12 +686,12 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}.
      */
     @InterfaceStability.Uncommitted
-    public JsonObject put(String name, List<?> value, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject put(String name, List<?> value, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         return put(name, JsonArray.from(value));
     }
 
@@ -729,12 +763,12 @@ public class JsonObject extends JsonValue implements Serializable {
      * {@link JsonValue#NULL JsonValue.NULL} or a null value explicitly cast to Object.
      *
      * @param name The null field's name.
-     * @param encryptionProvider Crypto provider for encryption.
+     * @param config Crypto provider config for encryption.
      * @return the {@link JsonObject}
      */
     @InterfaceStability.Uncommitted
-    public JsonObject putNull(String name, String encryptionProvider) {
-        this.encryptionPathInfo.put(name, encryptionProvider);
+    public JsonObject putNull(String name, ValueEncryptionConfig config) {
+        addValueEncryptionInfo(name, config);
         content.put(name, null);
         return this;
     }
@@ -869,7 +903,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     @InterfaceStability.Uncommitted
     @InterfaceAudience.Private
-    public Map<String, String> encryptionPathInfo() {
+    public Map<String, ValueEncryptionConfig> encryptionPathInfo() {
         return this.encryptionPathInfo;
     }
 
@@ -927,6 +961,18 @@ public class JsonObject extends JsonValue implements Serializable {
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Cannot convert JsonObject to Json String", e);
         }
+    }
+
+    /**
+     * Escapes for json pointer syntax and adds to the encryption info
+     *
+     * @param path Name of the key
+     * @param config Value encryption configuration
+     */
+    @InterfaceAudience.Private
+    private void addValueEncryptionInfo(String path, ValueEncryptionConfig config) {
+        path = path.replaceAll("~", "~0").replaceAll("/", "~1");
+        this.encryptionPathInfo.put(path, config);
     }
 
     @Override
