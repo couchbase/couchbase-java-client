@@ -64,6 +64,7 @@ public class N1qlParams implements Serializable {
     private Map<String, Object> rawParams;
     private boolean pretty;
     private boolean readonly;
+    private N1qlProfile profile;
 
     private final Map<String, String> credentials;
 
@@ -140,6 +141,10 @@ public class N1qlParams implements Serializable {
 
         if (this.readonly) {
             queryJson.put("readonly", true);
+        }
+
+        if (this.profile != null) {
+            queryJson.put("profile", this.profile.toString());
         }
 
         if (this.rawParams != null) {
@@ -411,6 +416,17 @@ public class N1qlParams implements Serializable {
     }
 
     /**
+     * Specifies if there should be a profile section returned with the request results.
+     *
+     * @param profile the profile param {@link N1qlProfile}.
+     * @return this {@link N1qlParams} for chaining.
+     */
+    public N1qlParams profile(N1qlProfile profile) {
+        this.profile = profile;
+        return this;
+    }
+
+    /**
      * Allows to specify an arbitrary, raw N1QL param.
      *
      * Use with care and only provide options that are supported by the server and are not exposed as part of the
@@ -480,6 +496,7 @@ public class N1qlParams implements Serializable {
         if (mutationState != null ? !mutationState.equals(that.mutationState) : that.mutationState != null)
             return false;
         if (!credentials.equals(that.credentials)) return false;
+        if (profile != that.profile) return false;
         return rawParams != null ? rawParams.equals(that.rawParams) : that.rawParams == null;
     }
 
@@ -500,6 +517,7 @@ public class N1qlParams implements Serializable {
         result = 31 * result + (adhoc ? 1 : 0);
         result = 31 * result + (pretty ? 1 : 0);
         result = 31 * result + (readonly ? 1 : 0);
+        result = 31 * result + (profile != null ? profile.hashCode() : 0);
         return result;
     }
 
@@ -521,6 +539,9 @@ public class N1qlParams implements Serializable {
         sb.append(", rawParams=").append(rawParams);
         if (!credentials.isEmpty())
             sb.append(", credentials=").append(credentials.size());
+        if (profile != null) {
+            sb.append(", profile=").append(profile.toString());
+        }
         sb.append('}');
         return sb.toString();
     }
