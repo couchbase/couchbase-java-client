@@ -15,9 +15,14 @@
  */
 package com.couchbase.client.java.query;
 
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
+
 /**
  * N1ql profile options
  */
+@InterfaceStability.Uncommitted
+@InterfaceAudience.Public
 public enum N1qlProfile {
 
     /**

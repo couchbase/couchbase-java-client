@@ -421,6 +421,7 @@ public class N1qlParams implements Serializable {
      * @param profile the profile param {@link N1qlProfile}.
      * @return this {@link N1qlParams} for chaining.
      */
+    @InterfaceStability.Uncommitted
     public N1qlParams profile(N1qlProfile profile) {
         this.profile = profile;
         return this;
