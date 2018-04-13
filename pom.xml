@@ -382,4 +382,11 @@
         </profile>
     </profiles>
 
+    <repositories>
+        <repository>
+            <id>cb-pre</id>
+            <name>Couchbase Prerelease Repo</name>
+            <url>http://files.couchbase.com/maven2</url>
+        </repository>
+    </repositories>
 </project>
