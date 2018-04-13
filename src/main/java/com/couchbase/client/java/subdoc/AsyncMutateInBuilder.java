@@ -327,7 +327,7 @@ public class AsyncMutateInBuilder {
         return mutationResult.flatMap(new Func1<DocumentFragment<Mutation>, Observable<DocumentFragment<Mutation>>>() {
             @Override
             public Observable<DocumentFragment<Mutation>> call(final DocumentFragment<Mutation> fragment) {
-                return Observe.call(core, bucketName, docId, fragment.cas(), false, fragment.mutationToken(),
+                Observable<DocumentFragment<Mutation>> result = Observe.call(core, bucketName, docId, fragment.cas(), false, fragment.mutationToken(),
                     persistTo.value(), replicateTo.value(),
                     environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, DocumentFragment<Mutation>>() {
@@ -342,12 +342,13 @@ public class AsyncMutateInBuilder {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    })
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                    });
+                if (timeout > 0) {
+                    result = result.timeout(timeout, timeUnit, environment.scheduler());
+                }
+                return result;
             }
         });
-
-
     }
 
     /**
@@ -1774,7 +1775,7 @@ public class AsyncMutateInBuilder {
         return mutation.flatMap(new Func1<DocumentFragment<T>, Observable<DocumentFragment<T>>>() {
             @Override
             public Observable<DocumentFragment<T>> call(final DocumentFragment<T> frag) {
-                return Observe
+                Observable<DocumentFragment<T>> result = Observe
                     .call(core, bucketName, frag.id(), frag.cas(), false, frag.mutationToken(), persistTo.value(), replicateTo.value(),
                         environment.observeIntervalDelay(), environment.retryStrategy())
                     .map(new Func1<Boolean, DocumentFragment<T>>() {
@@ -1790,8 +1791,11 @@ public class AsyncMutateInBuilder {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    })
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                    });
+                if (timeout > 0) {
+                    result = result.timeout(timeout, timeUnit, environment.scheduler());
+                }
+                return result;
             }
         });
     }
