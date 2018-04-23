@@ -82,6 +82,13 @@ public class ConnectionTest  {
     }
 
     @Test
+    public void shouldProvideClusterInfoWithBadHostInBootstrapList() {
+        Cluster cluster = CouchbaseCluster.create("1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4", TestProperties.seedNode());
+        cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
+        cluster.clusterManager().info();
+    }
+
+    @Test
     public void shouldCacheBucketReference() {
         Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
         Bucket bucket1 = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
