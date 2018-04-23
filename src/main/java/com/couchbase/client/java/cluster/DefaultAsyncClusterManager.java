@@ -18,6 +18,8 @@ package com.couchbase.client.java.cluster;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.annotations.InterfaceStability;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.config.BucketsConfigRequest;
 import com.couchbase.client.core.message.config.BucketsConfigResponse;
 import com.couchbase.client.core.message.config.ClusterConfigRequest;
@@ -56,11 +58,13 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 
@@ -543,44 +547,48 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         });
     }
 
+    Observable<Boolean> sendAddNodeRequest(final InetSocketAddress address) {
+        final NetworkAddress networkAddress = NetworkAddress.create(address.getAddress().getHostAddress());
+        return core.<AddNodeResponse>send(new AddNodeRequest(networkAddress))
+                .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
+                    @Override
+                    public Observable<AddServiceResponse> call(AddNodeResponse addNodeResponse) {
+                        if (!addNodeResponse.status().isSuccess()) {
+                            throw new CouchbaseException("Could not enable ClusterManager service to function properly.");
+                        }
+                        int port = environment.sslEnabled() ? environment.bootstrapHttpSslPort() : environment.bootstrapHttpDirectPort();
+                        return core.send(new AddServiceRequest(ServiceType.CONFIG, username, password, port, networkAddress));
+                    }
+                })
+                .map(new Func1<AddServiceResponse, Boolean>() {
+                    @Override
+                    public Boolean call(AddServiceResponse addServiceResponse) {
+                        if (!addServiceResponse.status().isSuccess()) {
+                            throw new CouchbaseException("Could not enable ClusterManager service to function properly.");
+                        }
+                        return true;
+                    }
+                });
+    }
+
     private Observable<Boolean> ensureServiceEnabled() {
         if (connectionString.hosts().isEmpty()) {
             return Observable.error(new IllegalStateException("No host found in the connection string! " + connectionString.toString()));
         }
 
-        return Observable
-            .just(connectionString.hosts().get(0).getAddress().getHostAddress())
-            .map(new Func1<String, NetworkAddress>() {
-                @Override
-                public NetworkAddress call(String hostname) {
-                    return NetworkAddress.create(hostname);
-                }
-            })
-            .flatMap(new Func1<NetworkAddress, Observable<AddServiceResponse>>() {
-                @Override
-                public Observable<AddServiceResponse> call(final NetworkAddress hostname) {
-                    return core
-                        .<AddNodeResponse>send(new AddNodeRequest(hostname))
-                        .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
-                            @Override
-                            public Observable<AddServiceResponse> call(AddNodeResponse response) {
-                                int port = environment.sslEnabled()
-                                    ? environment.bootstrapHttpSslPort() : environment.bootstrapHttpDirectPort();
-                                return core.send(new AddServiceRequest(ServiceType.CONFIG, username, password,
-                                    port, hostname));
-                            }
-                        });
-                }
-            })
-            .map(new Func1<AddServiceResponse, Boolean>() {
-                @Override
-                public Boolean call(AddServiceResponse addServiceResponse) {
-                    if (!addServiceResponse.status().isSuccess()) {
-                        throw new CouchbaseException("Could not enable ClusterManager service to function properly.");
+        final AtomicInteger integer = new AtomicInteger(0);
+        return Observable.just(connectionString.hosts())
+                .flatMap(new Func1<List<InetSocketAddress>, Observable<Boolean>>() {
+                    @Override
+                    public Observable<Boolean> call(List<InetSocketAddress> inetSocketAddresses) {
+                        int hostIndex = integer.getAndIncrement();
+                        if (hostIndex >= connectionString.hosts().size()) {
+                            integer.set(0);
+                            return Observable.error(new CouchbaseException("Could not enable ClusterManager service to function properly."));
+                        }
+                        return sendAddNodeRequest(inetSocketAddresses.get(hostIndex));
                     }
-                    return true;
-                }
-            });
-    }
+                });
 
+    }
 }
