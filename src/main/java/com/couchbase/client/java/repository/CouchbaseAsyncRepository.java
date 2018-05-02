@@ -37,8 +37,12 @@ public class CouchbaseAsyncRepository implements AsyncRepository {
     private final AsyncBucket bucket;
 
     public CouchbaseAsyncRepository(AsyncBucket bucket) {
+        this(bucket, new DefaultEntityConverter());
+    }
+
+    public CouchbaseAsyncRepository(AsyncBucket bucket, EntityConverter converter) {
         this.bucket = bucket;
-        converter = new DefaultEntityConverter();
+        this.converter = converter;
     }
 
     @Override
