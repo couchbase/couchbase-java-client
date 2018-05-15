@@ -49,6 +49,7 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.AuthenticatorException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
+import com.couchbase.client.java.error.AuthenticationException;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.error.MixedAuthenticationException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
@@ -389,8 +390,8 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     @Override
     public Observable<AsyncBucket> openBucket(final String name, final String password,
                                               final List<Transcoder<? extends Document, ?>> transcoders) {
-        if (this.authenticator instanceof PasswordAuthenticator) {
-            return Observable.error(new MixedAuthenticationException("Mixed mode authentication not allowed, use Bucket credentials or User credentials (rbac)"));
+        if (this.authenticator instanceof PasswordAuthenticator || this.authenticator instanceof CertAuthenticator) {
+            return Observable.error(new MixedAuthenticationException("Mixed mode authentication not allowed, use Bucket credentials, User credentials (rbac) or Certificate auth"));
         }
 
         return openBucketInternal(name, name, password, transcoders);
@@ -398,6 +399,10 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
     private Observable<AsyncBucket> openBucketInternal(final String name, final String username, final String password,
                                                        final List<Transcoder<? extends Document, ?>> transcoders) {
+        if (environment.certAuthEnabled() && !(this.authenticator instanceof CertAuthenticator)) {
+            return Observable.error(new AuthenticationException("CertAuthenticator must be used when certAuthEnabled on the Environment"));
+        }
+
         if (name == null || name.isEmpty()) {
             return Observable.error(
                     new IllegalArgumentException("Bucket name is not allowed to be null or empty.")
@@ -521,8 +526,8 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             return this;
         }
         if (this.authenticator != null  && this.authenticator.getClass() != auth.getClass()) {
-            throw new MixedAuthenticationException("Mixed mode authentication not allowed, use either Classic Authenticator " +
-                    "or Password Authenticator");
+            throw new MixedAuthenticationException("Mixed mode authentication not allowed, use either ClassicAuthenticator " +
+                    ", PasswordAuthenticator or CertAuthenticator");
         }
 
         if (this.authenticator instanceof PasswordAuthenticator) {
@@ -531,6 +536,24 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             if (newPa.username() == null) {
                 auth = new PasswordAuthenticator(pa.username(), newPa.password());
             }
+        }
+
+        if (auth instanceof CertAuthenticator) {
+            if (!environment.certAuthEnabled()) {
+                throw new AuthenticationException("CertAuthenticator used, but certAuthEnabled not enabled on " +
+                    "the Environment");
+            }
+
+            if (environment.sslKeystore() == null &&
+                environment.sslTruststore() == null &&
+                (environment.sslKeystoreFile() == null || environment.sslKeystoreFile().isEmpty()) &&
+                (environment.sslTruststoreFile() == null || environment.sslTruststoreFile().isEmpty())) {
+                throw new AuthenticationException("CertAuthenticator used, but neither keystore nor " +
+                    "truststore configured");
+            }
+        } else if (environment.certAuthEnabled()) {
+            throw new AuthenticationException("Only CertAuthenticator can be used when certAuthEnabled on the " +
+                "Environment");
         }
 
         this.authenticator = auth;

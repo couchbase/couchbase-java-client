@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Couchbase, Inc.
+ * Copyright (c) 2018 Couchbase, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,28 @@
  */
 package com.couchbase.client.java.error;
 
-import com.couchbase.client.java.auth.PasswordAuthenticator;
+import com.couchbase.client.core.CouchbaseException;
 
 /**
- * This exception is commonly raised when the {@link PasswordAuthenticator}
- * containing RBAC user credentials and bucket credentials are used together
+ * Describes authentication issues, usually during bootstrap.
  *
- * @author Subhashni Balakrishnan
- * @since 2.4.4
+ * @author Michael Nitschinger
+ * @since 1.6.0
  */
-public class MixedAuthenticationException extends AuthenticationException {
+public class AuthenticationException extends CouchbaseException {
 
-    public MixedAuthenticationException() {
-        super();
+    public AuthenticationException() {
     }
 
-    public MixedAuthenticationException(String message) {
+    public AuthenticationException(String message) {
         super(message);
     }
 
-    public MixedAuthenticationException(String message, Throwable cause) {
+    public AuthenticationException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public MixedAuthenticationException(Throwable cause) {
+    public AuthenticationException(Throwable cause) {
         super(cause);
     }
 }

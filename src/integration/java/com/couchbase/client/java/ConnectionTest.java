@@ -22,7 +22,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.couchbase.client.java.auth.Authenticator;
+import com.couchbase.client.java.auth.CertAuthenticator;
 import com.couchbase.client.java.cluster.ClusterManager;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.AuthenticationException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.error.MixedAuthenticationException;
@@ -128,5 +133,92 @@ public class ConnectionTest  {
 
         assertNotEquals(bucket1.hashCode(), bucket3.hashCode());
         assertFalse(bucket3.isClosed());
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldNotAcceptCertAuthWithoutCertAuthEnabled() {
+        Cluster cluster = null;
+        try {
+            cluster = CouchbaseCluster.create(TestProperties.seedNode());
+            cluster.authenticate(CertAuthenticator.INSTANCE);
+        } finally {
+            if (cluster != null) {
+                cluster.disconnect();
+            }
+        }
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldNotAcceptCertAuthWithoutKeystoreOrTruststore() {
+        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+            .sslEnabled(true)
+            .certAuthEnabled(true)
+            .build();
+        Cluster cluster = null;
+        try {
+            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+            cluster.authenticate(CertAuthenticator.INSTANCE);
+        } finally {
+            if (cluster != null) {
+                cluster.disconnect();
+            }
+            env.shutdown();
+        }
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldNotAcceptOtherAuthenticatorIfCertEnabled() {
+        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+            .sslEnabled(true)
+            .certAuthEnabled(true)
+            .build();
+        Cluster cluster = null;
+        try {
+            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+            cluster.authenticate("foo", "bar");
+        } finally {
+            if (cluster != null) {
+                cluster.disconnect();
+            }
+            env.shutdown();
+        }
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldNotAcceptCertMixedAuth() {
+        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+            .sslEnabled(true)
+            .certAuthEnabled(true)
+            .sslTruststoreFile("some/file/path")
+            .build();
+        Cluster cluster = null;
+        try {
+            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+            cluster.authenticate(CertAuthenticator.INSTANCE);
+            cluster.openBucket(TestProperties.bucket(), "password");
+        } finally {
+            if (cluster != null) {
+                cluster.disconnect();
+            }
+            env.shutdown();
+        }
+    }
+
+    @Test(expected = AuthenticationException.class)
+    public void shouldNotOpenBucketIfCertNotSetProperly() {
+        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+            .sslEnabled(true)
+            .certAuthEnabled(true)
+            .build();
+        Cluster cluster = null;
+        try {
+            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+            cluster.openBucket(TestProperties.bucket());
+        } finally {
+            if (cluster != null) {
+                cluster.disconnect();
+            }
+            env.shutdown();
+        }
     }
 }
