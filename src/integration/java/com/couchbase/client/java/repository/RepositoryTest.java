@@ -17,6 +17,7 @@ package com.couchbase.client.java.repository;
 
 import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.repository.annotation.Field;
 import com.couchbase.client.java.repository.annotation.Id;
 import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
 import com.couchbase.client.java.util.ClusterDependentTest;
@@ -136,6 +137,27 @@ public class RepositoryTest extends ClusterDependentTest {
         repository().upsert(EntityDocument.create(new EntityWithNoNStringId()));
     }
 
+    @Test
+    public void shouldUpsertExtendedEntity() {
+        Child entity = new Child("myid", "myname");
+        EntityDocument<Child> document = EntityDocument.create(entity);
+
+        assertFalse(repository().exists(document));
+        assertEquals(0, document.cas());
+        EntityDocument<Child> stored = repository().upsert(document);
+        assertNotEquals(0, stored.cas());
+        assertEquals(document.content(), stored.content());
+
+        JsonDocument storedRaw = bucket().get(entity.getId());
+        assertEquals(entity.getName(), storedRaw.content().getString("name"));
+
+        EntityDocument<Child> found = repository().get(entity.getId(), Child.class);
+        assertEquals(found.cas(), stored.cas());
+        assertNotEquals(0, found.cas());
+
+        assertTrue(repository().exists(document));
+    }
+
     static class EntityWithoutId {
     }
 
@@ -147,6 +169,38 @@ public class RepositoryTest extends ClusterDependentTest {
     static class EntityWithNoNStringId {
         public @Id
         Date id = new Date();
+    }
+
+
+    public static abstract class Parent {
+         @Id
+         private String id;
+
+         Parent(String id) {
+            this.id = id;
+         }
+
+        public String getId() {
+            return id;
+        }
+    }
+
+    public static class Child extends Parent {
+        @Field
+        private String name;
+
+        public Child() {
+            super(null);
+        }
+
+        public Child(String id, String name) {
+            super(id);
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
 }
