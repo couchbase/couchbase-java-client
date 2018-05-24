@@ -17,6 +17,7 @@ package com.couchbase.client.java.repository.mapping;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,11 +31,11 @@ public class ReflectionBasedEntityMetadata implements EntityMetadata {
     private final List<PropertyMetadata> properties;
     private final PropertyMetadata idProperty;
 
-    public ReflectionBasedEntityMetadata(Class<?> sourceEntity) {
+    public ReflectionBasedEntityMetadata(final Class<?> sourceEntity) {
         properties = new ArrayList<PropertyMetadata>();
 
         PropertyMetadata idProperty = null;
-        for (Field field : sourceEntity.getDeclaredFields()) {
+        for (Field field : getAllDeclaredFields(sourceEntity)) {
             PropertyMetadata property = new ReflectionBasedPropertyMetadata(field);
             properties.add(property);
             if (property.isId()) {
@@ -43,6 +44,24 @@ public class ReflectionBasedEntityMetadata implements EntityMetadata {
         }
 
         this.idProperty = idProperty;
+    }
+
+    /**
+     * Helper method to grab all the declared fields from the given class but also
+     * from its inherited parents!
+     *
+     * @param sourceEntity the source entity to start from.
+     * @return an iterable of found fields.
+     */
+    private static List<Field> getAllDeclaredFields(final Class<?> sourceEntity) {
+        List<Field> fields = new ArrayList<Field>();
+        Class<?> clazz = sourceEntity;
+        while (clazz != null) {
+            Field[] f = clazz.getDeclaredFields();
+            fields.addAll(Arrays.asList(f));
+            clazz = clazz.getSuperclass();
+        }
+        return fields;
     }
 
     @Override
