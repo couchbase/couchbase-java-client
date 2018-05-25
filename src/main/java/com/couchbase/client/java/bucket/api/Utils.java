@@ -22,6 +22,17 @@ import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.CouchbaseResponse;
+<<<<<<< HEAD
+=======
+import com.couchbase.client.core.message.analytics.AnalyticsRequest;
+import com.couchbase.client.core.message.kv.BinaryRequest;
+import com.couchbase.client.core.message.query.QueryRequest;
+import com.couchbase.client.core.message.search.SearchRequest;
+import com.couchbase.client.core.message.view.ViewRequest;
+import com.couchbase.client.core.tracing.ThresholdLogReporter;
+import com.couchbase.client.core.utils.DefaultObjectMapper;
+import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
+>>>>>>> bc1ff501... Update signatures to latest tracing changes.
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -63,6 +74,25 @@ public class Utils {
         }
     }
 
+    /**
+     * Maps the given request to the proper service identifier.
+     */
+    private static String inferOperationPrefix(final CouchbaseRequest request) {
+        if (request instanceof BinaryRequest) {
+            return ThresholdLogReporter.SERVICE_KV + ":";
+        } else if (request instanceof QueryRequest) {
+            return ThresholdLogReporter.SERVICE_N1QL + ":";
+        } else if (request instanceof SearchRequest) {
+            return ThresholdLogReporter.SERVICE_FTS + ":";
+        } else if (request instanceof AnalyticsRequest) {
+            return ThresholdLogReporter.SERVICE_ANALYTICS + ":";
+        } else if (request instanceof ViewRequest) {
+            return ThresholdLogReporter.SERVICE_VIEW + ":";
+        } else {
+            return "";
+        }
+    }
+
     public static <T> Observable<T> applyTimeout(final Observable<T> input, final CouchbaseRequest request,
         final CouchbaseEnvironment environment, final long timeout, final TimeUnit timeUnit) {
         if (timeout > 0) {
@@ -87,7 +117,7 @@ public class Utils {
     }
 
     public static void addRequestSpan(CouchbaseEnvironment env, CouchbaseRequest request, String opName) {
-        if (env.tracingEnabled()) {
+        if (env.operationTracingEnabled()) {
             Scope scope = env.tracer()
                 .buildSpan(opName)
                 .startActive(false);
@@ -98,7 +128,7 @@ public class Utils {
 
     public static void addRequestSpanWithParent(CouchbaseEnvironment env, Span parent, CouchbaseRequest request,
         String opName) {
-        if (env.tracingEnabled()) {
+        if (env.operationTracingEnabled()) {
             Scope scope = env.tracer()
                 .buildSpan(opName)
                 .asChildOf(parent)

@@ -139,7 +139,7 @@ public class Get {
                 content.release();
             }
 
-            if (environment.tracingEnabled()) {
+            if (environment.operationTracingEnabled()) {
                 environment.tracer().scopeManager()
                     .activate(response.request().span(), true)
                     .close();
@@ -177,7 +177,7 @@ public class Get {
                 content.release();
             }
 
-            if (environment.tracingEnabled()) {
+            if (environment.operationTracingEnabled()) {
                 environment.tracer().scopeManager()
                     .activate(response.request().span(), true)
                     .close();
@@ -217,7 +217,7 @@ public class Get {
                 content.release();
             }
 
-            if (environment.tracingEnabled()) {
+            if (environment.operationTracingEnabled()) {
                 environment.tracer().scopeManager()
                     .activate(response.request().span(), true)
                     .close();
@@ -259,7 +259,7 @@ public class Get {
             Transcoder<?, Object> transcoder = (Transcoder<?, Object>) transcoders.get(target);
 
             Scope decodeScope = null;
-            if (environment.tracingEnabled()) {
+            if (environment.operationTracingEnabled()) {
                 decodeScope = environment.tracer()
                     .buildSpan("response_decoding")
                     .asChildOf(response.request().span())
@@ -269,7 +269,7 @@ public class Get {
             D decoded = (D) transcoder.decode(id, response.content(), response.cas(), 0,
                 response.flags(), response.status());
 
-            if (environment.tracingEnabled() && decodeScope != null) {
+            if (environment.operationTracingEnabled() && decodeScope != null) {
                 decodeScope.close();
                 if (decodeScope.span() instanceof ThresholdLogSpan) {
                     decodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_DECODE_MICROS,
@@ -278,7 +278,7 @@ public class Get {
                 }
             }
 
-            if (environment.tracingEnabled()) {
+            if (environment.operationTracingEnabled()) {
                 environment.tracer().scopeManager()
                     .activate(response.request().span(), true)
                     .close();

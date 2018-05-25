@@ -88,7 +88,7 @@ public class ReplicaReader {
             @Override
             public Observable<D> call() {
                 final Span parentSpan;
-                if (environment.tracingEnabled()) {
+                if (environment.operationTracingEnabled()) {
                     Scope scope = environment.tracer()
                       .buildSpan("get_from_replica")
                       .startActive(false);
@@ -126,7 +126,7 @@ public class ReplicaReader {
                 return result.doOnTerminate(new Action0() {
                       @Override
                       public void call() {
-                          if (environment.tracingEnabled() && parentSpan != null) {
+                          if (environment.operationTracingEnabled() && parentSpan != null) {
                               environment.tracer().scopeManager()
                                 .activate(parentSpan, true)
                                 .close();

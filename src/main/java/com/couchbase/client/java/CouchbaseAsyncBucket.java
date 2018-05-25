@@ -2094,7 +2094,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
      * Helper method to start tracing and return the span.
      */
     private Span startTracing(String spanName) {
-        if (!environment.tracingEnabled()) {
+        if (!environment.operationTracingEnabled()) {
             return null;
         }
         Scope scope = environment.tracer()

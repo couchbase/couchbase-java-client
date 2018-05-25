@@ -1274,7 +1274,7 @@ public class AsyncMutateInBuilder {
                                 response.content().release();
                             }
 
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(req.span(), true)
                                     .close();
@@ -1568,7 +1568,7 @@ public class AsyncMutateInBuilder {
             @Override
             public Observable<DocumentFragment<Mutation>> call() {
                 Span requestSpan = null;
-                if (environment.tracingEnabled()) {
+                if (environment.operationTracingEnabled()) {
                     Scope scope = environment.tracer()
                         .buildSpan("subdoc_mutate")
                         .startActive(false);
@@ -1663,7 +1663,7 @@ public class AsyncMutateInBuilder {
                                 response.content().release();
                             }
 
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(response.request().span(), true)
                                     .close();
@@ -1752,7 +1752,7 @@ public class AsyncMutateInBuilder {
                                 }
                             }
                         } finally {
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(response.request().span(), true)
                                     .close();

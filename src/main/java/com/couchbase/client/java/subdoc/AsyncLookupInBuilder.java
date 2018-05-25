@@ -565,7 +565,7 @@ public class AsyncLookupInBuilder {
                             }).doOnTerminate(new Action0() {
                                 @Override
                                 public void call() {
-                                    if (environment.tracingEnabled()) {
+                                    if (environment.operationTracingEnabled()) {
                                         environment.tracer().scopeManager()
                                             .activate(mlr.request().span(), true)
                                             .close();
@@ -609,7 +609,7 @@ public class AsyncLookupInBuilder {
                                     }
 
                                     Scope decodeScope = null;
-                                    if (environment.tracingEnabled()) {
+                                    if (environment.operationTracingEnabled()) {
                                         decodeScope = environment.tracer()
                                             .buildSpan("response_decoding")
                                             .asChildOf(response.request().span())
@@ -619,7 +619,7 @@ public class AsyncLookupInBuilder {
                                     T content = subdocumentTranscoder.decodeWithMessage(response.content(), fragmentType,
                                         "Couldn't decode subget fragment for " + id + "/" + spec.path());
 
-                                    if (environment.tracingEnabled() && decodeScope != null) {
+                                    if (environment.operationTracingEnabled() && decodeScope != null) {
                                         decodeScope.close();
                                         if (decodeScope.span() instanceof ThresholdLogSpan) {
                                             decodeScope.span().setBaggageItem(ThresholdLogReporter.KEY_DECODE_MICROS,
@@ -651,7 +651,7 @@ public class AsyncLookupInBuilder {
                                 }
                             }
                         } finally {
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(response.request().span(), true)
                                     .close();
@@ -703,7 +703,7 @@ public class AsyncLookupInBuilder {
 
                             throw SubdocHelper.commonSubdocErrors(response.status(), id, spec.path());
                         } finally {
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(response.request().span(), true)
                                     .close();
@@ -763,7 +763,7 @@ public class AsyncLookupInBuilder {
                                 }
                             }
                         } finally {
-                            if (environment.tracingEnabled()) {
+                            if (environment.operationTracingEnabled()) {
                                 environment.tracer().scopeManager()
                                     .activate(response.request().span(), true)
                                     .close();

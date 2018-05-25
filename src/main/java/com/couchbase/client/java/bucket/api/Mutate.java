@@ -87,7 +87,7 @@ public class Mutate {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
-                if (env.tracingEnabled()) {
+                if (env.operationTracingEnabled()) {
                     Tracer.SpanBuilder spanBuilder = env.tracer()
                         .buildSpan("insert");
                     if (parent != null) {
@@ -136,7 +136,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -174,7 +174,7 @@ public class Mutate {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
-                if (env.tracingEnabled()) {
+                if (env.operationTracingEnabled()) {
                     Tracer.SpanBuilder spanBuilder = env.tracer()
                         .buildSpan("upsert");
                     if (parent != null) {
@@ -224,7 +224,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -263,7 +263,7 @@ public class Mutate {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
-                if (env.tracingEnabled()) {
+                if (env.operationTracingEnabled()) {
                     Tracer.SpanBuilder spanBuilder = env.tracer()
                         .buildSpan("replace");
                     if (parent != null) {
@@ -312,7 +312,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -372,7 +372,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -424,7 +424,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -475,7 +475,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -528,7 +528,7 @@ public class Mutate {
                             response.content().release();
                         }
 
-                        if (env.tracingEnabled()) {
+                        if (env.operationTracingEnabled()) {
                             env.tracer().scopeManager()
                                 .activate(response.request().span(), true)
                                 .close();
@@ -566,7 +566,7 @@ public class Mutate {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
-                if (env.tracingEnabled()) {
+                if (env.operationTracingEnabled()) {
                     Tracer.SpanBuilder spanBuilder = env.tracer()
                         .buildSpan("append");
                     if (parent != null) {
@@ -650,7 +650,7 @@ public class Mutate {
             @Override
             public Observable<D> call() {
                 Span requestSpan = null;
-                if (env.tracingEnabled()) {
+                if (env.operationTracingEnabled()) {
                     Tracer.SpanBuilder spanBuilder = env.tracer()
                         .buildSpan("prepend");
                     if (parent != null) {
