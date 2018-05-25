@@ -23,17 +23,22 @@ import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.CouchbaseResponse;
 import com.couchbase.client.core.message.analytics.AnalyticsRequest;
+import com.couchbase.client.core.message.config.ConfigRequest;
 import com.couchbase.client.core.message.kv.BinaryRequest;
 import com.couchbase.client.core.message.query.QueryRequest;
 import com.couchbase.client.core.message.search.SearchRequest;
 import com.couchbase.client.core.message.view.ViewRequest;
 import com.couchbase.client.core.tracing.ThresholdLogReporter;
+import com.couchbase.client.core.utils.DefaultObjectMapper;
+import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import rx.Observable;
 import rx.functions.Func1;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -58,32 +63,59 @@ public class Utils {
         return ex;
     }
 
-    public static String formatTimeout(CouchbaseRequest request, long timeout) {
+    /**
+     * This method take the given request and produces the correct additional timeout
+     * information according to the RFC.
+     */
+    static String formatTimeout(final CouchbaseRequest request, final long timeout) {
+        Map<String, Object> fieldMap = new HashMap<String, Object>();
+        fieldMap.put("t", timeout);
+
         if (request != null) {
-            return "localId: " + request.lastLocalId() + ", opId: " + request.operationId() + ", local: "
-                + request.lastLocalSocket()
-                + ", remote: " + request.lastRemoteSocket() + ", timeout: " + timeout + "us";
-        } else {
-            return "localId: unknown, opId: unknown, local: unknown, remote: unknown, timeout: " + timeout + "us";
+            fieldMap.put("s", formatServiceType(request));
+            putIfNotNull(fieldMap, "i", request.operationId());
+            putIfNotNull(fieldMap, "b", request.bucket());
+            putIfNotNull(fieldMap, "c", request.lastLocalId());
+            putIfNotNull(fieldMap, "l", request.lastLocalSocket());
+            putIfNotNull(fieldMap, "r", request.lastRemoteSocket());
+        }
+
+        try {
+            return DefaultObjectMapper.writeValueAsString(fieldMap);
+        } catch (JsonProcessingException e) {
+            LOGGER.warn("Could not format timeout information for request " + request, e);
+            return null;
         }
     }
 
     /**
-     * Maps the given request to the proper service identifier.
+     * Helper method to avoid ugly if/else blocks in {@link #formatTimeout(CouchbaseRequest, long)}.
      */
-    private static String inferOperationPrefix(final CouchbaseRequest request) {
+    private static void putIfNotNull(final Map<String, Object> map, final String key, final Object value) {
+        if (value != null) {
+            map.put(key, value);
+        }
+    }
+
+    /**
+     * Helper method to turn the request into the proper string service type.
+     */
+    private static String formatServiceType(final CouchbaseRequest request) {
         if (request instanceof BinaryRequest) {
-            return ThresholdLogReporter.SERVICE_KV + ":";
+            return ThresholdLogReporter.SERVICE_KV;
         } else if (request instanceof QueryRequest) {
-            return ThresholdLogReporter.SERVICE_N1QL + ":";
-        } else if (request instanceof SearchRequest) {
-            return ThresholdLogReporter.SERVICE_FTS + ":";
-        } else if (request instanceof AnalyticsRequest) {
-            return ThresholdLogReporter.SERVICE_ANALYTICS + ":";
+            return ThresholdLogReporter.SERVICE_N1QL;
         } else if (request instanceof ViewRequest) {
-            return ThresholdLogReporter.SERVICE_VIEW + ":";
+            return ThresholdLogReporter.SERVICE_VIEW;
+        } else if (request instanceof AnalyticsRequest) {
+            return ThresholdLogReporter.SERVICE_ANALYTICS;
+        } else if (request instanceof SearchRequest) {
+            return ThresholdLogReporter.SERVICE_FTS;
+        } else if (request instanceof ConfigRequest) {
+            // Shouldn't be user visible, but just for completeness sake.
+            return "config";
         } else {
-            return "";
+            return "unknown";
         }
     }
 
