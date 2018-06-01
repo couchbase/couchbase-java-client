@@ -22,17 +22,12 @@ import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.core.message.CouchbaseResponse;
-<<<<<<< HEAD
-=======
 import com.couchbase.client.core.message.analytics.AnalyticsRequest;
 import com.couchbase.client.core.message.kv.BinaryRequest;
 import com.couchbase.client.core.message.query.QueryRequest;
 import com.couchbase.client.core.message.search.SearchRequest;
 import com.couchbase.client.core.message.view.ViewRequest;
 import com.couchbase.client.core.tracing.ThresholdLogReporter;
-import com.couchbase.client.core.utils.DefaultObjectMapper;
-import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
->>>>>>> bc1ff501... Update signatures to latest tracing changes.
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -41,7 +36,6 @@ import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 
 @InterfaceAudience.Private
 @InterfaceStability.Uncommitted
