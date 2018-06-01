@@ -326,11 +326,11 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
      */
     private static void seedNodesViaDnsSrv(ConnectionString connectionString,
        CouchbaseEnvironment environment, List<String> seedNodes) {
-        if (connectionString.hosts().size() == 1) {
-            InetSocketAddress lookupNode = connectionString.hosts().get(0);
+        if (connectionString.allHosts().size() == 1) {
+            InetSocketAddress lookupNode = connectionString.allHosts().get(0);
             LOGGER.debug(
                 "Attempting to load DNS SRV records from {}.",
-                connectionString.hosts().get(0)
+                connectionString.allHosts().get(0)
             );
 
             try {
