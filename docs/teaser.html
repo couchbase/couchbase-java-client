@@ -5,9 +5,10 @@
 <pre>
 // Connect to a cluster on localhost
 Cluster cluster = CouchbaseCluster.create();
+cluster.authenticate("username", "password");
 
 // Open the default bucket
-Bucket bucket = cluster.openBucket();
+Bucket bucket = cluster.openBucket("myTestBucket");
 
 // Create a user and insert it
 JsonObject user = JsonObject.empty()
