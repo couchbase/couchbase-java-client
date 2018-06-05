@@ -145,6 +145,7 @@ public class AsyncRawQueryExecutor {
             @Override
             public Observable<RawQueryResponse> call(Subscriber s) {
                 RawQueryRequest request = RawQueryRequest.jsonQuery(query.n1ql().toString(), bucket, username, password, query.params().clientContextId());
+                request.subscriber(s);
                 return core.<RawQueryResponse>send(request);
             }
         }).map(new Func1<RawQueryResponse, T>() {
@@ -217,10 +218,11 @@ public class AsyncRawQueryExecutor {
         final String indexName = query.indexName();
         final AbstractFtsQuery queryPart = query.query();
 
-        return Observable.defer(new Func0<Observable<SearchQueryResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<? extends SearchQueryResponse>>() {
             @Override
-            public Observable<SearchQueryResponse> call() {
+            public Observable<? extends SearchQueryResponse> call(Subscriber subscriber) {
                 SearchQueryRequest request = new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
+                request.subscriber(subscriber);
                 return core.send(request);
             }
         }).map(new Func1<SearchQueryResponse, T>() {

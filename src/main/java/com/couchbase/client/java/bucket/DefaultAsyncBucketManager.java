@@ -120,7 +120,15 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
         return Observable.defer(new Func0<Observable<BucketConfigResponse>>() {
             @Override
             public Observable<BucketConfigResponse> call() {
-                return core.send(new BucketConfigRequest("/pools/default/buckets/", null, bucket, username, password));
+                return deferAndWatch(new Func1<Subscriber, Observable<? extends BucketConfigResponse>>() {
+                    @Override
+                    public Observable<? extends BucketConfigResponse> call(Subscriber subscriber) {
+                        BucketConfigRequest request = new BucketConfigRequest("/pools/default/buckets/",
+                            null, bucket, username, password);
+                        request.subscriber(subscriber);
+                        return core.send(request);
+                    }
+                });
             }
         })
         .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -154,7 +162,14 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
         return Observable.defer(new Func0<Observable<GetDesignDocumentsResponse>>() {
             @Override
             public Observable<GetDesignDocumentsResponse> call() {
-                return core.send(new GetDesignDocumentsRequest(bucket, username, password));
+                return deferAndWatch(new Func1<Subscriber, Observable<? extends GetDesignDocumentsResponse>>() {
+                    @Override
+                    public Observable<? extends GetDesignDocumentsResponse> call(final Subscriber subscriber) {
+                        GetDesignDocumentsRequest request = new GetDesignDocumentsRequest(bucket, username, password);
+                        request.subscriber(subscriber);
+                        return core.send(request);
+                    }
+                });
             }
         })
         .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())

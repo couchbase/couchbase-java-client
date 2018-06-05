@@ -40,6 +40,7 @@ import com.couchbase.client.java.transcoder.Transcoder;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.bucket.api.Utils.addRequestSpanWithParent;
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
  * Helper class to deal with reading from zero to N replicas and returning results.
@@ -101,13 +103,17 @@ public class ReplicaReader {
                 Observable<D> result = assembleRequests(core, id, type, bucket)
                   .flatMap(new Func1<BinaryRequest, Observable<D>>() {
                       @Override
-                      public Observable<D> call(BinaryRequest request) {
+                      public Observable<D> call(final BinaryRequest request) {
                           String name = request instanceof ReplicaGetRequest ? "get_replica" : "get";
                           addRequestSpanWithParent(environment, parentSpan, request, name);
 
-                          Observable<GetResponse> result = core
-                            .<GetResponse>send(request)
-                            .filter(new Get.GetFilter(environment));
+                          Observable<GetResponse> result = deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
+                              @Override
+                              public Observable<GetResponse> call(Subscriber subscriber) {
+                                  request.subscriber(subscriber);
+                                  return core.send(request);
+                              }
+                          }).filter(new Get.GetFilter(environment));
 
                           if (timeout > 0) {
                               // individual timeout to clean out ops at some point

@@ -1266,7 +1266,13 @@ public class AsyncMutateInBuilder {
                     commands
                 );
                 addRequestSpan(environment, req, "subdoc_multi_mutate");
-                return applyTimeout(core.<MultiMutationResponse>send(req)
+                return applyTimeout(deferAndWatch(new Func1<Subscriber, Observable<MultiMutationResponse>>() {
+                        @Override
+                        public Observable<MultiMutationResponse> call(Subscriber subscriber) {
+                            req.subscriber(subscriber);
+                            return core.send(req);
+                        }
+                    })
                     .flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
                         @Override
                         public Observable<DocumentFragment<Mutation>> call(MultiMutationResponse response) {

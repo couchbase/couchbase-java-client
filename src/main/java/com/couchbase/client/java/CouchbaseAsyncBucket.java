@@ -776,12 +776,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncViewResult> query(final ViewQuery query, final long timeout, final TimeUnit timeUnit) {
-        Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
-            @Override
-            public Observable<ViewQueryResponse> call() {
+        final Observable<ViewQueryResponse> source = deferAndWatch(
+            new Func1<Subscriber, Observable<? extends ViewQueryResponse>>() {
+                @Override
+                public Observable<? extends ViewQueryResponse> call(final Subscriber subscriber) {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
                     query.isDevelopment(), query.toQueryString(), query.getKeys(), bucket, username, password);
                 Utils.addRequestSpan(environment, request, "view");
+                request.subscriber(subscriber);
                 return applyTimeout(core.<ViewQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });
@@ -810,12 +812,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             query.serverSideTimeout(environment().searchTimeout(), TimeUnit.MILLISECONDS);
         }
 
-        Observable<SearchQueryResponse> source = Observable.defer(new Func0<Observable<SearchQueryResponse>>() {
-            @Override
-            public Observable<SearchQueryResponse> call() {
+        final Observable<SearchQueryResponse> source = deferAndWatch(
+            new Func1<Subscriber, Observable<? extends SearchQueryResponse>>() {
+                @Override
+                public Observable<? extends SearchQueryResponse> call(Subscriber subscriber) {
                 final SearchQueryRequest request =
                     new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
                 Utils.addRequestSpan(environment, request, "search");
+                request.subscriber(subscriber);
                 return applyTimeout(core.<SearchQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });
@@ -847,12 +851,14 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncSpatialViewResult> query(final SpatialViewQuery query, final long timeout, final TimeUnit timeUnit) {
-        Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
-            @Override
-            public Observable<ViewQueryResponse> call() {
+        final Observable<ViewQueryResponse> source = deferAndWatch(
+            new Func1<Subscriber, Observable<? extends ViewQueryResponse>>() {
+                @Override
+                public Observable<? extends ViewQueryResponse> call(Subscriber subscriber) {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
                     query.isDevelopment(), true, query.toString(), null, bucket, username, password);
                 addRequestSpan(environment, request, "spatial_view");
+                request.subscriber(subscriber);
                 return applyTimeout(core.<ViewQueryResponse>send(request), request, environment, timeout, timeUnit);
             }
         });

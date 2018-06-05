@@ -26,6 +26,7 @@ import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import io.opentracing.tag.Tags;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func6;
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
 import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 public class AnalyticsQueryExecutor {
 
@@ -53,15 +55,16 @@ public class AnalyticsQueryExecutor {
 
     public Observable<AsyncAnalyticsQueryResult> execute(final AnalyticsQuery query, final CouchbaseEnvironment env,
                                                          final long timeout, final TimeUnit timeUnit) {
-        return Observable.defer(new Func0<Observable<GenericAnalyticsResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<GenericAnalyticsResponse>>() {
             @Override
-            public Observable<GenericAnalyticsResponse> call() {
+            public Observable<GenericAnalyticsResponse> call(final Subscriber subscriber) {
                 GenericAnalyticsRequest request = GenericAnalyticsRequest
                     .jsonQuery(query.query().toString(), bucket, username, password);
                 Utils.addRequestSpan(env, request, "analytics");
                 if (env.operationTracingEnabled()) {
                     request.span().setTag(Tags.DB_STATEMENT.getKey(), query.statement());
                 }
+                request.subscriber(subscriber);
                 return applyTimeout(core.<GenericAnalyticsResponse>send(request), request, env, timeout, timeUnit);
             }
         }).flatMap(new Func1<GenericAnalyticsResponse, Observable<AsyncAnalyticsQueryResult>>() {
