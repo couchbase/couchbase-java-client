@@ -1038,9 +1038,9 @@ public class AsyncMutateInBuilder {
             }
         }
 
-        Observable<DocumentFragment<Mutation>> mutations = Observable.defer(new Func0<Observable<MutationCommand>>() {
+        Observable<DocumentFragment<Mutation>> mutations = deferAndWatch(new Func1<Subscriber, Observable<MultiMutationResponse>>() {
             @Override
-            public Observable<MutationCommand> call() {
+            public Observable<MultiMutationResponse> call(Subscriber s) {
                 List<ByteBuf> bufList = new ArrayList<ByteBuf>(mutationSpecs.size());
                 final List<MutationCommand> commands = new ArrayList<MutationCommand>(mutationSpecs.size());
 
@@ -1063,15 +1063,11 @@ public class AsyncMutateInBuilder {
                         }
                     }
                 }
-                return Observable.from(commands);
-            }
-        }).toList()
-        .flatMap(new Func1<List<MutationCommand>, Observable<MultiMutationResponse>>(){
-            @Override
-            public Observable<MultiMutationResponse> call(List<MutationCommand> mutationCommands) {
-                return core.send(new SubMultiMutationRequest(docId, bucketName,
+                SubMultiMutationRequest request = new SubMultiMutationRequest(docId, bucketName,
                         expiry, cas, SubMultiMutationDocOptionsBuilder.builder().upsertDocument(upsertDocument).insertDocument(insertDocument),
-                        mutationCommands));
+                        commands);
+                request.subscriber(s);
+                return core.send(request);
             }
         }).flatMap(new Func1<MultiMutationResponse, Observable<DocumentFragment<Mutation>>>() {
             @Override

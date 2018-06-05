@@ -31,6 +31,7 @@ import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.deps.io.netty.util.CharsetUtil;
 import com.couchbase.client.java.error.FlushDisabledException;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 
 /**
@@ -118,8 +120,15 @@ public class BucketFlusher {
             .from(FLUSH_MARKERS)
             .flatMap(new Func1<String, Observable<UpsertResponse>>() {
                 @Override
-                public Observable<UpsertResponse> call(String id) {
-                    return core.send(new UpsertRequest(id, Unpooled.copiedBuffer(id, CharsetUtil.UTF_8), bucket));
+                public Observable<UpsertResponse> call(final String id) {
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends UpsertResponse>>() {
+                        @Override
+                        public Observable<? extends UpsertResponse> call(final Subscriber subscriber) {
+                            UpsertRequest request = new UpsertRequest(id, Unpooled.copiedBuffer(id, CharsetUtil.UTF_8), bucket);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .doOnNext(new Action1<UpsertResponse>() {
@@ -152,8 +161,14 @@ public class BucketFlusher {
      * @return an observable indicating if done (true) or polling needs to happen (false).
      */
     private static Observable<Boolean> initiateFlush(final ClusterFacade core, final String bucket, final String username, final String password) {
-        return core
-            .<FlushResponse>send(new FlushRequest(bucket, username, password))
+        return deferAndWatch(new Func1<Subscriber, Observable<FlushResponse>>() {
+                @Override
+                public Observable<FlushResponse> call(Subscriber subscriber) {
+                    FlushRequest request = new FlushRequest(bucket, username, password);
+                    request.subscriber(subscriber);
+                    return core.send(request);
+                }
+            })
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
             .map(new Func1<FlushResponse, Boolean>() {
                 @Override
@@ -182,8 +197,15 @@ public class BucketFlusher {
             .from(FLUSH_MARKERS)
             .flatMap(new Func1<String, Observable<GetResponse>>() {
                 @Override
-                public Observable<GetResponse> call(String id) {
-                    return core.send(new GetRequest(id, bucket));
+                public Observable<GetResponse> call(final String id) {
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends GetResponse>>() {
+                        @Override
+                        public Observable<? extends GetResponse> call(Subscriber subscriber) {
+                            GetRequest request = new GetRequest(id, bucket);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .reduce(0, new Func2<Integer, GetResponse, Integer>() {

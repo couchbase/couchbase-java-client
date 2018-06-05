@@ -23,7 +23,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import rx.Observable;
-import rx.functions.Func0;
+import rx.Subscriber;
 import rx.functions.Func1;
 import rx.functions.Func6;
 
@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 public class AnalyticsQueryExecutor {
 
@@ -47,10 +48,13 @@ public class AnalyticsQueryExecutor {
     }
 
     public Observable<AsyncAnalyticsQueryResult> execute(final AnalyticsQuery query) {
-        return Observable.defer(new Func0<Observable<GenericAnalyticsResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<GenericAnalyticsResponse>>() {
             @Override
-            public Observable<GenericAnalyticsResponse> call() {
-                return core.send(GenericAnalyticsRequest.jsonQuery(query.query().toString(), bucket, username, password));
+            public Observable<GenericAnalyticsResponse> call(final Subscriber subscriber) {
+                GenericAnalyticsRequest request = GenericAnalyticsRequest
+                        .jsonQuery(query.query().toString(), bucket, username, password);
+                request.subscriber(subscriber);
+                return core.<GenericAnalyticsResponse>send(request);
             }
         }).flatMap(new Func1<GenericAnalyticsResponse, Observable<AsyncAnalyticsQueryResult>>() {
             @Override

@@ -33,11 +33,13 @@ import com.couchbase.client.java.ReplicaMode;
 import com.couchbase.client.java.error.CouchbaseOutOfMemoryException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.util.ArrayList;
 import java.util.List;
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
  * Helper class to deal with reading from zero to N replicas and returning results.
@@ -70,15 +72,19 @@ public class ReplicaReader {
     public static Observable<GetResponse> read(final ClusterFacade core, final String id,
         final ReplicaMode type, final String bucket) {
         return assembleRequests(core, id, type, bucket)
-            .flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
-                @Override
-                public Observable<GetResponse> call(BinaryRequest request) {
-                    return core
-                        .<GetResponse>send(request)
-                        .filter(GetResponseFilter.INSTANCE)
-                        .onErrorResumeNext(GetResponseErrorHandler.INSTANCE);
-                }
-            });
+                .flatMap(new Func1<BinaryRequest, Observable<GetResponse>>() {
+                    @Override
+                    public Observable<GetResponse> call(final BinaryRequest request) {
+                        Observable<GetResponse> result = deferAndWatch(new Func1<Subscriber, Observable<GetResponse>>() {
+                            @Override
+                            public Observable<GetResponse> call(Subscriber subscriber) {
+                                request.subscriber(subscriber);
+                                return core.send(request);
+                            }
+                        }).filter(GetResponseFilter.INSTANCE);
+                        return result.onErrorResumeNext(GetResponseErrorHandler.INSTANCE);
+                    }
+                });
     }
 
     /**

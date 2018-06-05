@@ -53,6 +53,7 @@ import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
 import com.couchbase.client.java.util.LRUCache;
 import rx.Observable;
+import rx.Subscriber;
 import rx.exceptions.CompositeException;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.couchbase.client.java.CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER;
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
  * A class used to execute various N1QL queries.
@@ -186,10 +188,12 @@ public class N1qlQueryExecutor {
      * @return a result containing all found rows and additional information.
      */
     protected Observable<AsyncN1qlQueryResult> executeQuery(final N1qlQuery query) {
-        return Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<GenericQueryResponse>>() {
             @Override
-            public Observable<GenericQueryResponse> call() {
-                return core.send(createN1qlRequest(query, bucket, username, password, null));
+            public Observable<GenericQueryResponse> call(Subscriber subscriber) {
+                GenericQueryRequest request = createN1qlRequest(query, bucket, username, password, null);
+                request.subscriber(subscriber);
+                return core.send(request);
             }
         }).flatMap(new Func1<GenericQueryResponse, Observable<AsyncN1qlQueryResult>>() {
             @Override
@@ -439,10 +443,12 @@ public class N1qlQueryExecutor {
 
         if (isEncodedPlanEnabled()) {
             //we'll include the encodedPlan in each EXECUTE, so we don't broadcast during PREPARE
-            source = Observable.defer(new Func0<Observable<GenericQueryResponse>>() {
+            source = deferAndWatch(new Func1<Subscriber, Observable<? extends GenericQueryResponse>>() {
                 @Override
-                public Observable<GenericQueryResponse> call() {
-                    return core.send(createN1qlRequest(query, bucket, username, password, null));
+                public Observable<? extends GenericQueryResponse> call(Subscriber subscriber) {
+                    GenericQueryRequest request = createN1qlRequest(query, bucket, username, password, null);
+                    request.subscriber(subscriber);
+                    return core.send(request);
                 }
             });
         } else {
@@ -470,8 +476,14 @@ public class N1qlQueryExecutor {
                 public Observable<GenericQueryResponse> call(NodeInfo nodeInfo) {
                     try {
                         InetAddress hostname = InetAddress.getByName(nodeInfo.hostname().address());
-                        GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, hostname);
-                        return core.send(req);
+                        final GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, hostname);
+                        return deferAndWatch(new Func1<Subscriber, Observable<? extends GenericQueryResponse>>() {
+                            @Override
+                            public Observable<? extends GenericQueryResponse> call(Subscriber subscriber) {
+                                req.subscriber(subscriber);
+                                return core.send(req);
+                            }
+                        });
                     } catch (UnknownHostException e) {
                         return Observable.error(e);
                     }

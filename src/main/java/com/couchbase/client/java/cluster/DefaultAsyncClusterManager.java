@@ -55,6 +55,7 @@ import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.error.TranscodingException;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
@@ -66,6 +67,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 import static com.couchbase.client.java.util.retry.RetryBuilder.any;
 
 public class DefaultAsyncClusterManager implements AsyncClusterManager {
@@ -108,7 +110,14 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             .flatMap(new Func1<Boolean, Observable<ClusterConfigResponse>>() {
                 @Override
                 public Observable<ClusterConfigResponse> call(Boolean aBoolean) {
-                    return core.send(new ClusterConfigRequest(username, password));
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends ClusterConfigResponse>>() {
+                        @Override
+                        public Observable<? extends ClusterConfigResponse> call(Subscriber subscriber) {
+                            ClusterConfigRequest request = new ClusterConfigRequest(username, password);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -142,7 +151,14 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             .flatMap(new Func1<Boolean, Observable<BucketsConfigResponse>>() {
                 @Override
                 public Observable<BucketsConfigResponse> call(Boolean aBoolean) {
-                    return core.send(new BucketsConfigRequest(username, password));
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends BucketsConfigResponse>>() {
+                        @Override
+                        public Observable<? extends BucketsConfigResponse> call(Subscriber subscriber) {
+                            BucketsConfigRequest request = new BucketsConfigRequest(username, password);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -235,7 +251,14 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                 .flatMap(new Func1<Boolean, Observable<RemoveBucketResponse>>() {
                     @Override
                     public Observable<RemoveBucketResponse> call(Boolean aBoolean) {
-                        return core.send(new RemoveBucketRequest(name, username, password));
+                        return deferAndWatch(new Func1<Subscriber, Observable<? extends RemoveBucketResponse>>() {
+                            @Override
+                            public Observable<? extends RemoveBucketResponse> call(Subscriber subscriber) {
+                                RemoveBucketRequest request = new RemoveBucketRequest(name, username, password);
+                                request.subscriber(subscriber);
+                                return core.send(request);
+                            }
+                        });
                     }
                 })
                 .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -262,7 +285,14 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             }).flatMap(new Func1<Boolean, Observable<InsertBucketResponse>>() {
                 @Override
                 public Observable<InsertBucketResponse> call(Boolean exists) {
-                    return core.send(new InsertBucketRequest(payload, username, password));
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends InsertBucketResponse>>() {
+                        @Override
+                        public Observable<? extends InsertBucketResponse> call(Subscriber subscriber) {
+                            InsertBucketRequest request = new InsertBucketRequest(payload, username, password);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -292,7 +322,15 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
             }).flatMap(new Func1<Boolean, Observable<UpdateBucketResponse>>() {
                 @Override
                 public Observable<UpdateBucketResponse> call(Boolean exists) {
-                    return core.send(new UpdateBucketRequest(settings.name(), payload, username, password));
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends UpdateBucketResponse>>() {
+                        @Override
+                        public Observable<? extends UpdateBucketResponse> call(Subscriber subscriber) {
+                            UpdateBucketRequest request = new UpdateBucketRequest(
+                                settings.name(), payload, username, password);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
                 }
             })
             .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
@@ -311,48 +349,64 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     public Observable<Boolean> upsertUser(final AuthDomain domain, final String userid, final UserSettings userSettings) {
         final String payload = getUserSettingsPayload(userSettings);
         return ensureServiceEnabled()
-                        .flatMap(new Func1<Boolean, Observable<UpsertUserResponse>>() {
-                            @Override
-                            public Observable<UpsertUserResponse> call(Boolean aBoolean) {
-                                return core.send(new UpsertUserRequest(username, password, domain.alias(), userid, payload));
-                            }
-                        })
-                        .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
-                        .map(new Func1<UpsertUserResponse, Boolean>() {
-                            @Override
-                            public Boolean call(UpsertUserResponse response) {
-                                if (!response.status().isSuccess()) {
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append("Could not update user: ");
-                                    sb.append(response.status());
-                                    if (response.message().length() > 0) {
-                                        sb.append(", ");
-                                        sb.append("msg: ");
-                                        sb.append(response.message());
-                                    }
-                                    throw new CouchbaseException(sb.toString());
-                                }
-                                return true;
-                            }
-                        });
+            .flatMap(new Func1<Boolean, Observable<UpsertUserResponse>>() {
+                @Override
+                public Observable<UpsertUserResponse> call(Boolean aBoolean) {
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends UpsertUserResponse>>() {
+                        @Override
+                        public Observable<? extends UpsertUserResponse> call(Subscriber subscriber) {
+                            UpsertUserRequest request = new UpsertUserRequest(
+                                username, password, domain.alias(), userid, payload);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
+                }
+            })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+            .map(new Func1<UpsertUserResponse, Boolean>() {
+                @Override
+                public Boolean call(UpsertUserResponse response) {
+                    if (!response.status().isSuccess()) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Could not update user: ");
+                        sb.append(response.status());
+                        if (response.message().length() > 0) {
+                            sb.append(", ");
+                            sb.append("msg: ");
+                            sb.append(response.message());
+                        }
+                        throw new CouchbaseException(sb.toString());
+                    }
+                    return true;
+                }
+            });
     }
 
     @Override
     public Observable<Boolean> removeUser(final AuthDomain domain, final String userid) {
         return ensureServiceEnabled()
-                        .flatMap(new Func1<Boolean, Observable<RemoveUserResponse>>() {
-                            @Override
-                            public Observable<RemoveUserResponse> call(Boolean aBoolean) {
-                                return core.send(new RemoveUserRequest(username, password, domain.alias(), userid));
-                            }
-                        })
-                        .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
-                        .map(new Func1<RemoveUserResponse, Boolean>() {
-                            @Override
-                            public Boolean call(RemoveUserResponse response) {
-                                return response.status().isSuccess();
-                            }
-                        });
+            .flatMap(new Func1<Boolean, Observable<RemoveUserResponse>>() {
+                @Override
+                public Observable<RemoveUserResponse> call(Boolean aBoolean) {
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends RemoveUserResponse>>() {
+                        @Override
+                        public Observable<? extends RemoveUserResponse> call(Subscriber subscriber) {
+                            RemoveUserRequest request = new RemoveUserRequest(
+                                username, password, domain.alias(), userid);
+                            request.subscriber(subscriber);
+                            return core.send(request);
+                        }
+                    });
+                }
+            })
+            .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())
+            .map(new Func1<RemoveUserResponse, Boolean>() {
+                @Override
+                public Boolean call(RemoveUserResponse response) {
+                    return response.status().isSuccess();
+                }
+            });
     }
 
     @Override
@@ -366,11 +420,16 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                 .flatMap(new Func1<Boolean, Observable<GetUsersResponse>>() {
                     @Override
                     public Observable<GetUsersResponse> call(Boolean aBoolean) {
-                        if (userid == null || userid.isEmpty()) {
-                            return core.send(GetUsersRequest.usersFromDomain(username, password, domain.alias()));
-                        } else {
-                            return core.send(GetUsersRequest.user(username, password, domain.alias(), userid));
-                        }
+                        final GetUsersRequest request = (userid == null || userid.isEmpty())
+                            ? GetUsersRequest.usersFromDomain(username, password, domain.alias())
+                            : GetUsersRequest.user(username, password, domain.alias(), userid);
+                        return deferAndWatch(new Func1<Subscriber, Observable<? extends GetUsersResponse>>() {
+                            @Override
+                            public Observable<? extends GetUsersResponse> call(Subscriber subscriber) {
+                                request.subscriber(subscriber);
+                                return core.send(request);
+                            }
+                        });
                     }
                 })
                 .retryWhen(any().delay(Delay.fixed(100, TimeUnit.MILLISECONDS)).max(Integer.MAX_VALUE).build())

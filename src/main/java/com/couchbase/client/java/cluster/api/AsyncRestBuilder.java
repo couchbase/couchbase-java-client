@@ -30,7 +30,11 @@ import com.couchbase.client.deps.io.netty.handler.codec.http.HttpMethod;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func0;
+import rx.functions.Func1;
+
+import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 /**
  * A builder class to incrementally construct REST API requests and execute
@@ -234,12 +238,13 @@ public class AsyncRestBuilder implements RestBuilderMarker {
      * @return an {@link Observable} of the result of the API call, which is a {@link RestApiResponse}.
      */
     public Observable<RestApiResponse> execute() {
-        return Observable.defer(new Func0<Observable<RestApiResponse>>() {
+        return deferAndWatch(new Func1<Subscriber, Observable<? extends RestApiResponse>>() {
             @Override
-            public Observable<RestApiResponse> call() {
+            public Observable<? extends RestApiResponse> call(Subscriber subscriber) {
                 RestApiRequest apiRequest = asRequest();
                 LOGGER.debug("Executing Cluster API request {} on {}", apiRequest.method(), apiRequest.pathWithParameters());
-                return core.send(asRequest());
+                apiRequest.subscriber(subscriber);
+                return core.send(apiRequest);
             }
         });
     }

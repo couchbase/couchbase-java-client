@@ -813,11 +813,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncViewResult> query(final ViewQuery query) {
-        Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
+        Observable<ViewQueryResponse> source = deferAndWatch(new Func1<Subscriber, Observable<ViewQueryResponse>>() {
             @Override
-            public Observable<ViewQueryResponse> call() {
+            public Observable<ViewQueryResponse> call(Subscriber subscriber) {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
                     query.isDevelopment(), query.toQueryString(), query.getKeys(), bucket, username, password);
+                request.subscriber(subscriber);
                 return core.send(request);
             }
         });
@@ -841,11 +842,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             query.serverSideTimeout(environment().searchTimeout(), TimeUnit.MILLISECONDS);
         }
 
-        Observable<SearchQueryResponse> source = Observable.defer(new Func0<Observable<SearchQueryResponse>>() {
+        Observable<SearchQueryResponse> source = deferAndWatch(new Func1<Subscriber, Observable<SearchQueryResponse>>() {
             @Override
-            public Observable<SearchQueryResponse> call() {
+            public Observable<SearchQueryResponse> call(Subscriber subscriber) {
                 final SearchQueryRequest request =
-                    new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
+                        new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
+                request.subscriber(subscriber);
                 return core.send(request);
             }
         });
@@ -872,11 +874,12 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncSpatialViewResult> query(final SpatialViewQuery query) {
-        Observable<ViewQueryResponse> source = Observable.defer(new Func0<Observable<ViewQueryResponse>>() {
+        Observable<ViewQueryResponse> source = deferAndWatch(new Func1<Subscriber, Observable<ViewQueryResponse>>() {
             @Override
-            public Observable<ViewQueryResponse> call() {
+            public Observable<ViewQueryResponse> call(Subscriber subscriber) {
                 final ViewQueryRequest request = new ViewQueryRequest(query.getDesign(), query.getView(),
-                    query.isDevelopment(), true, query.toString(), null, bucket, username, password);
+                        query.isDevelopment(), true, query.toString(), null, bucket, username, password);
+                request.subscriber(subscriber);
                 return core.send(request);
             }
         });
