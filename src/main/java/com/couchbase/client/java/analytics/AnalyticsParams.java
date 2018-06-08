@@ -24,6 +24,9 @@ import com.couchbase.client.java.query.N1qlParams;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.N1qlParams.durationToN1qlFormat;
 
 /**
  * Parameters for Analytics Queries.
@@ -37,6 +40,7 @@ public class AnalyticsParams implements Serializable {
 
     private static final long serialVersionUID = 8888370260267213836L;
 
+    private String serverSideTimeout;
     private String clientContextId;
     private Map<String, Object> rawParams;
 
@@ -47,6 +51,10 @@ public class AnalyticsParams implements Serializable {
      * @param queryJson the Analytics query
      */
     public void injectParams(JsonObject queryJson) {
+        if (this.serverSideTimeout != null) {
+            queryJson.put("timeout", this.serverSideTimeout);
+        }
+
         if (this.clientContextId != null) {
             queryJson.put("client_context_id", this.clientContextId);
         }
@@ -74,6 +82,18 @@ public class AnalyticsParams implements Serializable {
     }
 
     /**
+     * Sets a maximum timeout for processing on the server side.
+     *
+     * @param timeout the duration of the timeout.
+     * @param unit the unit of the timeout, from nanoseconds to hours.
+     * @return this {@link AnalyticsParams} for chaining.
+     */
+    public AnalyticsParams serverSideTimeout(long timeout, TimeUnit unit) {
+        this.serverSideTimeout = durationToN1qlFormat(timeout, unit);
+        return this;
+    }
+
+    /**
      * Allows to specify an arbitrary, raw Analytics param.
      *
      * Use with care and only provide options that are supported by the server and are not exposed as part of the
@@ -95,6 +115,15 @@ public class AnalyticsParams implements Serializable {
 
         rawParams.put(name, value);
         return this;
+    }
+
+    /**
+     * Helper method to check if a custom server side timeout has been applied on the params.
+     *
+     * @return true if it has, false otherwise.
+     */
+    public boolean hasServerSideTimeout() {
+        return serverSideTimeout != null;
     }
 
     /**

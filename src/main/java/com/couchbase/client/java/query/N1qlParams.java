@@ -158,7 +158,11 @@ public class N1qlParams implements Serializable {
         }
     }
 
-    private static String durationToN1qlFormat(long duration, TimeUnit unit) {
+    /**
+     * Helper method to convert a duration into the n1ql (golang) format.
+     * @return
+     */
+    public static String durationToN1qlFormat(long duration, TimeUnit unit) {
         switch (unit) {
             case NANOSECONDS:
                 return duration + "ns";

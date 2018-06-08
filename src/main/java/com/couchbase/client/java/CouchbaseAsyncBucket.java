@@ -901,11 +901,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncAnalyticsQueryResult> query(final AnalyticsQuery query, long timeout, TimeUnit timeUnit) {
-      /* TODO once exposed on the server
         if (!query.params().hasServerSideTimeout()) {
-            query.params().serverSideTimeout(environment().queryTimeout(), TimeUnit.MILLISECONDS);
+            query.params().serverSideTimeout(timeout, timeUnit);
         }
-        */
         return analyticsQueryExecutor.execute(query, environment, timeout, timeUnit);
     }
 
