@@ -17,14 +17,13 @@ package com.couchbase.client.java.document.json;
 
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.core.logging.CouchbaseLogger;
-import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
-import com.couchbase.client.crypto.AESCryptoProviderBase;
-import com.couchbase.client.crypto.CryptoProvider;
+import com.couchbase.client.encryption.CryptoProvider;
 import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
+import com.couchbase.client.encryption.CryptoManager;
+import com.couchbase.client.encryption.errors.CryptoProviderDecryptFailedException;
+import com.couchbase.client.encryption.errors.CryptoProviderNameNotFoundException;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.crypto.EncryptionConfig;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.Serializable;
@@ -53,8 +52,6 @@ public class JsonObject extends JsonValue implements Serializable {
 
     private static final long serialVersionUID = 8817717605659870262L;
 
-    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(JsonObject.class);
-
     /**
      * The backing {@link Map} for the object.
      */
@@ -63,12 +60,12 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Encryption meta information for the Json values
      */
-    private final Map<String, ValueEncryptionConfig> encryptionPathInfo;
+    private volatile Map<String, String> encryptionPathInfo;
 
     /**
      * Configuration for decryption, set using the environment
      */
-    private EncryptionConfig encryptionConfig;
+    private volatile CryptoManager cryptoManager;
 
     /**
      * Encryption prefix
@@ -82,7 +79,6 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     private JsonObject() {
         content = new HashMap<String, Object>();
-        encryptionPathInfo = new HashMap<String, ValueEncryptionConfig>();
     }
 
     /**
@@ -90,7 +86,6 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     private JsonObject(int initialCapacity) {
         content = new HashMap<String, Object>(initialCapacity);
-        encryptionPathInfo = new HashMap<String, ValueEncryptionConfig>();
     }
 
     /**
@@ -221,18 +216,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link Object} value identified by the field name.
+     * Stores the {@link Object} value as encrypted identified by the field name.
      *
      * Note that the value is checked and a {@link IllegalArgumentException} is thrown if not supported.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(final String name, final Object value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(final String name, final Object value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         } else if (value == JsonValue.NULL) {
@@ -248,18 +242,24 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Decrypt value if the name starts with "__encrypt_"
      */
-    @InterfaceStability.Uncommitted
-    private Object decrypt(JsonObject object) {
-        Object decrypted = null;
+    private Object decrypt(JsonObject object, String providerName) throws Exception {
+        Object decrypted;
 
-        try {
             String key = object.getString("kid");
             String alg = object.getString("alg");
 
-            CryptoProvider provider = this.encryptionConfig.getCryptoProvider(alg);
+            CryptoProvider provider = this.cryptoManager.getProvider(providerName);
 
-            if (provider == null || provider.getProviderName().contentEquals(key)) {
-                throw new Exception("Crypto provider mismatch");
+            if (provider == null) {
+                throw new CryptoProviderNameNotFoundException();
+            }
+
+            if (!provider.checkAlgorithmNameMatch(alg)) {
+                throw new CryptoProviderDecryptFailedException("Crypto provider algorithm name mismatch");
+            }
+
+            if (!key.contentEquals(provider.getKeyStoreProvider().publicKeyName())) {
+                throw new CryptoProviderDecryptFailedException("Public key mismatch");
             }
 
             byte[] encryptedBytes;
@@ -280,14 +280,12 @@ public class JsonObject extends JsonValue implements Serializable {
                 encryptedBytes = Base64.decode(object.getString("ciphertext"));
             }
 
-            byte[] signature = Base64.decode(object.getString("sig"));
-            String signatureKey = key;
-            if (provider instanceof AESCryptoProviderBase) {
-                signatureKey = ((AESCryptoProviderBase) provider).getHMACKeyName();
-            }
+            if (object.containsKey("sig")) {
+                byte[] signature = Base64.decode(object.getString("sig"));
 
-            if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature, signatureKey)) {
-                throw new SecurityException("Signature check for data integrity failed");
+                if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature)) {
+                    throw new SecurityException("Signature check for data integrity failed");
+                }
             }
 
             byte[] decryptedBytes = provider.decrypt(encryptedBytes);
@@ -299,10 +297,6 @@ public class JsonObject extends JsonValue implements Serializable {
                 decrypted = JsonArray.from((List<?>) decrypted);
             }
             return decrypted;
-        } catch (Exception ex) {
-            LOGGER.error("Could not decrypt value", ex);
-        }
-        return decrypted;
     }
 
     /**
@@ -311,12 +305,19 @@ public class JsonObject extends JsonValue implements Serializable {
      * @param name the key of the field.
      * @return the value of the field, or null if it does not exist.
      */
-    @InterfaceStability.Uncommitted
     public Object get(final String name) {
-        if (content.containsKey(ENCRYPTION_PREFIX + name)) {
-            return decrypt((JsonObject) content.get(ENCRYPTION_PREFIX + name));
-        }
         return content.get(name);
+    }
+
+    /**
+     * Retrieve and decrypt content and not casting its type
+     *
+     * @param name the key of the field
+     * @param providerName the crypto algorithm provider name
+     * @return the value of the field, or null if it does not exist
+     */
+    public Object getAndDecrypt(final String name, String providerName) throws Exception {
+        return decrypt((JsonObject) content.get(ENCRYPTION_PREFIX + name), providerName);
     }
 
     /**
@@ -332,16 +333,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link String} value identified by the field name.
+     * Stores a {@link String} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName the crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(final String name, final String value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(final String name, final String value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -357,6 +357,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link String}.
+     *
+     * @param name the name of the field.
+     * @param providerName the crypto provider name for decryption.
+     * @return the result or null if it does not exist.
+     */
+    public String getAndDecryptString(String name, String providerName) throws Exception {
+        return (String) getAndDecrypt(name, providerName);
+    }
+
+    /**
      * Stores a {@link Integer} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -369,16 +380,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link Integer} value identified by the field name.
+     * Stores a {@link Integer} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, int value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, int value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -404,6 +414,28 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link Integer}.
+     *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
+     * @param name the name of the field.
+     * @param providerName crypto provider name for decryption.
+     * @return the result or null if it does not exist.
+     */
+    @InterfaceStability.Committed
+    public Integer getAndDecryptInt(String name, String providerName) throws Exception {
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) getAndDecrypt(name, providerName);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Integer) {
+            return (Integer) number;
+        } else {
+            return number.intValue(); //autoboxing to Integer
+        }
+    }
+
+    /**
      * Stores a {@link Long} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -416,16 +448,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link Long} value identified by the field name.
+     * Stores a {@link Long} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, long value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, long value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -451,6 +482,27 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link Long}.
+     *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
+     * @param name the name of the field.
+     * @param providerName the crypto provider name for decryption
+     * @return the result or null if it does not exist.
+     */
+    public Long getAndDecryptLong(String name, String providerName) throws Exception {
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) getAndDecrypt(name, providerName);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Long) {
+            return (Long) number;
+        } else {
+            return number.longValue(); //autoboxing to Long
+        }
+    }
+
+    /**
      * Stores a {@link Double} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -462,18 +514,16 @@ public class JsonObject extends JsonValue implements Serializable {
         return this;
     }
 
-
     /**
-     * Stores a {@link Double} value identified by the field name.
+     * Stores a {@link Double} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, double value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, double value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -499,6 +549,27 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the value from the field name and casts it to {@link Double}.
+     *
+     * Note that if value was stored as another numerical type, some truncation or rounding may occur.
+     *
+     * @param name the name of the field.
+     * @param providerName the crypto provider name for decryption
+     * @return the result or null if it does not exist.
+     */
+    public Double getAndDecryptDouble(String name, String providerName) throws Exception {
+        //let it fail in the more general case where it isn't actually a number
+        Number number = (Number) getAndDecrypt(name, providerName);
+        if (number == null) {
+            return null;
+        } else if (number instanceof Double) {
+            return (Double) number;
+        } else {
+            return number.doubleValue(); //autoboxing to Double
+        }
+    }
+
+    /**
      * Stores a {@link Boolean} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -511,16 +582,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link Boolean} value identified by the field name.
+     * Stores a {@link Boolean} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, boolean value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, boolean value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -536,6 +606,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link Boolean}.
+     *
+     * @param name the name of the field.
+     * @param providerName the provider name of the field.
+     * @return the result or null if it does not exist.
+     */
+    public Boolean getAndDecryptBoolean(String name, String providerName) throws Exception {
+        return (Boolean) getAndDecrypt(name, providerName);
+    }
+
+    /**
      * Stores a {@link JsonObject} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -548,10 +629,10 @@ public class JsonObject extends JsonValue implements Serializable {
         }
         content.put(name, value);
         if (value != null) {
-            Map<String, ValueEncryptionConfig> paths = value.encryptionPathInfo();
-            if (paths.size() > 0) {
-                for (Map.Entry<String, ValueEncryptionConfig> entry : paths.entrySet()) {
-                    this.encryptionPathInfo.put(name.replace("~", "~0").replace("/", "~1") + "/" + entry.getKey(), entry.getValue());
+            Map<String, String> paths = value.encryptionPathInfo();
+            if (paths != null && !paths.isEmpty()) {
+                for (Map.Entry<String, String> entry : paths.entrySet()) {
+                    addValueEncryptionInfo(name.replace("~", "~0").replace("/", "~1") + "/" + entry.getKey(), entry.getValue(), false);
                 }
                 value.clearEncryptionPaths();
             }
@@ -561,16 +642,15 @@ public class JsonObject extends JsonValue implements Serializable {
 
 
     /**
-     * Stores a {@link JsonObject} value identified by the field name.
+     * Stores a {@link JsonObject} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, JsonObject value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, JsonObject value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
         }
@@ -591,17 +671,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Attempt to convert a {@link Map} to a {@link JsonObject} value and store it, identified by the field name.
+     * Attempt to convert a {@link Map} to a {@link JsonObject} value and store it,
+     * as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider encryption config.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      * @see #from(Map)
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, Map<String, ?> value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, Map<String, ?> value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         return put(name, JsonObject.from(value));
     }
 
@@ -616,6 +696,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link JsonObject}.
+     *
+     * @param name the name of the field.
+     * @param providerName Crypto provider name for decryption
+     * @return the result or null if it does not exist.
+     */
+    public JsonObject getAndDecryptObject(String name, String providerName) throws Exception {
+        return (JsonObject) getAndDecrypt(name, providerName);
+    }
+
+    /**
      * Stores a {@link JsonArray} value identified by the field name.
      *
      * @param name the name of the JSON field.
@@ -627,18 +718,16 @@ public class JsonObject extends JsonValue implements Serializable {
         return this;
     }
 
-
     /**
-     * Stores a {@link JsonArray} value identified by the field name.
+     * Stores a {@link JsonArray} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName the crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, JsonArray value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, JsonArray value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -656,16 +745,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link Number} value identified by the field name.
+     * Stores a {@link Number} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, Number value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, Number value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, value);
         return this;
     }
@@ -682,16 +770,15 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
-     * Stores a {@link JsonArray} value identified by the field name.
+     * Stores a {@link JsonArray} value as encrypted identified by the field name.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
-     * @param config Crypto provider config for encryption.
+     * @param providerName the crypto provider name for encryption.
      * @return the {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject put(String name, List<?> value, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putAndEncrypt(String name, List<?> value, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         return put(name, JsonArray.from(value));
     }
 
@@ -706,6 +793,17 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link JsonArray}.
+     *
+     * @param name the name of the field.
+     * @param providerName crypto provider name for decryption.
+     * @return the result or null if it does not exist.
+     */
+    public JsonArray getAndDecryptArray(String name, String providerName) throws Exception {
+        return (JsonArray) getAndDecrypt(name, providerName);
+    }
+
+    /**
      * Retrieves the value from the field name and casts it to {@link BigInteger}.
      *
      * @param name the name of the field.
@@ -713,6 +811,17 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public BigInteger getBigInteger(String name) {
         return (BigInteger) content.get(name);
+    }
+
+    /**
+     * Retrieves the decrypted value from the field name and casts it to {@link BigInteger}.
+     *
+     * @param name the name of the field.
+     * @param providerName crypto provider name for decryption.
+     * @return the result or null if it does not exist.
+     */
+    public BigInteger getAndDecryptBigInteger(String name, String providerName) throws Exception {
+        return (BigInteger) getAndDecrypt(name, providerName);
     }
 
     /**
@@ -732,6 +841,23 @@ public class JsonObject extends JsonValue implements Serializable {
     }
 
     /**
+     * Retrieves the decrypted value from the field name and casts it to {@link BigDecimal}.
+     *
+     * @param name the name of the field.
+     * @param providerName crypto provider for decryption
+     * @return the result or null if it does not exist.
+     */
+    public BigDecimal getAndDecryptBigDecimal(String name, String providerName) throws Exception {
+        Object found = getAndDecrypt(name, providerName);
+        if (found == null) {
+            return null;
+        } else if (found instanceof Double) {
+            return new BigDecimal((Double) found);
+        }
+        return (BigDecimal) found;
+    }
+
+    /**
      * Retrieves the value from the field name and casts it to {@link Number}.
      *
      * @param name the name of the field.
@@ -739,6 +865,17 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public Number getNumber(String name) {
         return (Number) content.get(name);
+    }
+
+    /**
+     * Retrieves the decrypted value from the field name and casts it to {@link Number}.
+     *
+     * @param name the name of the field.
+     * @param providerName the crypto provider name for decryption
+     * @return the result or null if it does not exist.
+     */
+    public Number getAndDecryptNumber(String name, String providerName) throws Exception {
+        return (Number) getAndDecrypt(name, providerName);
     }
 
     /**
@@ -757,18 +894,17 @@ public class JsonObject extends JsonValue implements Serializable {
 
 
     /**
-     * Store a null value identified by the field's name.
+     * Store a null value as encrypted identified by the field's name.
      *
      * This method is equivalent to calling {@link #put(String, Object)} with either
      * {@link JsonValue#NULL JsonValue.NULL} or a null value explicitly cast to Object.
      *
      * @param name The null field's name.
-     * @param config Crypto provider config for encryption.
+     * @param providerName Crypto provider name for encryption.
      * @return the {@link JsonObject}
      */
-    @InterfaceStability.Uncommitted
-    public JsonObject putNull(String name, ValueEncryptionConfig config) {
-        addValueEncryptionInfo(name, config);
+    public JsonObject putNullAndEncrypt(String name, String providerName) {
+        addValueEncryptionInfo(name, providerName, true);
         content.put(name, null);
         return this;
     }
@@ -781,7 +917,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public JsonObject removeKey(String name) {
         content.remove(name);
-        if (this.encryptionPathInfo.entrySet().contains(name)) {
+        if (this.encryptionPathInfo != null && this.encryptionPathInfo.entrySet().contains(name)) {
             this.encryptionPathInfo.remove(name);
         }
         return this;
@@ -836,20 +972,19 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @return the content copied as a {@link Map}.
      */
-    @InterfaceStability.Uncommitted
-    public Map<String, Object> toDecryptedMap() {
+    public Map<String, Object> toDecryptedMap(String providerName) throws Exception {
         Map<String, Object> copy = new HashMap<String, Object>(content.size());
         for (Map.Entry<String, Object> entry : content.entrySet()) {
             Object content = entry.getValue();
             String key = entry.getKey();
            if (entry.getKey().startsWith(ENCRYPTION_PREFIX)) {
-                content = decrypt((JsonObject) entry.getValue());
+                content = decrypt((JsonObject) entry.getValue(), providerName);
                 key = key.replace(ENCRYPTION_PREFIX, "");
             }
             if (content instanceof JsonObject) {
                JsonObject value = (JsonObject)content;
-               value.setEncryptionConfig(this.encryptionConfig);
-               copy.put(key,  ((JsonObject) content).toDecryptedMap());
+               value.setCryptoManager(this.cryptoManager);
+               copy.put(key,  ((JsonObject) content).toDecryptedMap(providerName));
             } else if (content instanceof JsonArray) {
                 copy.put(key, ((JsonArray) content).toList());
             } else {
@@ -893,7 +1028,6 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @param name the key name of the field.
      */
-    @InterfaceStability.Uncommitted
     public boolean isEncrypted(final String name) {
         return this.containsKey(ENCRYPTION_PREFIX + name);
     }
@@ -901,37 +1035,36 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Get the encryption list to merge path with parent
      */
-    @InterfaceStability.Uncommitted
     @InterfaceAudience.Private
-    public Map<String, ValueEncryptionConfig> encryptionPathInfo() {
+    public Map<String, String> encryptionPathInfo() {
         return this.encryptionPathInfo;
     }
 
     /**
      * Clear the encryption paths
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     @InterfaceAudience.Private
     public void clearEncryptionPaths() {
-        this.encryptionPathInfo.clear();
+        if (this.encryptionPathInfo != null) {
+            this.encryptionPathInfo.clear();
+        }
     }
 
     /**
      * Set the encryption configuration for decryption
      */
-    @InterfaceStability.Uncommitted
     @InterfaceAudience.Private
-    public void setEncryptionConfig(EncryptionConfig config) {
-        this.encryptionConfig = config;
+    public void setCryptoManager(CryptoManager cryptoManager) {
+        this.cryptoManager = cryptoManager;
     }
 
     /**
      * Get the encryption configuration for decryption
      */
-    @InterfaceStability.Uncommitted
     @InterfaceAudience.Private
-    public EncryptionConfig getEncryptionConfig() {
-        return this.encryptionConfig;
+    public CryptoManager getCryptoManager() {
+        return this.cryptoManager;
     }
 
     /**
@@ -953,26 +1086,26 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * @return the decrypted JSON string representing this {@link JsonObject}.
      */
-    @InterfaceStability.Uncommitted
-    public String toDecryptedString() {
-        try {
-            Map<String,Object> mapData = this.toDecryptedMap();
-            return JacksonTransformers.MAPPER.writeValueAsString(JsonObject.from(mapData));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Cannot convert JsonObject to Json String", e);
-        }
+    public String toDecryptedString(String providerName) throws Exception {
+        Map<String,Object> mapData = this.toDecryptedMap(providerName);
+        return JacksonTransformers.MAPPER.writeValueAsString(JsonObject.from(mapData));
     }
 
     /**
-     * Escapes for json pointer syntax and adds to the encryption info
+     * Adds to the encryption info with optional escape for json pointer syntax
      *
      * @param path Name of the key
-     * @param config Value encryption configuration
+     * @param providerName Value encryption configuration
      */
     @InterfaceAudience.Private
-    private void addValueEncryptionInfo(String path, ValueEncryptionConfig config) {
-        path = path.replaceAll("~", "~0").replaceAll("/", "~1");
-        this.encryptionPathInfo.put(path, config);
+    private void addValueEncryptionInfo(String path, String providerName, boolean escape) {
+        if (escape) {
+            path = path.replaceAll("~", "~0").replaceAll("/", "~1");
+        }
+        if (this.encryptionPathInfo == null) {
+            this.encryptionPathInfo = new HashMap<String, String>();
+        }
+        this.encryptionPathInfo.put(path, providerName);
     }
 
     @Override

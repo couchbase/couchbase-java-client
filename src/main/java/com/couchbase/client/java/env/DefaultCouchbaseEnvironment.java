@@ -33,9 +33,9 @@ import com.couchbase.client.core.metrics.MetricsCollectorConfig;
 import com.couchbase.client.core.node.MemcachedHashingStrategy;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.time.Delay;
-import com.couchbase.client.crypto.EncryptionConfig;
 import com.couchbase.client.deps.com.lmax.disruptor.WaitStrategy;
 import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
+import com.couchbase.client.encryption.CryptoManager;
 import com.couchbase.client.java.AsyncCluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import rx.Scheduler;
@@ -80,7 +80,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long kvTimeout;
     private final long connectTimeout;
     private final boolean dnsSrvEnabled;
-    private final EncryptionConfig encryptionConfig;
+    private final CryptoManager cryptoManager;
 
     protected static String CLIENT_VERSION;
     protected static String CLIENT_GIT_VERSION;
@@ -145,7 +145,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         analyticsTimeout = longPropertyOr("analyticsTimeout", builder.analyticsTimeout);
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout);
         dnsSrvEnabled = booleanPropertyOr("dnsSrvEnabled", builder.dnsSrvEnabled);
-        encryptionConfig = builder.encryptionConfig;
+        cryptoManager = builder.cryptoManager;
 
         if (queryTimeout > maxRequestLifetime()) {
             LOGGER.warn("The configured query timeout is greater than the maximum request lifetime. " +
@@ -201,7 +201,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long analyticsTimeout = ANALYTICS_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
-        private EncryptionConfig encryptionConfig;
+        private CryptoManager cryptoManager;
 
         public Builder() {
             super();
@@ -251,8 +251,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
             return this;
         }
 
-        public Builder encryptionConfig(EncryptionConfig encryptionConfig) {
-            this.encryptionConfig = encryptionConfig;
+        public Builder cryptoManager(CryptoManager cryptoManager) {
+            this.cryptoManager = cryptoManager;
             return this;
         }
 
@@ -314,7 +314,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     }
 
     @Override
-    public EncryptionConfig encryptionConfig() { return encryptionConfig; }
+    public CryptoManager cryptoManager() { return cryptoManager; }
 
     @Override
     protected StringBuilder dumpParameters(StringBuilder sb) {
@@ -328,8 +328,8 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         sb.append(", kvTimeout=").append(this.kvTimeout);
         sb.append(", connectTimeout=").append(this.connectTimeout);
         sb.append(", dnsSrvEnabled=").append(this.dnsSrvEnabled);
-        if (this.encryptionConfig() != null) {
-            sb.append(", encryptionConfig=").append(this.encryptionConfig.toString());
+        if (this.cryptoManager() != null) {
+            sb.append(", cryptoManager=").append(this.cryptoManager.toString());
         }
         return sb;
     }

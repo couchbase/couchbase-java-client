@@ -18,7 +18,7 @@ package com.couchbase.client.java.env;
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.env.CoreEnvironment;
-import com.couchbase.client.crypto.EncryptionConfig;
+import com.couchbase.client.encryption.CryptoManager;
 import com.couchbase.client.java.Cluster;
 
 /**
@@ -113,9 +113,9 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
 
 
     /**
-     * Returns the encryption configuration set.
+     * Returns the crypto manager set.
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     @InterfaceAudience.Public
-    EncryptionConfig encryptionConfig();
+    CryptoManager cryptoManager();
 }

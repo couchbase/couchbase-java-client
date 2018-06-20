@@ -15,8 +15,6 @@
  */
 package com.couchbase.client.java.repository.mapping;
 
-import com.couchbase.client.java.document.json.ValueEncryptionConfig;
-
 /**
  * Represents the metadata for a document property inside an {@link EntityMetadata}.
  *
@@ -39,13 +37,6 @@ public interface PropertyMetadata {
      */
     boolean isField();
 
-
-    /**
-     * If this property represents an encrypted field in the Document.
-     *
-     * @return encryption config if present
-     */
-    ValueEncryptionConfig valueEncryptionConfig();
 
     /**
      * The name of the field inside the document.
@@ -86,4 +77,11 @@ public interface PropertyMetadata {
      * @return the type.
      */
     Class<?> type();
+
+    /**
+     * Get the encryption crypto algorithm provider name set
+     *
+     * @return the crypto provider name
+     */
+    String encryptionProviderName();
 }

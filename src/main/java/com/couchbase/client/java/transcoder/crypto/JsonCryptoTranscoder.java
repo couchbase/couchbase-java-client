@@ -19,8 +19,6 @@ package com.couchbase.client.java.transcoder.crypto;
 import java.util.Map;
 
 import com.couchbase.client.core.annotations.InterfaceStability;
-import com.couchbase.client.crypto.AESCryptoProviderBase;
-import com.couchbase.client.crypto.CryptoProvider;
 import com.couchbase.client.core.lang.Tuple;
 import com.couchbase.client.core.lang.Tuple2;
 import com.couchbase.client.core.message.ResponseStatus;
@@ -28,11 +26,12 @@ import com.couchbase.client.core.message.kv.MutationToken;
 import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.encryption.CryptoManager;
+import com.couchbase.client.encryption.CryptoProvider;
+import com.couchbase.client.encryption.errors.CryptoProviderEncryptFailedException;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.crypto.EncryptionConfig;
-import com.couchbase.client.java.document.json.ValueEncryptionConfig;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.AbstractTranscoder;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
@@ -45,80 +44,81 @@ import com.couchbase.client.java.transcoder.TranscoderUtils;
  * @author Subhashni Balakrishnan
  * @since 2.6.0
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 public class JsonCryptoTranscoder extends AbstractTranscoder<JsonDocument, JsonObject> {
 
-    private final EncryptionConfig encryptionConfig;
+    private final CryptoManager cryptoManager;
 
-    public JsonCryptoTranscoder(EncryptionConfig config) {
-        this.encryptionConfig = config;
+    public JsonCryptoTranscoder(CryptoManager cryptoManager) {
+        this.cryptoManager = cryptoManager;
     }
 
     private void addEncryption(JsonObject content) throws Exception {
-        if (content == null || content.encryptionPathInfo().size() == 0) {
-            return;
+        try {
+            if (content == null || content.encryptionPathInfo().size() == 0) {
+                return;
+            }
+
+            for (Map.Entry<String, String> entry : content.encryptionPathInfo().entrySet()) {
+                String providerName = entry.getValue();
+                String[] pathSplit = entry.getKey().split("/");
+
+                int i = 0;
+                for (String path : pathSplit) {
+                    pathSplit[i] = path.replace("~1", "/").replace("~0", "~");
+                    i++;
+                }
+
+                JsonObject parent = content;
+                String lastPointer = pathSplit[pathSplit.length - 1];
+
+                for (i = 0; i < pathSplit.length - 1; i++) {
+                    parent = (JsonObject) parent.get(pathSplit[i]);
+                }
+
+                Object value = parent.get(lastPointer);
+                JsonObject encryptedVal = JsonObject.create();
+                CryptoProvider provider = this.cryptoManager.getProvider(providerName);
+                if (provider == null) {
+                    throw new Exception("Encryption provider does not exist in the configuration");
+                }
+
+                String jsonValue = JacksonTransformers.MAPPER.writeValueAsString(value);
+
+                encryptedVal.put("kid", provider.getKeyStoreProvider().publicKeyName());
+                encryptedVal.put("alg", provider.getProviderName());
+
+                int ivSize = provider.getIVSize();
+                String encryptedValString;
+
+                if (ivSize > 0) {
+                    byte[] encryptedwithIv = provider.encrypt(jsonValue.getBytes());
+                    byte[] iv = new byte[ivSize];
+                    byte[] encryptedBytes = new byte[encryptedwithIv.length - ivSize];
+                    System.arraycopy(encryptedwithIv, 0, iv, 0, ivSize);
+                    System.arraycopy(encryptedwithIv, ivSize, encryptedBytes, 0, encryptedBytes.length);
+                    encryptedVal.put("iv", Base64.encode(iv));
+                    encryptedVal.put("ciphertext", Base64.encode(encryptedBytes));
+                    encryptedValString = encryptedVal.getString("kid") + encryptedVal.getString("alg")
+                            + encryptedVal.getString("iv") + encryptedVal.getString("ciphertext");
+                } else {
+                    encryptedVal.put("ciphertext", Base64.encode(provider.encrypt(jsonValue.getBytes())));
+                    encryptedValString = encryptedVal.getString("kid") + encryptedVal.getString("alg")
+                            + encryptedVal.getString("ciphertext");
+                }
+                byte[] signature = provider.getSignature(encryptedValString.getBytes());
+
+                if (signature != null) {
+                    encryptedVal.put("sig", Base64.encode(provider.getSignature(encryptedValString.getBytes())));
+                }
+
+                parent.removeKey(lastPointer);
+                parent.put(JsonObject.ENCRYPTION_PREFIX + lastPointer, encryptedVal);
+            }
+            content.clearEncryptionPaths();
+        } catch (Exception ex) {
+            throw new CryptoProviderEncryptFailedException(ex.getMessage(), ex);
         }
-
-        for (Map.Entry<String, ValueEncryptionConfig> entry:content.encryptionPathInfo().entrySet()) {
-            ValueEncryptionConfig config = entry.getValue();
-            String[] pathSplit = entry.getKey().split("/");
-
-            int i = 0;
-            for (String path: pathSplit) {
-                pathSplit[i] = path.replace("~1", "/").replace("~0", "~");
-                i++;
-            }
-
-            JsonObject parent = content;
-            String lastPointer = pathSplit[pathSplit.length-1];
-
-            for (i=0; i < pathSplit.length-1; i++) {
-                parent = (JsonObject) parent.get(pathSplit[i]);
-            }
-
-            Object value = parent.get(lastPointer);
-            JsonObject encryptedVal = JsonObject.create();
-            CryptoProvider provider = this.encryptionConfig.getCryptoProvider(config.getProvider().toString());
-            if (provider == null) {
-                throw new Exception("Encryption provider does not exist in the configuration");
-            }
-
-            String jsonValue = JacksonTransformers.MAPPER.writeValueAsString(value);
-            String keyName = config.getEncryptionKey() != null ? config.getEncryptionKey() : provider.getKeyName();
-
-            encryptedVal.put("kid", keyName);
-            encryptedVal.put("alg", config.getProvider().toString());
-
-            int ivSize = provider.getIVSize();
-            String encryptedValString;
-
-            if (ivSize > 0) {
-                byte[] encryptedwithIv = provider.encrypt(jsonValue.getBytes());
-                byte[] iv = new byte[ivSize];
-                byte[] encryptedBytes = new byte[encryptedwithIv.length - ivSize];
-                System.arraycopy(encryptedwithIv, 0, iv, 0, ivSize);
-                System.arraycopy(encryptedwithIv, ivSize, encryptedBytes, 0, encryptedBytes.length);
-                encryptedVal.put("iv", Base64.encode(iv));
-                encryptedVal.put("ciphertext", Base64.encode(encryptedBytes));
-                encryptedValString = encryptedVal.getString("kid") + encryptedVal.getString("alg")
-                        + encryptedVal.getString("iv") + encryptedVal.getString("ciphertext");
-            } else {
-                encryptedVal.put("ciphertext", Base64.encode(provider.encrypt(jsonValue.getBytes())));
-                encryptedValString = encryptedVal.getString("kid") + encryptedVal.getString("alg")
-                        + encryptedVal.getString("ciphertext");
-            }
-
-            String signatureKeyName = keyName;
-            if (provider instanceof AESCryptoProviderBase) {
-                signatureKeyName = config.getHMACKey() != null ? config.getHMACKey() : ((AESCryptoProviderBase) provider).getHMACKeyName();
-            }
-
-            encryptedVal.put("sig", Base64.encode(provider.getSignature(encryptedValString.getBytes(), signatureKeyName)));
-            parent.removeKey(lastPointer);
-            parent.put(JsonObject.ENCRYPTION_PREFIX + lastPointer, encryptedVal);
-        }
-
-        content.clearEncryptionPaths();
     }
 
     @Override
@@ -140,14 +140,14 @@ public class JsonCryptoTranscoder extends AbstractTranscoder<JsonDocument, JsonO
                     + "id " + id + ", could not decode.");
         }
         JsonObject jsonObject = byteBufToJsonObject(content);
-        jsonObject.setEncryptionConfig(encryptionConfig);
+        jsonObject.setCryptoManager(cryptoManager);
         return newDocument(id, expiry, jsonObject, cas);
     }
 
     @Override
     public JsonDocument newDocument(String id, int expiry, JsonObject content, long cas) {
         JsonDocument document = JsonDocument.create(id, expiry, content, cas);
-        document.content().setEncryptionConfig(this.encryptionConfig);
+        document.content().setCryptoManager(this.cryptoManager);
         return document;
     }
 

@@ -201,8 +201,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
         transcoders = new ConcurrentHashMap<Class<? extends Document>, Transcoder<? extends Document, ?>>();
 
-        if (environment != null && environment.encryptionConfig() != null) {
-            JsonCryptoTranscoder transcoder = new JsonCryptoTranscoder(environment.encryptionConfig());
+        if (environment != null && environment.cryptoManager() != null) {
+            JsonCryptoTranscoder transcoder = new JsonCryptoTranscoder(environment.cryptoManager());
             transcoders.put(transcoder.documentType(), transcoder);
         } else {
             transcoders.put(JSON_OBJECT_TRANSCODER.documentType(), JSON_OBJECT_TRANSCODER);

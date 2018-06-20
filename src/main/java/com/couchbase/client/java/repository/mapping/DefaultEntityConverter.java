@@ -18,7 +18,6 @@ package com.couchbase.client.java.repository.mapping;
 import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.document.json.ValueEncryptionConfig;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +53,7 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             String name = propertyMetadata.name();
             Class<?> type = propertyMetadata.type();
             Object value = propertyMetadata.get(document);
-            ValueEncryptionConfig valueEncryptionConfig = propertyMetadata.valueEncryptionConfig();
+            String encryptionProviderName = propertyMetadata.encryptionProviderName();
 
             if (value == null
                 || value instanceof String
@@ -62,8 +61,8 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
                 || value instanceof Integer
                 || value instanceof Long
                 || value instanceof Double) {
-                if (valueEncryptionConfig != null) {
-                    content.put(name, value, valueEncryptionConfig);
+                if (encryptionProviderName != null) {
+                    content.putAndEncrypt(name, value, encryptionProviderName);
                 } else {
                     content.put(name, value);
                 }
@@ -84,7 +83,9 @@ public class DefaultEntityConverter implements EntityConverter<JsonDocument> {
             if (source.content() != null) {
                 for (PropertyMetadata propertyMetadata : entityMetadata.properties()) {
                     String fieldName = propertyMetadata.name();
-                    if (source.content().containsKey(fieldName) || source.content().containsKey(JsonObject.ENCRYPTION_PREFIX + fieldName)) {
+                    if (source.content().containsKey(JsonObject.ENCRYPTION_PREFIX + fieldName)) {
+                        propertyMetadata.set(source.content().getAndDecrypt(fieldName, propertyMetadata.encryptionProviderName()), instance);
+                    } else if(source.content().containsKey(fieldName)) {
                         propertyMetadata.set(source.content().get(fieldName), instance);
                     }
                 }

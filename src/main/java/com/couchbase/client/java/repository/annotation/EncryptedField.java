@@ -24,15 +24,12 @@ import java.lang.annotation.Target;
 
 import com.couchbase.client.core.annotations.InterfaceStability;
 
-import com.couchbase.client.java.encryption.EncryptionProvider;
-
 /**
  * Annotation for encrypted field
  *
  * @author Subhashni Balakrishnan
  * @since 2.6.0
  */
-@InterfaceStability.Uncommitted
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
@@ -43,19 +40,5 @@ public @interface EncryptedField {
      *
      * @return name of the provider
      */
-    EncryptionProvider provider();
-
-    /**
-     * Encryption key name to be used, else the default key set on the provider will be used.
-     *
-     * @return encryption key name
-     */
-    String key() default "";
-
-    /**
-     * HMAC key name to be used, else the default HMAC key set on the provider will be used.
-     *
-     * @return HMAC key name
-     */
-    String hmac() default "";
+    String provider();
 }
