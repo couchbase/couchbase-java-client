@@ -533,7 +533,7 @@ public class SearchParamsTest {
         JsonObject expected = JsonObject.create()
             .put("sort", JsonArray.from(
                 JsonObject.create().put("by", "score"),
-                JsonObject.create().put("by", "score").put("descending", true)
+                JsonObject.create().put("by", "score").put("desc", true)
             ));
         assertEquals(expected, result);
     }
@@ -548,7 +548,7 @@ public class SearchParamsTest {
         JsonObject expected = JsonObject.create()
             .put("sort", JsonArray.from(
                 JsonObject.create().put("by", "id"),
-                JsonObject.create().put("by", "id").put("descending", true)
+                JsonObject.create().put("by", "id").put("desc", true)
             ));
         assertEquals(expected, result);
     }
@@ -566,7 +566,7 @@ public class SearchParamsTest {
             .put("sort", JsonArray.from(
                 JsonObject.create().put("by", "field").put("field", "fieldname"),
                 JsonObject.create().put("by", "field").put("field", "f")
-                    .put("descending", true).put("mode", "default").put("missing", "first")
+                    .put("desc", true).put("mode", "default").put("missing", "first")
                     .put("type", "auto")
             ));
         assertEquals(expected, result);
@@ -583,7 +583,7 @@ public class SearchParamsTest {
         JsonObject expected = JsonObject.create()
             .put("sort", JsonArray.from(
                 JsonObject.create().put("by", "geo_distance").put("field", "fname")
-                    .put("descending", true).put("unit", "km")
+                    .put("desc", true).put("unit", "km")
                     .put("location", JsonArray.from(1.0, 2.0))
             ));
         assertEquals(expected, result);
@@ -599,7 +599,7 @@ public class SearchParamsTest {
         JsonObject expected = JsonObject.create()
             .put("sort", JsonArray.from(
                 "_score",
-                JsonObject.create().put("by", "id").put("descending", true),
+                JsonObject.create().put("by", "id").put("desc", true),
                 "bar"
             ));
         assertEquals(expected, result);

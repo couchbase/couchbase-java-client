@@ -39,7 +39,7 @@ public abstract class SearchSort {
     public void injectParams(final JsonObject queryJson) {
         queryJson.put("by", identifier());
         if (descending) {
-            queryJson.put("descending", descending);
+            queryJson.put("desc", true);
         }
     }
 
