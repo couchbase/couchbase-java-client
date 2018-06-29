@@ -22,7 +22,8 @@ import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.encryption.CryptoManager;
 import com.couchbase.client.encryption.errors.CryptoProviderDecryptFailedException;
-import com.couchbase.client.encryption.errors.CryptoProviderNameNotFoundException;
+import com.couchbase.client.encryption.errors.CryptoProviderMissingPublicKeyException;
+import com.couchbase.client.encryption.errors.CryptoProviderSigningFailedException;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
@@ -245,58 +246,54 @@ public class JsonObject extends JsonValue implements Serializable {
     private Object decrypt(JsonObject object, String providerName) throws Exception {
         Object decrypted;
 
-            String key = object.getString("kid");
-            String alg = object.getString("alg");
+        String key = object.getString("kid");
+        String alg = object.getString("alg");
 
-            CryptoProvider provider = this.cryptoManager.getProvider(providerName);
+        CryptoProvider provider = this.cryptoManager.getProvider(providerName);
 
-            if (provider == null) {
-                throw new CryptoProviderNameNotFoundException();
+        if (!provider.checkAlgorithmNameMatch(alg)) {
+            throw new CryptoProviderMissingPublicKeyException("Cryptographic providers require a non-null, empty public and key identifier (kid) be configured for the alias: " + providerName);
+        }
+
+        if (!key.contentEquals(provider.getKeyStoreProvider().publicKeyName())) {
+            throw new CryptoProviderMissingPublicKeyException("Cryptographic providers require a non-null, empty public and key identifier (kid) be configured for the alias: " + providerName);
+        }
+
+        byte[] encryptedBytes;
+        String encryptedValueWithConfig;
+
+        if (object.containsKey("iv")) {
+            encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
+                    + object.getString("iv") + object.getString("ciphertext");
+
+            byte[] encrypted = Base64.decode(object.getString("ciphertext"));
+            byte[] iv = Base64.decode(object.getString("iv"));
+            encryptedBytes = new byte[iv.length + encrypted.length];
+            System.arraycopy(iv, 0, encryptedBytes, 0, iv.length);
+            System.arraycopy(encrypted, 0, encryptedBytes, iv.length, encrypted.length);
+        } else {
+            encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
+                    + object.getString("ciphertext");
+            encryptedBytes = Base64.decode(object.getString("ciphertext"));
+        }
+
+        if (object.containsKey("sig")) {
+            byte[] signature = Base64.decode(object.getString("sig"));
+
+            if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature)) {
+                throw new CryptoProviderSigningFailedException("The authentication failed while checking the signature of the message payload for the alias: " + providerName);
             }
+        }
 
-            if (!provider.checkAlgorithmNameMatch(alg)) {
-                throw new CryptoProviderDecryptFailedException("Crypto provider algorithm name mismatch");
-            }
-
-            if (!key.contentEquals(provider.getKeyStoreProvider().publicKeyName())) {
-                throw new CryptoProviderDecryptFailedException("Public key mismatch");
-            }
-
-            byte[] encryptedBytes;
-            String encryptedValueWithConfig;
-
-            if (object.containsKey("iv")) {
-                encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
-                        + object.getString("iv") + object.getString("ciphertext");
-
-                byte[] encrypted = Base64.decode(object.getString("ciphertext"));
-                byte[] iv = Base64.decode(object.getString("iv"));
-                encryptedBytes = new byte[iv.length + encrypted.length];
-                System.arraycopy(iv, 0, encryptedBytes, 0, iv.length);
-                System.arraycopy(encrypted, 0, encryptedBytes, iv.length, encrypted.length);
-            } else {
-                encryptedValueWithConfig = object.getString("kid") + object.getString("alg")
-                        + object.getString("ciphertext");
-                encryptedBytes = Base64.decode(object.getString("ciphertext"));
-            }
-
-            if (object.containsKey("sig")) {
-                byte[] signature = Base64.decode(object.getString("sig"));
-
-                if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature)) {
-                    throw new SecurityException("Signature check for data integrity failed");
-                }
-            }
-
-            byte[] decryptedBytes = provider.decrypt(encryptedBytes);
-            String decryptedString = new String(decryptedBytes, Charset.forName("UTF-8"));
-            decrypted = JacksonTransformers.MAPPER.readValue(decryptedString, Object.class);
-            if (decrypted instanceof Map) {
-                decrypted = JsonObject.from((Map<String, ?>) decrypted);
-            } else if (decrypted instanceof List) {
-                decrypted = JsonArray.from((List<?>) decrypted);
-            }
-            return decrypted;
+        byte[] decryptedBytes = provider.decrypt(encryptedBytes);
+        String decryptedString = new String(decryptedBytes, Charset.forName("UTF-8"));
+        decrypted = JacksonTransformers.MAPPER.readValue(decryptedString, Object.class);
+        if (decrypted instanceof Map) {
+            decrypted = JsonObject.from((Map<String, ?>) decrypted);
+        } else if (decrypted instanceof List) {
+            decrypted = JsonArray.from((List<?>) decrypted);
+        }
+        return decrypted;
     }
 
     /**

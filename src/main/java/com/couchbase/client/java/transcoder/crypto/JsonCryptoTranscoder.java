@@ -79,10 +79,6 @@ public class JsonCryptoTranscoder extends AbstractTranscoder<JsonDocument, JsonO
                 Object value = parent.get(lastPointer);
                 JsonObject encryptedVal = JsonObject.create();
                 CryptoProvider provider = this.cryptoManager.getProvider(providerName);
-                if (provider == null) {
-                    throw new Exception("Encryption provider does not exist in the configuration");
-                }
-
                 String jsonValue = JacksonTransformers.MAPPER.writeValueAsString(value);
 
                 encryptedVal.put("kid", provider.getKeyStoreProvider().publicKeyName());
@@ -117,7 +113,7 @@ public class JsonCryptoTranscoder extends AbstractTranscoder<JsonDocument, JsonO
             }
             content.clearEncryptionPaths();
         } catch (Exception ex) {
-            throw new CryptoProviderEncryptFailedException(ex.getMessage(), ex);
+            throw new CryptoProviderEncryptFailedException("Encryption of the fields in the document failed" + ex.getMessage(), ex);
         }
     }
 
