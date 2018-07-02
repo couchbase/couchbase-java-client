@@ -175,7 +175,7 @@ public interface BucketManager {
      * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
-     * @return null if the document not found or a {@link DesignDocument}.
+     * @return a {@link DesignDocument} if found.
      */
     DesignDocument getDesignDocument(String name);
 
@@ -191,7 +191,7 @@ public interface BucketManager {
      * @param name the name of the {@link DesignDocument}.
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
-     * @return null if the document not found or a {@link DesignDocument}.
+     * @return a {@link DesignDocument} if found.
      */
     DesignDocument getDesignDocument(String name, long timeout, TimeUnit timeUnit);
 
@@ -207,7 +207,7 @@ public interface BucketManager {
      *
      * @param name the name of the {@link DesignDocument}.
      * @param development if {@link DesignDocument} should be loaded from development or from production.
-     * @return null if the document not found or a {@link DesignDocument}.
+     * @return a {@link DesignDocument} if found.
      */
     DesignDocument getDesignDocument(String name, boolean development);
 
@@ -224,7 +224,7 @@ public interface BucketManager {
      * @param development if {@link DesignDocument} should be loaded from development or from production.
      * @param timeout the custom timeout.
      * @param timeUnit the time unit for the custom timeout.
-     * @return null if the document not found or a {@link DesignDocument}.
+     * @return a {@link DesignDocument} if found.
      */
     DesignDocument getDesignDocument(String name, boolean development, long timeout, TimeUnit timeUnit);
 

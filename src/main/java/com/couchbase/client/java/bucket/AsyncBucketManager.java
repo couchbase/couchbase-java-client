@@ -102,7 +102,7 @@ public interface AsyncBucketManager {
      * - com.couchbase.client.java.error.DesignDocumentDoesNotExistException: If {@link DesignDocument} is not found.
      *
      * @param name the name of the {@link DesignDocument}.
-     * @return and empty observable if the document not found or a {@link DesignDocument}.
+     * @return an observable that resolves into a  {@link DesignDocument}.
      */
     Observable<DesignDocument> getDesignDocument(String name);
 
@@ -116,7 +116,7 @@ public interface AsyncBucketManager {
      *
      * @param name the name of the {@link DesignDocument}.
      * @param development if it should be loaded from development or production.
-     * @return and empty observable if the document not found or a {@link DesignDocument}.
+     * @return an observable that resolves into a  {@link DesignDocument}.
      */
     Observable<DesignDocument> getDesignDocument(String name, boolean development);
 
