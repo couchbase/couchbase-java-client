@@ -21,10 +21,9 @@ import com.couchbase.client.encryption.CryptoProvider;
 import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.encryption.CryptoManager;
-import com.couchbase.client.encryption.errors.CryptoProviderDecryptFailedException;
-import com.couchbase.client.encryption.errors.CryptoProviderMissingPublicKeyException;
-import com.couchbase.client.encryption.errors.CryptoProviderSigningFailedException;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.error.CryptoProviderMissingPublicKeyException;
+import com.couchbase.client.java.error.CryptoProviderSigningFailedException;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.Serializable;
