@@ -22,8 +22,6 @@ import com.couchbase.client.core.utils.Base64;
 import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
 import com.couchbase.client.encryption.CryptoManager;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
-import com.couchbase.client.java.error.CryptoProviderMissingPublicKeyException;
-import com.couchbase.client.java.error.CryptoProviderSigningFailedException;
 import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.Serializable;
@@ -251,11 +249,11 @@ public class JsonObject extends JsonValue implements Serializable {
         CryptoProvider provider = this.cryptoManager.getProvider(providerName);
 
         if (!provider.checkAlgorithmNameMatch(alg)) {
-            throw new CryptoProviderMissingPublicKeyException("Cryptographic providers require a non-null, empty public and key identifier (kid) be configured for the alias: " + providerName);
+            cryptoManager.throwMissingPublicKeyEx(providerName);
         }
 
         if (!key.contentEquals(provider.getKeyStoreProvider().publicKeyName())) {
-            throw new CryptoProviderMissingPublicKeyException("Cryptographic providers require a non-null, empty public and key identifier (kid) be configured for the alias: " + providerName);
+            cryptoManager.throwMissingPublicKeyEx(providerName);
         }
 
         byte[] encryptedBytes;
@@ -280,7 +278,7 @@ public class JsonObject extends JsonValue implements Serializable {
             byte[] signature = Base64.decode(object.getString("sig"));
 
             if (!provider.verifySignature(encryptedValueWithConfig.getBytes(), signature)) {
-                throw new CryptoProviderSigningFailedException("The authentication failed while checking the signature of the message payload for the alias: " + providerName);
+                cryptoManager.throwSigningFailedEx(providerName);
             }
         }
 
