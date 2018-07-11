@@ -144,6 +144,15 @@ public class Utils {
 
     public static void addRequestSpan(CouchbaseEnvironment env, CouchbaseRequest request, String opName) {
         if (env.operationTracingEnabled()) {
+            if (env.propagateParentSpan()) {
+                Span potentialParent = env.tracer().activeSpan();
+                if (potentialParent != null) {
+                    // there is an active span, use it as a parent
+                    addRequestSpanWithParent(env, potentialParent, request, opName);
+                    return;
+                }
+            }
+
             Scope scope = env.tracer()
                 .buildSpan(opName)
                 .startActive(false);

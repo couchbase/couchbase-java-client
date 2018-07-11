@@ -16,31 +16,12 @@
 package com.couchbase.client.java.env;
 
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
-import com.couchbase.client.core.env.KeyValueServiceConfig;
-import com.couchbase.client.core.env.QueryServiceConfig;
-import com.couchbase.client.core.env.SearchServiceConfig;
-import com.couchbase.client.core.env.ViewServiceConfig;
-import com.couchbase.client.core.env.WaitStrategyFactory;
-import com.couchbase.client.core.env.resources.ShutdownHook;
-import com.couchbase.client.core.event.EventBus;
-import com.couchbase.client.core.event.consumers.LoggingConsumer;
-import com.couchbase.client.core.hooks.CouchbaseCoreSendHook;
-import com.couchbase.client.core.logging.CouchbaseLogLevel;
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
-import com.couchbase.client.core.metrics.LatencyMetricsCollectorConfig;
-import com.couchbase.client.core.metrics.MetricsCollectorConfig;
-import com.couchbase.client.core.node.MemcachedHashingStrategy;
-import com.couchbase.client.core.retry.RetryStrategy;
-import com.couchbase.client.core.time.Delay;
-import com.couchbase.client.deps.com.lmax.disruptor.WaitStrategy;
-import com.couchbase.client.deps.io.netty.channel.EventLoopGroup;
 import com.couchbase.client.encryption.CryptoManager;
 import com.couchbase.client.java.AsyncCluster;
 import com.couchbase.client.java.CouchbaseCluster;
-import rx.Scheduler;
 
-import java.security.KeyStore;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -71,6 +52,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private static final long KV_TIMEOUT = 2500;
     private static final long CONNECT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     private static final boolean DNS_SRV_ENABLED = false;
+    private static final boolean PROPAGATE_PARENT_SPAN = true;
 
     private final long managementTimeout;
     private final long queryTimeout;
@@ -81,6 +63,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     private final long connectTimeout;
     private final boolean dnsSrvEnabled;
     private final CryptoManager cryptoManager;
+    private final boolean propagateParentSpan;
 
     protected static String CLIENT_VERSION;
     protected static String CLIENT_GIT_VERSION;
@@ -145,6 +128,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         analyticsTimeout = longPropertyOr("analyticsTimeout", builder.analyticsTimeout);
         connectTimeout = longPropertyOr("connectTimeout", builder.connectTimeout);
         dnsSrvEnabled = booleanPropertyOr("dnsSrvEnabled", builder.dnsSrvEnabled);
+        propagateParentSpan = booleanPropertyOr("propagateParentSpan", builder.propagateParentSpan);
         cryptoManager = builder.cryptoManager;
 
         if (queryTimeout > maxRequestLifetime()) {
@@ -201,6 +185,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         private long analyticsTimeout = ANALYTICS_TIMEOUT;
         private long connectTimeout = CONNECT_TIMEOUT;
         private boolean dnsSrvEnabled = DNS_SRV_ENABLED;
+        private boolean propagateParentSpan = PROPAGATE_PARENT_SPAN;
         private CryptoManager cryptoManager;
 
         public Builder() {
@@ -256,6 +241,10 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
             return this;
         }
 
+        public Builder propagateParentSpan(boolean propagateParentSpan) {
+            this.propagateParentSpan = propagateParentSpan;
+            return this;
+        }
 
         @Override
         public DefaultCouchbaseEnvironment build() {
@@ -317,6 +306,11 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
     public CryptoManager cryptoManager() { return cryptoManager; }
 
     @Override
+    public boolean propagateParentSpan() {
+        return propagateParentSpan;
+    }
+
+    @Override
     protected StringBuilder dumpParameters(StringBuilder sb) {
         //first dump core's parameters
         super.dumpParameters(sb);
@@ -331,6 +325,7 @@ public class DefaultCouchbaseEnvironment extends DefaultCoreEnvironment implemen
         if (this.cryptoManager() != null) {
             sb.append(", cryptoManager=").append(this.cryptoManager.toString());
         }
+        sb.append(", propagateParentSpan=").append(this.propagateParentSpan);
         return sb;
     }
 

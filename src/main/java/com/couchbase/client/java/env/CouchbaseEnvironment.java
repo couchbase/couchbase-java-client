@@ -118,4 +118,15 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
     @InterfaceStability.Committed
     @InterfaceAudience.Public
     CryptoManager cryptoManager();
+
+    /**
+     * If set to true, the code will check if a parent span is available and if so
+     * use this implicitly as a parent.
+     *
+     * This is enabled by default for ease of use but can be disabled in case it causes
+     * weird effects to parent spans in trace output.
+     *
+     * @return if a parent span should be propagated automatically.
+     */
+    boolean propagateParentSpan();
 }
