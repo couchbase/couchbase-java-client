@@ -66,6 +66,10 @@ public class DefaultViewResult implements ViewResult {
 
     @Override
     public Iterator<ViewRow> rows(long timeout, TimeUnit timeUnit) {
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("Timeout must be greater than 0");
+        }
+
         return asyncViewResult
             .rows()
             .map(new Func1<AsyncViewRow, ViewRow>() {

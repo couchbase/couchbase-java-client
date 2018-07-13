@@ -623,6 +623,10 @@ public class DefaultAsyncBucketManager implements AsyncBucketManager {
     @Override
     public Observable<IndexInfo> watchN1qlIndexes(List<String> watchList, final long watchTimeout,
             final TimeUnit watchTimeUnit) {
+        if (watchTimeout <= 0) {
+            throw new IllegalArgumentException("Watch timeout needs to be greater than 0");
+        }
+
         final Set<String> watchSet = new HashSet<String>(watchList);
 
         return listN1qlIndexes()

@@ -435,25 +435,25 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return insert(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
-                        persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                Observable<D> or = Observe
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
+                                persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
+                // we need a timeout here since observe doesn't have one yet
+                return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
             }
         }).doOnTerminate(stopTracing(parent));
     }
@@ -477,7 +477,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<D, Observable<D>>() {
                 @Override
                 public Observable<D> call(final D doc) {
-                    return Observe
+                    Observable<D> or = Observe
                         .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
                             persistTo.value(), replicateTo.value(),
                             environment.observeIntervalDelay(), environment.retryStrategy(), parent)
@@ -494,9 +494,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                     "Durability requirement failed: " + throwable.getMessage(),
                                     throwable));
                             }
-                        })
-                        // we need a timeout here since observe doesn't have one yet
-                        .timeout(timeout, timeUnit, environment.scheduler());
+                        });
+                    // we need a timeout here since observe doesn't have one yet
+                    return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
                 }
             })
             .doOnTerminate(stopTracing(parent));
@@ -600,7 +600,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return replace(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
-                return Observe
+                Observable<D> or = Observe
                     .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(),
                         replicateTo.value(), environment.observeIntervalDelay(), environment.retryStrategy(), parent)
                     .map(new Func1<Boolean, D>() {
@@ -615,9 +615,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                    });
+                // we need a timeout here since observe doesn't have one yet
+                return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
             }
         }).doOnTerminate(stopTracing(parent));
     }
@@ -746,7 +746,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return remove(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
-                return Observe
+                Observable<D> or = Observe
                     .call(core, bucket, doc.id(), doc.cas(), true, doc.mutationToken(),
                         persistTo.value(), replicateTo.value(),
                         environment.observeIntervalDelay(), environment.retryStrategy(), parent)
@@ -762,9 +762,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                 "Durability requirement failed: " + throwable.getMessage(),
                                 throwable));
                         }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                    });
+                // we need a timeout here since observe doesn't have one yet
+                return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
             }
         }).doOnTerminate(stopTracing(parent));
     }
@@ -1107,26 +1107,26 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
             .flatMap(new Func1<JsonLongDocument, Observable<JsonLongDocument>>() {
                 @Override
                 public Observable<JsonLongDocument> call(final JsonLongDocument doc) {
-                    return Observe
-                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
-                            persistTo.value(), replicateTo.value(),
-                            environment.observeIntervalDelay(), environment.retryStrategy(), parent)
-                        .map(new Func1<Boolean, JsonLongDocument>() {
-                            @Override
-                            public JsonLongDocument call(Boolean aBoolean) {
-                                return doc;
-                            }
-                        })
-                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends JsonLongDocument>>() {
-                            @Override
-                            public Observable<? extends JsonLongDocument> call(Throwable throwable) {
-                                return Observable.error(new DurabilityException(
-                                    "Durability requirement failed: " + throwable.getMessage(),
-                                    throwable));
-                            }
-                        })
-                        // we need a timeout here since observe doesn't have one yet
-                        .timeout(timeout, timeUnit, environment.scheduler());
+                    Observable<JsonLongDocument> or = Observe
+                            .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(),
+                                    persistTo.value(), replicateTo.value(),
+                                    environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                            .map(new Func1<Boolean, JsonLongDocument>() {
+                                @Override
+                                public JsonLongDocument call(Boolean aBoolean) {
+                                    return doc;
+                                }
+                            })
+                            .onErrorResumeNext(new Func1<Throwable, Observable<? extends JsonLongDocument>>() {
+                                @Override
+                                public Observable<? extends JsonLongDocument> call(Throwable throwable) {
+                                    return Observable.error(new DurabilityException(
+                                            "Durability requirement failed: " + throwable.getMessage(),
+                                            throwable));
+                                }
+                            });
+                    // we need a timeout here since observe doesn't have one yet
+                    return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
                 }
             })
             .doOnTerminate(stopTracing(parent));
@@ -1212,24 +1212,24 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return append(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                Observable<D> or = Observe
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
+                // we need a timeout here since observe doesn't have one yet
+                return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
             }
         }).doOnTerminate(stopTracing(parent));
     }
@@ -1254,24 +1254,24 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         return prepend(document, parent, timeout, timeUnit).flatMap(new Func1<D, Observable<D>>() {
             @Override
             public Observable<D> call(final D doc) {
-                return Observe
-                    .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
-                        environment.observeIntervalDelay(), environment.retryStrategy(), parent)
-                    .map(new Func1<Boolean, D>() {
-                        @Override
-                        public D call(Boolean aBoolean) {
-                            return doc;
-                        }
-                    }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
-                        @Override
-                        public Observable<? extends D> call(Throwable throwable) {
-                            return Observable.error(new DurabilityException(
-                                "Durability requirement failed: " + throwable.getMessage(),
-                                throwable));
-                        }
-                    })
-                    // we need a timeout here since observe doesn't have one yet
-                    .timeout(timeout, timeUnit, environment.scheduler());
+                Observable<D> or = Observe
+                        .call(core, bucket, doc.id(), doc.cas(), false, doc.mutationToken(), persistTo.value(), replicateTo.value(),
+                                environment.observeIntervalDelay(), environment.retryStrategy(), parent)
+                        .map(new Func1<Boolean, D>() {
+                            @Override
+                            public D call(Boolean aBoolean) {
+                                return doc;
+                            }
+                        }).onErrorResumeNext(new Func1<Throwable, Observable<? extends D>>() {
+                            @Override
+                            public Observable<? extends D> call(Throwable throwable) {
+                                return Observable.error(new DurabilityException(
+                                        "Durability requirement failed: " + throwable.getMessage(),
+                                        throwable));
+                            }
+                        });
+                // we need a timeout here since observe doesn't have one yet
+                return timeout > 0 ? or.timeout(timeout, timeUnit, environment.scheduler()) : or;
             }
         }).doOnTerminate(stopTracing(parent));
     }

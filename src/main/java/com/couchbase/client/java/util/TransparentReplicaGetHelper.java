@@ -141,6 +141,13 @@ public class TransparentReplicaGetHelper {
     @InterfaceAudience.Public
     public static <D extends Document<?>> Single<D> getFirstPrimaryOrReplica(final String id,
         final Class<D> target, final Bucket bucket, final long primaryTimeout, final long replicaTimeout) {
+        if (primaryTimeout <= 0) {
+            throw new IllegalArgumentException("Primary timeout must be greater than 0ms");
+        }
+        if (replicaTimeout <= 0) {
+            throw new IllegalArgumentException("Replica timeout must be greater than 0ms");
+        }
+
         Observable<D> fallback = bucket
             .async()
             .getFromReplica(id, ReplicaMode.ALL, target)
