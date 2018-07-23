@@ -218,6 +218,11 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * Note that the value is checked and a {@link IllegalArgumentException} is thrown if not supported.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -306,6 +311,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Retrieve and decrypt content and not casting its type
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the key of the field
      * @param providerName the crypto algorithm provider name
      * @return the value of the field, or null if it does not exist
@@ -343,6 +353,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Retrieves the value from the field name and casts it to {@link String}.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @return the result or null if it does not exist.
      */
@@ -352,6 +367,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link String}.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the field.
      * @param providerName the crypto provider name for decryption.
@@ -375,6 +395,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Stores a {@link Integer} value as encrypted identified by the field name.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
@@ -444,6 +469,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Stores a {@link Long} value as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -480,6 +510,11 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * Note that if value was stored as another numerical type, some truncation or rounding may occur.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @param providerName the crypto provider name for decryption
      * @return the result or null if it does not exist.
@@ -510,6 +545,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Stores a {@link Double} value as encrypted identified by the field name.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
@@ -547,6 +587,11 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * Note that if value was stored as another numerical type, some truncation or rounding may occur.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @param providerName the crypto provider name for decryption
      * @return the result or null if it does not exist.
@@ -578,6 +623,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Stores a {@link Boolean} value as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -601,6 +651,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link Boolean}.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the field.
      * @param providerName the provider name of the field.
@@ -638,6 +693,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Stores a {@link JsonObject} value as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -668,6 +728,11 @@ public class JsonObject extends JsonValue implements Serializable {
      * Attempt to convert a {@link Map} to a {@link JsonObject} value and store it,
      * as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -692,6 +757,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link JsonObject}.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @param providerName Crypto provider name for decryption
      * @return the result or null if it does not exist.
@@ -714,6 +784,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Stores a {@link JsonArray} value as encrypted identified by the field name.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
@@ -741,6 +816,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Stores a {@link Number} value as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName Crypto provider name for encryption.
@@ -766,6 +846,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Stores a {@link JsonArray} value as encrypted identified by the field name.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the JSON field.
      * @param value the value of the JSON field.
      * @param providerName the crypto provider name for encryption.
@@ -789,6 +874,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link JsonArray}.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @param providerName crypto provider name for decryption.
      * @return the result or null if it does not exist.
@@ -809,6 +899,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link BigInteger}.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the field.
      * @param providerName crypto provider name for decryption.
@@ -837,6 +932,11 @@ public class JsonObject extends JsonValue implements Serializable {
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link BigDecimal}.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @param name the name of the field.
      * @param providerName crypto provider for decryption
      * @return the result or null if it does not exist.
@@ -863,6 +963,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Retrieves the decrypted value from the field name and casts it to {@link Number}.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the name of the field.
      * @param providerName the crypto provider name for decryption
@@ -892,6 +997,11 @@ public class JsonObject extends JsonValue implements Serializable {
      *
      * This method is equivalent to calling {@link #put(String, Object)} with either
      * {@link JsonValue#NULL JsonValue.NULL} or a null value explicitly cast to Object.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name The null field's name.
      * @param providerName Crypto provider name for encryption.
@@ -964,6 +1074,11 @@ public class JsonObject extends JsonValue implements Serializable {
      * sub-arrays ({@link JsonArray}) are also recursively converted to
      * maps and lists, respectively. The encrypted values are decrypted.
      *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
+     *
      * @return the content copied as a {@link Map}.
      */
     public Map<String, Object> toDecryptedMap(String providerName) throws Exception {
@@ -1019,6 +1134,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Returns true if the field is encrypted.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @param name the key name of the field.
      */
@@ -1077,6 +1197,11 @@ public class JsonObject extends JsonValue implements Serializable {
 
     /**
      * Converts the {@link JsonObject} into its decrypted JSON string representation.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      *
      * @return the decrypted JSON string representing this {@link JsonObject}.
      */

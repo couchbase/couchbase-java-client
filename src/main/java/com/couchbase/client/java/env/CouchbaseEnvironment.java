@@ -114,6 +114,11 @@ public interface CouchbaseEnvironment extends CoreEnvironment {
 
     /**
      * Returns the crypto manager set.
+     *
+     * Note: Use of the Field Level Encryption functionality provided in the
+     * com.couchbase.client.encryption namespace provided by Couchbase is
+     * subject to the Couchbase Inc. Enterprise Subscription License Agreement
+     * at https://www.couchbase.com/ESLA-11132015.
      */
     @InterfaceStability.Committed
     @InterfaceAudience.Public
