@@ -39,7 +39,7 @@ public class SimpleAnalyticsQuery extends AnalyticsQuery {
         }
 
         this.statement = statement;
-        this.params = params;
+        this.params = params == null ? AnalyticsParams.build() : params;
     }
 
     public String statement() {
