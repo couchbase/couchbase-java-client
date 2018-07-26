@@ -43,8 +43,12 @@ public class AnalyticsParams implements Serializable {
     private String serverSideTimeout;
     private String clientContextId;
     private Map<String, Object> rawParams;
+    private boolean pretty;
 
-    private AnalyticsParams() { }
+
+    private AnalyticsParams() {
+        pretty = false;
+    }
 
     /**
      * Modifies the given Analytics query (as a {@link JsonObject}) to reflect these {@link N1qlParams}.
@@ -59,8 +63,7 @@ public class AnalyticsParams implements Serializable {
             queryJson.put("client_context_id", this.clientContextId);
         }
 
-        // Always set pretty to false, since, why not?
-        queryJson.put("pretty", false);
+        queryJson.put("pretty", pretty);
 
         if (this.rawParams != null) {
             for (Map.Entry<String, Object> entry : rawParams.entrySet()) {
@@ -118,6 +121,21 @@ public class AnalyticsParams implements Serializable {
     }
 
     /**
+     * If set to false, the server will be instructed to remove extra whitespace from the JSON response
+     * in order to save bytes. In performance-critical environments as well as large responses this is
+     * recommended in order to cut down on network traffic.
+     *
+     * Note that false is the default, since usually that's what is recommended.
+     *
+     * @param pretty if set to false, pretty responses are disabled.
+     * @return this {@link AnalyticsParams} for chaining.
+     */
+    public AnalyticsParams pretty(boolean pretty) {
+        this.pretty = pretty;
+        return this;
+    }
+
+    /**
      * Helper method to check if a custom server side timeout has been applied on the params.
      *
      * @return true if it has, false otherwise.
@@ -142,6 +160,7 @@ public class AnalyticsParams implements Serializable {
 
         AnalyticsParams params = (AnalyticsParams) o;
 
+        if (pretty != params.pretty) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(params.serverSideTimeout) : params.serverSideTimeout != null)
             return false;
         if (clientContextId != null ? !clientContextId.equals(params.clientContextId) : params.clientContextId != null)
@@ -154,6 +173,7 @@ public class AnalyticsParams implements Serializable {
         int result = serverSideTimeout != null ? serverSideTimeout.hashCode() : 0;
         result = 31 * result + (clientContextId != null ? clientContextId.hashCode() : 0);
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
+        result = 31 * result + (pretty ? 1 : 0);
         return result;
     }
 
@@ -163,6 +183,7 @@ public class AnalyticsParams implements Serializable {
             "serverSideTimeout='" + serverSideTimeout + '\'' +
             ", clientContextId='" + clientContextId + '\'' +
             ", rawParams=" + rawParams +
+            ", pretty=" + pretty +
             '}';
     }
 }
