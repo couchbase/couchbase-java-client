@@ -59,7 +59,7 @@ public class AnalyticsQueryExecutor {
             @Override
             public Observable<GenericAnalyticsResponse> call(final Subscriber subscriber) {
                 GenericAnalyticsRequest request = GenericAnalyticsRequest
-                    .jsonQuery(query.query().toString(), bucket, username, password);
+                    .jsonQuery(query.query().toString(), bucket, username, password, query.params().priority());
                 Utils.addRequestSpan(env, request, "analytics");
                 if (env.operationTracingEnabled()) {
                     request.span().setTag(Tags.DB_STATEMENT.getKey(), query.statement());

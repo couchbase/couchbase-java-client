@@ -45,9 +45,17 @@ public class AnalyticsParams implements Serializable {
     private Map<String, Object> rawParams;
     private boolean pretty;
 
+    /**
+     * We are exposing this as a boolean, but internally the server
+     * wants it as int to be forwards compatible (since at some
+     * point we might want to expose this as a number to users).
+     */
+    private int priority;
+
 
     private AnalyticsParams() {
         pretty = false;
+        priority = 0;
     }
 
     /**
@@ -138,6 +146,44 @@ public class AnalyticsParams implements Serializable {
     }
 
     /**
+     * If this request should receive priority in server side scheduling.
+     *
+     * Default is false.
+     *
+     * @param priority true if it should, false otherwise.
+     * @return this {@link AnalyticsParams} for chaining.
+     */
+    public AnalyticsParams priority(boolean priority) {
+        return priority(priority ? -1 : 0);
+    }
+
+    /**
+     * Sets the priority of this request.
+     *
+     * This method is private for now, but can be opened later once the
+     * server supports different levels.
+     *
+     * @param priority the priority to use
+     * @return this {@link AnalyticsParams} for chaining.
+     */
+    private AnalyticsParams priority(int priority) {
+        this.priority = priority;
+        return this;
+    }
+
+    /**
+     * Returns the set priority as an integer.
+     *
+     * This method is considered private API.
+     *
+     * @return the priority if set, 0 if not set.
+     */
+    @InterfaceAudience.Private
+    public int priority() {
+        return priority;
+    }
+
+    /**
      * Helper method to check if a custom server side timeout has been applied on the params.
      *
      * @return true if it has, false otherwise.
@@ -167,14 +213,15 @@ public class AnalyticsParams implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AnalyticsParams params = (AnalyticsParams) o;
+        AnalyticsParams that = (AnalyticsParams) o;
 
-        if (pretty != params.pretty) return false;
-        if (serverSideTimeout != null ? !serverSideTimeout.equals(params.serverSideTimeout) : params.serverSideTimeout != null)
+        if (pretty != that.pretty) return false;
+        if (priority != that.priority) return false;
+        if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
-        if (clientContextId != null ? !clientContextId.equals(params.clientContextId) : params.clientContextId != null)
+        if (clientContextId != null ? !clientContextId.equals(that.clientContextId) : that.clientContextId != null)
             return false;
-        return rawParams != null ? rawParams.equals(params.rawParams) : params.rawParams == null;
+        return rawParams != null ? rawParams.equals(that.rawParams) : that.rawParams == null;
     }
 
     @Override
@@ -183,6 +230,7 @@ public class AnalyticsParams implements Serializable {
         result = 31 * result + (clientContextId != null ? clientContextId.hashCode() : 0);
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
         result = 31 * result + (pretty ? 1 : 0);
+        result = 31 * result + priority;
         return result;
     }
 
@@ -193,6 +241,7 @@ public class AnalyticsParams implements Serializable {
             ", clientContextId='" + clientContextId + '\'' +
             ", rawParams=" + rawParams +
             ", pretty=" + pretty +
+            ", priority=" + priority +
             '}';
     }
 }
