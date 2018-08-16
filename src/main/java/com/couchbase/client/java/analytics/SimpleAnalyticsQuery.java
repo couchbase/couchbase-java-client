@@ -33,12 +33,7 @@ public class SimpleAnalyticsQuery extends AnalyticsQuery {
     private final AnalyticsParams params;
 
     SimpleAnalyticsQuery(String statement, AnalyticsParams params) {
-        statement = statement.trim();
-        if (!statement.endsWith(";")) {
-            statement = statement + ";";
-        }
-
-        this.statement = statement;
+        this.statement = statement.trim();
         this.params = params == null ? AnalyticsParams.build() : params;
     }
 

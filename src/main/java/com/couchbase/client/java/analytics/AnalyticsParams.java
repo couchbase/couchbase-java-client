@@ -63,7 +63,9 @@ public class AnalyticsParams implements Serializable {
             queryJson.put("client_context_id", this.clientContextId);
         }
 
-        queryJson.put("pretty", pretty);
+        if (pretty) {
+            queryJson.put("pretty", true);
+        }
 
         if (this.rawParams != null) {
             for (Map.Entry<String, Object> entry : rawParams.entrySet()) {
@@ -142,6 +144,13 @@ public class AnalyticsParams implements Serializable {
      */
     public boolean hasServerSideTimeout() {
         return serverSideTimeout != null;
+    }
+
+    /**
+     * Helper method to check if a client context ID is set.
+     */
+    public String clientContextId() {
+        return clientContextId;
     }
 
     /**

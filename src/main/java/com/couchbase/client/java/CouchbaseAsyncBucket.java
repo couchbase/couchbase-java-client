@@ -904,6 +904,9 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         if (!query.params().hasServerSideTimeout()) {
             query.params().serverSideTimeout(timeout, timeUnit);
         }
+        if (query.params().clientContextId() == null || query.params().clientContextId().isEmpty()) {
+            query.params().withContextId(UUID.randomUUID().toString());
+        }
         return analyticsQueryExecutor.execute(query, environment, timeout, timeUnit);
     }
 
