@@ -37,10 +37,12 @@ public class SimpleAnalyticsQuery extends AnalyticsQuery {
         this.params = params == null ? AnalyticsParams.build() : params;
     }
 
+    @Override
     public String statement() {
         return statement;
     }
 
+    @Override
     public AnalyticsParams params() {
         return params;
     }
