@@ -607,7 +607,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     }
 
     Observable<Boolean> sendAddNodeRequest(final InetSocketAddress address) {
-        final NetworkAddress networkAddress = NetworkAddress.create(address.getAddress().getHostAddress());
+        final NetworkAddress networkAddress = NetworkAddress.create(address.getAddress().getHostName());
         return core.<AddNodeResponse>send(new AddNodeRequest(networkAddress))
                 .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
                     @Override

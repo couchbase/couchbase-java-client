@@ -301,7 +301,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             seedNodesViaDnsSrv(connectionString, environment, seedNodes);
         } else {
             for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(node.getAddress().getHostAddress());
+                seedNodes.add(node.getHostName());
             }
         }
 
@@ -343,13 +343,13 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                 LOGGER.info("Loaded seed nodes from DNS SRV {}.", system(foundNodes));
             } catch (Exception ex) {
                 LOGGER.warn("DNS SRV lookup failed, proceeding with normal bootstrap.", ex);
-                seedNodes.add(lookupNode.getAddress().getHostAddress());
+                seedNodes.add(lookupNode.getHostName());
             }
         } else {
             LOGGER.info("DNS SRV enabled, but less or more than one seed node given. "
                 + "Proceeding with normal bootstrap.");
             for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(node.getAddress().getHostAddress());
+                seedNodes.add(node.getHostName());
             }
         }
     }
