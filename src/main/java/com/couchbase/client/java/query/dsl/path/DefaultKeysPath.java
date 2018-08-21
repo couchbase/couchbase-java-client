@@ -17,6 +17,7 @@ package com.couchbase.client.java.query.dsl.path;
 
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.query.dsl.Expression;
+import com.couchbase.client.java.query.dsl.element.Element;
 import com.couchbase.client.java.query.dsl.element.KeysElement;
 
 import static com.couchbase.client.java.query.dsl.Expression.s;
@@ -80,5 +81,16 @@ public class DefaultKeysPath extends DefaultLetPath implements KeysPath {
     @Override
     public LetPath useKeys(JsonArray keys) {
         return useKeys(x(keys));
+    }
+
+    @Override
+    public LetPath on(final Expression expression) {
+        element(new Element() {
+            @Override
+            public String export() {
+                return "ON " + expression.toString();
+            }
+        });
+        return new DefaultLetPath(this);
     }
 }

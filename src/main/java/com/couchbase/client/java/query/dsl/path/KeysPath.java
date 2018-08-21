@@ -63,4 +63,9 @@ public interface KeysPath extends LetPath {
 
     /** use the primary keyspace (doc id) in a join clause) */
     LetPath useKeys(JsonArray keys);
+
+    /**
+     * ANSI join "on" clause.
+     */
+    LetPath on(Expression expression);
 }
