@@ -126,7 +126,6 @@
             <groupId>com.couchbase.client</groupId>
             <artifactId>encryption</artifactId>
             <version>${encryptionextension.version}</version>
-            <optional>true</optional>
         </dependency>
 
         <!-- Test Dependencies -->
