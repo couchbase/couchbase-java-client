@@ -346,13 +346,9 @@
     </build>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>GoEuro-Releases</id>
+            <url>http://nexus.goeuro.int/content/repositories/releases</url>
         </repository>
     </distributionManagement>
 
@@ -384,9 +380,15 @@
 
     <repositories>
         <repository>
-            <id>cb-pre</id>
-            <name>Couchbase Prerelease Repo</name>
-            <url>http://files.couchbase.com/maven2</url>
+            <id>GoEuro Nexus</id>
+            <url>http://nexus.goeuro.int/content/groups/goeuro/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
         </repository>
     </repositories>
 </project>
