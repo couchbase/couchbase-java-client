@@ -53,7 +53,7 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
  * @since 2.3.6
  */
 
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class CouchbaseQueue<E> extends AbstractQueue<E> {
 

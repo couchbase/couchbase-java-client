@@ -54,7 +54,7 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
  */
 
 
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class CouchbaseArrayList<E> extends AbstractList<E> {
 

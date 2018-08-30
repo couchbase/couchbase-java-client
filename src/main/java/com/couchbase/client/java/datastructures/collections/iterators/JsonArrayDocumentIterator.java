@@ -36,7 +36,7 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
  * @author Subhashni Balakrishnan
  * @since 2.3.6
  */
-@InterfaceStability.Experimental
+@InterfaceStability.Committed
 @InterfaceAudience.Private
 public class JsonArrayDocumentIterator<E> implements Iterator<E> {
 
