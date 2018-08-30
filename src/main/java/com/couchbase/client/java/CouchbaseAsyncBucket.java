@@ -1936,25 +1936,18 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                 final int retryCount) {
         if (retryCount <= 0) return Observable.error(new CASMismatchException());
         final Mutation mutationOperation = Mutation.DELETE;
-        return get(docId, JsonArrayDocument.class)
-                .toList()
-                .flatMap(new Func1<List<JsonArrayDocument>, Observable<E>>() {
+        final int index = -1;
+        return lookupIn(docId).get("[" + index + "]")
+                .execute()
+                .flatMap(new Func1<DocumentFragment<Lookup>, Observable<E>>() {
                     @Override
-                    public Observable<E> call(List<JsonArrayDocument> jsonArrayDocuments) {
-                        if (jsonArrayDocuments.size() == 0) {
-                            throw new DocumentDoesNotExistException();
-                        }
-                        JsonArrayDocument jsonArrayDocument = jsonArrayDocuments.get(0);
-                        int size = jsonArrayDocument.content().size();
-                        final Object val;
-                        if (size > 0) {
-                            val = jsonArrayDocument.content().get(size - 1);
-                        } else {
-                            return Observable.just(null);
-                        }
-                        if (mutationOptionBuilder.cas() != 0 && jsonArrayDocument.cas() != mutationOptionBuilder.cas()) {
+                    public Observable<E> call(DocumentFragment<Lookup> documentFragment) {
+                        long cas = documentFragment.cas();
+                        if (mutationOptionBuilder.cas() != 0 && cas != mutationOptionBuilder.cas()) {
                             throw new CASMismatchException();
                         }
+                        final Object val = documentFragment.content(0);
+
                         Func1<Throwable, Observable<? extends DocumentFragment<Mutation>>> handleCASMismatch = new
                                 Func1<Throwable, Observable<? extends DocumentFragment<Mutation>>>() {
                                     @Override
@@ -1970,13 +1963,15 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                             return ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, element);
                                                         }
                                                     });
+                                        } else if (throwable instanceof MultiMutationException && throwable.getCause() instanceof PathNotFoundException) {
+                                            return Observable.just(ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, null));
                                         } else {
                                             return Observable.error(throwable);
                                         }
                                     }
                                 };
-                        return mutateIn(docId).remove("[" + -1 + "]")
-                                .withCas(jsonArrayDocument.cas())
+                        return mutateIn(docId).remove("[" + index + "]")
+                                .withCas(cas)
                                 .withExpiry(mutationOptionBuilder.expiry())
                                 .withDurability(mutationOptionBuilder.persistTo(), mutationOptionBuilder.replicateTo())
                                 .execute()
