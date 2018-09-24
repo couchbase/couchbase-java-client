@@ -51,6 +51,7 @@ public class AnalyticsMetrics implements Serializable {
     private final int warningCount;
     private final int mutationCount;
     private final int sortCount;
+    private final long processedObjects;
     private final long resultSize;
     private final String elapsedTime;
     private final String executionTime;
@@ -80,6 +81,7 @@ public class AnalyticsMetrics implements Serializable {
         this.mutationCount = parseBestEffortToInt(rawMetrics, "mutationCount");
         this.sortCount = parseBestEffortToInt(rawMetrics, "sortCount");
         this.resultSize = parseBestEffortToLong(rawMetrics, "resultSize");
+        this.processedObjects = parseBestEffortToLong(rawMetrics, "processedObjects");
     }
 
     private int parseBestEffortToInt(JsonObject input, String fieldname) {
@@ -170,6 +172,13 @@ public class AnalyticsMetrics implements Serializable {
     }
 
     /**
+     * @return The number of processed objects for the request.
+     */
+    public long processedObjects() {
+        return processedObjects;
+    }
+
+    /**
      * Exposes the underlying raw form of the metrics, as a {@link JsonObject}.
      *
      * Note that values exposed as methods are cached at instantiation, so this
@@ -190,6 +199,7 @@ public class AnalyticsMetrics implements Serializable {
         sb.append(", mutationCount=").append(mutationCount);
         sb.append(", sortCount=").append(sortCount);
         sb.append(", resultSize=").append(resultSize);
+        sb.append(", processedObjects=").append(processedObjects);
         sb.append(", elapsedTime='").append(elapsedTime).append('\'');
         sb.append(", executionTime='").append(executionTime).append('\'');
         sb.append('}');
