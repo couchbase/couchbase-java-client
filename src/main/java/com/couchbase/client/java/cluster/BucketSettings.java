@@ -97,6 +97,13 @@ public interface BucketSettings {
     CompressionMode compressionMode();
 
     /**
+     * The ejection method available for the bucket.
+     *
+     * @return the ejection method selected.
+     */
+    EjectionMethod ejectionMethod();
+
+    /**
      * A map of map of advanced settings that are not covered by the native methods of the object
      * but still need to be set when configuring a bucket.
      *

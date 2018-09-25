@@ -217,6 +217,14 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                 }
                             }
 
+                            EjectionMethod ejectionMethod = EjectionMethod.VALUE;
+                            String rawEjectionMethod = bucket.getString("evictionPolicy");
+                            if (rawEjectionMethod != null && !rawEjectionMethod.isEmpty()) {
+                                if ("fullEviction".equalsIgnoreCase(rawEjectionMethod)) {
+                                    ejectionMethod = EjectionMethod.FULL;
+                                }
+                            }
+
                             settings.add(DefaultBucketSettings.builder()
                                     .name(bucket.getString("name"))
                                     .enableFlush(enableFlush)
@@ -227,6 +235,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                     .port(bucket.getInt("proxyPort"))
                                     .password(bucket.getString("saslPassword"))
                                     .compressionMode(compressionMode)
+                                    .ejectionMethod(ejectionMethod)
                                     .build(bucket));
                         }
                         return Observable.from(settings);
@@ -529,6 +538,12 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                             + settings.compressionMode());
             }
             actual.put("compressionMode", compressionMode);
+        }
+
+        if (settings.ejectionMethod() != null) {
+            if (settings.ejectionMethod() == EjectionMethod.FULL) {
+                actual.put("evictionPolicy", "fullEviction");
+            }
         }
 
         String bucketType;

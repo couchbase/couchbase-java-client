@@ -39,6 +39,7 @@ public class DefaultBucketSettings implements BucketSettings {
     private final Map<String, Object> customSettings;
     private final JsonObject raw;
     private final CompressionMode compressionMode;
+    private final EjectionMethod ejectionMethod;
 
     private DefaultBucketSettings(Builder builder) {
         this(builder, JsonObject.empty());
@@ -55,6 +56,7 @@ public class DefaultBucketSettings implements BucketSettings {
         enableFlush = builder.enableFlush();
         customSettings = builder.customSettings();
         compressionMode = builder.compressionMode();
+        ejectionMethod = builder.ejectionMethod();
         this.raw = raw;
     }
 
@@ -124,6 +126,11 @@ public class DefaultBucketSettings implements BucketSettings {
     }
 
     @Override
+    public EjectionMethod ejectionMethod() {
+        return ejectionMethod;
+    }
+
+    @Override
     public Map<String, Object> customSettings() {
         return customSettings;
     }
@@ -144,6 +151,7 @@ public class DefaultBucketSettings implements BucketSettings {
         private boolean indexReplicas = false;
         private boolean enableFlush = false;
         private CompressionMode compressionMode = null;
+        private EjectionMethod ejectionMethod = null;
         private final Map<String, Object> customSettings = new LinkedHashMap<String, Object>();
 
         @Override
@@ -237,6 +245,16 @@ public class DefaultBucketSettings implements BucketSettings {
         }
 
         @Override
+        public EjectionMethod ejectionMethod() {
+            return ejectionMethod;
+        }
+
+        public Builder ejectionMethod(final EjectionMethod ejectionMethod) {
+            this.ejectionMethod = ejectionMethod;
+            return this;
+        }
+
+        @Override
         public Map<String, Object> customSettings() {
             return this.customSettings;
         }
@@ -299,6 +317,7 @@ public class DefaultBucketSettings implements BucketSettings {
             .append(", replicas=").append(replicas)
             .append(", indexReplicas=").append(indexReplicas)
             .append(", compressionMode=").append(compressionMode)
+            .append(", ejectionMethod=").append(ejectionMethod)
             .append(", enableFlush=").append(enableFlush);
         if (!customSettings.isEmpty()) {
             s.append(", customSettings=").append(customSettings);

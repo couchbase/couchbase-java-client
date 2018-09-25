@@ -31,7 +31,7 @@ public class DefaultAsyncClusterManagerTest {
                 .withSetting("baz", 123)
                 .build();
 
-        String expectedToString = "DefaultBucketSettings{name='foo', type=COUCHBASE, quota=100, port=0, password='', replicas=3, indexReplicas=false, enableFlush=false" +
+        String expectedToString = "DefaultBucketSettings{name='foo', type=COUCHBASE, quota=100, port=0, password='', replicas=3, indexReplicas=false, compressionMode=null, ejectionMethod=null, enableFlush=false" +
                 ", customSettings={foo=bar, baz=123}}";
         String expectedInsert = "name=foo&ramQuotaMB=100&authType=sasl&replicaNumber=3&bucketType=membase&flushEnabled=0" +
                 "&foo=bar&baz=123";
@@ -75,12 +75,24 @@ public class DefaultAsyncClusterManagerTest {
     @Test
     public void shouldSerializeCompressionMode() {
         BucketSettings settings = DefaultBucketSettings.builder()
-            .compressionMode(CompressionMode.ACTIVE)
-            .build();
+                .compressionMode(CompressionMode.ACTIVE)
+                .build();
 
         DefaultAsyncClusterManager clusterManager = new DefaultAsyncClusterManager("login", "password", null, null, null);
         String payload = clusterManager.getConfigureBucketPayload(settings, false);
 
         assertTrue(payload.contains("compressionMode=active"));
+    }
+
+    @Test
+    public void shouldSerializeEjectionMethod() {
+        BucketSettings settings = DefaultBucketSettings.builder()
+                .ejectionMethod(EjectionMethod.FULL)
+                .build();
+
+        DefaultAsyncClusterManager clusterManager = new DefaultAsyncClusterManager("login", "password", null, null, null);
+        String payload = clusterManager.getConfigureBucketPayload(settings, false);
+
+        assertTrue(payload.contains("evictionPolicy=fullEviction"));
     }
 }
