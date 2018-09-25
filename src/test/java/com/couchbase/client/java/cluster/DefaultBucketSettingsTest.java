@@ -48,4 +48,11 @@ public class DefaultBucketSettingsTest {
         assertTrue(DefaultBucketSettings.builder().enableFlush(true).build().enableFlush());
     }
 
+    @Test
+    public void shouldAllowToOverrideCompressionMode() {
+        for (CompressionMode mode : CompressionMode.values()) {
+            assertEquals(mode, DefaultBucketSettings.builder().compressionMode(mode).build().compressionMode());
+        }
+    }
+
 }

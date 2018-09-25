@@ -90,6 +90,13 @@ public interface BucketSettings {
     boolean enableFlush();
 
     /**
+     * The different compression modes for the bucket.
+     *
+     * @return the compression mode selected.
+     */
+    CompressionMode compressionMode();
+
+    /**
      * A map of map of advanced settings that are not covered by the native methods of the object
      * but still need to be set when configuring a bucket.
      *

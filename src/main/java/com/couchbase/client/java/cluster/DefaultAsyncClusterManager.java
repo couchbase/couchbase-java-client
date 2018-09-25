@@ -203,6 +203,20 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                 bucketType = BucketType.MEMCACHED;
                             }
 
+                            CompressionMode compressionMode = null;
+                            String rawCompressionMode = bucket.getString("compressionMode");
+                            if (rawCompressionMode != null && !rawCompressionMode.isEmpty()) {
+                                if ("off".equalsIgnoreCase(rawCompressionMode)) {
+                                    compressionMode = CompressionMode.OFF;
+                                } else if ("active".equalsIgnoreCase(rawCompressionMode)) {
+                                    compressionMode = CompressionMode.ACTIVE;
+                                } else {
+                                    // unconditional check because this is the default
+                                    // on the server
+                                    compressionMode = CompressionMode.PASSIVE;
+                                }
+                            }
+
                             settings.add(DefaultBucketSettings.builder()
                                     .name(bucket.getString("name"))
                                     .enableFlush(enableFlush)
@@ -212,6 +226,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                     .indexReplicas(indexReplicas)
                                     .port(bucket.getInt("proxyPort"))
                                     .password(bucket.getString("saslPassword"))
+                                    .compressionMode(compressionMode)
                                     .build(bucket));
                         }
                         return Observable.from(settings);
@@ -501,6 +516,19 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         actual.put("replicaNumber", settings.replicas());
         if (settings.port() > 0) {
             actual.put("proxyPort", settings.port());
+        }
+
+        if (settings.compressionMode() != null) {
+            String compressionMode;
+            switch (settings.compressionMode()) {
+                case OFF: compressionMode = "off"; break;
+                case ACTIVE: compressionMode = "active"; break;
+                case PASSIVE: compressionMode = "passive"; break;
+                default:
+                    throw new UnsupportedOperationException("Could not convert compression mode "
+                            + settings.compressionMode());
+            }
+            actual.put("compressionMode", compressionMode);
         }
 
         String bucketType;

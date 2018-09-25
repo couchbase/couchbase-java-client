@@ -16,6 +16,7 @@
 package com.couchbase.client.java.cluster;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -69,5 +70,17 @@ public class DefaultAsyncClusterManagerTest {
         assertThat(payload)
                 .doesNotContain("bar")
                 .isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldSerializeCompressionMode() {
+        BucketSettings settings = DefaultBucketSettings.builder()
+            .compressionMode(CompressionMode.ACTIVE)
+            .build();
+
+        DefaultAsyncClusterManager clusterManager = new DefaultAsyncClusterManager("login", "password", null, null, null);
+        String payload = clusterManager.getConfigureBucketPayload(settings, false);
+
+        assertTrue(payload.contains("compressionMode=active"));
     }
 }
