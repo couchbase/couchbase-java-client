@@ -95,6 +95,7 @@ import com.couchbase.client.java.query.core.N1qlQueryExecutor;
 import com.couchbase.client.java.repository.AsyncRepository;
 import com.couchbase.client.java.repository.CouchbaseAsyncRepository;
 import com.couchbase.client.java.search.SearchQuery;
+import com.couchbase.client.java.search.core.SearchQueryExecutor;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
 import com.couchbase.client.java.search.result.impl.DefaultAsyncSearchQueryResult;
 import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
@@ -180,6 +181,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
     /** the bucket's {@link N1qlQueryExecutor}. Prefer using {@link #n1qlQueryExecutor()} since it allows mocking and testing */
     private final N1qlQueryExecutor n1qlQueryExecutor;
     private final AnalyticsQueryExecutor analyticsQueryExecutor;
+    private final SearchQueryExecutor searchQueryExecutor;
 
     private volatile boolean closed;
 
@@ -229,6 +231,7 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
         boolean n1qlPreparedEncodedPlanEnabled = "true".equalsIgnoreCase(System.getProperty(N1qlQueryExecutor.ENCODED_PLAN_ENABLED_PROPERTY, "true")); //active by default
         n1qlQueryExecutor = new N1qlQueryExecutor(core, bucket, username, password, n1qlPreparedEncodedPlanEnabled);
         analyticsQueryExecutor = new AnalyticsQueryExecutor(core, bucket, username, password);
+        searchQueryExecutor = new SearchQueryExecutor(environment, core, bucket, username, password);
     }
 
     @Override
@@ -805,43 +808,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Observable<AsyncSearchQueryResult> query(final SearchQuery query, final long timeout, final TimeUnit timeUnit) {
-        final String indexName = query.indexName();
-
         //always set a server side timeout. if not explicit, set it to the client side timeout
         if (query.getServerSideTimeout() == null) {
             query.serverSideTimeout(environment().searchTimeout(), TimeUnit.MILLISECONDS);
         }
-
-        final Observable<SearchQueryResponse> source = deferAndWatch(
-            new Func1<Subscriber, Observable<? extends SearchQueryResponse>>() {
-                @Override
-                public Observable<? extends SearchQueryResponse> call(Subscriber subscriber) {
-                final SearchQueryRequest request =
-                    new SearchQueryRequest(indexName, query.export().toString(), bucket, username, password);
-                Utils.addRequestSpan(environment, request, "search");
-                request.subscriber(subscriber);
-                return applyTimeout(core.<SearchQueryResponse>send(request), request, environment, timeout, timeUnit);
-            }
-        });
-
-        return source.map(new Func1<SearchQueryResponse, AsyncSearchQueryResult>() {
-            @Override
-            public AsyncSearchQueryResult call(SearchQueryResponse response) {
-                if (response.status().isSuccess()) {
-                    JsonObject json = JsonObject.fromJson(response.payload());
-                    return DefaultAsyncSearchQueryResult.fromJson(json);
-                } else if (response.payload().contains("index not found")) {
-                    return DefaultAsyncSearchQueryResult.fromIndexNotFound(indexName);
-                } else if (response.status() == ResponseStatus.INVALID_ARGUMENTS) {
-                    return DefaultAsyncSearchQueryResult.fromHttp400(response.payload());
-                } else if (response.status() == ResponseStatus.FAILURE) {
-                    //TODO for now only HTTP 412 can lead to FAILURE in search, will need to keep the HTTP code in the future
-                    return DefaultAsyncSearchQueryResult.fromHttp412();
-                } else {
-                    throw new CouchbaseException("Could not query search index, " + response.status() + ": " + response.payload());
-                }
-            }
-        });
+        return searchQueryExecutor.execute(query, timeout, timeUnit);
     }
 
     @Override

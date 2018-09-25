@@ -28,6 +28,7 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.FtsConsistencyTimeoutException;
 import com.couchbase.client.java.error.FtsMalformedRequestException;
+import com.couchbase.client.java.error.FtsServerOverloadException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.search.result.AsyncSearchQueryResult;
 import com.couchbase.client.java.search.result.SearchMetrics;
@@ -285,6 +286,21 @@ public class DefaultAsyncSearchQueryResult implements AsyncSearchQueryResult {
         return new DefaultAsyncSearchQueryResult(
                 status,
                 Observable.<SearchQueryRow>error(new FtsConsistencyTimeoutException()),
+                Observable.<FacetResult>empty(),
+                Observable.just(metrics)
+        );
+    }
+
+    /**
+     * Creates a result out of the http 429 response code if retry didn't work.
+     */
+    public static AsyncSearchQueryResult fromHttp429(String payload) {
+        SearchStatus status = new DefaultSearchStatus(1L, 1L, 0L);
+        SearchMetrics metrics = new DefaultSearchMetrics(0L, 0L, 0d);
+
+        return new DefaultAsyncSearchQueryResult(
+                status,
+                Observable.<SearchQueryRow>error(new FtsServerOverloadException(payload)),
                 Observable.<FacetResult>empty(),
                 Observable.just(metrics)
         );
