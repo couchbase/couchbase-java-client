@@ -15,7 +15,6 @@
  */
 package com.couchbase.client.java.cluster;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,6 +22,11 @@ import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.document.json.JsonObject;
 
 public class DefaultBucketSettings implements BucketSettings {
+
+    /**
+     * Use a default quota of 100MB if not otherwise specified.
+     */
+    private static final int DEFAULT_QUOTA_MB = 100;
 
     private final String name;
     private final BucketType type;
@@ -35,11 +39,11 @@ public class DefaultBucketSettings implements BucketSettings {
     private final Map<String, Object> customSettings;
     private final JsonObject raw;
 
-    DefaultBucketSettings(Builder builder) {
+    private DefaultBucketSettings(Builder builder) {
         this(builder, JsonObject.empty());
     }
 
-    DefaultBucketSettings(Builder builder, JsonObject raw) {
+    private DefaultBucketSettings(Builder builder, JsonObject raw) {
         name = builder.name();
         type = builder.type();
         quota = builder.quota();
@@ -52,8 +56,24 @@ public class DefaultBucketSettings implements BucketSettings {
         this.raw = raw;
     }
 
+    /**
+     * Provides a builder to build the bucket settings.
+     *
+     * @return the bucket settings builder.
+     */
     public static Builder builder() {
         return new Builder();
+    }
+
+
+    /**
+     * Helper method to create bucket settings with a name and default settings.
+     *
+     * @param name the name of the bucket
+     * @return bucket settings with defaults.
+     */
+    public static DefaultBucketSettings create(final String name) {
+        return builder().name(name).build();
     }
 
     @Override
@@ -110,7 +130,7 @@ public class DefaultBucketSettings implements BucketSettings {
 
         private String name = "";
         private BucketType type = BucketType.COUCHBASE;
-        private int quota = 0;
+        private int quota = DEFAULT_QUOTA_MB;
         private int port = 0;
         private String password = "";
         private int replicas = 0;
@@ -252,15 +272,15 @@ public class DefaultBucketSettings implements BucketSettings {
 
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder("DefaultClusterBucketSettings{")
-                .append("name='").append(name).append('\'')
-                .append(", type=").append(type)
-                .append(", quota=").append(quota)
-                .append(", port=").append(port)
-                .append(", password='").append(password).append('\'')
-                .append(", replicas=").append(replicas)
-                .append(", indexReplicas=").append(indexReplicas)
-                .append(", enableFlush=").append(enableFlush);
+        StringBuilder s = new StringBuilder("DefaultBucketSettings{")
+            .append("name='").append(name).append('\'')
+            .append(", type=").append(type)
+            .append(", quota=").append(quota)
+            .append(", port=").append(port)
+            .append(", password='").append(password).append('\'')
+            .append(", replicas=").append(replicas)
+            .append(", indexReplicas=").append(indexReplicas)
+            .append(", enableFlush=").append(enableFlush);
         if (!customSettings.isEmpty()) {
             s.append(", customSettings=").append(customSettings);
         }

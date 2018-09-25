@@ -495,7 +495,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         }
         actual.put("ramQuotaMB", settings.quota());
         actual.put("authType", "sasl");
-        actual.put("saslPassword", settings.password());
+        if (settings.password() != null && !settings.password().isEmpty()) {
+            actual.put("saslPassword", settings.password());
+        }
         actual.put("replicaNumber", settings.replicas());
         if (settings.port() > 0) {
             actual.put("proxyPort", settings.port());
