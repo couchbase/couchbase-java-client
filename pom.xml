@@ -17,7 +17,7 @@
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
     <version>2.7.3-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>Couchbase Java SDK</name>
     <description>The official Couchbase Java SDK</description>
@@ -264,6 +264,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                         <manifestEntries>
                             <Automatic-Module-Name>com.couchbase.client.java</Automatic-Module-Name>
                         </manifestEntries>
@@ -332,6 +333,35 @@
                         <phase>compile</phase>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>4.1.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <manifestLocation>META-INF</manifestLocation>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <Bundle-License>http://www.apache.org/licenses/LICENSE-2.0.txt</Bundle-License>
+                        <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                        <Bundle-Description>${project.description}</Bundle-Description>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
+                        <Export-Package>com.couchbase.client.*</Export-Package>
+                        <Import-Package>com.couchbase.client.core;version="[${core.version},${core.version}]",org.apache.log4j;version="[${log4j.version},${log4j.version}]";resolution:=optional, org.slf4j;version="[${slf4j.version},${slf4j.version}]";resolution:=optional, org.apache.commons.logging;version="[${commons-logging.version},${commons-logging.version}]";resolution:=optional, com.couchbase.client.encryption;version="[${encryptionextension.version},${encryptionextension.version}]";resolution:=optional</Import-Package>
+                    </instructions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>manifest</goal>
                         </goals>
                     </execution>
                 </executions>
