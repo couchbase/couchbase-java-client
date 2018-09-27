@@ -16,18 +16,25 @@
 package com.couchbase.client.java.analytics;
 
 import com.couchbase.client.core.ClusterFacade;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
 import com.couchbase.client.core.message.analytics.GenericAnalyticsRequest;
 import com.couchbase.client.core.message.analytics.GenericAnalyticsResponse;
+import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.java.bucket.api.Utils;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
+import com.couchbase.client.java.error.CannotRetryException;
+import com.couchbase.client.java.error.QueryExecutionException;
+import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.error.TranscodingException;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
+import com.couchbase.client.java.util.retry.RetryBuilder;
 import io.opentracing.tag.Tags;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Func0;
+import rx.functions.Action4;
 import rx.functions.Func1;
 import rx.functions.Func6;
 
@@ -40,6 +47,13 @@ import static com.couchbase.client.java.bucket.api.Utils.applyTimeout;
 import static com.couchbase.client.java.util.OnSubscribeDeferAndWatch.deferAndWatch;
 
 public class AnalyticsQueryExecutor {
+
+    /**
+     * The logger used.
+     */
+    private static CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(AnalyticsQueryExecutor.class);
+
+    private static final String ERROR_FIELD_CODE = "code";
 
     private final ClusterFacade core;
     private final String bucket;
@@ -133,7 +147,34 @@ public class AnalyticsQueryExecutor {
 
                 AsyncAnalyticsQueryResult r = new DefaultAsyncAnalyticsQueryResult(rows, signature, info, errors,
                     finalStatus, parseSuccess, requestId, contextId);
-                return Observable.just(r);            }
+                return Observable.just(r);
+            }
+        })
+        .flatMap(RESULT_PEEK_FOR_RETRY)
+        .retryWhen(RetryBuilder
+            .anyOf(AnalyticsTemporaryFailureException.class)
+            .delay(Delay.exponential(TimeUnit.MILLISECONDS, 500, 2))
+            .max(10)
+            .doOnRetry(new Action4<Integer, Throwable, Long, TimeUnit>() {
+                @Override
+                public void call(Integer attempt, Throwable error, Long delay, TimeUnit delayUnit) {
+                    LOGGER.debug("Retrying {} because of {} (attempt {}, delay {} {})", query.query(),
+                            error.getMessage(), attempt, delay, delayUnit);
+                }
+            })
+            .build()
+        )
+        .onErrorResumeNext(new Func1<Throwable, Observable<? extends AsyncAnalyticsQueryResult>>() {
+            @Override
+            public Observable<? extends AsyncAnalyticsQueryResult> call(Throwable throwable) {
+                if (throwable instanceof CannotRetryException) {
+                    if (throwable.getCause() != null && throwable.getCause() instanceof AnalyticsTemporaryFailureException) {
+                        AnalyticsTemporaryFailureException x = (AnalyticsTemporaryFailureException) throwable.getCause();
+                        return Observable.just(x.result());
+                    }
+                }
+                return Observable.error(throwable);
+            }
         });
     }
 
@@ -165,4 +206,80 @@ public class AnalyticsQueryExecutor {
                 });
         }
     };
+
+    private static final Func1<AsyncAnalyticsQueryResult, Observable<AsyncAnalyticsQueryResult>> RESULT_PEEK_FOR_RETRY =
+            new Func1<AsyncAnalyticsQueryResult, Observable<AsyncAnalyticsQueryResult>>() {
+                @Override
+                public Observable<AsyncAnalyticsQueryResult> call(final AsyncAnalyticsQueryResult aqr) {
+                    if (!aqr.parseSuccess()) {
+                        final Observable<JsonObject> cachedErrors = aqr.errors().cache();
+
+                        return cachedErrors
+                                //only keep errors that triggers a prepared statement retry
+                                .filter(new Func1<JsonObject, Boolean>() {
+                                    @Override
+                                    public Boolean call(JsonObject e) {
+                                        return shouldRetry(e);
+                                    }
+                                })
+                                //if none, will emit null
+                                .lastOrDefault(null)
+                                //... in which case a copy of the AsyncN1qlQueryResult is propagated, otherwise an retry
+                                // triggering exception is propagated.
+                                .flatMap(new Func1<JsonObject, Observable<AsyncAnalyticsQueryResult>>() {
+                                    @Override
+                                    public Observable<AsyncAnalyticsQueryResult> call(JsonObject errorJson) {
+                                        AsyncAnalyticsQueryResult copyResult = new DefaultAsyncAnalyticsQueryResult(
+                                                aqr.rows(),
+                                                aqr.signature(),
+                                                aqr.info(),
+                                                cachedErrors,
+                                                aqr.status(),
+                                                aqr.parseSuccess(),
+                                                aqr.requestId(),
+                                                aqr.clientContextId()
+                                        );
+                                        if (errorJson == null) {
+                                            return Observable.just(copyResult);
+                                        } else {
+                                            return Observable.error(
+                                                new AnalyticsTemporaryFailureException(copyResult)
+                                            );
+                                        }
+                                    }
+                                });
+                    } else {
+                        return Observable.just(aqr);
+                    }
+                }
+            };
+
+    private static boolean shouldRetry(final JsonObject errorJson) {
+        if (errorJson == null) return false;
+        Integer code = errorJson.getInt(ERROR_FIELD_CODE);
+
+        // The following error codes have been identified as being
+        // retryable.
+        switch (code) {
+            case 21002:
+            case 23000:
+            case 23003:
+            case 23007:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    static class AnalyticsTemporaryFailureException extends TemporaryFailureException {
+        private final AsyncAnalyticsQueryResult result;
+
+        public AnalyticsTemporaryFailureException(AsyncAnalyticsQueryResult result) {
+            this.result = result;
+        }
+
+        public AsyncAnalyticsQueryResult result() {
+            return result;
+        }
+    }
 }
