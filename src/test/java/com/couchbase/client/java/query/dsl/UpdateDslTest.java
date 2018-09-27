@@ -26,7 +26,6 @@ import com.couchbase.client.java.query.dsl.path.DefaultReturningPath;
 import com.couchbase.client.java.query.dsl.path.DefaultUpdateSetOrUnsetPath;
 import com.couchbase.client.java.query.dsl.path.DefaultUpdateUsePath;
 import org.junit.Test;
-import org.omg.PortableInterceptor.ACTIVE;
 
 import static com.couchbase.client.java.query.dsl.Expression.i;
 import static com.couchbase.client.java.query.dsl.Expression.s;
