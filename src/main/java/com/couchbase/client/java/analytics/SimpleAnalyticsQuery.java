@@ -25,7 +25,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  * @author Michael Nitschinger
  * @since 2.4.3
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class SimpleAnalyticsQuery extends AnalyticsQuery {
 

@@ -27,7 +27,7 @@ import java.io.Serializable;
  * @author Michael Nitschinger
  * @since 2.4.3
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class AnalyticsMetrics implements Serializable {
 

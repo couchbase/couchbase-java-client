@@ -25,7 +25,7 @@ import com.couchbase.client.java.transcoder.JacksonTransformers;
 
 import java.io.IOException;
 
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class DefaultAsyncAnalyticsQueryRow implements AsyncAnalyticsQueryRow {
 

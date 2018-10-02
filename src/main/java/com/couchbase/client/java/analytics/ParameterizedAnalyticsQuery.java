@@ -26,7 +26,7 @@ import com.couchbase.client.java.document.json.JsonObject;
  *
  * @since 2.6.2
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class ParameterizedAnalyticsQuery extends SimpleAnalyticsQuery {
 

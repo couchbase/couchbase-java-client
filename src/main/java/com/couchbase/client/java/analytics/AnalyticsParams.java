@@ -34,7 +34,7 @@ import static com.couchbase.client.java.query.N1qlParams.durationToN1qlFormat;
  * @author Michael Nitschinger
  * @since 2.4.3
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class AnalyticsParams implements Serializable {
 

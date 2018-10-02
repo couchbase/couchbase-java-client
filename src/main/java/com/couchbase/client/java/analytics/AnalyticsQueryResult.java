@@ -31,7 +31,7 @@ import java.util.List;
  * @author Michael Nitschinger
  * @since 2.4.3
  */
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public interface AnalyticsQueryResult extends Iterable<AnalyticsQueryRow> {
 

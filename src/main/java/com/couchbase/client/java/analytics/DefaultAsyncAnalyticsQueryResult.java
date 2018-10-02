@@ -21,7 +21,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import rx.Observable;
 import rx.functions.Func1;
 
-@InterfaceStability.Uncommitted
+@InterfaceStability.Committed
 @InterfaceAudience.Public
 public class DefaultAsyncAnalyticsQueryResult implements AsyncAnalyticsQueryResult {
 
