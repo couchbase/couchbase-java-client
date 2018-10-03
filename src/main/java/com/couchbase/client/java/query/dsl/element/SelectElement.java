@@ -38,7 +38,7 @@ public class SelectElement implements Element {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         if (selectType != SelectType.DEFAULT) {
-            sb.append(selectType).append(" ");
+            sb.append(selectType.value()).append(" ");
         }
         for (int i=0; i < expressions.length; i++) {
             sb.append(expressions[i].toString());

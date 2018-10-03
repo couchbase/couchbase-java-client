@@ -15,8 +15,7 @@
  */
 package com.couchbase.client.java.query.dsl;
 
-import static com.couchbase.client.java.query.Select.select;
-import static com.couchbase.client.java.query.Select.selectDistinct;
+import static com.couchbase.client.java.query.Select.*;
 import static com.couchbase.client.java.query.dsl.Expression.i;
 import static com.couchbase.client.java.query.dsl.Expression.path;
 import static com.couchbase.client.java.query.dsl.Expression.s;
@@ -665,5 +664,19 @@ public class SelectDslSmokeTest {
 
         assertEquals("SELECT jungleville.level, friends FROM jungleville USE KEYS \"zid-jungle-0002\" " +
                 "JOIN jungleville.friends ON KEYS jungleville.friends", statement.toString());
+    }
+
+    @Test
+    public void test55() {
+        Statement statement = selectDistinctRaw("name").from("authors");
+
+        assertEquals("SELECT DISTINCT RAW name FROM authors", statement.toString());
+    }
+
+    @Test
+    public void test56() {
+        Statement statement = selectDistinctRaw(x("name")).from("authors");
+
+        assertEquals("SELECT DISTINCT RAW name FROM authors", statement.toString());
     }
 }

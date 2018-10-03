@@ -25,7 +25,8 @@ public enum SelectType {
     DEFAULT(""),
     ALL("ALL"),
     DISTINCT("DISTINCT"),
-    RAW("RAW");
+    RAW("RAW"),
+    DISTINCT_RAW("DISTINCT RAW");
 
     private final String value;
 

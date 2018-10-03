@@ -57,6 +57,12 @@ public class DefaultSelectPath extends AbstractPath implements SelectPath {
     }
 
     @Override
+    public FromPath selectDistinctRaw(Expression expression) {
+        element(new SelectElement(SelectType.DISTINCT_RAW, expression));
+        return new DefaultFromPath(this);
+    }
+
+    @Override
     public FromPath select(String... expressions) {
         Expression[] converted = new Expression[expressions.length];
         for (int i = 0; i < expressions.length; i++) {
@@ -86,5 +92,10 @@ public class DefaultSelectPath extends AbstractPath implements SelectPath {
     @Override
     public FromPath selectRaw(String expression) {
         return selectRaw(x(expression));
+    }
+
+    @Override
+    public FromPath selectDistinctRaw(String expression) {
+        return selectDistinctRaw(x(expression));
     }
 }

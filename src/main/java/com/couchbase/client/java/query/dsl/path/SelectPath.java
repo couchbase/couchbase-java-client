@@ -40,4 +40,7 @@ public interface SelectPath extends Path {
 
     FromPath selectRaw(String expression);
 
+    FromPath selectDistinctRaw(Expression expression);
+
+    FromPath selectDistinctRaw(String expression);
 }
