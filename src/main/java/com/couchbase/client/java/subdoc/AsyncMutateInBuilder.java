@@ -1247,7 +1247,8 @@ public class AsyncMutateInBuilder {
                             bufList.add(buf);
                             commands.add(new MutationCommandBuilder(spec.type(), spec.path(), buf)
                                     .createIntermediaryPath(spec.createPath())
-                                    .xattr(spec.xattr()).build());
+                                    .xattr(spec.xattr())
+                                    .expandMacros(spec.expandMacros()).build());
                         } catch (TranscodingException e) {
                             releaseAll(bufList);
                             return Observable.error(e);
@@ -1382,6 +1383,7 @@ public class AsyncMutateInBuilder {
                     SubDictUpsertRequest request = new SubDictUpsertRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
+                    request.expandMacros(spec.expandMacros());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
@@ -1413,6 +1415,7 @@ public class AsyncMutateInBuilder {
                     SubDictAddRequest request = new SubDictAddRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
+                    request.expandMacros(spec.expandMacros());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;
@@ -1446,6 +1449,7 @@ public class AsyncMutateInBuilder {
                     SubReplaceRequest request = new SubReplaceRequest(docId, spec.path(), buf, bucketName, expiry, cas);
                     request.createIntermediaryPath(spec.createPath());
                     request.xattr(spec.xattr());
+                    request.expandMacros(spec.expandMacros());
                     request.upsertDocument(upsertDocument);
                     request.insertDocument(insertDocument);
                     return request;

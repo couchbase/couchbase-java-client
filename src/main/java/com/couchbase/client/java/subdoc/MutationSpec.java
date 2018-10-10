@@ -35,6 +35,7 @@ public class MutationSpec {
     private final Object fragment;
     private final boolean createPath;
     private final boolean xattr;
+    private final boolean expandMacros;
 
     @Deprecated
     public MutationSpec(Mutation type, String path, Object fragment, boolean createPath) {
@@ -44,6 +45,7 @@ public class MutationSpec {
         this.fragment = fragment;
         this.createPath = createPath;
         this.xattr = false;
+        this.expandMacros = false;
     }
 
     public MutationSpec(Mutation type, String path, Object fragment, SubdocOptionsBuilder builder) {
@@ -52,6 +54,7 @@ public class MutationSpec {
         this.fragment = fragment;
         this.createPath = builder.createPath();
         this.xattr = builder.xattr();
+        this.expandMacros = builder.expandMacros();
     }
 
     public MutationSpec(Mutation type, String path, Object fragment) {
@@ -60,6 +63,7 @@ public class MutationSpec {
         this.fragment = fragment;
         this.createPath = false;
         this.xattr = false;
+        this.expandMacros = false;
     }
 
     /**
@@ -97,6 +101,13 @@ public class MutationSpec {
         return this.xattr;
     }
 
+    /**
+     * @return true if macros will be expanded for this field
+     */
+    public boolean expandMacros() {
+        return this.expandMacros;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
@@ -104,6 +115,7 @@ public class MutationSpec {
         sb.append(", \"path\":" + path);
         sb.append(", \"createPath\":" + createPath);
         sb.append(", \"xattr\":" + xattr);
+        sb.append(", \"expandMacros\":" + expandMacros);
         sb.append('}');
         return sb.toString();
     }

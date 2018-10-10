@@ -52,10 +52,10 @@ public class SubDocumentTest {
         MutationSpec spec3 = new MutationSpec(Mutation.ARRAY_PUSH_LAST, "path", "toto", false);
         MutationSpec spec4 = new MutationSpec(Mutation.ARRAY_PUSH_FIRST, "path", "toto", true);
 
-        assertEquals("{\"type\":DICT_ADD, \"path\":some/path/\"e\", \"createPath\":false, \"xattr\":false}", spec1.toString());
-        assertEquals("{\"type\":ARRAY_ADD_UNIQUE, \"path\":some/path/\"e\", \"createPath\":true, \"xattr\":false}", spec2.toString());
-        assertEquals("{\"type\":ARRAY_PUSH_LAST, \"path\":path, \"createPath\":false, \"xattr\":false}", spec3.toString());
-        assertEquals("{\"type\":ARRAY_PUSH_FIRST, \"path\":path, \"createPath\":true, \"xattr\":false}", spec4.toString());
+        assertEquals("{\"type\":DICT_ADD, \"path\":some/path/\"e\", \"createPath\":false, \"xattr\":false, \"expandMacros\":false}", spec1.toString());
+        assertEquals("{\"type\":ARRAY_ADD_UNIQUE, \"path\":some/path/\"e\", \"createPath\":true, \"xattr\":false, \"expandMacros\":false}", spec2.toString());
+        assertEquals("{\"type\":ARRAY_PUSH_LAST, \"path\":path, \"createPath\":false, \"xattr\":false, \"expandMacros\":false}", spec3.toString());
+        assertEquals("{\"type\":ARRAY_PUSH_FIRST, \"path\":path, \"createPath\":true, \"xattr\":false, \"expandMacros\":false}", spec4.toString());
     }
 
     @Test

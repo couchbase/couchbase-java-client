@@ -32,6 +32,7 @@ import com.couchbase.client.core.annotations.InterfaceStability;
 public class SubdocOptionsBuilder {
     private boolean createPath;
     private boolean xattr;
+    private boolean expandMacros;
 
     public SubdocOptionsBuilder() {
     }
@@ -98,12 +99,29 @@ public class SubdocOptionsBuilder {
         return this.xattr;
     }
 
+    /**
+     * Controls whether macros such as ${Mutation.CAS} will be expanded by the server for this field.  Default is false.
+     */
+    @InterfaceAudience.Private
+    public SubdocOptionsBuilder expandMacros(boolean expandMacros) {
+        this.expandMacros = expandMacros;
+        return this;
+    }
+
+    /**
+     * Get whether macros will be expanded for this field.
+     */
+    @InterfaceAudience.Private
+    public boolean expandMacros() {
+        return this.expandMacros;
+    }
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append(" \"createPath\": " + createPath);
         sb.append(", \"xattr\":" + xattr);
+        sb.append(", \"expandMacros\":" + expandMacros);
         sb.append("}");
         return sb.toString();
     }
