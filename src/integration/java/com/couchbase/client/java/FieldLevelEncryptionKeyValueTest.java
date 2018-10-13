@@ -306,6 +306,22 @@ public class FieldLevelEncryptionKeyValueTest {
         Assert.assertEquals("{\"foo1\":{\"foo2\":{\"foo3\":{\"foo4\":\"bar\"}}}}", stored.content().toDecryptedString("RSA"));
     }
 
+    @Test
+    public void testUseWithNoEncryptedFields() {
+        JsonDocument document = JsonDocument.create("testUseWithNoEncryptedFields",
+                JsonObject.create().put("foo", "bar"));
+        bucket.upsert(document);
+        JsonDocument stored = bucket.get(document);
+        Assert.assertEquals("Verifying content", "bar", stored.content().get("foo"));
+    }
+
+    @Test
+    public void testUseWithNull() {
+        JsonDocument document = JsonDocument.create("testUseWithNull", null);
+        bucket.upsert(document);
+        JsonDocument stored = bucket.get(document);
+        Assert.assertEquals("Verifying content", null, stored.content());
+    }
 
     @Test
     public void testEntityEncryption() {
@@ -326,6 +342,17 @@ public class FieldLevelEncryptionKeyValueTest {
         Assert.assertTrue(entity.boolr == stored.content().boolr);
         Assert.assertTrue(entity.ia == stored.content().ia);
         Assert.assertTrue(entity.ir == stored.content().ir);
+    }
+
+    @Test
+    public void testEntityWithNoEncryption() {
+        EntityWithNoEncryption entity = new EntityWithNoEncryption();
+        entity.id = "testEntityWithNoEncryption";
+        entity.content = "foobar";
+        EntityDocument<EntityWithNoEncryption> document = EntityDocument.create(entity);
+        bucket.repository().upsert(document);
+        EntityDocument<EntityWithNoEncryption> stored = bucket.repository().get(entity.id, EntityWithNoEncryption.class);
+        Assert.assertEquals("Verifying content", entity.content, stored.content().content);
     }
 
     public static class Entity {
@@ -350,5 +377,11 @@ public class FieldLevelEncryptionKeyValueTest {
 
         @EncryptedField(provider = "RSA")
         public long ir;
+    }
+
+    public static class EntityWithNoEncryption {
+        @Id
+        public String id;
+        public String content;
     }
 }
