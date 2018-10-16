@@ -248,6 +248,11 @@ public class CouchbaseCluster implements Cluster {
     }
 
     @Override
+    public AsyncCluster async() {
+        return couchbaseAsyncCluster;
+    }
+
+    @Override
     public Bucket openBucket() {
         //skip the openBucket(String) that checks the authenticator, default to empty password.
         return openBucket(CouchbaseAsyncCluster.DEFAULT_BUCKET, null, null);

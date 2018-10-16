@@ -50,6 +50,13 @@ import com.couchbase.client.java.transcoder.Transcoder;
 public interface Cluster {
 
     /**
+     * Returns a reference to the underlying async cluster.
+     *
+     * @return the async cluster reference.
+     */
+    AsyncCluster async();
+
+    /**
      * Opens the default bucket with an empty password with the default connect timeout.
      *
      * This method throws:

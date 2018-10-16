@@ -26,6 +26,7 @@ import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import rx.Observable;
 
 import java.util.List;
 
@@ -81,6 +82,14 @@ public class DiagnosticsTest {
     assertEquals("myReportId", sh.id());
 
     assertNotNull(sh.exportToJson());
+  }
+
+  @Test
+  public void shouldAllowFromCluster() {
+    Observable<DiagnosticsReport> report = ctx.cluster().async().diagnostics();
+    DiagnosticsReport extracted = report.toBlocking().single();
+    assertNotNull(extracted);
+    assertNotNull(extracted.exportToJson());
   }
 
   @Test
