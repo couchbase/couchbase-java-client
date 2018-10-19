@@ -27,16 +27,17 @@ import java.util.List;
 @InterfaceAudience.Public
 public class DefaultAnalyticsQueryResult implements AnalyticsQueryResult {
 
-    private final String status;
+    private String status;
     private final boolean finalSuccess;
     private final boolean parseSuccess;
-    private final List<AnalyticsQueryRow> allRows;
+    private List<AnalyticsQueryRow> allRows;
     private final Object signature;
     private final AnalyticsMetrics info;
     private final List<JsonObject> errors;
     private final String requestId;
     private final String clientContextId;
-
+    private final AsyncAnalyticsDeferredResultHandle asyncHandle;
+    private final AnalyticsDeferredResultHandle handle;
 
     /**
      * Create a default blocking representation of a query result.
@@ -66,16 +67,52 @@ public class DefaultAnalyticsQueryResult implements AnalyticsQueryResult {
         this.signature = signature;
         this.errors = errors;
         this.info = info;
+        this.handle = null;
+        this.asyncHandle = null;
+    }
+
+    /**
+     * Create a default blocking representation of a query result.
+     *
+     * @param asyncHandle the deferred result handle.
+     * @param signature the signature for rows.
+     * @param info the metrics.
+     * @param errors the list of errors and warnings.
+     * @param finalStatus the definitive (but potentially delayed) status of the query.
+     * @param finalSuccess the definitive (but potentially delayed) success of the query.
+     * @param parseSuccess the intermediate result of the query
+     */
+    public DefaultAnalyticsQueryResult(AsyncAnalyticsDeferredResultHandle asyncHandle, Object signature,
+                                       AnalyticsMetrics info, List<JsonObject> errors,
+                                       String finalStatus, Boolean finalSuccess, boolean parseSuccess,
+                                       String requestId, String clientContextId) {
+
+        this.asyncHandle = asyncHandle;
+        this.handle = new DefaultAnalyticsDeferredResultHandle(this.asyncHandle);
+        this.requestId = requestId;
+        this.clientContextId = clientContextId;
+        this.parseSuccess = parseSuccess;
+        this.finalSuccess = finalSuccess != null && finalSuccess;
+        this.status = finalStatus;
+        this.signature = signature;
+        this.errors = errors;
+        this.info = info;
     }
 
     @Override
     public List<AnalyticsQueryRow> allRows() {
+        if (this.status.equalsIgnoreCase("running")) {
+            return null;
+        }
         return this.allRows;
     }
 
     @Override
     public Iterator<AnalyticsQueryRow> rows() {
-        return this.allRows.iterator();
+        if (this.status.equalsIgnoreCase("running")) {
+            return null;
+        }
+        return this.allRows().iterator();
     }
 
     @Override
@@ -105,12 +142,12 @@ public class DefaultAnalyticsQueryResult implements AnalyticsQueryResult {
 
     @Override
     public String status() {
-        return status;
+        return this.status;
     }
 
     @Override
     public Iterator<AnalyticsQueryRow> iterator() {
-        return rows();
+        return this.rows();
     }
 
     @Override
@@ -121,6 +158,11 @@ public class DefaultAnalyticsQueryResult implements AnalyticsQueryResult {
     @Override
     public String clientContextId() {
         return this.clientContextId;
+    }
+
+    @Override
+    public AnalyticsDeferredResultHandle handle() {
+        return this.handle;
     }
 
     @Override
@@ -135,6 +177,7 @@ public class DefaultAnalyticsQueryResult implements AnalyticsQueryResult {
             ", errors=" + errors +
             ", requestId='" + requestId + '\'' +
             ", clientContextId='" + clientContextId + '\'' +
+            ", handle='" + handle+ '\'' +
             '}';
     }
 }

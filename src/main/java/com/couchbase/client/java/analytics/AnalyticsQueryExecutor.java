@@ -36,6 +36,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action4;
 import rx.functions.Func1;
+import rx.functions.Func5;
 import rx.functions.Func6;
 
 import java.util.Arrays;
@@ -84,20 +85,7 @@ public class AnalyticsQueryExecutor {
         }).flatMap(new Func1<GenericAnalyticsResponse, Observable<AsyncAnalyticsQueryResult>>() {
             @Override
             public Observable<AsyncAnalyticsQueryResult> call(final GenericAnalyticsResponse response) {
-                final Observable<AsyncAnalyticsQueryRow> rows = response.rows().map(new Func1<ByteBuf, AsyncAnalyticsQueryRow>() {
-                    @Override
-                    public AsyncAnalyticsQueryRow call(ByteBuf byteBuf) {
-                        try {
-                            TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(byteBuf);
-                            byte[] copy = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
-                            return new DefaultAsyncAnalyticsQueryRow(copy);
-                        } catch (Exception e) {
-                            throw new TranscodingException("Could not decode Analytics Query Row.", e);
-                        } finally {
-                            byteBuf.release();
-                        }
-                    }
-                });
+
                 final Observable<Object> signature = response.signature().map(new Func1<ByteBuf, Object>() {
                     @Override
                     public Object call(ByteBuf byteBuf) {
@@ -144,10 +132,31 @@ public class AnalyticsQueryExecutor {
                 boolean parseSuccess = response.status().isSuccess();
                 String contextId = response.clientRequestId() == null ? "" : response.clientRequestId();
                 String requestId = response.requestId();
-
-                AsyncAnalyticsQueryResult r = new DefaultAsyncAnalyticsQueryResult(rows, signature, info, errors,
-                    finalStatus, parseSuccess, requestId, contextId);
-                return Observable.just(r);
+                if (!query.params().deferred()) {
+                    final Observable<AsyncAnalyticsQueryRow> rows = response.rows().map(new Func1<ByteBuf, AsyncAnalyticsQueryRow>() {
+                        @Override
+                        public AsyncAnalyticsQueryRow call(ByteBuf byteBuf) {
+                            try {
+                                TranscoderUtils.ByteBufToArray rawData = TranscoderUtils.byteBufToByteArray(byteBuf);
+                                byte[] copy = Arrays.copyOfRange(rawData.byteArray, rawData.offset, rawData.offset + rawData.length);
+                                return new DefaultAsyncAnalyticsQueryRow(copy);
+                            } catch (Exception e) {
+                                throw new TranscodingException("Could not decode Analytics Query Row.", e);
+                            } finally {
+                                byteBuf.release();
+                            }
+                        }
+                    });
+                    AsyncAnalyticsQueryResult r = new DefaultAsyncAnalyticsQueryResult(rows, signature, info, errors,
+                            finalStatus, parseSuccess, requestId, contextId);
+                    return Observable.just(r);
+                } else {
+                    String statusHandleStr = response.handle();
+                    AsyncAnalyticsDeferredResultHandle handle = new DefaultAsyncAnalyticsDeferredResultHandle(statusHandleStr, env, core, bucket, username, password, timeout, timeUnit);
+                    AsyncAnalyticsQueryResult r = new DefaultAsyncAnalyticsQueryResult(handle, signature, info, errors,
+                            finalStatus, parseSuccess, requestId, contextId);
+                    return Observable.just(r);
+                }
             }
         })
         .flatMap(RESULT_PEEK_FOR_RETRY)
@@ -207,7 +216,34 @@ public class AnalyticsQueryExecutor {
         }
     };
 
-    private static final Func1<AsyncAnalyticsQueryResult, Observable<AsyncAnalyticsQueryResult>> RESULT_PEEK_FOR_RETRY =
+    /**
+     * A function that can be used in a flatMap to convert an {@link AsyncAnalyticsQueryResult} to
+     * a {@link AnalyticsQueryResult} for deferred queries.
+     *
+     */
+    public static final Func1<? super AsyncAnalyticsQueryResult, ? extends Observable<? extends AnalyticsQueryResult>> ASYNC_RESULT_TO_SYNC_DEFERRED = new Func1<AsyncAnalyticsQueryResult, Observable<AnalyticsQueryResult>>() {
+        @Override
+        public Observable<AnalyticsQueryResult> call(final AsyncAnalyticsQueryResult aqr) {
+            final boolean parseSuccess = aqr.parseSuccess();
+            final String requestId = aqr.requestId();
+            final String clientContextId = aqr.clientContextId();
+
+            return Observable.zip(aqr.signature().singleOrDefault(JsonObject.empty()),
+                    aqr.info().singleOrDefault(AnalyticsMetrics.EMPTY_METRICS),
+                    aqr.errors().toList(),
+                    aqr.status(),
+                    aqr.finalSuccess().singleOrDefault(Boolean.FALSE),
+                    new Func5<Object, AnalyticsMetrics, List<JsonObject>, String, Boolean, AnalyticsQueryResult>() {
+                        @Override
+                        public AnalyticsQueryResult call(Object signature, AnalyticsMetrics info, List<JsonObject> errors, String finalStatus, Boolean finalSuccess) {
+                            return new DefaultAnalyticsQueryResult(aqr.handle(), signature, info, errors, finalStatus, finalSuccess,
+                                    parseSuccess, requestId, clientContextId);
+                        }
+                    });
+        }
+    };
+
+    protected static final Func1<AsyncAnalyticsQueryResult, Observable<AsyncAnalyticsQueryResult>> RESULT_PEEK_FOR_RETRY =
             new Func1<AsyncAnalyticsQueryResult, Observable<AsyncAnalyticsQueryResult>>() {
                 @Override
                 public Observable<AsyncAnalyticsQueryResult> call(final AsyncAnalyticsQueryResult aqr) {
@@ -229,16 +265,30 @@ public class AnalyticsQueryExecutor {
                                 .flatMap(new Func1<JsonObject, Observable<AsyncAnalyticsQueryResult>>() {
                                     @Override
                                     public Observable<AsyncAnalyticsQueryResult> call(JsonObject errorJson) {
-                                        AsyncAnalyticsQueryResult copyResult = new DefaultAsyncAnalyticsQueryResult(
-                                                aqr.rows(),
-                                                aqr.signature(),
-                                                aqr.info(),
-                                                cachedErrors,
-                                                aqr.status(),
-                                                aqr.parseSuccess(),
-                                                aqr.requestId(),
-                                                aqr.clientContextId()
-                                        );
+                                        AsyncAnalyticsQueryResult copyResult;
+                                        if (aqr.handle() != null) {
+                                            copyResult = new DefaultAsyncAnalyticsQueryResult(
+                                                    aqr.handle(),
+                                                    aqr.signature(),
+                                                    aqr.info(),
+                                                    cachedErrors,
+                                                    aqr.status(),
+                                                    aqr.parseSuccess(),
+                                                    aqr.requestId(),
+                                                    aqr.clientContextId()
+                                            );
+                                        } else {
+                                            copyResult = new DefaultAsyncAnalyticsQueryResult(
+                                                    aqr.rows(),
+                                                    aqr.signature(),
+                                                    aqr.info(),
+                                                    cachedErrors,
+                                                    aqr.status(),
+                                                    aqr.parseSuccess(),
+                                                    aqr.requestId(),
+                                                    aqr.clientContextId()
+                                            );
+                                        }
                                         if (errorJson == null) {
                                             return Observable.just(copyResult);
                                         } else {

@@ -25,14 +25,15 @@ import rx.functions.Func1;
 @InterfaceAudience.Public
 public class DefaultAsyncAnalyticsQueryResult implements AsyncAnalyticsQueryResult {
 
-    private final Observable<AsyncAnalyticsQueryRow> rows;
+    private Observable<AsyncAnalyticsQueryRow> rows;
     private final Observable<Object> signature;
     private final Observable<AnalyticsMetrics> info;
     private final boolean parsingSuccess;
     private final Observable<JsonObject> errors;
-    private final Observable<String> finalStatus;
+    private Observable<String> finalStatus;
     private final String requestId;
     private final String clientContextId;
+    private AsyncAnalyticsDeferredResultHandle handle;
 
     public DefaultAsyncAnalyticsQueryResult(Observable<AsyncAnalyticsQueryRow> rows, Observable<Object> signature,
         Observable<AnalyticsMetrics> info, Observable<JsonObject> errors, Observable<String> finalStatus,
@@ -47,9 +48,33 @@ public class DefaultAsyncAnalyticsQueryResult implements AsyncAnalyticsQueryResu
         this.clientContextId = clientContextId;
     }
 
+    public DefaultAsyncAnalyticsQueryResult(AsyncAnalyticsDeferredResultHandle handle, Observable<Object> signature,
+                                            Observable<AnalyticsMetrics> info, Observable<JsonObject> errors,
+                                            Observable<String> finalStatus, boolean parsingSuccess, String requestId,
+                                            String clientContextId) {
+        this.handle = handle;
+        this.signature = signature;
+        this.info = info;
+        this.errors = errors;
+        this.finalStatus = finalStatus;
+        this.parsingSuccess = parsingSuccess;
+        this.requestId = requestId;
+        this.clientContextId = clientContextId;
+        this.rows = Observable.empty();
+    }
+
     @Override
     public Observable<AsyncAnalyticsQueryRow> rows() {
-        return rows;
+        return finalStatus.flatMap(new Func1<String, Observable<AsyncAnalyticsQueryRow>>() {
+            @Override
+            public Observable<AsyncAnalyticsQueryRow> call(String s) {
+                if (s.equalsIgnoreCase("running")) {
+                    return Observable.just(null);
+                } else {
+                    return rows;
+                }
+            }
+        });
     }
 
     @Override
@@ -96,4 +121,7 @@ public class DefaultAsyncAnalyticsQueryResult implements AsyncAnalyticsQueryResu
     public String clientContextId() {
         return clientContextId;
     }
+
+    @Override
+    public AsyncAnalyticsDeferredResultHandle handle() { return handle; }
 }

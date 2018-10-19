@@ -21,6 +21,8 @@ import com.couchbase.client.java.document.json.JsonObject;
 /**
  * A {@link CouchbaseException} representing various errors during N1QL querying, when an
  * actual Exception wrapping a {@link JsonObject} is needed.
+ * It can also be thrown when the result handle is not available during deferred query rows
+ * fetch, the result handle is available only when the status poll returns success.
  *
  * @author Simon Baslé
  * @since 2.2

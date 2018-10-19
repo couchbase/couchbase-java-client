@@ -92,4 +92,10 @@ public interface AnalyticsQueryResult extends Iterable<AnalyticsQueryRow> {
      */
     String clientContextId();
 
+
+    /**
+     * @return the handle to fetch results from deferred execution
+     */
+    @InterfaceStability.Experimental
+    AnalyticsDeferredResultHandle handle();
 }

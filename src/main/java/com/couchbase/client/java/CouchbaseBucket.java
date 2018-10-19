@@ -15,6 +15,7 @@
  */
 package com.couchbase.client.java;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -23,11 +24,16 @@ import java.util.concurrent.TimeUnit;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.message.internal.PingReport;
 import com.couchbase.client.core.service.ServiceType;
+import com.couchbase.client.deps.com.fasterxml.jackson.core.JsonProcessingException;
+import com.couchbase.client.java.analytics.AnalyticsDeferredResultHandle;
 import com.couchbase.client.java.analytics.AnalyticsQuery;
 import com.couchbase.client.java.analytics.AnalyticsQueryExecutor;
 import com.couchbase.client.java.analytics.AnalyticsQueryResult;
+import com.couchbase.client.java.analytics.AsyncAnalyticsDeferredResultHandle;
 import com.couchbase.client.java.analytics.AsyncAnalyticsQueryResult;
+import com.couchbase.client.java.analytics.DefaultAnalyticsDeferredResultHandle;
 import com.couchbase.client.java.analytics.DefaultAnalyticsQueryResult;
+import com.couchbase.client.java.analytics.DefaultAsyncAnalyticsDeferredResultHandle;
 import com.couchbase.client.java.analytics.DefaultAsyncAnalyticsQueryResult;
 import com.couchbase.client.java.bucket.AsyncBucketManager;
 import com.couchbase.client.java.bucket.BucketManager;
@@ -36,6 +42,7 @@ import com.couchbase.client.java.datastructures.MutationOptionBuilder;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.JsonLongDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -50,6 +57,7 @@ import com.couchbase.client.java.subdoc.AsyncLookupInBuilder;
 import com.couchbase.client.java.subdoc.AsyncMutateInBuilder;
 import com.couchbase.client.java.subdoc.LookupInBuilder;
 import com.couchbase.client.java.subdoc.MutateInBuilder;
+import com.couchbase.client.java.transcoder.JacksonTransformers;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.Blocking;
 import com.couchbase.client.java.view.AsyncSpatialViewResult;
@@ -576,10 +584,18 @@ public class CouchbaseBucket implements Bucket {
 
     @Override
     public AnalyticsQueryResult query(AnalyticsQuery query, long timeout, TimeUnit timeUnit) {
-        return asyncBucket.query(query, timeout, timeUnit)
-            .flatMap(AnalyticsQueryExecutor.ASYNC_RESULT_TO_SYNC)
-            .toBlocking()
-            .single();
+        if (!query.params().deferred()) {
+            return asyncBucket.query(query, timeout, timeUnit)
+                    .flatMap(AnalyticsQueryExecutor.ASYNC_RESULT_TO_SYNC)
+                    .toBlocking()
+                    .single();
+        } else {
+            return asyncBucket.query(query, timeout, timeUnit)
+                    .flatMap(AnalyticsQueryExecutor.ASYNC_RESULT_TO_SYNC_DEFERRED)
+                    .toBlocking()
+                    .single();
+        }
+
     }
 
     @Override
@@ -1224,6 +1240,31 @@ public class CouchbaseBucket implements Bucket {
     @Override
     public PingReport ping(String reportId, Collection<ServiceType> services, long timeout, TimeUnit timeUnit) {
         return asyncBucket.ping(reportId, services, timeout, timeUnit).toBlocking().value();
+    }
+
+    @Override
+    public byte[] exportAnalyticsDeferredResultHandle(AnalyticsDeferredResultHandle handle) {
+        try {
+            JsonObject jsonObject = JsonObject.create();
+            jsonObject.put("v", 1);
+            jsonObject.put("uri", handle.getStatusHandleUri());
+            return JacksonTransformers.MAPPER.writeValueAsBytes(jsonObject);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot convert handle to Json String", e);
+        }
+    }
+
+    @Override
+    public AnalyticsDeferredResultHandle importAnalyticsDeferredResultHandle(byte[] b) {
+        try {
+            JsonObject jsonObj = CouchbaseAsyncBucket.JSON_OBJECT_TRANSCODER.stringToJsonObject(new String(b, StandardCharsets.UTF_8));
+            if (jsonObj.getInt("v") != 1) {
+                throw new IllegalArgumentException("Version is not supported");
+            }
+            return new DefaultAnalyticsDeferredResultHandle(new DefaultAsyncAnalyticsDeferredResultHandle(jsonObj.getString("uri"), this.environment(), this.core(), this.name(), username, password, environment.analyticsTimeout(), TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot import", e);
+        }
     }
 
     @Override

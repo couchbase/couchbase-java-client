@@ -52,10 +52,13 @@ public class AnalyticsParams implements Serializable {
      */
     private int priority;
 
+    private boolean deferred;
+
 
     private AnalyticsParams() {
         pretty = false;
         priority = 0;
+        deferred = false;
     }
 
     /**
@@ -73,6 +76,10 @@ public class AnalyticsParams implements Serializable {
 
         if (pretty) {
             queryJson.put("pretty", true);
+        }
+
+        if (deferred) {
+            queryJson.put("mode", "async");
         }
 
         if (this.rawParams != null) {
@@ -171,6 +178,23 @@ public class AnalyticsParams implements Serializable {
         return this;
     }
 
+    @InterfaceAudience.Private
+    public boolean deferred() {
+        return deferred;
+    }
+
+  /**
+     * Set to true for deferred query execution
+     * (Translates to mode async for the server request)
+     *
+     * @param deferred true for deferred execution, false otherwise.
+     * @return this {@link AnalyticsParams} for chaining.
+     */
+    public AnalyticsParams deferred(boolean deferred) {
+        this.deferred = deferred;
+        return this;
+    }
+
     /**
      * Returns the set priority as an integer.
      *
@@ -182,6 +206,7 @@ public class AnalyticsParams implements Serializable {
     public int priority() {
         return priority;
     }
+
 
     /**
      * Helper method to check if a custom server side timeout has been applied on the params.
@@ -217,6 +242,7 @@ public class AnalyticsParams implements Serializable {
 
         if (pretty != that.pretty) return false;
         if (priority != that.priority) return false;
+        if (deferred != that.deferred) return false;
         if (serverSideTimeout != null ? !serverSideTimeout.equals(that.serverSideTimeout) : that.serverSideTimeout != null)
             return false;
         if (clientContextId != null ? !clientContextId.equals(that.clientContextId) : that.clientContextId != null)
@@ -231,6 +257,7 @@ public class AnalyticsParams implements Serializable {
         result = 31 * result + (rawParams != null ? rawParams.hashCode() : 0);
         result = 31 * result + (pretty ? 1 : 0);
         result = 31 * result + priority;
+        result = 31 * result + (deferred ? 1 : 0);
         return result;
     }
 
@@ -242,6 +269,7 @@ public class AnalyticsParams implements Serializable {
             ", rawParams=" + rawParams +
             ", pretty=" + pretty +
             ", priority=" + priority +
+            ", deferred=" + deferred +
             '}';
     }
 }

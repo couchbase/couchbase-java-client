@@ -29,6 +29,7 @@ import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.message.internal.PingReport;
 import com.couchbase.client.core.service.ServiceType;
+import com.couchbase.client.java.analytics.AnalyticsDeferredResultHandle;
 import com.couchbase.client.java.analytics.AnalyticsQuery;
 import com.couchbase.client.java.analytics.AnalyticsQueryResult;
 import com.couchbase.client.java.bucket.BucketManager;
@@ -5896,5 +5897,19 @@ public interface Bucket {
      */
     PingReport ping(String reportId, Collection<ServiceType> services, long timeout, TimeUnit timeUnit);
 
+ /**
+     * Exports the deferred result handle to a serialized form which can be used across SDKs
+     * @param handle the deferred result handle
+     * @return the serialized bytes
+     */
+    @InterfaceStability.Experimental
+    byte[] exportAnalyticsDeferredResultHandle(AnalyticsDeferredResultHandle handle);
 
+    /**
+     * Imports from json to create a {@link AnalyticsDeferredResultHandle}.
+     * @param b the bytes to be converted to handle
+     * @return the deferred handle instance
+     */
+    @InterfaceStability.Experimental
+    AnalyticsDeferredResultHandle importAnalyticsDeferredResultHandle(byte[] b);
 }

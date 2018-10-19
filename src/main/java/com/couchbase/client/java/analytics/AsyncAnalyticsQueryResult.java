@@ -15,6 +15,8 @@
  */
 package com.couchbase.client.java.analytics;
 
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.client.core.annotations.InterfaceAudience;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -82,4 +84,9 @@ public interface AsyncAnalyticsQueryResult {
      * @return the clientContextId that was set by the client (could be truncated to 64 bytes of UTF-8 chars)
      */
     String clientContextId();
+
+
+    /** @return the {@link AsyncAnalyticsDeferredResultHandle} for deferred result fetch */
+    @InterfaceStability.Experimental
+    AsyncAnalyticsDeferredResultHandle handle();
 }
