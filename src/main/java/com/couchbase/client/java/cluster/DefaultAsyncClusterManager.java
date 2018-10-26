@@ -45,6 +45,7 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.core.utils.NetworkAddress;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
+import com.couchbase.client.java.CouchbaseAsyncCluster;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -652,7 +653,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     }
 
     Observable<Boolean> sendAddNodeRequest(final InetSocketAddress address) {
-        final NetworkAddress networkAddress = NetworkAddress.create(address.getAddress().getHostAddress());
+        final NetworkAddress networkAddress = NetworkAddress.create(CouchbaseAsyncCluster.ALLOW_HOSTNAMES_AS_SEED_NODES ?
+                address.getHostName() :
+                address.getAddress().getHostAddress());
         return core.<AddNodeResponse>send(new AddNodeRequest(networkAddress))
                 .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
                     @Override
