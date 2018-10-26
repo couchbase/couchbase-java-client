@@ -123,6 +123,14 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         CouchbaseLoggerFactory.getInstance(CouchbaseAsyncCluster.class);
 
     /**
+     * Flag which controls the usage of hostnames for seed nodes
+     */
+    public static final boolean ALLOW_HOSTNAMES_AS_SEED_NODES = Boolean.parseBoolean(
+            System.getProperty("com.couchbase.allowHostnamesAsSeedNodes", "false")
+    );
+
+
+    /**
      * The default bucket used when {@link #openBucket()} is called.
      *
      * Defaults to "default".
@@ -301,7 +309,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
             seedNodesViaDnsSrv(connectionString, environment, seedNodes);
         } else {
             for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(node.getAddress().getHostAddress());
+                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? node.getHostName() : node.getAddress().getHostAddress());
             }
         }
 
@@ -343,13 +351,13 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                 LOGGER.info("Loaded seed nodes from DNS SRV {}.", system(foundNodes));
             } catch (Exception ex) {
                 LOGGER.warn("DNS SRV lookup failed, proceeding with normal bootstrap.", ex);
-                seedNodes.add(lookupNode.getAddress().getHostAddress());
+                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? lookupNode.getHostName() : lookupNode.getAddress().getHostAddress());
             }
         } else {
             LOGGER.info("DNS SRV enabled, but less or more than one seed node given. "
                 + "Proceeding with normal bootstrap.");
             for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(node.getAddress().getHostAddress());
+                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? node.getHostName() : node.getAddress().getHostAddress());
             }
         }
     }
