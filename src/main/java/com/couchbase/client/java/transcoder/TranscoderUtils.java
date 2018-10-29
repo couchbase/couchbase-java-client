@@ -334,7 +334,7 @@ public class TranscoderUtils {
             ByteBufInputStream bbis = null;
             try {
                 bbis = new ByteBufInputStream(input);
-                return mapper.readValue(bbis, clazz);
+                return mapper.readValue((InputStream)bbis, clazz);
             }
             finally {
                 if (bbis != null) {
