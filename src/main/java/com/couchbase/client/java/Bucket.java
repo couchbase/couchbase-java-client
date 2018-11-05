@@ -2748,23 +2748,23 @@ public interface Bucket {
     SearchQueryResult query(SearchQuery query, long timeout, TimeUnit timeUnit);
 
     /**
-     * Uncommitted: Queries Couchbase Analytics
+     * Queries Couchbase Analytics
      *
      * @param query the query builder.
      * @return a query result containing the rows and additional information.
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     AnalyticsQueryResult query(AnalyticsQuery query);
 
     /**
-     * Uncommitted: Queries Couchbase Analytics
+     * Queries Couchbase Analytics
      *
      * @param query the query builder.
      * @param timeout the custom full timeout, including the time to retrieve all rows, errors, etc...
      * @param timeUnit the unit for the timeout.
      * @return a query result containing the rows and additional information.
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     AnalyticsQueryResult query(AnalyticsQuery query, long timeout, TimeUnit timeUnit);
 
     /**

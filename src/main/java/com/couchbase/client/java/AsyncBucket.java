@@ -2436,23 +2436,23 @@ public interface AsyncBucket {
     Observable<AsyncSearchQueryResult> query(SearchQuery query, long timeout, TimeUnit timeUnit);
 
     /**
-     * Uncommitted: Queries Couchbase Analytics
+     * Queries Couchbase Analytics
      *
      * @param query the query builder.
      * @return a query result containing the rows and additional information.
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     Observable<AsyncAnalyticsQueryResult> query(AnalyticsQuery query);
 
     /**
-     * Uncommitted: Queries Couchbase Analytics
+     * Queries Couchbase Analytics
      *
      * @param query the query builder.
      * @param timeout the custom timeout.
      * @param timeUnit the unit for the timeout.
      * @return a query result containing the rows and additional information.
      */
-    @InterfaceStability.Uncommitted
+    @InterfaceStability.Committed
     Observable<AsyncAnalyticsQueryResult> query(AnalyticsQuery query, long timeout, TimeUnit timeUnit);
 
     /**
