@@ -73,8 +73,10 @@ public interface SearchQueryResult extends Iterable<SearchQueryRow> {
     List<String> errors();
 
     /**
-     * If one or more facet were requested via the {@link SearchQuery#addFacets(SearchFacet...)} method when querying,
-     * contains the result of each facet. The map keys are the names given to each requested facet.
+     * If one or more facet were requested via the {@link SearchQuery#addFacet(String, SearchFacet)} method
+     * when querying, contains the result of each facet.
+     *
+     * <p>The map keys are the names given to each requested facet.</p>
      */
     Map<String, FacetResult> facets();
 

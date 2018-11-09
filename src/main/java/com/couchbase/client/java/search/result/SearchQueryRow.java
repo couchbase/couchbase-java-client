@@ -53,7 +53,6 @@ public interface SearchQueryRow {
 
     /**
      * If {@link SearchQuery#explain() requested in the query}, an explanation of the match, in JSON form.
-     * @return
      */
     JsonObject explanation();
 

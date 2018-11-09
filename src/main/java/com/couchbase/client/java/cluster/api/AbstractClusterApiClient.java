@@ -114,7 +114,7 @@ public abstract class AbstractClusterApiClient<T extends RestBuilderMarker> {
     /**
      * Create the concrete {@link RestBuilderMarker builders} returned by concrete implementations.
      * Builders will be either capable of synchronous or asynchronous execution, depending on
-     * type {@link T}.
+     * type T.
      */
     protected abstract T createBuilder(HttpMethod method, String fullPath);
 
@@ -125,7 +125,7 @@ public abstract class AbstractClusterApiClient<T extends RestBuilderMarker> {
      *  - if an element is null, it is ignored.
      *
      * @param paths the elements of the path.
-     * @returns the full path.
+     * @return returns the full path.
      */
     public static String buildPath(String... paths) {
         if (paths == null || paths.length == 0) {

@@ -37,7 +37,7 @@ import rx.functions.Func1;
  * The responses can directly be exposed as {@link JsonObject} or {@link String}, but custom methods allow
  * to work from a byte array (for N1QL) or String (for FTS) and perform a custom deserialization.
  *
- * Note that this class is outside of the Bucket API as it is {@link InterfaceStability.Uncommitted Uncommitted},
+ * Note that this class is outside of the Bucket API as it is uncommitted,
  * and is not common to all Couchbase SDKs.
  *
  * @author Simon Baslé
@@ -93,7 +93,7 @@ public class RawQueryExecutor {
 
     /**
      * Synchronously perform a {@link N1qlQuery} and apply a user function to deserialize the raw N1QL
-     * response, which is represented as a {@link TranscoderUtils.ByteBufToArray}.
+     * response, which is represented as a "TranscoderUtils.ByteBufToArray".
      *
      * The array is derived from a {@link ByteBuf} that will be released, so it shouldn't be used
      * to back the returned instance. Its scope should be considered the scope of the call method.

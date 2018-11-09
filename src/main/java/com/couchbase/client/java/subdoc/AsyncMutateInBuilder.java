@@ -71,7 +71,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -677,7 +676,7 @@ public class AsyncMutateInBuilder {
      * @param path the path where to insert a new dictionary value.
      * @param fragment the new dictionary value to insert.
      * @param createPath true to create missing intermediary nodes.
-     * @deprecated Use {@link #insert(String, T, SubdocOptionsBuilder)} instead.
+     * @deprecated Use {@link #insert(String, Object, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder insert(String path, T fragment, boolean createPath) {
@@ -719,7 +718,7 @@ public class AsyncMutateInBuilder {
      * @param path the path where to insert (or replace) a dictionary value.
      * @param fragment the new dictionary value to be applied.
      * @param createPath true to create missing intermediary nodes.
-     * @deprecated Use {@link #upsert(String, T, SubdocOptionsBuilder)} instead.
+     * @deprecated Use {@link #upsert(String, Object, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder upsert(String path, T fragment, boolean createPath) {
@@ -855,7 +854,7 @@ public class AsyncMutateInBuilder {
      * @param path the path of the array.
      * @param value the value to insert at the front of the array.
      * @param createPath true to create missing intermediary nodes.
-     * @deprecated Use {@link #arrayPrepend(String, T, SubdocOptionsBuilder)} instead.
+     * @deprecated Use {@link #arrayPrepend(String, Object, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayPrepend(String path, T value, boolean createPath) {
@@ -968,7 +967,7 @@ public class AsyncMutateInBuilder {
      * @param path the path of the array.
      * @param value the value to insert at the back of the array.
      * @param createPath true to create missing intermediary nodes.
-     * @deprecated Use {@link #arrayAppend(String, T, SubdocOptionsBuilder)} instead.
+     * @deprecated Use {@link #arrayAppend(String, Object, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayAppend(String path, T value, boolean createPath) {
@@ -1180,7 +1179,7 @@ public class AsyncMutateInBuilder {
      * @param path the path to mutate in the JSON.
      * @param value the value to insert.
      * @param createPath true to create missing intermediary nodes.
-     * @deprecated Use {@link #arrayAddUnique(String, T, SubdocOptionsBuilder)} instead.
+     * @deprecated Use {@link #arrayAddUnique(String, Object, SubdocOptionsBuilder)} instead.
      */
     @Deprecated
     public <T> AsyncMutateInBuilder arrayAddUnique(String path, T value, boolean createPath) {

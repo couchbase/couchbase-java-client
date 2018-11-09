@@ -20,7 +20,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.document.json.JsonValue;
 
 /**
- * Represent a N1QL {@link} with an optionally parameterized statement (in which case the
+ * Represent a N1QL query with an optionally parameterized statement (in which case the
  * values must be passed according to the type and number of placeholders).
  *
  * Positional placeholders (in the form of either "$1" "$2" or just simple "?") are filled

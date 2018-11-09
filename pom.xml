@@ -226,13 +226,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.3</version>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
@@ -247,12 +250,6 @@
                             <location>${core.apidocs}/</location>
                         </offlineLink>
                     </offlineLinks>
-                    <doclet>ch.raffael.doclets.pegdown.PegdownDoclet</doclet>
-                    <docletArtifact>
-                        <groupId>ch.raffael.pegdown-doclet</groupId>
-                        <artifactId>pegdown-doclet</artifactId>
-                        <version>1.1</version>
-                    </docletArtifact>
                     <useStandardDocletOptions>true</useStandardDocletOptions>
                     <windowtitle>Couchbase Java SDK</windowtitle>
                     <doctitle>Couchbase Java SDK (${project.version})</doctitle>

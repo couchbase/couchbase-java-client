@@ -40,7 +40,7 @@ public interface SearchStatus {
     long successCount();
 
     /**
-     * the number of FTS pindexes queried that gave an error. If > 0,
+     * the number of FTS pindexes queried that gave an error. If &gt; 0,
      * the {@link SearchQueryResult}'s {@link SearchQueryResult#errors()} method will contain errors.
      */
     long errorCount();

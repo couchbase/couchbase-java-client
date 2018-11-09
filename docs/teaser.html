@@ -1,32 +1,34 @@
-<h2>Welcome to the Couchbase Java SDK API Reference!</h2>
+<body>
+    <h2>Welcome to the Couchbase Java SDK API Reference!</h2>
 
-<p><b>Here is a simple hello world that you can run and verify your installation works:</b></p>
+    <p><b>Here is a simple hello world that you can run and verify your installation works:</b></p>
 
-<pre>
-// Connect to a cluster on localhost
-Cluster cluster = CouchbaseCluster.create();
-cluster.authenticate("username", "password");
+    <pre>
+    // Connect to a cluster on localhost
+    Cluster cluster = CouchbaseCluster.create();
+    cluster.authenticate("username", "password");
 
-// Open the default bucket
-Bucket bucket = cluster.openBucket("myTestBucket");
+    // Open the default bucket
+    Bucket bucket = cluster.openBucket("myTestBucket");
 
-// Create a user and insert it
-JsonObject user = JsonObject.empty()
-    .put("firstname", "Walter")
-    .put("lastname", "White")
-    .put("job", "chemistry teacher")
-    .put("age", 50);
-JsonDocument doc = JsonDocument.create("walter", user);
-JsonDocument response = bucket.upsert(doc);
+    // Create a user and insert it
+    JsonObject user = JsonObject.empty()
+        .put("firstname", "Walter")
+        .put("lastname", "White")
+        .put("job", "chemistry teacher")
+        .put("age", 50);
+    JsonDocument doc = JsonDocument.create("walter", user);
+    JsonDocument response = bucket.upsert(doc);
 
-// Read it back out
-JsonDocument walter = bucket.get("walter");
-System.out.println("Found: " + walter);
+    // Read it back out
+    JsonDocument walter = bucket.get("walter");
+    System.out.println("Found: " + walter);
 
-// Disconnect from the cluster
-cluster.disconnect();
-</pre>
+    // Disconnect from the cluster
+    cluster.disconnect();
+    </pre>
 
-<p style="border: 5px solid orange; padding: 4px;font-size: 12pt;">
-    If you don't know where to go next, <b>start <a href="com/couchbase/client/java/CouchbaseCluster.html">at the CouchbaseCluster class</a></b>!
-</p>
+    <p style="border: 5px solid orange; padding: 4px;font-size: 12pt;">
+        If you don't know where to go next, <b>start <a href="com/couchbase/client/java/CouchbaseCluster.html">at the CouchbaseCluster class</a></b>!
+    </p>
+</body>

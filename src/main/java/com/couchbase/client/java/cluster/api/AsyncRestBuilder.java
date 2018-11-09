@@ -97,8 +97,8 @@ public class AsyncRestBuilder implements RestBuilderMarker {
      * Adds an HTTP header to the request. Using a key twice will result
      * in the last value being used for a given header.
      *
-     * @param key the header name (see {@link HttpHeaders.Names} for standard names).
-     * @param value the header value (see {@link HttpHeaders.Values} for standard values).
+     * @param key the header name (see "HttpHeaders.Names" for standard names).
+     * @param value the header value (see "HttpHeaders.Values" for standard values).
      */
     public AsyncRestBuilder withHeader(String key, Object value) {
         this.headers.put(key, value);

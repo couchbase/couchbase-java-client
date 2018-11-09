@@ -109,7 +109,7 @@ public class N1qlQueryExecutor {
 
     /**
      * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
-     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     * are not ad-hoc, it will cache up to {@link #QUERY_CACHE_SIZE} queries.
      *
      * @param core the core through which to send requests.
      * @param bucket the bucket to bootstrap from.
@@ -122,7 +122,7 @@ public class N1qlQueryExecutor {
 
     /**
      * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
-     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     * are not ad-hoc, it will cache up to {@link #QUERY_CACHE_SIZE} queries.
      *
      * @param core the core through which to send requests.
      * @param bucket the bucket to bootstrap from.
@@ -134,7 +134,7 @@ public class N1qlQueryExecutor {
 
     /**
      * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
-     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     * are not ad-hoc, it will cache up to {@link #QUERY_CACHE_SIZE} queries.
      *
      * @param core the core through which to send requests.
      * @param bucket the bucket to bootstrap from.
@@ -147,7 +147,7 @@ public class N1qlQueryExecutor {
 
     /**
      * Construct a new N1qlQueryExecutor that will send requests through the given {@link ClusterFacade}. For queries that
-     * are not ad-hoc, it will cache up to {@value #QUERY_CACHE_SIZE} queries.
+     * are not ad-hoc, it will cache up to {@link #QUERY_CACHE_SIZE} queries.
      *
      * @param core the core through which to send requests.
      * @param bucket the bucket to bootstrap from.

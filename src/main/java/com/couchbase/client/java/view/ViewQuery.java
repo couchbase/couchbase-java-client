@@ -565,7 +565,7 @@ public class ViewQuery implements Serializable {
      * A string representation of this ViewQuery, suitable for logging and other human consumption.
      * If the {@link #keys(JsonArray)} parameter is too large, it is truncated in this dump.
      *
-     * @see this#toQueryString() for the parameter representation of the ViewQuery execution URL.
+     * see the {@link #toQueryString()} for the parameter representation of the ViewQuery execution URL.
      */
     @Override
     public String toString() {

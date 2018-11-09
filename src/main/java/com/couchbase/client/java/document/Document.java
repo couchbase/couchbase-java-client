@@ -63,7 +63,7 @@ public interface Document<T> {
      * the environment.
      *
      * Note that the mutation token is always null, unless they are explicitly enabled on the
-     * environment, the server version is supported (>= 4.0.0) and the mutation operation succeeded.
+     * environment, the server version is supported (&gt;= 4.0.0) and the mutation operation succeeded.
      *
      * If set, it can be used for enhanced durability requirements, as well as optimized consistency
      * for N1QL queries.

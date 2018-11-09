@@ -83,8 +83,9 @@ public class RestBuilder implements RestBuilderMarker {
     /**
      * Adds an HTTP header to the request. Using a key twice will result
      * in the last value being used for a given header.
-     *  @param key the header name (see {@link HttpHeaders.Names} for standard names).
-     * @param value the header value (see {@link HttpHeaders.Values} for standard values).
+     *
+     * @param key the header name (see HttpHeaders.Names for standard names).
+     * @param value the header value (see HttpHeaders.Values for standard values).
      */
     public RestBuilder withHeader(String key, Object value) {
         delegate.withHeader(key, value);

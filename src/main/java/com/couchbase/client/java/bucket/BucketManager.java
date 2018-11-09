@@ -693,7 +693,7 @@ public interface BucketManager {
             boolean defer, long timeout, TimeUnit timeUnit);
 
     /**
-     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket, within the default management timeout.
+     * Drop the default primary index ({@link Index#PRIMARY_NAME}) associated with the current bucket, within the default management timeout.
      *
      * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
      * by name.
@@ -706,7 +706,7 @@ public interface BucketManager {
     boolean dropN1qlPrimaryIndex(boolean ignoreIfNotExist);
 
     /**
-     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket, within a custom timeout.
+     * Drop the default primary index ({@link Index#PRIMARY_NAME}) associated with the current bucket, within a custom timeout.
      *
      * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
      * by name.
@@ -811,7 +811,7 @@ public interface BucketManager {
      * "online" or the watchTimeout has expired. This only considers GSI indexes, as the index management API only
      * deals with this type of indexes.
      *
-     * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
+     * Note: You can activate DEBUG level logs on the "{@link DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
      * to see various stages of the polling.
      *
      * You can also watch a primary index by using the {@link Index#PRIMARY_NAME} constant.

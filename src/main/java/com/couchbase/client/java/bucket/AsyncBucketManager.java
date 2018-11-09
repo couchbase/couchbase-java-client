@@ -356,7 +356,7 @@ public interface AsyncBucketManager {
             final boolean ignoreIfExist, boolean defer);
 
     /**
-     * Drop the default primary index ({@value Index#PRIMARY_NAME}) associated with the current bucket.
+     * Drop the default primary index ({@link Index#PRIMARY_NAME}) associated with the current bucket.
      *
      * The index management API only deals with GSI type of indexes, which allows it to uniquely identify indexes
      * by name.
@@ -423,7 +423,7 @@ public interface AsyncBucketManager {
      * "online" or the watchTimeout has expired.. This only considers GSI indexes, as the index management API only
      * deals with this type of indexes.
      *
-     * Note: You can activate DEBUG level logs on the "{@value DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
+     * Note: You can activate DEBUG level logs on the "{@link DefaultAsyncBucketManager#INDEX_WATCH_LOG_NAME}" logger
      * to see various stages of the polling.
      *
      * You can also watch a primary index by using the {@link Index#PRIMARY_NAME} constant.
