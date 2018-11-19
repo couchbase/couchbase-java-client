@@ -17,6 +17,7 @@ package com.couchbase.client.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +62,8 @@ public class N1qlPreparedTest {
 
     @BeforeClass
     public static void init() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .adhoc(true)
                 .bucketName("N1qlPrepared")
@@ -112,7 +115,9 @@ public class N1qlPreparedTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     public static N1qlQueryResult query(N1qlQuery query) {

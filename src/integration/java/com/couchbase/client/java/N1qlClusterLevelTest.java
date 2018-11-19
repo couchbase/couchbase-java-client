@@ -17,6 +17,7 @@ package com.couchbase.client.java;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -60,6 +61,8 @@ public class N1qlClusterLevelTest {
 
     @BeforeClass
     public static void init() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .bucketName("N1qlCluster")
                 .bucketPassword("protected")
@@ -103,9 +106,15 @@ public class N1qlClusterLevelTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
-        ctx2.destroyBucketAndDisconnect();
-        ctx3.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
+        if (ctx2 != null) {
+            ctx2.destroyBucketAndDisconnect();
+        }
+        if (ctx3 != null) {
+            ctx3.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

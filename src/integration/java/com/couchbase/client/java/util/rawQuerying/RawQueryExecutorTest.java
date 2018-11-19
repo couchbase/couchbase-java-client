@@ -16,6 +16,7 @@
 package com.couchbase.client.java.util.rawQuerying;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -44,6 +45,8 @@ public class RawQueryExecutorTest {
 
     @BeforeClass
     public static void init() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .bucketName("RawQueryExecutor")
                 .bucketPassword("foo")
@@ -66,7 +69,9 @@ public class RawQueryExecutorTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
 

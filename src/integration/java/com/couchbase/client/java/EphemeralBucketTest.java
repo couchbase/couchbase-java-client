@@ -20,6 +20,7 @@ import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
@@ -37,6 +38,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Verifies the management of ephemeral buckets.
@@ -56,6 +58,8 @@ public class EphemeralBucketTest {
 
     @BeforeClass
     public static void setup() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         couchbaseCluster = CouchbaseCluster.create(TestProperties.seedNode());
         couchbaseCluster.authenticate(new PasswordAuthenticator(TestProperties.adminName(), TestProperties.adminPassword()));
         clusterManager = couchbaseCluster.clusterManager();
@@ -69,7 +73,9 @@ public class EphemeralBucketTest {
 
     @AfterClass
     public static void cleanup() {
-        couchbaseCluster.disconnect();
+        if (couchbaseCluster != null) {
+            couchbaseCluster.disconnect();
+        }
     }
 
     @Before

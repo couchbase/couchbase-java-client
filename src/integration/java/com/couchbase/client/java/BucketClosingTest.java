@@ -16,7 +16,10 @@
 package com.couchbase.client.java;
 
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.couchbase.client.core.BucketClosedException;
@@ -28,6 +31,11 @@ import com.couchbase.client.java.util.ClusterDependentTest;
  * @since 2.0.1
  */
 public class BucketClosingTest extends ClusterDependentTest {
+
+  @Before
+  public void setup() {
+    assumeFalse(CouchbaseTestContext.isMockEnabled());
+  }
 
   @Test(expected = BucketClosedException.class)
   public void shouldPreventSyncCloseBucketThenSyncGet() {

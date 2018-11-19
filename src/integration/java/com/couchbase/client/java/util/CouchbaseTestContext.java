@@ -78,6 +78,8 @@ public class CouchbaseTestContext {
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
     }
 
+    private static Properties mockProperties = loadProperties();
+
     private final Bucket bucket;
     private final String bucketPassword;
     private final BucketManager bucketManager;
@@ -92,7 +94,7 @@ public class CouchbaseTestContext {
     private final boolean isFlushEnabled;
     private final Repository repository;
     private final boolean rbacEnabled;
-    private final CouchbaseMock mock;
+    public final CouchbaseMock mock;
 
     private CouchbaseTestContext(Bucket bucket, String bucketPassword,
             BucketManager bucketManager, Cluster cluster, ClusterManager clusterManager, String seedNode,
@@ -166,7 +168,6 @@ public class CouchbaseTestContext {
         private DefaultBucketSettings.Builder bucketSettingsBuilder;
         private boolean flushOnInit;
         private CouchbaseMock couchbaseMock;
-        private Properties testProperties;
 
 
         public Builder() {
@@ -315,22 +316,6 @@ public class CouchbaseTestContext {
             return this;
         }
 
-        private void loadProperties() {
-            if (testProperties != null) {
-                return;
-            }
-            testProperties = new Properties();
-            try {
-                testProperties.load(getClass().getResourceAsStream("/mock.properties"));
-            } catch (Exception ex) {
-                //ignore
-            }
-        }
-
-        private boolean isMockEnabled() {
-            return Boolean.parseBoolean(testProperties.getProperty("mock.enabled", "false"));
-        }
-
         /**
          * Build the {@link CouchbaseTestContext}, triggering potential creation of a bucket, flush of a bucket, etc...
          * (see {@link #adhoc(boolean)}, {@link #flushOnInit(boolean)}, ...).
@@ -385,9 +370,9 @@ public class CouchbaseTestContext {
         }
 
         protected void createMock() {
-            int nodeCount = Integer.parseInt(testProperties.getProperty("mock.nodeCount", "1"));
-            int replicaCount = Integer.parseInt(testProperties.getProperty("mock.replicaCount", "1"));
-            String bucketType = testProperties.getProperty("mock.bucketType", "couchbase");
+            int nodeCount = Integer.parseInt(mockProperties.getProperty("mock.nodeCount", "1"));
+            int replicaCount = Integer.parseInt(mockProperties.getProperty("mock.replicaCount", "1"));
+            String bucketType = mockProperties.getProperty("mock.bucketType", "couchbase");
 
             BucketConfiguration bucketConfiguration = new BucketConfiguration();
             bucketConfiguration.numNodes = nodeCount;
@@ -545,7 +530,7 @@ public class CouchbaseTestContext {
      * @param forced if true, always consider the feature available.
      */
     public CouchbaseTestContext ignoreIfMissing(CouchbaseFeature feature, boolean forced) {
-        Assume.assumeTrue("Feature " + feature + " not available and not forced", forced || clusterManager.info().checkAvailable(feature));
+        Assume.assumeTrue("Feature " + feature + " not available and not forced", isMockEnabled() || forced || clusterManager.info().checkAvailable(feature));
         return this;
     }
 
@@ -557,7 +542,7 @@ public class CouchbaseTestContext {
      * @param minimumVersion the required version to check for.
      */
     public CouchbaseTestContext ignoreIfClusterUnder(Version minimumVersion) {
-        Assume.assumeTrue("Cluster is under " + minimumVersion, clusterManager().info().getMinVersion().compareTo(minimumVersion) >= 0);
+        Assume.assumeTrue("Cluster is under " + minimumVersion, isMockEnabled() || clusterManager().info().getMinVersion().compareTo(minimumVersion) >= 0);
         return this;
     }
 
@@ -692,5 +677,22 @@ public class CouchbaseTestContext {
 
     public boolean rbacEnabled() {
         return rbacEnabled;
+    }
+
+    private static Properties loadProperties() {
+        if (mockProperties != null) {
+            return mockProperties;
+        }
+        mockProperties = new Properties();
+        try {
+            mockProperties.load(CouchbaseTestContext.class.getResourceAsStream("/mock.properties"));
+        } catch (Exception ex) {
+            //ignore
+        }
+        return mockProperties;
+    }
+
+    public static boolean isMockEnabled() {
+        return Boolean.parseBoolean(mockProperties.getProperty("useMock", "true"));
     }
 }

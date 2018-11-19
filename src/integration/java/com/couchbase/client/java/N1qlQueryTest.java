@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.Field;
@@ -58,6 +59,8 @@ public class N1qlQueryTest {
 
     @BeforeClass
     public static void init() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .bucketName("N1qlQuery")
                 .adhoc(true)
@@ -72,7 +75,9 @@ public class N1qlQueryTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

@@ -35,6 +35,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Verifies the basic functionality of both the diagnostics and ping commands.
@@ -100,7 +101,10 @@ public class DiagnosticsTest {
     assertEquals(pr.sdk(), ctx.env().userAgent());
     assertEquals("myReportId", pr.id());
     assertTrue(pr.version() > 0);
-    assertTrue(pr.configRev() > 0);
+    if (!CouchbaseTestContext.isMockEnabled()) {
+      // current mock version does not include rev
+      assertTrue(pr.configRev() > 0);
+    }
 
     assertNotNull(pr.exportToJson());
 

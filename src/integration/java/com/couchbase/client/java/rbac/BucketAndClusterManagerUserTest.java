@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author Subhashni Balakrishnan
@@ -51,6 +52,8 @@ public class BucketAndClusterManagerUserTest {
 
     @BeforeClass
     public static void setup() throws Exception {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .build()
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));

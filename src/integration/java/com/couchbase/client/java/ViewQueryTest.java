@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -69,6 +70,8 @@ public class ViewQueryTest {
      */
     @BeforeClass
     public static void setupViews() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
             .adhoc(true)
             .bucketQuota(100)
@@ -115,7 +118,9 @@ public class ViewQueryTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

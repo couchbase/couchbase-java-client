@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.internal.matchers.ThrowableCauseMatcher.hasCause;
 
 import java.io.IOException;
@@ -85,6 +86,8 @@ public class SubDocumentTest {
 
     @BeforeClass
     public static void connect() throws Exception {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .bucketQuota(100)
                 .bucketReplicas(1)

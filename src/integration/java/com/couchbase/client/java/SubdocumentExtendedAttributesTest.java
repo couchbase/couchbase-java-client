@@ -18,6 +18,8 @@ package com.couchbase.client.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
+
 import java.util.Arrays;
 
 import com.couchbase.client.core.CouchbaseException;
@@ -210,6 +212,8 @@ public class SubdocumentExtendedAttributesTest {
 
     @Test
     public void verifyChainArrayCollectionOpsXATTR() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         DocumentFragment<Mutation> result = ctx.bucket()
                 .mutateIn(key)
                 .arrayAppendAll("spring.refs", Arrays.asList("id4", "id5", "id6", "id7"), new SubdocOptionsBuilder().createPath(true).xattr(true))
@@ -382,6 +386,8 @@ public class SubdocumentExtendedAttributesTest {
 
     @Test
     public void shouldAllowDeletedDocumentXattrLookup() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         String key = "shouldAllowDeletedDocumentXattrLookup";
         JsonObject content = JsonObject.create().put("foo", "bar");
         DocumentFragment<Mutation> mutationResult = ctx.bucket()
@@ -429,6 +435,8 @@ public class SubdocumentExtendedAttributesTest {
 
     @Test
     public void shouldExpandMacro() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         String key = "shouldExpandMacro";
         JsonObject content = JsonObject.create().put("foo", "bar");
         DocumentFragment<Mutation> mutationResult = ctx.bucket()

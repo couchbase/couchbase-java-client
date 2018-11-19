@@ -31,8 +31,11 @@ import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.Version;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author Subhashni Balakrishnan
@@ -41,6 +44,14 @@ public class PasswordAuthenticatorTest {
     private static CouchbaseTestContext ctx;
     private static String username = "testUser";
     private static String password = "password";
+
+    /**
+     * The mock does not support RBAC, so let's disable this test.
+     */
+    @Before
+    public void checkMock() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+    }
 
     @BeforeClass
     public static void setup() throws Exception {

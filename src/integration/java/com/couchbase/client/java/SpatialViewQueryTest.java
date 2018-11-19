@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Verifies the functionality of {@link SpatialViewQuery}.
@@ -67,6 +68,8 @@ public class SpatialViewQueryTest {
      */
     @BeforeClass
     public static void setupSpatialViews() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .adhoc(true)
                 .bucketName("Spatial")
@@ -108,7 +111,9 @@ public class SpatialViewQueryTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

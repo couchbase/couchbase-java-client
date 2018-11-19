@@ -15,13 +15,13 @@
  */
 package com.couchbase.client.java;
 
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.FlushDisabledException;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Verifies the exception surface of running flush on a flush-disabled bucket.
@@ -34,7 +34,9 @@ public class FlushDisabledTest {
     private static CouchbaseTestContext ctx;
 
     @BeforeClass
-    public static void init() throws InterruptedException {
+    public static void init() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
             .bucketName("FlushDisabled")
             .enableFlush(false)
@@ -45,7 +47,9 @@ public class FlushDisabledTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test(expected = FlushDisabledException.class)

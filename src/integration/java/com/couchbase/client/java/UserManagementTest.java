@@ -18,6 +18,7 @@ package com.couchbase.client.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 
 import java.util.Collections;
@@ -50,6 +51,8 @@ public class UserManagementTest {
 
     @BeforeClass
     public static void setup() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .build()
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));

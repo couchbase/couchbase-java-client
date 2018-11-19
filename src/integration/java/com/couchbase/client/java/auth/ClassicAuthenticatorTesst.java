@@ -2,6 +2,8 @@ package com.couchbase.client.java.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +11,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
@@ -25,6 +28,8 @@ public class ClassicAuthenticatorTesst {
 
     @Before
     public void init() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         this.authenticator = new ClassicAuthenticator();
         this.cluster = CouchbaseCluster.create(TestProperties.seedNode())
                 .authenticate(authenticator);
@@ -32,7 +37,9 @@ public class ClassicAuthenticatorTesst {
 
     @After
     public void tearDown() {
-        this.cluster.disconnect();
+        if (this.cluster != null) {
+            this.cluster.disconnect();
+        }
     }
 
     @Test

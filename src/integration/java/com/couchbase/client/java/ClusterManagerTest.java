@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
 import com.couchbase.client.java.cluster.api.RestBuilder;
 import com.couchbase.client.java.error.InvalidPasswordException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -67,6 +69,8 @@ public class ClusterManagerTest {
 
     @BeforeClass
     public static void setup() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         couchbaseCluster = CouchbaseCluster.create(TestProperties.seedNode());
         clusterManager = couchbaseCluster
             .clusterManager(TestProperties.adminName(), TestProperties.adminPassword());

@@ -28,6 +28,8 @@ import com.couchbase.client.java.error.DurabilityException;
 import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.client.java.error.TemporaryLockFailureException;
 import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import junit.framework.TestCase;
 import org.junit.Assume;
 import org.junit.Test;
 import rx.functions.Action0;
@@ -47,6 +49,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 public class KeyValueTest extends ClusterDependentTest {
 
@@ -90,7 +93,10 @@ public class KeyValueTest extends ClusterDependentTest {
         assertEquals(doc.id(), removed.id());
         assertNull(removed.content());
         assertEquals(0, removed.expiry());
-        assertTrue(removed.cas() != 0);
+        if (!CouchbaseTestContext.isMockEnabled()) {
+            // a coming mock version will fix this
+            assertTrue(removed.cas() != 0);
+        }
 
         assertFalse(bucket().exists("upsert"));
         assertNull(bucket().get("upsert"));
@@ -119,7 +125,10 @@ public class KeyValueTest extends ClusterDependentTest {
         JsonDocument removed = bucket().remove(response);
         assertEquals(removed.id(), response.id());
         assertNull(removed.content());
-        assertTrue(removed.cas() != 0);
+        if (!CouchbaseTestContext.isMockEnabled()) {
+            // will be fixed in a future mock version
+            assertTrue(removed.cas() != 0);
+        }
         assertNotEquals(response.cas(), removed.cas());
 
         assertNull(bucket().get(id));
@@ -380,12 +389,18 @@ public class KeyValueTest extends ClusterDependentTest {
         // Then a replace
         result = bucket().async().replace(JsonDocument.create(key, JsonObject.empty().put("k", "v")), PersistTo.MASTER).toBlocking().single();
         assertEquals(key, result.id());
-        assertTrue(result.cas() != 0);
+        if (!CouchbaseTestContext.isMockEnabled()) {
+            // a coming mock version will fix this
+            assertTrue(result.cas() != 0);
+        }
 
         // Then a remove
         result = bucket().async().remove(key, PersistTo.MASTER).toBlocking().single();
         assertEquals(key, result.id());
-        assertTrue(result.cas() != 0);
+        if (!CouchbaseTestContext.isMockEnabled()) {
+            // will be fixed in a future mock version
+            assertTrue(result.cas() != 0);
+        }
 
         // Test with counter
         key = "persist-to-master-counter-doc";
@@ -571,12 +586,16 @@ public class KeyValueTest extends ClusterDependentTest {
 
     @Test(expected = CASMismatchException.class)
     public void shouldFailWithInvalidCASOnAppend() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         StringDocument stored = bucket().upsert(StringDocument.create("appendCasMismatch", "foo"));
         bucket().append(StringDocument.from(stored, stored.cas() + 1));
     }
 
     @Test(expected = CASMismatchException.class)
     public void shouldFailWithInvalidCASOnPrepend() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         StringDocument stored = bucket().upsert(StringDocument.create("prependCasMismatch", "foo"));
         bucket().prepend(StringDocument.from(stored, stored.cas() + 1));
     }

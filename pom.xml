@@ -37,7 +37,7 @@
         <assertj.version>1.7.1</assertj.version>
         <guavatest.version>19.0</guavatest.version>
         <core.apidocs>${project.build.directory}/coredocs</core.apidocs>
-        <couchbasemock.version>1.5.9</couchbasemock.version>
+        <couchbasemock.version>1.5.19</couchbasemock.version>
         <encryptionextension.version>1.0.0</encryptionextension.version>
     </properties>
 

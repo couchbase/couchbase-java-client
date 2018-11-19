@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +46,7 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.query.dsl.path.index.IndexType;
 import com.couchbase.client.java.query.util.IndexInfo;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -83,6 +85,8 @@ public class BucketManagerIndexManagementTests {
 
     @Before
     public void createBucket() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         indexedBucketName = indexBucketNamePrefix + ++count;
         clusterManager.insertBucket(DefaultBucketSettings.builder()
                 .name(indexedBucketName)
@@ -95,8 +99,10 @@ public class BucketManagerIndexManagementTests {
 
     @After
     public void removeBucket() {
-        indexedBucket.close();
-        clusterManager.removeBucket(indexedBucketName);
+        if (indexedBucket != null) {
+            indexedBucket.close();
+            clusterManager.removeBucket(indexedBucketName);
+        }
     }
 
     @AfterClass

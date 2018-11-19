@@ -16,6 +16,7 @@
 package com.couchbase.client.java.datastructures;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.error.subdoc.PathInvalidException;
@@ -119,6 +120,8 @@ public class DataStructuresTest {
 
     @Test(expected = RequestTooBigException.class)
     public void testMapRequestTooBigException() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         char[] data = new char[5000000];
         String str = new String(data);
         boolean result = ctx.bucket().mapAdd("dsmapFull", "foo", str, MutationOptionBuilder.builder().persistTo(PersistTo.MASTER));
@@ -210,6 +213,8 @@ public class DataStructuresTest {
 
     @Test(expected = RequestTooBigException.class)
     public void testListFullException() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         char[] data = new char[5000000];
         String str = new String(data);
         boolean result = ctx.bucket().listPrepend("dslistFull", str, MutationOptionBuilder.builder().persistTo(PersistTo.MASTER));
@@ -260,6 +265,8 @@ public class DataStructuresTest {
 
     @Test(expected = RequestTooBigException.class)
     public void testQueueFullException() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         char[] data = new char[5000000];
         String str = new String(data);
         boolean result = ctx.bucket().queuePush("dsqueueFull", str, MutationOptionBuilder.builder().persistTo(PersistTo.MASTER));
@@ -333,6 +340,8 @@ public class DataStructuresTest {
 
     @Test(expected = RequestTooBigException.class)
     public void testSetFullException() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         char[] data = new char[5000000];
         String str = new String(data);
         boolean result = ctx.bucket().setAdd("dssetFull", str, MutationOptionBuilder.builder().persistTo(PersistTo.MASTER));

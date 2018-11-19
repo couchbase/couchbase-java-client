@@ -38,6 +38,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assume.assumeFalse;
+
 /**
  * @author Subhashni Balakrishnan
  */
@@ -53,6 +55,8 @@ public class DataServiceUserTest {
 
     @BeforeClass
     public static void setup() throws Exception {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .build()
                 .ignoreIfClusterUnder(Version.parseVersion("5.0.0"));

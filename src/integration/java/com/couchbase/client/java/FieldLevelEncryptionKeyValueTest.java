@@ -37,16 +37,20 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.repository.annotation.EncryptedField;
 import com.couchbase.client.java.repository.annotation.Id;
+import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static com.couchbase.client.java.env.DefaultCouchbaseEnvironment.builder;
+
 /**
  * Verifies field level encryptions using AES, RSA using Jceks key store
  */
-public class FieldLevelEncryptionKeyValueTest {
+public class FieldLevelEncryptionKeyValueTest extends ClusterDependentTest {
 
     private static Cluster cluster;
 
@@ -97,10 +101,14 @@ public class FieldLevelEncryptionKeyValueTest {
         cryptoManager.registerProvider("RSA", rsaCryptoProvider);
         cryptoManager.registerProvider("AES", aes128CryptoProvider);
 
-        CouchbaseEnvironment environment = DefaultCouchbaseEnvironment.builder()
-                .cryptoManager(cryptoManager)
-                .build();
-        cluster = CouchbaseCluster.create(environment, TestProperties.seedNode());
+        DefaultCouchbaseEnvironment.Builder builder = DefaultCouchbaseEnvironment.builder()
+                .cryptoManager(cryptoManager);
+        if (CouchbaseTestContext.isMockEnabled()) {
+            builder
+                .bootstrapCarrierDirectPort(ctx.mock.getCarrierPort(ctx.bucketName()))
+                .bootstrapHttpDirectPort(ctx.mock.getHttpPort());
+        }
+        cluster = CouchbaseCluster.create(builder.build(), TestProperties.seedNode());
         try {
             bucket = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
         } catch (InvalidPasswordException ex) {

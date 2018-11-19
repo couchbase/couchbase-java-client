@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.couchbase.client.java.auth.Authenticator;
@@ -31,8 +32,10 @@ import com.couchbase.client.java.error.AuthenticationException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.error.MixedAuthenticationException;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import com.couchbase.client.java.util.features.Version;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -42,6 +45,11 @@ import org.junit.Test;
  * @since 2.0
  */
 public class ConnectionTest  {
+
+    @Before
+    public void checkMock() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfBucketIsNull() {

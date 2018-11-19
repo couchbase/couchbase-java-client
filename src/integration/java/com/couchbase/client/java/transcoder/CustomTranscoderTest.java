@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Exercises the registration and invocation of custom document transcoders.
@@ -52,6 +53,8 @@ public class CustomTranscoderTest {
 
     @BeforeClass
     public static void connect() throws Exception {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .adhoc(true)
                 .build();
@@ -64,7 +67,9 @@ public class CustomTranscoderTest {
 
     @AfterClass
     public static void disconnect() throws Exception {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     private Bucket openBucket(List<Transcoder<? extends Document, ?>> transcoders) {

@@ -21,6 +21,7 @@ import static com.couchbase.client.java.search.facet.SearchFacet.term;
 import static com.googlecode.catchexception.CatchException.catchException;
 import static com.googlecode.catchexception.CatchException.caughtException;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +75,8 @@ public class SearchQueryTest {
 
     @BeforeClass
     public static void init() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .withEnv(DefaultCouchbaseEnvironment.builder()
                         .mutationTokensEnabled(true))

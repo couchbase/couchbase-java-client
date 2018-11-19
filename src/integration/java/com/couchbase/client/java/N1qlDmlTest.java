@@ -18,6 +18,7 @@ package com.couchbase.client.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,8 @@ public class N1qlDmlTest {
 
     @BeforeClass
     public static void init() {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
                 .bucketName("N1qlDml")
                 .adhoc(true)
@@ -58,7 +61,9 @@ public class N1qlDmlTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test

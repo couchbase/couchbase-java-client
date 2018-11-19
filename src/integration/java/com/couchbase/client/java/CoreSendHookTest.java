@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 public class CoreSendHookTest {
 
@@ -52,6 +53,8 @@ public class CoreSendHookTest {
 
     @BeforeClass
     public static void init() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isMockEnabled());
+
         ctx = CouchbaseTestContext.builder()
             .bucketName("CoreSendHookTest")
             .adhoc(true)
@@ -80,7 +83,9 @@ public class CoreSendHookTest {
 
     @AfterClass
     public static void cleanup() {
-        ctx.destroyBucketAndDisconnect();
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     @Test
