@@ -413,6 +413,21 @@ public class CouchbaseTestContext {
                 if (!existing) {
                     if (createIfMissing) {
                         clusterManager.insertBucket(bucketSettingsBuilder.build());
+                        boolean bucketExists = false;
+                        while (!bucketExists) {
+                            try {
+                                cluster.openBucket(bucketName);
+                                bucketExists = true;
+                            } catch (Exception e) {
+                                //bucket is not yet available
+                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new RuntimeException(e);
+                            }
+                        }
                     } else {
                         throw new BucketDoesNotExistException("Bucket " + bucketName + " doesn't exist and bucket creation disabled (or a sample)");
                     }

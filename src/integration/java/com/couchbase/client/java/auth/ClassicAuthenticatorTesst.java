@@ -97,12 +97,12 @@ public class ClassicAuthenticatorTesst {
     }
     @Test
     public void testOpenBucketDefaultDoesntUseAuthenticator() throws InterruptedException {
-        authenticator.bucket("default", "bad");
+        authenticator.bucket(TestProperties.bucket(), TestProperties.password());
 
-        Bucket b1 = cluster.openBucket();
+        Bucket b1 = cluster.openBucket(TestProperties.bucket());
         b1.close();
         Thread.sleep(1000);
-        Bucket b2 = cluster.openBucket(5, TimeUnit.SECONDS);
+        Bucket b2 = cluster.openBucket(TestProperties.bucket(), 5, TimeUnit.SECONDS);
 
         assertThat(b1).isNotNull();
         assertThat(b2).isNotNull().isNotSameAs(b1);

@@ -86,12 +86,24 @@ public class BucketManagerIndexManagementTests {
     @Before
     public void createBucket() throws InterruptedException {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
-
+        cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
         indexedBucketName = indexBucketNamePrefix + ++count;
         clusterManager.insertBucket(DefaultBucketSettings.builder()
                 .name(indexedBucketName)
                 .quota(100));
-        indexedBucket = cluster.openBucket(indexedBucketName);
+        while (indexedBucket == null) {
+            try {
+                indexedBucket = cluster.openBucket(indexedBucketName);
+            } catch (Exception e) {
+                LOGGER.info("Unable to open bucket" + e.getMessage());
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }
         LOGGER.info(indexedBucket + " created and opened");
         List<IndexInfo> initialIndexes = indexedBucket.bucketManager().listN1qlIndexes();
         assertEquals("Newly created bucket unexpectedly has indexes: " + initialIndexes, 0, initialIndexes.size());
