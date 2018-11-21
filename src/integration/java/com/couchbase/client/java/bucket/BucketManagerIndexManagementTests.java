@@ -32,11 +32,14 @@ import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.logging.CouchbaseLogger;
 import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.message.internal.PingReport;
+import com.couchbase.client.core.message.internal.PingServiceHealth;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
+import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.error.IndexAlreadyExistsException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
@@ -91,11 +94,21 @@ public class BucketManagerIndexManagementTests {
         clusterManager.insertBucket(DefaultBucketSettings.builder()
                 .name(indexedBucketName)
                 .quota(100));
-        while (indexedBucket == null) {
+        boolean canUseBucket = false;
+        do {
             try {
                 indexedBucket = cluster.openBucket(indexedBucketName);
+                PingReport pingReport = indexedBucket.ping();
+                for (PingServiceHealth health:pingReport.services()) {
+                    if (health.state() != PingServiceHealth.PingState.OK) {
+                        throw new Exception("Not healthy");
+                    }
+                }
+                indexedBucket.upsert(JsonDocument.create(indexedBucketName + "foo"));
+                indexedBucket.remove(indexedBucketName + "foo");
+                canUseBucket = true;
             } catch (Exception e) {
-                LOGGER.info("Unable to open bucket" + e.getMessage());
+                LOGGER.info("Unable to open/use bucket" + e.toString());
             }
             try {
                 Thread.sleep(100);
@@ -103,7 +116,7 @@ public class BucketManagerIndexManagementTests {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
-        }
+        } while(!canUseBucket);
         LOGGER.info(indexedBucket + " created and opened");
         List<IndexInfo> initialIndexes = indexedBucket.bucketManager().listN1qlIndexes();
         assertEquals("Newly created bucket unexpectedly has indexes: " + initialIndexes, 0, initialIndexes.size());

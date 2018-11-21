@@ -44,7 +44,7 @@ public class RawQueryExecutorTest {
     private static RawQueryExecutor rawQueryExecutor;
 
     @BeforeClass
-    public static void init() throws InterruptedException {
+    public static void init() throws Exception {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
 
         ctx = CouchbaseTestContext.builder()

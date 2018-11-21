@@ -15,12 +15,18 @@
  */
 package com.couchbase.client.java.util;
 
+import static org.junit.Assume.assumeFalse;
+
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.core.ServiceNotAvailableException;
+import com.couchbase.client.core.logging.CouchbaseLogger;
+import com.couchbase.client.core.logging.CouchbaseLoggerFactory;
+import com.couchbase.client.core.message.internal.PingReport;
+import com.couchbase.client.core.message.internal.PingServiceHealth;
 import com.couchbase.client.deps.io.netty.util.ResourceLeakDetector;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -29,9 +35,11 @@ import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
+import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.AuthenticationException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.query.N1qlParams;
@@ -71,6 +79,8 @@ import org.junit.BeforeClass;
  * @since 2.2
  */
 public class CouchbaseTestContext {
+
+    private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(CouchbaseTestContext.class);
 
     public static final String AD_HOC = "adHoc_";
 
@@ -130,15 +140,18 @@ public class CouchbaseTestContext {
      * It will ignore an already existing primary index. If other N1QL errors arise, a {@link CouchbaseException} will
      * be thrown (with the message containing the list of errors).
      */
-    public CouchbaseTestContext ensurePrimaryIndex() {
+    public CouchbaseTestContext ensurePrimaryIndex() throws Exception {
         //test for N1QL
         if (clusterManager.info().checkAvailable(CouchbaseFeature.N1QL)) {
             N1qlQueryResult result = bucket().query(
                     N1qlQuery.simple("CREATE PRIMARY INDEX ON `" + bucketName() + "`",
-                            N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)), 2, TimeUnit.MINUTES);
+                            N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)), 5, TimeUnit.MINUTES);
+
             if (!result.finalSuccess()) {
                 //ignore "index already exist"
                 for (JsonObject error : result.errors()) {
+                    assumeFalse(error.getString("msg").contains("concurrent"));
+                    assumeFalse(error.getString("msg").contains("Request timed out"));
                     if (!error.getString("msg").contains("already exist")) {
                         throw new CouchbaseException("Could not CREATE PRIMARY INDEX - " + result.errors().toString());
                     }
@@ -408,26 +421,37 @@ public class CouchbaseTestContext {
             boolean existing = true;
             ClusterManager clusterManager = cluster.clusterManager(adminName, adminPassword);
 
+            Bucket bucket;
+
             if(!isMockEnabled()) {
                 existing = clusterManager.hasBucket(bucketName);
                 if (!existing) {
                     if (createIfMissing) {
                         clusterManager.insertBucket(bucketSettingsBuilder.build());
-                        boolean bucketExists = false;
-                        while (!bucketExists) {
+                        boolean canUseBucket = false;
+                        do {
                             try {
-                                cluster.openBucket(bucketName);
-                                bucketExists = true;
+                                bucket = authed ? cluster.openBucket(bucketName) :
+                                        cluster.openBucket(bucketName, bucketPassword);
+                                PingReport pingReport = bucket.ping();
+                                for (PingServiceHealth health:pingReport.services()) {
+                                    if (health.state() != PingServiceHealth.PingState.OK) {
+                                        throw new Exception("Not healthy");
+                                    }
+                                }
+                                bucket.upsert(JsonDocument.create(bucketName + "foo"));
+                                bucket.remove(bucketName + "foo");
+                                canUseBucket = true;
                             } catch (Exception e) {
-                                //bucket is not yet available
+                                LOGGER.info("Unable to open/use bucket " + e.toString());
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException iex) {
+                                    Thread.currentThread().interrupt();
+                                    throw new RuntimeException(iex);
+                                }
                             }
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                throw new RuntimeException(e);
-                            }
-                        }
+                        } while (!canUseBucket);
                     } else {
                         throw new BucketDoesNotExistException("Bucket " + bucketName + " doesn't exist and bucket creation disabled (or a sample)");
                     }
@@ -436,7 +460,7 @@ public class CouchbaseTestContext {
 
             boolean isFlushEnabled = bucketSettingsBuilder.enableFlush();
 
-            Bucket bucket = authed ? cluster.openBucket(bucketName) :
+            bucket = authed ? cluster.openBucket(bucketName) :
                 cluster.openBucket(bucketName, bucketPassword);
             BucketManager bucketManager = bucket.bucketManager();
 
@@ -456,7 +480,7 @@ public class CouchbaseTestContext {
                 }
             }
 
-            return new CouchbaseTestContext(bucket, bucketPassword, bucketManager, cluster, clusterManager, seedNode,                               adminName, adminPassword, env, createAdhocBucket, isFlushEnabled, authed, couchbaseMock);
+            return new CouchbaseTestContext(bucket, bucketPassword, bucketManager, cluster, clusterManager, seedNode, adminName, adminPassword, env, createAdhocBucket, isFlushEnabled, authed, couchbaseMock);
         }
     }
 
@@ -709,5 +733,9 @@ public class CouchbaseTestContext {
 
     public static boolean isMockEnabled() {
         return Boolean.parseBoolean(mockProperties.getProperty("useMock", "true"));
+    }
+
+    public static boolean isCi() {
+        return TestProperties.isCi();
     }
 }

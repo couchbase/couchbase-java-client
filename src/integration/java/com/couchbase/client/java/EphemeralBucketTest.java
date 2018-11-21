@@ -27,6 +27,7 @@ import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Func1;
@@ -91,7 +92,8 @@ public class EphemeralBucketTest {
     }
 
     @Test
-    public void shouldManageEphemeralBucket() {
+    public void shouldManageEphemeralBucket() throws Exception {
+        assumeFalse(CouchbaseTestContext.isCi());
         BucketSettings settings = DefaultBucketSettings
             .builder()
             .type(BucketType.EPHEMERAL)

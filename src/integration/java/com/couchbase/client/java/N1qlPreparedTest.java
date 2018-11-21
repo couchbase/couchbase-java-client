@@ -61,7 +61,7 @@ public class N1qlPreparedTest {
     private static int count = 0;
 
     @BeforeClass
-    public static void init() throws InterruptedException {
+    public static void init() throws Exception {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
 
         ctx = CouchbaseTestContext.builder()

@@ -70,6 +70,7 @@ public class ClusterManagerTest {
     @BeforeClass
     public static void setup() {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
+        assumeFalse(CouchbaseTestContext.isCi());
 
         couchbaseCluster = CouchbaseCluster.create(TestProperties.seedNode());
         clusterManager = couchbaseCluster
@@ -186,7 +187,7 @@ public class ClusterManagerTest {
     }
 
     @Test
-    public void shouldUpdateBucket() {
+    public void shouldUpdateBucket() throws Exception {
         BucketSettings settings = DefaultBucketSettings
             .builder()
             .name(UPDATE_BUCKET)

@@ -662,6 +662,8 @@ public class KeyValueTest extends ClusterDependentTest {
 
     @Test
     public void shouldStoreAndGetBigDecimal() {
+        assumeFalse(CouchbaseTestContext.isCi());
+
         BigDecimal bigdec = new BigDecimal("12345.678901234567890432423432324");
         JsonObject original = JsonObject
             .create()

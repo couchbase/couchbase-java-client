@@ -21,6 +21,8 @@ import com.couchbase.client.java.repository.annotation.Field;
 import com.couchbase.client.java.repository.annotation.Id;
 import com.couchbase.client.java.repository.mapping.RepositoryMappingException;
 import com.couchbase.client.java.util.ClusterDependentTest;
+import com.couchbase.client.java.util.CouchbaseTestContext;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Date;
@@ -29,8 +31,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 public class RepositoryTest extends ClusterDependentTest {
+
+    @BeforeClass
+    public static void check() {
+        assumeFalse(CouchbaseTestContext.isCi());
+    }
 
     @Test
     public void shouldUpsertAndGetEntity() {

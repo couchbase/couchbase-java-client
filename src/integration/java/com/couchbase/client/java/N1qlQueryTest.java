@@ -58,7 +58,7 @@ public class N1qlQueryTest {
     private static final N1qlParams WITH_CONSISTENCY = N1qlParams.build().consistency(CONSISTENCY);
 
     @BeforeClass
-    public static void init() throws InterruptedException {
+    public static void init() throws Exception {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
 
         ctx = CouchbaseTestContext.builder()

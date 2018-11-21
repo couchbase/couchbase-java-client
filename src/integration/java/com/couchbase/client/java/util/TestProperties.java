@@ -28,6 +28,7 @@ public class TestProperties {
     private static String password;
     private static String adminName;
     private static String adminPassword;
+    private static boolean isCi;
 
     /**
     * Initialize static the properties.
@@ -38,6 +39,7 @@ public class TestProperties {
         password = System.getProperty("password", "");
         adminName = System.getProperty("adminName", "Administrator");
         adminPassword = System.getProperty("adminPassword", "password");
+        isCi = Boolean.parseBoolean(System.getProperty("ci", "false"));
     }
 
     /**
@@ -85,4 +87,12 @@ public class TestProperties {
         return adminPassword;
     }
 
+    /**
+     * Property set if the tests are running on ci
+     *
+     * @return true if running on ci
+     */
+    public static boolean isCi() {
+        return isCi;
+    }
 }

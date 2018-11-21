@@ -47,7 +47,7 @@ public class N1qlDmlTest {
     public static CouchbaseTestContext ctx;
 
     @BeforeClass
-    public static void init() {
+    public static void init() throws Exception {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
 
         ctx = CouchbaseTestContext.builder()

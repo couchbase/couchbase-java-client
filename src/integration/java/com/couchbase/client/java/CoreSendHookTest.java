@@ -29,6 +29,7 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import rx.Observable;
 import rx.functions.Action0;
@@ -54,6 +55,7 @@ public class CoreSendHookTest {
     @BeforeClass
     public static void init() throws InterruptedException {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
+        assumeFalse(CouchbaseTestContext.isCi());
 
         ctx = CouchbaseTestContext.builder()
             .bucketName("CoreSendHookTest")

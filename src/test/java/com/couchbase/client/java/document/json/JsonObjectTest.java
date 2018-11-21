@@ -16,6 +16,7 @@
 package com.couchbase.client.java.document.json;
 
 import com.couchbase.client.java.SerializationHelper;
+import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Verifies the functionality provided by a {@link JsonObject}.
@@ -461,6 +463,8 @@ public class JsonObjectTest {
 
     @Test
     public void shouldSupportBigDecimalConverted() throws Exception {
+        assumeFalse(CouchbaseTestContext.isCi());
+
         BigDecimal bigdec = new BigDecimal("1234.5678901234567890432423432324");
         JsonObject original = JsonObject
             .create()
