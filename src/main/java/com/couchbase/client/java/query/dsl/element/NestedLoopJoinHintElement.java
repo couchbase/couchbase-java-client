@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Couchbase, Inc.
+ * Copyright (c) 2018 Couchbase, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.couchbase.client.java.query.dsl.path;
+package com.couchbase.client.java.query.dsl.element;
+
+import com.couchbase.client.core.annotations.InterfaceAudience;
+import com.couchbase.client.core.annotations.InterfaceStability;
 
 /**
- * .
+ * Hint to use Nested loop join
  *
- * @author Michael Nitschinger
+ * @author Subhashni Balakrishnan
  */
-public interface JoinPath extends KeysPath {
+@InterfaceStability.Experimental
+@InterfaceAudience.Private
+public class NestedLoopJoinHintElement implements Element {
 
-    JoinPath as(String alias);
-
-    /**
-     * Use hash join hint (Available in Enterprise Edition only)
-     */
-    KeysPath useHash(HashSide side);
-
-    /**
-     * Use nested loop join
-     */
-    KeysPath useNestedLoop();
+    @Override
+    public String export() {
+        return "USE NL";
+    }
 }

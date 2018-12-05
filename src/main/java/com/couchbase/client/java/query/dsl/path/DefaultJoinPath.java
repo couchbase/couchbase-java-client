@@ -16,6 +16,7 @@
 package com.couchbase.client.java.query.dsl.path;
 
 import com.couchbase.client.java.query.dsl.element.AsElement;
+import com.couchbase.client.java.query.dsl.element.NestedLoopJoinHintElement;
 
 /**
  * .
@@ -29,8 +30,20 @@ public class DefaultJoinPath extends DefaultKeysPath implements JoinPath {
     }
 
     @Override
-    public KeysPath as(String alias) {
+    public JoinPath as(String alias) {
         element(new AsElement(alias));
+        return new DefaultJoinPath(this);
+    }
+
+    @Override
+    public KeysPath useHash(HashSide side) {
+        element(new HashJoinHintElement(side));
+        return new DefaultKeysPath(this);
+    }
+
+    @Override
+    public KeysPath useNestedLoop() {
+        element(new NestedLoopJoinHintElement());
         return new DefaultKeysPath(this);
     }
 }
