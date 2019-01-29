@@ -577,10 +577,13 @@ public class N1qlQueryExecutor {
           CouchbaseAsyncBucket.CURRENT_BUCKET_IDENTIFIER,
           "`" + bucket + "`"
         );
+        String statement = query.statement().toString();
         if (targetNode != null) {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, targetNode, query.params().clientContextId());
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, targetNode,
+                query.params().clientContextId(), statement);
         } else {
-            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password, query.params().clientContextId());
+            return GenericQueryRequest.jsonQuery(rawQuery, bucket, username, password,
+                query.params().clientContextId(), statement);
         }
     }
 
