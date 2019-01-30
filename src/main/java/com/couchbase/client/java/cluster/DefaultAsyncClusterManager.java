@@ -226,6 +226,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                 }
                             }
 
+                            // proxyPort field removed from server 6.5+ (MB-29741)
+                            int proxyPort = bucket.containsKey("proxyPort") ? bucket.getInt("proxyPort") : 0;
+
                             settings.add(DefaultBucketSettings.builder()
                                     .name(bucket.getString("name"))
                                     .enableFlush(enableFlush)
@@ -233,7 +236,7 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                                     .replicas(bucket.getInt("replicaNumber"))
                                     .quota(ramQuota)
                                     .indexReplicas(indexReplicas)
-                                    .port(bucket.getInt("proxyPort"))
+                                    .port(proxyPort)
                                     .password(bucket.getString("saslPassword"))
                                     .compressionMode(compressionMode)
                                     .ejectionMethod(ejectionMethod)
