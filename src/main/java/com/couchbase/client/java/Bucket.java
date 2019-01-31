@@ -2952,6 +2952,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with the default kvTimeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -2974,6 +2978,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with the default kvTimeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3009,6 +3017,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with the default kvTimeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3042,6 +3054,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with the default kvTimeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3078,6 +3094,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with a custom timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3102,6 +3122,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with a custom timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3139,6 +3163,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with a custom timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3174,6 +3202,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet with a custom timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3212,6 +3244,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
      * key/value timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3234,6 +3270,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
      * key/value timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3269,6 +3309,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
      * key/value timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3302,6 +3346,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with the default
      * key/value timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3338,6 +3386,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
      * timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3362,6 +3414,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
      * timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3399,6 +3455,10 @@ public interface Bucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
      * timeout.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * This method throws under the following conditions:
@@ -3434,6 +3494,10 @@ public interface Bucket {
     /**
      * Increment or decrement a counter with the given value and a initial value if it does not exist with a custom
      * timeout.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -3479,6 +3543,10 @@ public interface Bucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
@@ -3507,6 +3575,10 @@ public interface Bucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * This method throws under the following conditions:
      *
@@ -3548,6 +3620,10 @@ public interface Bucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
@@ -3587,6 +3663,10 @@ public interface Bucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * This method throws under the following conditions:
      *
@@ -3629,6 +3709,10 @@ public interface Bucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
@@ -3659,6 +3743,10 @@ public interface Bucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * This method throws under the following conditions:
      *
@@ -3702,6 +3790,10 @@ public interface Bucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * This method throws under the following conditions:
      *
      * - The operation takes longer than the specified timeout: {@link TimeoutException} wrapped in a {@link RuntimeException}
@@ -3743,6 +3835,10 @@ public interface Bucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * This method throws under the following conditions:
      *

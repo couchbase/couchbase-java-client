@@ -2635,6 +2635,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
      * The returned {@link Observable} can error under the following conditions:
@@ -2656,6 +2660,10 @@ public interface AsyncBucket {
     /**
      * Increment or decrement a counter with the given value or throw an exception if it does not
      * exist yet.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
@@ -2686,6 +2694,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -2724,6 +2736,10 @@ public interface AsyncBucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2759,6 +2775,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2791,6 +2811,10 @@ public interface AsyncBucket {
      * exist yet.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -2827,6 +2851,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2860,6 +2888,10 @@ public interface AsyncBucket {
      * exist yet.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -2896,6 +2928,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -2916,6 +2952,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -2939,6 +2979,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -2971,6 +3015,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3007,6 +3055,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -3038,6 +3090,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3074,6 +3130,10 @@ public interface AsyncBucket {
      *
      * It is not allowed that the delta value will bring the actual value below zero.
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -3106,6 +3166,10 @@ public interface AsyncBucket {
      * Increment or decrement a counter with the given value and a initial value if it does not exist.
      *
      * It is not allowed that the delta value will bring the actual value below zero.
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3147,6 +3211,10 @@ public interface AsyncBucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -3173,6 +3241,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3202,6 +3274,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3240,6 +3316,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3281,6 +3361,10 @@ public interface AsyncBucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -3318,6 +3402,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
@@ -3359,6 +3447,10 @@ public interface AsyncBucket {
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
      *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
+     *
      * The returned {@link Observable} can error under the following conditions:
      *
      * - The producer outpaces the SDK: {@link BackpressureException}
@@ -3397,6 +3489,10 @@ public interface AsyncBucket {
      * *Note*: Right now it is only possible to set the TTL of the counter document when it is created, not
      * when it is updated! If this behavior is needed, please refer to the subdocument API and use the JSON
      * based counters!
+     *
+     * The initial value for the counter can be set by passing the initial value in {@link #counter)} or using
+     * {@link #insert} to create a {@link JsonLongDocument}. The value can also be modified by using {@link #upsert}
+     * with {@link JsonLongDocument}.
      *
      * The returned {@link Observable} can error under the following conditions:
      *
