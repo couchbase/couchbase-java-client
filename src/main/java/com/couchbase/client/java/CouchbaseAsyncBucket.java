@@ -1963,8 +1963,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                             return ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, element);
                                                         }
                                                     });
-                                        } else if (throwable instanceof MultiMutationException && throwable.getCause() instanceof PathNotFoundException) {
-                                            return Observable.just(ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, null));
+                                        } else if (throwable.getCause() instanceof PathNotFoundException) {
+                                            return Observable.just(ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.NOT_EXISTS, mutationOperation, null));
                                         } else {
                                             return Observable.error(throwable);
                                         }
@@ -1986,6 +1986,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                             } else {
                                                 return (E) val;
                                             }
+                                        } else if (status == ResponseStatus.NOT_EXISTS) {
+                                            return null;
                                         } else {
                                             throw new CouchbaseException(status.toString());
                                         }
