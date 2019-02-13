@@ -352,7 +352,7 @@
                         <Bundle-Description>${project.description}</Bundle-Description>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
-                        <Export-Package>com.couchbase.client.*</Export-Package>
+                        <Export-Package>com.couchbase.client.java.*</Export-Package>
                         <Import-Package>com.couchbase.client.core;version="[${core.version},${core.version}]",org.apache.log4j;version="[${log4j.version},${log4j.version}]";resolution:=optional, org.slf4j;version="[${slf4j.version},${slf4j.version}]";resolution:=optional, org.apache.commons.logging;version="[${commons-logging.version},${commons-logging.version}]";resolution:=optional, com.couchbase.client.encryption;version="[${encryptionextension.version},${encryptionextension.version}]";resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
