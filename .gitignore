@@ -4,8 +4,6 @@
 .DS_Store
 .project
 build/
-lib/ivy-2.2.0.jar
-bin/
 target/
 log/
 
