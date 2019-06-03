@@ -486,7 +486,7 @@ public class N1qlQueryExecutor {
                 @Override
                 public Observable<GenericQueryResponse> call(NodeInfo nodeInfo) {
                     try {
-                        InetAddress hostname = InetAddress.getByName(nodeInfo.hostname().address());
+                        InetAddress hostname = InetAddress.getByName(nodeInfo.hostname());
                         final GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, hostname);
                         return deferAndWatch(new Func1<Subscriber, Observable<? extends GenericQueryResponse>>() {
                             @Override

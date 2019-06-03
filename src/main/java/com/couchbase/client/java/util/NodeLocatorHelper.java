@@ -156,7 +156,7 @@ public class NodeLocatorHelper {
                 throw new IllegalStateException("Replica not configured for this bucket.");
             }
             try {
-                return InetAddress.getByName(cbc.nodeAtIndex(nodeId).hostname().address());
+                return InetAddress.getByName(cbc.nodeAtIndex(nodeId).hostname());
             } catch (UnknownHostException e) {
                 throw new IllegalStateException(e);
             }
@@ -175,7 +175,7 @@ public class NodeLocatorHelper {
         BucketConfig config = bucketConfig.get();
         for (NodeInfo nodeInfo : config.nodes()) {
             try {
-                allNodes.add(InetAddress.getByName(nodeInfo.hostname().address()));
+                allNodes.add(InetAddress.getByName(nodeInfo.hostname()));
             } catch (UnknownHostException e) {
                 throw new IllegalStateException(e);
             }
@@ -190,7 +190,7 @@ public class NodeLocatorHelper {
             throw new IllegalStateException("No partition assigned to node for Document ID: " + id);
         }
         try {
-            return InetAddress.getByName(config.nodeAtIndex(nodeId).hostname().address());
+            return InetAddress.getByName(config.nodeAtIndex(nodeId).hostname());
         } catch (UnknownHostException e) {
             throw new IllegalStateException(e);
         }
@@ -207,7 +207,7 @@ public class NodeLocatorHelper {
             }
         }
         try {
-            return InetAddress.getByName(config.ketamaNodes().get(hash).hostname().address());
+            return InetAddress.getByName(config.ketamaNodes().get(hash).hostname());
         } catch (UnknownHostException e) {
             throw new IllegalStateException(e);
         }

@@ -656,9 +656,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     }
 
     Observable<Boolean> sendAddNodeRequest(final InetSocketAddress address) {
-        final NetworkAddress networkAddress = NetworkAddress.create(CouchbaseAsyncCluster.ALLOW_HOSTNAMES_AS_SEED_NODES ?
+        final String networkAddress = CouchbaseAsyncCluster.ALLOW_HOSTNAMES_AS_SEED_NODES ?
                 address.getHostName() :
-                address.getAddress().getHostAddress());
+                address.getAddress().getHostAddress();
         return core.<AddNodeResponse>send(new AddNodeRequest(networkAddress))
                 .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
                     @Override
