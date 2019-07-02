@@ -44,7 +44,7 @@ def write_core_test_properties(seedNode, bucket, password, path):
         print('unable to replace core test properties')
         os._exit(1)
     f.close()
-    
+
 def write_client_mock_test_properties(seedNode, bucket, password, path):
     print(seedNode + ',' + bucket + ',' + password)
     f = open('mock.properties', 'w+')
@@ -88,7 +88,7 @@ for cluster_version in args.cluster_versions:
     if CB_NODE_FOR_CENTOS == '':
         print('Unable to get the cb node using cbdyncluster')
         os._exit(1)
-    run_command('cbdyncluster setup ' + CLUSTER_ID + ' --ram-quota=2048 --storage-mode=memory_optimized --node=kv,index,n1ql --bucket='+bucketName+' --user='+bucketName+':'+password+':admin')
+    run_command('cbdyncluster setup ' + CLUSTER_ID + ' --node=kv,index,n1ql --bucket='+bucketName+' --user='+bucketName+':'+password+':admin')
     run_command('curl -u Administrator:password -v -X POST http://'+CB_NODE_FOR_CENTOS+':8091/pools/default/buckets/'+ bucketName+' -d "flushEnabled=1"')
     build_and_run_tests(CB_NODE_FOR_CENTOS, bucketName, password)
     run_command('cbdyncluster rm ' + CLUSTER_ID)
