@@ -35,10 +35,6 @@ def write_core_test_properties(seedNode, bucket, password, path):
     writeLine(f, 'password='+password)
     writeLine(f, 'adminUser=Administrator')
     writeLine(f, 'adminPassword=password')
-    writeLine(f, 'mockNodeCount=1')
-    writeLine(f, 'mockReplicaCount=1')
-    writeLine(f, 'mockBucketType=couchbase')
-    writeLine(f, 'useMock=false')
     writeLine(f, 'ci=true')
     if run_command('mv properties '+ path) < 0:
         print('unable to replace core test properties')
@@ -48,8 +44,10 @@ def write_core_test_properties(seedNode, bucket, password, path):
 def write_client_mock_test_properties(seedNode, bucket, password, path):
     print(seedNode + ',' + bucket + ',' + password)
     f = open('mock.properties', 'w+')
+    writeLine(f, 'mock.nodeCount=1')
+    writeLine(f, 'mock.replicaCount=1')
+    writeLine(f, 'mock.bucketType=couchbase')
     writeLine(f, 'mock.enabled=false')
-    writeLine(f, 'useMock=false')
     if run_command('mv mock.properties '+ path) < 0:
         print('unable to create mock client properties')
         os._exit(1)

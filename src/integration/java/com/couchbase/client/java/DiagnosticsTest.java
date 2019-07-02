@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import rx.Observable;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -95,8 +96,16 @@ public class DiagnosticsTest {
 
   @Test
   public void shouldRunPing() {
-    PingReport pr = ctx.bucket().ping("myReportId");
-
+    PingReport pr;
+    // For now, the mock can report that it has the query service, but doesn't handle
+    // the ping.  So, lets not query for that _if_ we are using the mock.
+    // TODO: fixup the CouchbaseMock, and look at how we deal with unexpected responses too
+    if (CouchbaseTestContext.isMockEnabled()) {
+      List<ServiceType> services = Arrays.asList(ServiceType.VIEW, ServiceType.BINARY);
+      pr = ctx.bucket().ping("myReportId", services);
+    } else {
+      pr = ctx.bucket().ping("myReportId");
+    }
     assertNotNull(pr.sdk());
     assertEquals(pr.sdk(), ctx.env().userAgent());
     assertEquals("myReportId", pr.id());

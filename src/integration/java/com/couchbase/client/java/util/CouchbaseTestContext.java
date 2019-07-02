@@ -724,7 +724,7 @@ public class CouchbaseTestContext {
         }
         mockProperties = new Properties();
         try {
-            mockProperties.load(CouchbaseTestContext.class.getResourceAsStream("/mock.properties"));
+            mockProperties.load(CouchbaseTestContext.class.getResourceAsStream("mock.properties"));
         } catch (Exception ex) {
             //ignore
         }
@@ -732,7 +732,7 @@ public class CouchbaseTestContext {
     }
 
     public static boolean isMockEnabled() {
-        return Boolean.parseBoolean(mockProperties.getProperty("useMock", "true"));
+        return Boolean.parseBoolean(mockProperties.getProperty("mock.enabled", "true"));
     }
 
     public static boolean isCi() {

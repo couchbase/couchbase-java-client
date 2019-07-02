@@ -38,6 +38,7 @@
         <guavatest.version>19.0</guavatest.version>
         <core.apidocs>${project.build.directory}/coredocs</core.apidocs>
         <couchbasemock.version>1.5.19</couchbasemock.version>
+        <useMock>false</useMock>
     </properties>
 
     <organization>
@@ -381,6 +382,10 @@
                 <includes>
                     <include>**/*</include>
                 </includes>
+            </resource>
+            <resource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
             </resource>
         </resources>
     </build>
