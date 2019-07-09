@@ -39,7 +39,6 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import com.couchbase.client.java.error.AuthenticationException;
 import com.couchbase.client.java.error.BucketDoesNotExistException;
 import com.couchbase.client.java.error.IndexDoesNotExistException;
 import com.couchbase.client.java.query.N1qlParams;
@@ -724,7 +723,7 @@ public class CouchbaseTestContext {
         }
         mockProperties = new Properties();
         try {
-            mockProperties.load(CouchbaseTestContext.class.getResourceAsStream("mock.properties"));
+            mockProperties.load(CouchbaseTestContext.class.getResourceAsStream("/mock.properties"));
         } catch (Exception ex) {
             //ignore
         }
