@@ -36,27 +36,16 @@ def write_core_test_properties(seedNode, bucket, password, path):
     writeLine(f, 'adminUser=Administrator')
     writeLine(f, 'adminPassword=password')
     writeLine(f, 'ci=true')
+    writeLine(f, 'mock.enabled=${useMock}')
     if run_command('mv properties '+ path) < 0:
         print('unable to replace core test properties')
-        os._exit(1)
-    f.close()
-
-def write_client_mock_test_properties(seedNode, bucket, password, path):
-    print(seedNode + ',' + bucket + ',' + password)
-    f = open('mock.properties', 'w+')
-    writeLine(f, 'mock.nodeCount=1')
-    writeLine(f, 'mock.replicaCount=1')
-    writeLine(f, 'mock.bucketType=couchbase')
-    writeLine(f, 'mock.enabled=false')
-    if run_command('mv mock.properties '+ path) < 0:
-        print('unable to create mock client properties')
         os._exit(1)
     f.close()
 
 def build_and_run_tests(seedNode, bucket, password):
     if run_command('git clone http://github.com/couchbase/couchbase-jvm-core') < 0:
         os._exit(1)
-    write_core_test_properties(seedNode, bucket, password, 'couchbase-jvm-core/src/main/resources/com.couchbase.client.core.integration.properties')
+    write_core_test_properties(seedNode, bucket, password, 'couchbase-jvm-core/src/test/resources/integration.properties')
     prev = os.getcwd()
     repo = os.getcwd() + "/.repository"
     os.chdir(prev+'/couchbase-jvm-core')
@@ -64,7 +53,6 @@ def build_and_run_tests(seedNode, bucket, password):
     os.chdir(prev)
     if run_command('git clone http://github.com/couchbase/couchbase-java-client') < 0:
         os._exit(1)
-    write_client_mock_test_properties(seedNode, bucket, password, 'couchbase-java-client/src/test/resources/mock.properties')
     os.chdir(prev + '/couchbase-java-client')
     run_command('mvn  -Dmaven.repo.local="'+ repo +'" install' + ' -DseedNode=' + seedNode + ' -Dbucket=' + bucket + ' -Dpassword=' + password + ' -Dci=true')
     os.chdir(prev)
