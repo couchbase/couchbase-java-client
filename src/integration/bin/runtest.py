@@ -46,7 +46,7 @@ def write_core_test_properties(seedNode, bucket, password, path):
 def build_and_run_tests(seedNode, bucket, password):
     if run_command('git clone http://github.com/couchbase/couchbase-jvm-core') < 0:
         os._exit(1)
-    write_core_test_properties(seedNode, bucket, password, 'couchbase-jvm-core/src/test/resources/integration.properties')
+    write_core_test_properties(seedNode, bucket, password, 'couchbase-jvm-core/src/test/resources/integration/integration.properties')
     prev = os.getcwd()
     repo = os.getcwd() + "/.repository"
     os.chdir(prev+'/couchbase-jvm-core')
