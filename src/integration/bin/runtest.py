@@ -37,10 +37,11 @@ def write_core_test_properties(seedNode, bucket, password, path):
     writeLine(f, 'adminPassword=password')
     writeLine(f, 'ci=true')
     writeLine(f, 'mock.enabled=${useMock}')
+    f.close()
+    run_command('cat properties')
     if run_command('mv properties '+ path) < 0:
         print('unable to replace core test properties')
         os._exit(1)
-    f.close()
 
 def build_and_run_tests(seedNode, bucket, password):
     if run_command('git clone http://github.com/couchbase/couchbase-jvm-core') < 0:
