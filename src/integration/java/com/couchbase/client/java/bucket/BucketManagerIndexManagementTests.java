@@ -26,8 +26,9 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.logging.CouchbaseLogger;
@@ -83,13 +84,13 @@ public class BucketManagerIndexManagementTests {
         String adminPassword = TestProperties.adminPassword();
 
         cluster = CouchbaseCluster.create(seedNode);
+        cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
         clusterManager = cluster.clusterManager(adminName, adminPassword);
     }
 
     @Before
     public void createBucket() throws InterruptedException {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
-        cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
         indexedBucketName = indexBucketNamePrefix + ++count;
         clusterManager.insertBucket(DefaultBucketSettings.builder()
                 .name(indexedBucketName)
@@ -108,16 +109,18 @@ public class BucketManagerIndexManagementTests {
                 indexedBucket.remove(indexedBucketName + "foo");
                 canUseBucket = true;
             } catch (Exception e) {
-                LOGGER.info("Unable to open/use bucket" + e.toString());
+                LOGGER.info("Unable to open/use bucket: {}", e.toString());
             }
             try {
-                Thread.sleep(100);
+                if (!canUseBucket) {
+                    Thread.sleep(100);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
         } while(!canUseBucket);
-        LOGGER.info(indexedBucket + " created and opened");
+        LOGGER.info("{} created and opened", indexedBucketName);
         List<IndexInfo> initialIndexes = indexedBucket.bucketManager().listN1qlIndexes();
         assertEquals("Newly created bucket unexpectedly has indexes: " + initialIndexes, 0, initialIndexes.size());
     }
@@ -127,6 +130,7 @@ public class BucketManagerIndexManagementTests {
         if (indexedBucket != null) {
             indexedBucket.close();
             clusterManager.removeBucket(indexedBucketName);
+            LOGGER.info("{} closed and removed.", indexedBucketName);
         }
     }
 
@@ -446,11 +450,14 @@ public class BucketManagerIndexManagementTests {
                 .doOnNext(new Action1<IndexInfo>() {
                     @Override
                     public void call(IndexInfo indexInfo) {
-                        LOGGER.info(indexInfo.name() + ": " + indexInfo.state());
+                        LOGGER.info("{} : {} ", indexInfo.name(), indexInfo.state());
                     }
                 })
                 .toList()
                 .toBlocking().single();
+
+        // get rid of dups - the primary _can_ be in here 2 times
+        readyInSeconds = new ArrayList<> (new HashSet<>(readyInSeconds));
         assertEquals("Not all indexes are online after 10 seconds", 3, readyInSeconds.size());
     }
 }
