@@ -409,10 +409,7 @@ public class CouchbaseTestContext {
          * (see {@link #adhoc(boolean)}, {@link #flushOnInit(boolean)}, ...), but re-using a previously existing
          * {@link Cluster} and {@link CouchbaseEnvironment}.
          */
-        public CouchbaseTestContext buildWithCluster(Cluster cluster, CouchbaseEnvironment env, boolean authed) {
-            if (createAdhocBucket) {
-                this.bucketName = AD_HOC + this.bucketName + System.nanoTime();
-            }
+        private CouchbaseTestContext buildWithCluster(Cluster cluster, CouchbaseEnvironment env, boolean authed) {
 
             this.bucketSettingsBuilder = bucketSettingsBuilder.name(this.bucketName)
                     .password(this.bucketPassword);
@@ -420,7 +417,7 @@ public class CouchbaseTestContext {
             boolean existing = true;
             ClusterManager clusterManager = cluster.clusterManager(adminName, adminPassword);
 
-            Bucket bucket;
+            Bucket bucket = null;
 
             if(!isMockEnabled()) {
                 existing = clusterManager.hasBucket(bucketName);
@@ -435,7 +432,7 @@ public class CouchbaseTestContext {
                                 PingReport pingReport = bucket.ping();
                                 for (PingServiceHealth health:pingReport.services()) {
                                     if (health.state() != PingServiceHealth.PingState.OK) {
-                                        throw new Exception("Not healthy");
+                                        throw new Exception(String.format("Not healthy {}", health.toString()));
                                     }
                                 }
                                 bucket.upsert(JsonDocument.create(bucketName + "foo"));
@@ -443,11 +440,21 @@ public class CouchbaseTestContext {
                                 canUseBucket = true;
                             } catch (Exception e) {
                                 LOGGER.info("Unable to open/use bucket " + e.toString());
+
                                 try {
+                                    // Lets close the bucket, just in case.  If we repeatedly call
+                                    // cluster.openBucket, we will just get the cached one, which maybe
+                                    // is problem, but for sure re-opening is ok.
+                                    if (bucket != null && !bucket.isClosed()) {
+                                        bucket.close();
+                                    }
                                     Thread.sleep(100);
                                 } catch (InterruptedException iex) {
                                     Thread.currentThread().interrupt();
                                     throw new RuntimeException(iex);
+                                } catch (Exception e2) {
+                                    // so we couldn't close the bucket.  Lets log that and move on.
+                                    LOGGER.warn(String.format("Unable to close bucket {}", e2.toString()));
                                 }
                             }
                         } while (!canUseBucket);
