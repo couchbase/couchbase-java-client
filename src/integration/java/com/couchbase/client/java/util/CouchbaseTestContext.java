@@ -423,7 +423,20 @@ public class CouchbaseTestContext {
                 existing = clusterManager.hasBucket(bucketName);
                 if (!existing) {
                     if (createIfMissing) {
-                        clusterManager.insertBucket(bucketSettingsBuilder.build());
+                        try {
+                            clusterManager.insertBucket(bucketSettingsBuilder.build());
+                        } catch(Exception e) {
+                            // Buckets don't immediately go away, so if the server is busy, and low on ram
+                            // quota, we can temporarily not be able to create a new bucket.  Lets wait a bit
+                            // and try again, once
+                            try {
+                                Thread.sleep(5000);  // 5 seconds is pretty arbitrary
+
+                            } catch (InterruptedException e2) {
+                                // lets just ignore it
+                            }
+                            clusterManager.insertBucket(bucketSettingsBuilder.build());
+                        }
                         boolean canUseBucket = false;
                         do {
                             try {
@@ -452,9 +465,9 @@ public class CouchbaseTestContext {
                                 } catch (InterruptedException iex) {
                                     Thread.currentThread().interrupt();
                                     throw new RuntimeException(iex);
-                                } catch (Exception e2) {
+                                } catch (Exception e3) {
                                     // so we couldn't close the bucket.  Lets log that and move on.
-                                    LOGGER.warn(String.format("Unable to close bucket {}", e2.toString()));
+                                    LOGGER.warn(String.format("Unable to close bucket {}", e3.toString()));
                                 }
                             }
                         } while (!canUseBucket);
@@ -544,6 +557,7 @@ public class CouchbaseTestContext {
      */
     public void disconnect() {
         cluster.disconnect();
+        env.shutdown();
     }
 
     //=====================
