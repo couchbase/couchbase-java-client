@@ -25,6 +25,7 @@ import com.couchbase.client.java.subdoc.DocumentFragment;
 import com.couchbase.client.java.subdoc.SubdocOptionsBuilder;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.Version;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -47,6 +48,12 @@ public class SubDocumentDocumentFlagsTests {
                 .build();
 
         ctx.ignoreIfClusterUnder(Version.parseVersion("5.0.0"));
+    }
+    @AfterClass
+    public static void after() {
+        if (ctx != null) {
+            ctx.destroyBucketAndDisconnect();
+        }
     }
 
     public void removeIfExists(String key) {

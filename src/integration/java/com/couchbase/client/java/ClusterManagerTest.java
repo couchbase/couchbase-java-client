@@ -39,6 +39,7 @@ import com.couchbase.client.java.cluster.api.RestBuilder;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -75,6 +76,13 @@ public class ClusterManagerTest {
         couchbaseCluster = CouchbaseCluster.create(TestProperties.seedNode());
         clusterManager = couchbaseCluster
             .clusterManager(TestProperties.adminName(), TestProperties.adminPassword());
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        if (couchbaseCluster != null) {
+            couchbaseCluster.disconnect();
+        }
     }
 
     @Before

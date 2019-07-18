@@ -30,6 +30,7 @@ import com.couchbase.client.java.error.MixedAuthenticationException;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.features.Version;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -42,6 +43,7 @@ import static org.junit.Assume.assumeFalse;
  */
 public class PasswordAuthenticatorTest {
     private static CouchbaseTestContext ctx;
+    private Cluster cluster;
     private static String username = "testUser";
     private static String password = "password";
 
@@ -51,6 +53,13 @@ public class PasswordAuthenticatorTest {
     @Before
     public void checkMock() {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
+    }
+
+    @After
+    public void after() {
+        if (cluster != null) {
+            cluster.disconnect();
+        }
     }
 
     @BeforeClass
@@ -74,68 +83,64 @@ public class PasswordAuthenticatorTest {
 
     @Test
     public void shouldOpenBucketWithCorrectCredentials() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
         cluster.openBucket(ctx.bucketName());
-        cluster.disconnect();
     }
 
     @Test
     public void shouldOpenBucketWithShortcutOverload() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(username, password);
         cluster.openBucket(ctx.bucketName());
-        cluster.disconnect();
     }
 
     @Test(expected = InvalidPasswordException.class)
     public void shouldNotOpenBucketWithInCorrectCredentials() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, "x"));
         cluster.openBucket(ctx.bucketName());
     }
 
     @Test(expected = InvalidPasswordException.class)
     public void shouldNotOpenBucketWithInCorrectCredentialsOverload() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, "x"));
         cluster.openBucket(ctx.bucketName(), new ArrayList<Transcoder<? extends Document, ?>>());
     }
 
     @Test(expected = MixedAuthenticationException.class)
     public void shouldNotAcceptMixedAuthenticationWithBucketCredentials() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
         cluster.openBucket(ctx.bucketName(), "x");
     }
 
     @Test(expected = MixedAuthenticationException.class)
     public void shouldNotAcceptMixedAuthenticationWithBucketCredentialsOverload() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
         cluster.openBucket(ctx.bucketName(), "x", null);
     }
 
     @Test(expected = MixedAuthenticationException.class)
     public void shouldNotAcceptMixedAuthenticationWithClassicAuthenticatorOverload() {
-        Cluster cluster = CouchbaseCluster.create(ctx.seedNode());
+        cluster = CouchbaseCluster.create(ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
         cluster.authenticate(new ClassicAuthenticator());
     }
 
     @Test
     public void shouldWorkWithUserNameInConnectionString() {
-        Cluster cluster = CouchbaseCluster.fromConnectionString("couchbase://" + username + "@" + ctx.seedNode());
+        cluster = CouchbaseCluster.fromConnectionString("couchbase://" + username + "@" + ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(password));
         cluster.openBucket(ctx.bucketName());
-        cluster.disconnect();
     }
 
     @Test
     public void shouldWorkWithUserNameInConnectionStringWithCorrectPriority() {
-        Cluster cluster = CouchbaseCluster.fromConnectionString("couchbase://" + "blah" + "@" + ctx.seedNode());
+        cluster = CouchbaseCluster.fromConnectionString("couchbase://" + "blah" + "@" + ctx.seedNode());
         cluster.authenticate(new PasswordAuthenticator(username, password));
         cluster.openBucket(ctx.bucketName());
-        cluster.disconnect();
     }
 }

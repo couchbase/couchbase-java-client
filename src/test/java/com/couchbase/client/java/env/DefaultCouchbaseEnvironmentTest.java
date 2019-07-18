@@ -17,6 +17,7 @@ package com.couchbase.client.java.env;
 
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,21 +33,32 @@ import static org.junit.Assert.assertTrue;
  */
 public class DefaultCouchbaseEnvironmentTest {
 
-    @Test
-    public void shouldApplyDefaultSettings() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.create();
+    private CouchbaseEnvironment env;
+    private CoreEnvironment coreEnv;
 
-        assertEquals(DefaultCouchbaseEnvironment.KEYVALUE_ENDPOINTS, env.kvEndpoints());
-        assertNotNull(env.ioPool());
+    @After
+    public void afterEach() {
+        if (env != null) {
+            env.shutdown();
+        }
+        if (coreEnv != null) {
+            coreEnv.shutdown();
+        }
     }
 
     @Test
+    public void shouldApplyDefaultSettings() {
+        env = DefaultCouchbaseEnvironment.create();
+        assertEquals(DefaultCouchbaseEnvironment.KEYVALUE_ENDPOINTS, env.kvEndpoints());
+        assertNotNull(env.ioPool());
+     }
+
+    @Test
     public void shouldOverrideSettings() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.
+        env = DefaultCouchbaseEnvironment.
             builder()
             .kvEndpoints(5)
             .build();
-
         assertEquals(5, env.kvEndpoints());
         assertNotNull(env.ioPool());
     }
@@ -54,7 +66,7 @@ public class DefaultCouchbaseEnvironmentTest {
     @Test
     public void systemPropertiesShouldTakePrecedence() {
         System.setProperty("com.couchbase.kvEndpoints", "10");
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.
+        env = DefaultCouchbaseEnvironment.
             builder()
             .kvEndpoints(5)
             .build();
@@ -65,15 +77,15 @@ public class DefaultCouchbaseEnvironmentTest {
 
     @Test
     public void toStringShouldContainJavaClientSpecificParameters() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.create();
+        env = DefaultCouchbaseEnvironment.create();
 
         assertTrue(env.toString().contains("kvTimeout="));
     }
 
     @Test
     public void testVersionInformationDifferentFromCore() {
-        CoreEnvironment coreEnv = DefaultCoreEnvironment.create();
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.create();
+        coreEnv = DefaultCoreEnvironment.create();
+        env = DefaultCouchbaseEnvironment.create();
 
         assertNotEquals(coreEnv.packageNameAndVersion(), env.packageNameAndVersion());
         assertNotEquals(coreEnv.userAgent(), env.userAgent());
@@ -86,12 +98,12 @@ public class DefaultCouchbaseEnvironmentTest {
 
     @Test
     public void testForcedVersionInformationSameWithCore() {
-        CoreEnvironment coreEnv = DefaultCoreEnvironment.builder()
+        coreEnv = DefaultCoreEnvironment.builder()
                 .packageNameAndVersion("foo")
                 .userAgent("bar")
                 .build();
 
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+        env = DefaultCouchbaseEnvironment.builder()
                 .packageNameAndVersion("foo")
                 .userAgent("bar")
                 .build();

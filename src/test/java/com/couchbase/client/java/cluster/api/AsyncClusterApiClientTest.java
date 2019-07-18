@@ -2,19 +2,13 @@ package com.couchbase.client.java.cluster.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.fail;
-
-import java.util.concurrent.TimeUnit;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.deps.io.netty.handler.codec.http.HttpMethod;
-import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
-import com.couchbase.client.java.cluster.api.AsyncRestBuilder;
-import com.couchbase.client.java.cluster.api.ClusterApiClient;
-import com.couchbase.client.java.cluster.api.Form;
-import com.couchbase.client.java.cluster.api.RestBuilder;
+
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.codearte.catchexception.shade.mockito.Mockito;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,6 +23,10 @@ public class AsyncClusterApiClientTest {
         core = Mockito.mock(ClusterFacade.class);
         env = DefaultCouchbaseEnvironment.create();
         apiClient = new AsyncClusterApiClient("username", "password", core);
+    }
+    @AfterClass
+    public static void after() {
+        env.shutdown();
     }
 
     @Test

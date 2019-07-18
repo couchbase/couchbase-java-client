@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
-import com.couchbase.client.java.auth.Authenticator;
 import com.couchbase.client.java.auth.CertAuthenticator;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
@@ -35,6 +34,7 @@ import com.couchbase.client.java.error.MixedAuthenticationException;
 import com.couchbase.client.java.util.CouchbaseTestContext;
 import com.couchbase.client.java.util.TestProperties;
 import com.couchbase.client.java.util.features.Version;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,6 +47,21 @@ import org.junit.Test;
  */
 public class ConnectionTest  {
 
+    public Cluster cluster;
+    public CouchbaseEnvironment env;
+
+    @After
+    public void after() {
+        if (cluster != null) {
+            cluster.disconnect();
+            cluster = null;
+        }
+        if (env != null) {
+            env.shutdown();
+            env = null;
+        }
+    }
+
     @Before
     public void checkMock() {
         assumeFalse(CouchbaseTestContext.isMockEnabled());
@@ -54,19 +69,19 @@ public class ConnectionTest  {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfBucketIsNull() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         cluster.openBucket(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfBucketIsEmpty() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         cluster.openBucket("");
     }
 
     @Test
     public void shouldThrowBucketDoesNotExistExceptionForWrongBucketName() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         ClusterManager clusterManager = cluster.clusterManager(TestProperties.adminName(), TestProperties.adminPassword());
         assumeTrue("Server after 4.5.0 throw an IllegalArgumentException, see other test",
                 clusterManager.info().getMinVersion().compareTo(new Version(4, 5, 0)) < 0);
@@ -76,7 +91,7 @@ public class ConnectionTest  {
 
     @Test
     public void shouldThrowInvalidPasswordExceptionForWrongBucketNameAfterWatson() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         ClusterManager clusterManager = cluster.clusterManager(TestProperties.adminName(), TestProperties.adminPassword());
         assumeTrue("Server before 4.5.0 throw a BucketDoesNotExistException, see other test",
                 clusterManager.info().getMinVersion().compareTo(new Version(4, 5, 0)) >= 0);
@@ -86,14 +101,14 @@ public class ConnectionTest  {
 
     @Test(expected = InvalidPasswordException.class)
     public void shouldThrowConfigurationExceptionForWrongBucketPassword() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         cluster.openBucket(TestProperties.bucket(), "completelyWrongPassword");
     }
 
     @Test
-    @Ignore // this doesn't pass currently - temporarily ingoring.
+    @Ignore // this doesn't pass currently - temporarily ignoring.
     public void shouldBootstrapWithBadHost() {
-        Cluster cluster = CouchbaseCluster.create("badnode", TestProperties.seedNode());
+        cluster = CouchbaseCluster.create("badnode", TestProperties.seedNode());
         try {
             cluster.openBucket(TestProperties.bucket(), TestProperties.password());
         } catch (InvalidPasswordException ex) {
@@ -104,7 +119,7 @@ public class ConnectionTest  {
 
     @Test
     public void shouldProvideClusterInfoWithBadHostInBootstrapList() {
-        Cluster cluster = CouchbaseCluster.create("x.y.z", TestProperties.seedNode());
+        cluster = CouchbaseCluster.create("x.y.z", TestProperties.seedNode());
         cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
         cluster.clusterManager().info();
     }
@@ -112,14 +127,14 @@ public class ConnectionTest  {
     @Test(expected = NullPointerException.class)
     @Ignore // this doesn't pass currently - temporarily ignoring.
     public void shouldNotCheckReverseLookupWhenDNSSRVEnabled() throws Exception {
-        Cluster cluster = CouchbaseCluster.create(DefaultCouchbaseEnvironment.builder().dnsSrvEnabled(true).build(), "x.y.z");
+        cluster = CouchbaseCluster.create(DefaultCouchbaseEnvironment.builder().dnsSrvEnabled(true).build(), "x.y.z");
         cluster.authenticate(TestProperties.adminName(), TestProperties.adminPassword());
         cluster.clusterManager().info();
     }
 
     @Test
     public void shouldCacheBucketReference() {
-        Cluster cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
         Bucket bucket1;
         Bucket bucket2;
 
@@ -155,88 +170,52 @@ public class ConnectionTest  {
 
     @Test(expected = AuthenticationException.class)
     public void shouldNotAcceptCertAuthWithoutCertAuthEnabled() {
-        Cluster cluster = null;
-        try {
-            cluster = CouchbaseCluster.create(TestProperties.seedNode());
-            cluster.authenticate(CertAuthenticator.INSTANCE);
-        } finally {
-            if (cluster != null) {
-                cluster.disconnect();
-            }
-        }
+        cluster = CouchbaseCluster.create(TestProperties.seedNode());
+        cluster.authenticate(CertAuthenticator.INSTANCE);
     }
 
     @Test(expected = AuthenticationException.class)
     public void shouldNotAcceptCertAuthWithoutKeystoreOrTruststore() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+        env = DefaultCouchbaseEnvironment.builder()
             .sslEnabled(true)
             .certAuthEnabled(true)
             .build();
-        Cluster cluster = null;
-        try {
-            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
-            cluster.authenticate(CertAuthenticator.INSTANCE);
-        } finally {
-            if (cluster != null) {
-                cluster.disconnect();
-            }
-            env.shutdown();
-        }
+        cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+        cluster.authenticate(CertAuthenticator.INSTANCE);
     }
 
     @Test(expected = AuthenticationException.class)
     public void shouldNotAcceptOtherAuthenticatorIfCertEnabled() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+        env = DefaultCouchbaseEnvironment.builder()
             .sslEnabled(true)
             .certAuthEnabled(true)
             .build();
-        Cluster cluster = null;
-        try {
-            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
-            cluster.authenticate("foo", "bar");
-        } finally {
-            if (cluster != null) {
-                cluster.disconnect();
-            }
-            env.shutdown();
-        }
+
+        cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+        cluster.authenticate("foo", "bar");
     }
 
     @Test(expected = AuthenticationException.class)
     public void shouldNotAcceptCertMixedAuth() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+        env = DefaultCouchbaseEnvironment.builder()
             .sslEnabled(true)
             .certAuthEnabled(true)
             .sslTruststoreFile("some/file/path")
             .build();
-        Cluster cluster = null;
-        try {
-            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
-            cluster.authenticate(CertAuthenticator.INSTANCE);
-            cluster.openBucket(TestProperties.bucket(), "password");
-        } finally {
-            if (cluster != null) {
-                cluster.disconnect();
-            }
-            env.shutdown();
-        }
+
+        cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+        cluster.authenticate(CertAuthenticator.INSTANCE);
+        cluster.openBucket(TestProperties.bucket(), "password");
     }
 
     @Test(expected = AuthenticationException.class)
     public void shouldNotOpenBucketIfCertNotSetProperly() {
-        CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
+        env = DefaultCouchbaseEnvironment.builder()
             .sslEnabled(true)
             .certAuthEnabled(true)
             .build();
-        Cluster cluster = null;
-        try {
-            cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
-            cluster.openBucket(TestProperties.bucket());
-        } finally {
-            if (cluster != null) {
-                cluster.disconnect();
-            }
-            env.shutdown();
-        }
+
+        cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
+        cluster.openBucket(TestProperties.bucket());
     }
 }

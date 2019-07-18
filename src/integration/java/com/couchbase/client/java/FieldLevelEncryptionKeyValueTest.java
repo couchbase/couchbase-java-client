@@ -32,7 +32,6 @@ import com.couchbase.client.java.document.EntityDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.InvalidPasswordException;
 import com.couchbase.client.java.repository.annotation.EncryptedField;
@@ -45,8 +44,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static com.couchbase.client.java.env.DefaultCouchbaseEnvironment.builder;
-
 /**
  * Verifies field level encryptions using AES, RSA using Jceks key store
  */
@@ -55,6 +52,8 @@ public class FieldLevelEncryptionKeyValueTest extends ClusterDependentTest {
     private static Cluster cluster;
 
     private static Bucket bucket;
+
+    private static DefaultCouchbaseEnvironment env;
 
     private static RSACryptoProvider rsaCryptoProvider;
 
@@ -108,7 +107,8 @@ public class FieldLevelEncryptionKeyValueTest extends ClusterDependentTest {
                 .bootstrapCarrierDirectPort(ctx.mock.getCarrierPort(ctx.bucketName()))
                 .bootstrapHttpDirectPort(ctx.mock.getHttpPort());
         }
-        cluster = CouchbaseCluster.create(builder.build(), TestProperties.seedNode());
+        env = builder.build();
+        cluster = CouchbaseCluster.create(env, TestProperties.seedNode());
         try {
             bucket = cluster.openBucket(TestProperties.bucket(), TestProperties.password());
         } catch (InvalidPasswordException ex) {
@@ -121,6 +121,7 @@ public class FieldLevelEncryptionKeyValueTest extends ClusterDependentTest {
     @AfterClass
     public static void tearDown() {
         cluster.disconnect();
+        env.shutdown();
     }
 
     @Test

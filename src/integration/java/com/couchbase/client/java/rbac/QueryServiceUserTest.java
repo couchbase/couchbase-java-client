@@ -80,7 +80,6 @@ public class QueryServiceUserTest {
     }
 
     @Test
-    @Ignore //fails currently
     public void testN1qlInsertAuthFail() {
         N1qlQueryResult result = bucket.query(N1qlQuery.simple("INSERT INTO "+ ctx.bucketName() +" (KEY, VALUE) VALUES (\"foo\", \n" +
                 "      { \"bar\": \"baz\" }) RETURNING * \n "));

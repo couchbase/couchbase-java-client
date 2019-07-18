@@ -44,7 +44,9 @@ import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.RawJsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import org.junit.After;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -61,6 +63,15 @@ import rx.functions.Func1;
  * @since 2.0
  */
 public class ViewQueryTest {
+
+    private CouchbaseEnvironment env;
+
+    @After
+    public void after() {
+        if (env != null) {
+            env.shutdown();
+        }
+    }
 
     @Test
     public void shouldSetDefaults() {
@@ -500,6 +511,7 @@ public class ViewQueryTest {
                         });
             }
         });
-        return new CouchbaseBucket(spyBucket, DefaultCouchbaseEnvironment.create(), null, "", "", "");
+        env = DefaultCouchbaseEnvironment.create();
+        return new CouchbaseBucket(spyBucket, env, null, "", "", "");
     }
 }

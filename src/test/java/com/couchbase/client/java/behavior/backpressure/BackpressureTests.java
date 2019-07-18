@@ -46,7 +46,9 @@ import com.couchbase.client.java.document.StringDocument;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.transcoder.Transcoder;
 import com.couchbase.client.java.transcoder.TranscoderUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -67,7 +69,7 @@ public class BackpressureTests {
     private static final int MAX_CONCURRENT = 18; //maximum amount of parallel requested get in the flatmap
     private static final int RANGE = 100; //total number of requests made
     private static final int LATENCY = 50; //in milliseconds, delay after which the core responds
-
+    private static DefaultCouchbaseEnvironment ENV;
 
     private static final Func1<StringDocument, String> EXTRACT_CONTENT = new Func1<StringDocument, String>() {
         @Override
@@ -76,6 +78,15 @@ public class BackpressureTests {
         }
     };
 
+    @BeforeClass
+    public static void before() {
+        ENV = DefaultCouchbaseEnvironment.create();
+    }
+    @AfterClass
+    public static void after() {
+        ENV.shutdown();
+    }
+
     @Test
     public void testBulkPatternWithoutConcurrentFlatMapThrowsBackpressureException() {
         final AtomicLong counter = new AtomicLong(0L);
@@ -83,7 +94,7 @@ public class BackpressureTests {
         final AtomicBoolean overflowed = new AtomicBoolean(false);
 
         CouchbaseCore core = createMock(counter, queued, overflowed);
-        final AsyncBucket bucket = new CouchbaseAsyncBucket(core, DefaultCouchbaseEnvironment.create(), "test", "",
+        final AsyncBucket bucket = new CouchbaseAsyncBucket(core, ENV, "test", "",
                 Collections.<Transcoder<? extends Document, ?>>emptyList());
         final Func1<Integer, Observable<StringDocument>> intToAsyncGet = new Func1<Integer, Observable<StringDocument>>() {
             @Override
@@ -116,7 +127,7 @@ public class BackpressureTests {
         final AtomicBoolean overflowed = new AtomicBoolean(false);
 
         CouchbaseCore core = createMock(counter, queued, overflowed);
-        final AsyncBucket bucket = new CouchbaseAsyncBucket(core, DefaultCouchbaseEnvironment.create(), "test", "",
+        final AsyncBucket bucket = new CouchbaseAsyncBucket(core, ENV, "test", "",
                 Collections.<Transcoder<? extends Document, ?>>emptyList());
         final Func1<Integer, Observable<StringDocument>> intToAsyncGet = new Func1<Integer, Observable<StringDocument>>() {
             @Override

@@ -56,7 +56,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import rx.functions.Action1;
 
@@ -66,8 +65,6 @@ import rx.functions.Action1;
  * @author Simon Baslé
  */
 
-// TEMPORARY!  Just to see if we can get the integration tests working on jenkins
-@Ignore
 public class BucketManagerIndexManagementTests {
 
     private static final CouchbaseLogger LOGGER = CouchbaseLoggerFactory.getInstance(

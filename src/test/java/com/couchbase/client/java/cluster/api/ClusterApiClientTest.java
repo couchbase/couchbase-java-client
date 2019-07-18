@@ -13,6 +13,7 @@ import com.couchbase.client.java.cluster.api.Form;
 import com.couchbase.client.java.cluster.api.RestBuilder;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.codearte.catchexception.shade.mockito.Mockito;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -27,6 +28,13 @@ public class ClusterApiClientTest {
         core = Mockito.mock(ClusterFacade.class);
         env = DefaultCouchbaseEnvironment.create();
         apiClient = new ClusterApiClient("username", "password", core, 1, TimeUnit.MILLISECONDS);
+    }
+
+    @AfterClass
+    public static void after() {
+        if (env != null) {
+            env.shutdown();
+        }
     }
 
     @Test
