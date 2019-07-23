@@ -91,6 +91,7 @@ public class BucketManagerIndexManagementTests {
 
     @Before
     public void createBucket() throws InterruptedException {
+        assumeFalse(CouchbaseTestContext.isCi());
         assumeFalse(CouchbaseTestContext.isMockEnabled());
         indexedBucketName = indexBucketNamePrefix + ++count;
         clusterManager.insertBucket(DefaultBucketSettings.builder()
