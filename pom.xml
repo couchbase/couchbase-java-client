@@ -438,5 +438,11 @@
             <name>Couchbase Prerelease Repo</name>
             <url>http://files.couchbase.com/maven2</url>
         </repository>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
     </repositories>
 </project>
