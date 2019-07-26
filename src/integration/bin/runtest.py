@@ -50,12 +50,12 @@ def build_and_run_tests(seedNode, bucket, password):
     prev = os.getcwd()
     repo = os.getcwd() + "/.repository"
     os.chdir(prev+'/couchbase-jvm-core')
-    run_command('mvn -Dmaven.repo.local="'+ repo +'" install')
+    run_command('mvn -Dmaven.repo.local="'+ repo +'" -Dsurefire.rerunFailingTestsCount=1 install')
     os.chdir(prev)
     if run_command('git clone http://github.com/couchbase/couchbase-java-client') < 0:
         os._exit(1)
     os.chdir(prev + '/couchbase-java-client')
-    run_command('mvn  -Dmaven.repo.local="'+ repo +'" install' + ' -DseedNode=' + seedNode + ' -Dbucket=' + bucket + ' -Dpassword=' + password + ' -Dci=true')
+    run_command('mvn  -Dmaven.repo.local="'+ repo +'" -Dsurefire.rerunFailingTestsCount=1 install' + ' -DseedNode=' + seedNode + ' -Dbucket=' + bucket + ' -Dpassword=' + password + ' -Dci=true')
     os.chdir(prev)
 
 parser = argparse.ArgumentParser(description='Run Java Integration tests')
