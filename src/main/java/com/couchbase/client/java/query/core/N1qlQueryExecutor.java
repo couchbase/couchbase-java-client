@@ -485,19 +485,14 @@ public class N1qlQueryExecutor {
             }).flatMap(new Func1<NodeInfo, Observable<GenericQueryResponse>>() {
                 @Override
                 public Observable<GenericQueryResponse> call(NodeInfo nodeInfo) {
-                    try {
-                        InetAddress hostname = InetAddress.getByName(nodeInfo.hostname());
-                        final GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, hostname);
-                        return deferAndWatch(new Func1<Subscriber, Observable<? extends GenericQueryResponse>>() {
-                            @Override
-                            public Observable<? extends GenericQueryResponse> call(Subscriber subscriber) {
-                                req.subscriber(subscriber);
-                                return core.send(req);
-                            }
-                        });
-                    } catch (UnknownHostException e) {
-                        return Observable.error(e);
-                    }
+                    final GenericQueryRequest req = createN1qlRequest(query, bucket, username, password, nodeInfo.hostname());
+                    return deferAndWatch(new Func1<Subscriber, Observable<? extends GenericQueryResponse>>() {
+                        @Override
+                        public Observable<? extends GenericQueryResponse> call(Subscriber subscriber) {
+                            req.subscriber(subscriber);
+                            return core.send(req);
+                        }
+                    });
                 }
             });
         }
@@ -571,7 +566,7 @@ public class N1qlQueryExecutor {
      * Creates the core query request and performs centralized string substitution.
      */
     private GenericQueryRequest createN1qlRequest(final N1qlQuery query, String bucket, String username, String password,
-            InetAddress targetNode) {
+            String targetNode) {
         String rawQuery = query.n1ql().toString();
         rawQuery = rawQuery.replaceAll(
           CouchbaseAsyncBucket.CURRENT_BUCKET_IDENTIFIER,
