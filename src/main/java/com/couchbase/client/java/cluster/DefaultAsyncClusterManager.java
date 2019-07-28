@@ -655,10 +655,8 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         });
     }
 
-    Observable<Boolean> sendAddNodeRequest(final InetSocketAddress address) {
-        final String networkAddress = CouchbaseAsyncCluster.ALLOW_HOSTNAMES_AS_SEED_NODES ?
-                address.getHostName() :
-                address.getAddress().getHostAddress();
+    Observable<Boolean> sendAddNodeRequest(final ConnectionString.UnresolvedSocket address) {
+        final String networkAddress = address.hostname();
         return core.<AddNodeResponse>send(new AddNodeRequest(networkAddress))
                 .flatMap(new Func1<AddNodeResponse, Observable<AddServiceResponse>>() {
                     @Override
@@ -688,9 +686,9 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
 
         final AtomicInteger integer = new AtomicInteger(0);
         return Observable.just(connectionString.hosts())
-                .flatMap(new Func1<List<InetSocketAddress>, Observable<Boolean>>() {
+                .flatMap(new Func1<List<ConnectionString.UnresolvedSocket>, Observable<Boolean>>() {
                     @Override
-                    public Observable<Boolean> call(List<InetSocketAddress> inetSocketAddresses) {
+                    public Observable<Boolean> call(List<ConnectionString.UnresolvedSocket> inetSocketAddresses) {
                         int hostIndex = integer.getAndIncrement();
                         if (hostIndex >= connectionString.hosts().size()) {
                             integer.set(0);

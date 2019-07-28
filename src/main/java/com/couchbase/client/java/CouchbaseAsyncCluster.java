@@ -15,7 +15,6 @@
  */
 package com.couchbase.client.java;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -121,14 +120,6 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
     private static final CouchbaseLogger LOGGER =
         CouchbaseLoggerFactory.getInstance(CouchbaseAsyncCluster.class);
-
-    /**
-     * Flag which controls the usage of hostnames for seed nodes
-     */
-    public static final boolean ALLOW_HOSTNAMES_AS_SEED_NODES = Boolean.parseBoolean(
-            System.getProperty("com.couchbase.allowHostnamesAsSeedNodes", "false")
-    );
-
 
     /**
      * The default bucket used when {@link #openBucket()} is called.
@@ -308,8 +299,8 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         if (environment.dnsSrvEnabled()) {
             seedNodesViaDnsSrv(connectionString, environment, seedNodes);
         } else {
-            for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? node.getHostName() : node.getAddress().getHostAddress());
+            for (ConnectionString.UnresolvedSocket node : connectionString.hosts()) {
+                seedNodes.add(node.hostname());
             }
         }
 
@@ -334,15 +325,15 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
      */
     private static void seedNodesViaDnsSrv(ConnectionString connectionString,
        CouchbaseEnvironment environment, List<String> seedNodes) {
-        if (connectionString.allHosts().size() == 1) {
-            InetSocketAddress lookupNode = connectionString.allHosts().get(0);
+        if (connectionString.hosts().size() == 1) {
+            ConnectionString.UnresolvedSocket lookupNode = connectionString.hosts().get(0);
             LOGGER.debug(
                 "Attempting to load DNS SRV records from {}.",
                 connectionString.allHosts().get(0)
             );
 
             try {
-                List<String> foundNodes = Bootstrap.fromDnsSrv(lookupNode.getHostName(), false,
+                List<String> foundNodes = Bootstrap.fromDnsSrv(lookupNode.hostname(), false,
                     environment.sslEnabled());
                 if (foundNodes.isEmpty()) {
                     throw new IllegalStateException("DNS SRV list is empty.");
@@ -351,13 +342,13 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
                 LOGGER.info("Loaded seed nodes from DNS SRV {}.", system(foundNodes));
             } catch (Exception ex) {
                 LOGGER.warn("DNS SRV lookup failed, proceeding with normal bootstrap.", ex);
-                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? lookupNode.getHostName() : lookupNode.getAddress().getHostAddress());
+                seedNodes.add(lookupNode.hostname());
             }
         } else {
             LOGGER.info("DNS SRV enabled, but less or more than one seed node given. "
                 + "Proceeding with normal bootstrap.");
-            for (InetSocketAddress node : connectionString.hosts()) {
-                seedNodes.add(ALLOW_HOSTNAMES_AS_SEED_NODES ? node.getHostName() : node.getAddress().getHostAddress());
+            for (ConnectionString.UnresolvedSocket node : connectionString.hosts()) {
+                seedNodes.add(node.hostname());
             }
         }
     }
