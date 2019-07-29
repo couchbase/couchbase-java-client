@@ -1630,6 +1630,12 @@ public class AsyncMutateInBuilder {
                             response.content().release();
                         }
 
+                        if (environment.operationTracingEnabled()) {
+                            environment.tracer().scopeManager()
+                              .activate(response.request().span(), true)
+                              .close();
+                        }
+
                         ResponseStatus responseStatus = response.status();
                         try {
                             Object value = responseStatusDocIdAndPathToValueEvaluator.call(responseStatus, docId, spec.path());
