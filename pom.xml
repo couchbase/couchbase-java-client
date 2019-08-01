@@ -39,6 +39,8 @@
         <core.apidocs>${project.build.directory}/coredocs</core.apidocs>
         <couchbasemock.version>1.5.19</couchbasemock.version>
         <useMock>false</useMock>
+        <gpg.keyname></gpg.keyname>
+        <gpg.passphrase></gpg.passphrase>
     </properties>
 
     <organization>
@@ -374,7 +376,6 @@
                 </executions>
             </plugin>
         </plugins>
-
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -429,6 +430,38 @@
                 <!-- just adding the unit tests again, noop. -->
                 <test-source-directory>src/test/java</test-source-directory>
             </properties>
+        </profile>
+        <profile>
+            <id>CI</id>
+            <properties>
+                <test-source-directory>src/integration/java</test-source-directory>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
