@@ -223,6 +223,10 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
                             if (rawEjectionMethod != null && !rawEjectionMethod.isEmpty()) {
                                 if ("fullEviction".equalsIgnoreCase(rawEjectionMethod)) {
                                     ejectionMethod = EjectionMethod.FULL;
+                                } else if ("noEviction".equalsIgnoreCase(rawEjectionMethod)) {
+                                    ejectionMethod = EjectionMethod.NONE;
+                                } else if ("nruEviction".equalsIgnoreCase(rawEjectionMethod)) {
+                                    ejectionMethod = EjectionMethod.NRU;
                                 }
                             }
 
@@ -545,8 +549,19 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
         }
 
         if (settings.ejectionMethod() != null) {
-            if (settings.ejectionMethod() == EjectionMethod.FULL) {
-                actual.put("evictionPolicy", "fullEviction");
+            switch (settings.ejectionMethod()) {
+                case FULL:
+                    actual.put("evictionPolicy", "fullEviction");
+                    break;
+                case NRU:
+                    actual.put("evictionPolicy", "nruEviction");
+                    break;
+                case NONE:
+                    actual.put("evictionPolicy", "noEviction");
+                    break;
+                case VALUE:
+                    // value eviction does not need an eviction policy set
+                    break;
             }
         }
 

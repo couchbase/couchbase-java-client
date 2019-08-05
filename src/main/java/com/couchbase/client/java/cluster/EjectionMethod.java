@@ -24,14 +24,32 @@ package com.couchbase.client.java.cluster;
  */
 public enum EjectionMethod {
     /**
-     * During ejection, only the value will be ejected
-     * (key and metadata will remain in memory).
+     * Value ejection - for couchbase buckets only.
+     *
+     * <p>During ejection, only the value will be ejected (key and metadata will remain in memory).</p>
      */
     VALUE,
 
     /**
-     * During ejection, everything (including key, metadata, and value)
-     * will be ejected.
+     * Full ejection - for couchbase buckets only.
+     *
+     * <p>During ejection, everything (including key, metadata, and value) will be ejected.</p>
      */
-    FULL
+    FULL,
+
+    /**
+     * No ejection at all - for ephemeral buckets only.
+     *
+     * <p>Specifying "NO ejection" means that the bucket will not evict items from the cache if the cache is full:
+     * this type of eviction policy should be used for in-memory database use-cases.</p>
+     */
+    NONE,
+
+    /**
+     * Not recently used ejection - for ephemeral buckets only.
+     *
+     * <p>Specifying "NRU ejection" means that items not recently used will be evicted from memory, when all memory in
+     * the bucket is used: this type of eviction policy should be used for caching use-cases.</p>
+     */
+    NRU
 }
