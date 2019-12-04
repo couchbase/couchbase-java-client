@@ -4,7 +4,7 @@ This project is the official driver for Couchbase when working with Java (or on 
 
 ## Features ##
 
-* High-Performance Key/Value and Query (N1QL, Views) operations
+* High-Performance Key/Value and Query (N1QL, Views, Search, Analytics) operations
 * Cluster-Awareness and automatic rebalance and failover handling
 * Asynchronous (through [RxJava](https://github.com/ReactiveX/RxJava)) and Synchronous APIs
 * Transparent Encryption Support
@@ -24,7 +24,7 @@ The easiest way is to download the jar as well as its transitive dependencies (o
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.7.10</version>
+    <version>2.7.11</version>
 </dependency>
 ```
 
