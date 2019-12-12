@@ -25,6 +25,10 @@ import com.couchbase.client.java.util.CouchbaseTestContext;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -166,6 +170,27 @@ public class RepositoryTest extends ClusterDependentTest {
         assertTrue(repository().exists(document));
     }
 
+    @Test
+    public void shouldUpsertMetaEntity() {
+        MetaEntity entity = new MetaEntity("myid", "myname");
+        EntityDocument<MetaEntity> document = EntityDocument.create(entity);
+
+        assertFalse(repository().exists(document));
+        assertEquals(0, document.cas());
+        EntityDocument<MetaEntity> stored = repository().upsert(document);
+        assertNotEquals(0, stored.cas());
+        assertEquals(document.content(), stored.content());
+
+        JsonDocument storedRaw = bucket().get(entity.getId());
+        assertEquals(entity.getName(), storedRaw.content().getString("name"));
+
+        EntityDocument<MetaEntity> found = repository().get(entity.getId(), MetaEntity.class);
+        assertEquals(found.cas(), stored.cas());
+        assertNotEquals(0, found.cas());
+
+        assertTrue(repository().exists(document));
+    }
+
     static class EntityWithoutId {
     }
 
@@ -204,6 +229,40 @@ public class RepositoryTest extends ClusterDependentTest {
         public Child(String id, String name) {
             super(id);
             this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ ElementType.FIELD })
+    @Id
+    public @interface MetaId {}
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ ElementType.FIELD })
+    @Field
+    public @interface MetaField {}
+
+    static class MetaEntity {
+        public @MetaId
+        String id = null;
+
+        @MetaField
+        private String name = null;
+
+        public MetaEntity() {
+        }
+
+        public MetaEntity(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() {
+            return id;
         }
 
         public String getName() {
