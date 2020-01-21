@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Represents a JSON object that can be stored and loaded from Couchbase Server.
  *
@@ -42,8 +44,6 @@ import java.util.Set;
  * The {@link JsonObject} is backed by a {@link Map} and is intended to work similar to it API wise, but to only
  * allow to store such objects which can be represented by JSON.
  *
- * @author Michael Nitschinger
- * @author Simon Baslé
  * @since 2.0
  */
 public class JsonObject extends JsonValue implements Serializable {
@@ -127,50 +127,19 @@ public class JsonObject extends JsonValue implements Serializable {
      * @throws ClassCastException if map contains a sub-Map or sub-List not supported (see above)
      */
     public static JsonObject from(Map<String, ?> mapData) {
-        if (mapData == null) {
-            throw new NullPointerException("Null input Map unsupported");
-        } else if (mapData.isEmpty()) {
-            return JsonObject.empty();
-        }
+        requireNonNull(mapData, "Null input Map unsupported");
 
         JsonObject result = new JsonObject(mapData.size());
-        for (Map.Entry<String, ?> entry : mapData.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-
-            if (value == JsonValue.NULL) {
-                value = null;
+        try {
+            for (Map.Entry<String, ?> entry : mapData.entrySet()) {
+                String key = requireNonNull(entry.getKey(), "The key is not allowed to be null");
+                Object value = entry.getValue();
+                result.put(key, coerce(value));
             }
-
-            if (key == null) {
-                throw new NullPointerException("The key is not allowed to be null");
-            } else if (value instanceof Map) {
-                try {
-                    JsonObject sub = JsonObject.from((Map<String, ?>) value);
-                    result.put(key, sub);
-                } catch (ClassCastException e) {
-                    throw e;
-                } catch (Exception e) {
-                    ClassCastException c = new ClassCastException("Couldn't convert sub-Map " + key + " to JsonObject");
-                    c.initCause(e);
-                    throw c;
-                }
-            } else if (value instanceof List) {
-                try {
-                    JsonArray sub = JsonArray.from((List<?>) value);
-                    result.put(key, sub);
-                } catch (Exception e) {
-                    //no risk of a direct ClassCastException here
-                    ClassCastException c = new ClassCastException("Couldn't convert sub-List " + key + " to JsonArray");
-                    c.initCause(e);
-                    throw c;
-                }
-            } else if (!checkType(value)) {
-                throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
-            } else {
-                result.put(key, value);
-            }
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Map key must be String", e);
         }
+
         return result;
     }
 
@@ -203,13 +172,8 @@ public class JsonObject extends JsonValue implements Serializable {
     public JsonObject put(final String name, final Object value) {
         if (this == value) {
             throw new IllegalArgumentException("Cannot put self");
-        } else if (value == JsonValue.NULL) {
-            putNull(name);
-        } else if (checkType(value)) {
-            content.put(name, value);
-        } else {
-            throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
         }
+        content.put(name, coerce(value));
         return this;
     }
 
@@ -230,15 +194,7 @@ public class JsonObject extends JsonValue implements Serializable {
      */
     public JsonObject putAndEncrypt(final String name, final Object value, String providerName) {
         addValueEncryptionInfo(name, providerName, true);
-        if (this == value) {
-            throw new IllegalArgumentException("Cannot put self");
-        } else if (value == JsonValue.NULL) {
-            putNull(name);
-        } else if (checkType(value)) {
-            content.put(name, value);
-        } else {
-            throw new IllegalArgumentException("Unsupported type for JsonObject: " + value.getClass());
-        }
+        put(name, value);
         return this;
     }
 

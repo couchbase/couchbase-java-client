@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,13 +38,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
-/**
- * Verifies the functionality provided by a {@link JsonArray}.
- *
- * @author Michael Nitschinger
- * @author Simon Baslé
- * @since 2.0
- */
 public class JsonArrayTest {
 
     @Test
@@ -139,7 +134,7 @@ public class JsonArrayTest {
 
     @Test
     public void shouldRecursiveParseList() {
-        List<?> subList = Collections.singletonList("test");
+        List<?> subList = singletonList("test");
         List<Object> source = new ArrayList<Object>(2);
         source.add("item1");
         source.add(subList);
@@ -154,7 +149,7 @@ public class JsonArrayTest {
 
     @Test
     public void shouldRecursiveParseMap() {
-        Map<String, ?> subMap = Collections.singletonMap("test", 2.5d);
+        Map<String, ?> subMap = singletonMap("test", 2.5d);
         List<Object> source = new ArrayList<Object>(2);
         source.add("item1");
         source.add(subMap);
@@ -168,48 +163,36 @@ public class JsonArrayTest {
     }
 
     @Test
-    public void shouldClassCastOnBadSubMap() {
-        Map<Integer, String> badMap1 = Collections.singletonMap(1, "test");
-        Map<String, Object> badMap2 = Collections.singletonMap("key1", (Object) new CloneNotSupportedException());
+    public void shouldThrowOnBadSubMap() {
+        Map<Integer, String> badMap1 = singletonMap(1, "test");
+        Map<String, Object> badMap2 = singletonMap("key1", (Object) new CloneNotSupportedException());
 
-        List<?> source = Collections.singletonList(badMap1);
+        List<?> source = singletonList(badMap1);
         try {
             JsonArray.from(source);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (e.getCause() != null) {
-                fail("No cause expected for sub map that are not Map<String, ?>");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected, not " + e);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
 
-        source = Collections.singletonList(badMap2);
+        source = singletonList(badMap2);
         try {
             JsonArray.from(source);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (!(e.getCause() instanceof IllegalArgumentException)) {
-                fail("ClassCastException with an IllegalArgumentException cause expected");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
     }
 
     @Test
-    public void shouldClassCastWithCauseOnBadSubList() {
-        List<?> badSubList = Collections.singletonList(new CloneNotSupportedException());
-        List<?> source = Collections.singletonList(badSubList);
+    public void shouldThrowOnBadSubList() {
+        List<?> badSubList = singletonList(new CloneNotSupportedException());
+        List<?> source = singletonList(badSubList);
         try {
             JsonArray.from(source);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (!(e.getCause() instanceof IllegalArgumentException)) {
-                fail("ClassCastException with an IllegalArgumentException cause expected");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
     }
 
@@ -219,9 +202,9 @@ public class JsonArrayTest {
         JsonArray arr = JsonArray.create();
         arr.add(JsonValue.NULL);
         arr.add(JsonObject.from(
-                Collections.singletonMap("subNull", JsonValue.NULL)));
+                singletonMap("subNull", JsonValue.NULL)));
         arr.add(JsonArray.from(
-                Collections.singletonList(JsonValue.NULL)));
+                singletonList(JsonValue.NULL)));
 
         assertEquals(3, arr.size());
         assertNull(arr.get(0));
@@ -399,4 +382,18 @@ public class JsonArrayTest {
         assertEquals(1234.567890123457, decoded.getDouble(0), 0);
         assertTrue(decoded.getNumber(0) instanceof Double);
     }
+
+    @Test
+    public void canPutWhenTypeIsUnknown() {
+        Object map = singletonMap("one", 1);
+        Object list = singletonList("red");
+        JsonArray json = JsonArray.create()
+            .add(map)
+            .add(list);
+
+        assertEquals(JsonArray.from(map, list), json);
+        assertEquals(JsonObject.from(singletonMap("one", 1)), json.getObject(0));
+        assertEquals(JsonArray.from(singletonList("red")), json.getArray(1));
+    }
+
 }

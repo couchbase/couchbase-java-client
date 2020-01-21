@@ -17,11 +17,12 @@ package com.couchbase.client.java.document.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a JSON value (either a {@link JsonObject} or a {@link JsonArray}.
  *
- * @author Michael Nitschinger
  * @since 2.0
  */
 public abstract class JsonValue {
@@ -29,7 +30,7 @@ public abstract class JsonValue {
     /**
      * Represents a Json "null".
      */
-    public static JsonNull NULL = JsonNull.INSTANCE;
+    public static final JsonNull NULL = JsonNull.INSTANCE;
 
     /**
      * Static factory method to create an empty {@link JsonObject}.
@@ -68,4 +69,24 @@ public abstract class JsonValue {
             || item instanceof JsonArray;
     }
 
+    /**
+     * Returns the given value converted to a type that passes the {@link #checkType} test.
+     * @throws IllegalArgumentException if conversion is not possible.
+     */
+    @SuppressWarnings("unchecked")
+    static Object coerce(Object value) {
+        if (checkType(value)) {
+            return value;
+        }
+        if (value instanceof Map) {
+            return JsonObject.from((Map) value);
+        }
+        if (value instanceof List) {
+            return JsonArray.from((List) value);
+        }
+        if (value instanceof JsonNull) {
+            return null;
+        }
+        throw new IllegalArgumentException("Unsupported type for JSON value: " + value.getClass());
+    }
 }

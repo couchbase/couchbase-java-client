@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,13 +37,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
-/**
- * Verifies the functionality provided by a {@link JsonObject}.
- *
- * @author Michael Nitschinger
- * @author Simon Baslé
- * @since 2.0
- */
 public class JsonObjectTest {
 
     @Test
@@ -257,50 +252,38 @@ public class JsonObjectTest {
     }
 
     @Test
-    public void shouldClassCastOnBadSubMap() {
-        Map<Integer, String> badMap1 = Collections.singletonMap(1, "test");
-        Map<String, Object> badMap2 = Collections.singletonMap("key1", (Object) new CloneNotSupportedException());
+    public void shouldThrowOnBadSubMap() {
+        Map<Integer, String> badMap1 = singletonMap(1, "test");
+        Map<String, Object> badMap2 = singletonMap("key1", (Object) new CloneNotSupportedException());
 
         Map<String, Object> sourceMap = new HashMap<String, Object>();
         sourceMap.put("subMap", badMap1);
         try {
             JsonObject.from(sourceMap);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (e.getCause() != null) {
-                fail("No cause expected for sub map that are not Map<String, ?>");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected, not " + e);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
 
         sourceMap.clear();
         sourceMap.put("subMap", badMap2);
         try {
             JsonObject.from(sourceMap);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (!(e.getCause() instanceof IllegalArgumentException)) {
-                fail("ClassCastException with an IllegalArgumentException cause expected");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
     }
 
     @Test
-    public void shouldClassCastWithCauseOnBadSubList() {
+    public void shouldThrowOnBadSubList() {
         List<?> badSubList = Collections.singletonList(new CloneNotSupportedException());
-        Map<String, ?> source = Collections.singletonMap("test", badSubList);
+        Map<String, ?> source = singletonMap("test", badSubList);
         try {
             JsonObject.from(source);
-            fail("ClassCastException expected");
-        } catch (ClassCastException e) {
-            if (!(e.getCause() instanceof IllegalArgumentException)) {
-                fail("ClassCastException with an IllegalArgumentException cause expected");
-            }
-        } catch (Exception e) {
-            fail("ClassCastException expected");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
     }
 
@@ -309,7 +292,7 @@ public class JsonObjectTest {
         JsonObject obj = JsonObject.create();
         obj.put("directNull", JsonValue.NULL);
         obj.put("subMapWithNull", JsonObject.from(
-                Collections.singletonMap("subNull", JsonValue.NULL)));
+                singletonMap("subNull", JsonValue.NULL)));
         obj.put("subArrayWithNull", JsonArray.from(
                 Collections.singletonList(JsonValue.NULL)));
 
@@ -483,6 +466,18 @@ public class JsonObjectTest {
         );
         assertEquals(1234.567890123457, decoded.getDouble("value"), 0);
         assertTrue(decoded.getNumber("value") instanceof Double);
+    }
+
+    @Test
+    public void canPutWhenTypeIsUnknown() {
+        Object map = singletonMap("one", 1);
+        Object list = singletonList("red");
+        JsonObject json = JsonObject.create()
+            .put("map", map)
+            .put("list", list);
+
+        assertEquals(JsonObject.from(singletonMap("one", 1)), json.getObject("map"));
+        assertEquals(JsonArray.from(singletonList("red")), json.getArray("list"));
     }
 
 }

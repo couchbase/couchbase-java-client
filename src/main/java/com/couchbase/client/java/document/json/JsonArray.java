@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 /**
@@ -36,8 +35,6 @@ import java.util.Map;
  * The {@link JsonArray} is backed by a {@link List} and is intended to work similar to it API wise, but to only
  * allow to store such objects which can be represented by JSON.
  *
- * @author Michael Nitschinger
- * @author Simon Baslé
  * @since 2.0
  */
 public class JsonArray extends JsonValue implements Iterable<Object>, Serializable {
@@ -91,11 +88,7 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     public static JsonArray from(Object... items) {
         JsonArray array = new JsonArray(items.length);
         for (Object item : items) {
-            if (checkType(item)) {
-                array.add(item);
-            } else {
-                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
-            }
+            array.add(coerce(item));
         }
         return array;
     }
@@ -120,47 +113,11 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     public static JsonArray from(List<?> items) {
         if (items == null) {
             throw new NullPointerException("Null list unsupported");
-        } else if (items.isEmpty()) {
-            return JsonArray.empty();
         }
 
         JsonArray array = new JsonArray(items.size());
-        ListIterator<?> iter = items.listIterator();
-        while (iter.hasNext()) {
-            int i = iter.nextIndex();
-            Object item = iter.next();
-
-            if (item == JsonValue.NULL) {
-                item = null;
-            }
-
-            if (item instanceof Map) {
-                try {
-                    JsonObject sub = JsonObject.from((Map<String, ?>) item);
-                    array.add(sub);
-                } catch (ClassCastException e) {
-                    throw e;
-                } catch (Exception e) {
-                    ClassCastException c = new ClassCastException("Couldn't convert sub-Map at " + i + " to JsonObject");
-                    c.initCause(e);
-                    throw c;
-                }
-            } else if (item instanceof List) {
-                try {
-                    JsonArray sub = JsonArray.from((List<?>) item);
-                    array.add(sub);
-                } catch (Exception e) {
-                    //no risk of a direct ClassCastException here
-                    ClassCastException c = new ClassCastException(
-                            "Couldn't convert sub-List at " + i + " to JsonArray");
-                    c.initCause(e);
-                    throw c;
-                }
-            } else if (checkType(item)) {
-                array.add(item);
-            } else {
-                throw new IllegalArgumentException("Unsupported type for JsonArray: " + item.getClass());
-            }
+        for (Object item : items) {
+            array.add(coerce(item));
         }
         return array;
     }
@@ -206,13 +163,8 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     public JsonArray add(Object value) {
         if (value == this) {
             throw new IllegalArgumentException("Cannot add self");
-        } else if (value == JsonValue.NULL) {
-            addNull();
-        } else if (checkType(value)) {
-            content.add(value);
-        } else {
-            throw new IllegalArgumentException("Unsupported type for JsonArray: " + value.getClass());
         }
+        content.add(coerce(value));
         return this;
     }
 
