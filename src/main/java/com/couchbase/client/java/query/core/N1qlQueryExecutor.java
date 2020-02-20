@@ -301,7 +301,7 @@ public class N1qlQueryExecutor {
 
         if (code == null || msg == null) return false;
 
-        if (code == 4050 || code == 4070 ||
+        if (code == 4040 || code == 4050 || code == 4070 ||
                 (code == 5000 && msg.contains(ERROR_5000_SPECIFIC_MESSAGE))) {
             return true;
         }

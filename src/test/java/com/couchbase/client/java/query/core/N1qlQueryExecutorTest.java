@@ -49,7 +49,6 @@ import com.couchbase.client.java.query.N1qlParams;
 import com.couchbase.client.java.query.Select;
 import com.couchbase.client.java.query.Statement;
 import com.couchbase.client.java.util.LRUCache;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ReturnsElementsOf;
@@ -71,8 +70,8 @@ public class N1qlQueryExecutorTest {
     }
 
     @Test
-    public void testPreparedStatementInCacheBypassesPreparation() throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    public void testPreparedStatementInCacheBypassesPreparation() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -100,8 +99,8 @@ public class N1qlQueryExecutorTest {
     }
 
     @Test
-    public void testPreparedStatementNotInCacheTriggersPreparation() throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    public void testPreparedStatementNotInCacheTriggersPreparation() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -135,7 +134,7 @@ public class N1qlQueryExecutorTest {
 
     @Test
     public void testExtractionOfPayloadFromPrepareResponse() {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true);
 
@@ -155,8 +154,8 @@ public class N1qlQueryExecutorTest {
     }
 
     @Test
-    public void testCachedPlanExecutionErrorTriggersRetry() throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    public void testCachedPlanExecutionErrorTriggersRetry() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -191,8 +190,8 @@ public class N1qlQueryExecutorTest {
     }
 
     @Test
-    public void testUncachedPlanExecutionErrorTriggersRetry() throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    public void testUncachedPlanExecutionErrorTriggersRetry() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -243,8 +242,8 @@ public class N1qlQueryExecutorTest {
 
 
     @Test
-    public void testUncachedPlanExecutionDoubleErrorTriggersRetryThenFails() throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    public void testUncachedPlanExecutionDoubleErrorTriggersRetryThenFails() {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -299,8 +298,8 @@ public class N1qlQueryExecutorTest {
         assertEquals(4050, errors.get(0).getInt("code").intValue());
     }
 
-    private void testRetryCondition(int code, String msg, boolean retryExpected) throws Exception {
-        LRUCache<String, PreparedPayload> cache = new LRUCache<String, PreparedPayload>(3);
+    private void testRetryCondition(int code, String msg, boolean retryExpected) {
+        LRUCache<String, PreparedPayload> cache = new LRUCache<>(3);
         CouchbaseCore mockFacade = mock(CouchbaseCore.class);
         N1qlQueryExecutor executor = spy(new N1qlQueryExecutor(mockFacade, "default", "", "", cache, true));
 
@@ -362,22 +361,27 @@ public class N1qlQueryExecutorTest {
     }
 
     @Test
-    public void testRetryOn4050() throws Exception {
+    public void testRetryOn4040() {
+        testRetryCondition(4040, "notRelevant", true);
+    }
+
+    @Test
+    public void testRetryOn4050() {
         testRetryCondition(4050, "notRelevant", true);
     }
 
     @Test
-    public void testRetryOn4070() throws Exception {
+    public void testRetryOn4070() {
         testRetryCondition(4070, "notRelevant", true);
     }
 
     @Test
-    public void testRetryOn5000WithSpecificMessage() throws Exception {
+    public void testRetryOn5000WithSpecificMessage() {
         testRetryCondition(5000, "toto" + N1qlQueryExecutor.ERROR_5000_SPECIFIC_MESSAGE, true);
     }
 
     @Test
-    public void testNoRetryOn5000WithRandomMessage() throws Exception {
+    public void testNoRetryOn5000WithRandomMessage() {
         testRetryCondition(5000, "notRelevant", false);
     }
 }
