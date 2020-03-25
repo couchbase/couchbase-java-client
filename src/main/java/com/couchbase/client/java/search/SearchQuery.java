@@ -16,6 +16,7 @@
 package com.couchbase.client.java.search;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -32,11 +33,13 @@ import com.couchbase.client.java.search.queries.AbstractFtsQuery;
 import com.couchbase.client.java.search.queries.BooleanFieldQuery;
 import com.couchbase.client.java.search.queries.BooleanQuery;
 import com.couchbase.client.java.search.queries.ConjunctionQuery;
+import com.couchbase.client.java.search.queries.Coordinate;
 import com.couchbase.client.java.search.queries.DateRangeQuery;
 import com.couchbase.client.java.search.queries.DisjunctionQuery;
 import com.couchbase.client.java.search.queries.DocIdQuery;
 import com.couchbase.client.java.search.queries.GeoBoundingBoxQuery;
 import com.couchbase.client.java.search.queries.GeoDistanceQuery;
+import com.couchbase.client.java.search.queries.GeoPolygonQuery;
 import com.couchbase.client.java.search.queries.MatchAllQuery;
 import com.couchbase.client.java.search.queries.MatchNoneQuery;
 import com.couchbase.client.java.search.queries.MatchPhraseQuery;
@@ -53,7 +56,6 @@ import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
 import com.couchbase.client.java.search.sort.SearchSort;
 import com.couchbase.client.java.subdoc.DocumentFragment;
-import rx.Observable;
 
 /**
  * The FTS API entry point. Describes an FTS query entirely (index, query body and parameters) and can
@@ -614,4 +616,11 @@ public class SearchQuery {
     public static GeoDistanceQuery geoDistance(double locationLon, double locationLat, String distance) {
         return new GeoDistanceQuery(locationLon, locationLat, distance);
     }
+
+    /** Prepare a {@link GeoPolygonQuery} body. */
+    @InterfaceStability.Experimental
+    public static GeoPolygonQuery geoPolygon(final List<Coordinate> points) {
+    	return new GeoPolygonQuery(points);
+    }
+
 }
