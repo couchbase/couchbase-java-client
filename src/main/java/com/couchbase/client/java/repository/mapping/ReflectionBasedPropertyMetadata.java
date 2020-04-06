@@ -18,12 +18,15 @@ package com.couchbase.client.java.repository.mapping;
 import com.couchbase.client.java.repository.annotation.EncryptedField;
 import com.couchbase.client.java.repository.annotation.Id;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The property metadata implementation based on java reflection.
  *
- * @author Michael Nitschinger
  * @since 2.2.0
  */
 public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
@@ -33,17 +36,16 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
     private final boolean isField;
     private final String name;
     private final String realName;
-    private String encryptionProviderName;
+    private final String encryptionProviderName;
 
     public ReflectionBasedPropertyMetadata(final Field fieldReference) {
         this.fieldReference = fieldReference;
 
-        isId = fieldReference.isAnnotationPresent(Id.class);
-        isField = fieldReference.isAnnotationPresent(com.couchbase.client.java.repository.annotation.Field.class);
-        if (fieldReference.isAnnotationPresent(EncryptedField.class)) {
-            EncryptedField encryptedField = fieldReference.getAnnotation(EncryptedField.class);
-            this.encryptionProviderName = encryptedField.provider();
-        }
+        isId = hasAnnotation(fieldReference, Id.class);
+        isField = hasAnnotation(fieldReference, com.couchbase.client.java.repository.annotation.Field.class);
+        EncryptedField encryptedField = findAnnotation(fieldReference, EncryptedField.class);
+        this.encryptionProviderName = encryptedField != null ? encryptedField.provider() : null;
+
         realName = fieldReference.getName();
         name = extractName(fieldReference);
 
@@ -106,11 +108,54 @@ public class ReflectionBasedPropertyMetadata implements PropertyMetadata {
      */
     private static String extractName(final Field fieldReference) {
         com.couchbase.client.java.repository.annotation.Field annotation =
-            fieldReference.getAnnotation(com.couchbase.client.java.repository.annotation.Field.class);
-        if (annotation == null || annotation.value() == null || annotation.value().isEmpty()) {
+            findAnnotation(fieldReference, com.couchbase.client.java.repository.annotation.Field.class);
+        if (annotation == null || annotation.value().isEmpty()) {
             return fieldReference.getName();
-        } else {
-            return annotation.value();
         }
+        return annotation.value();
+    }
+
+    private static boolean hasAnnotation(AnnotatedElement element, Class<? extends Annotation> annotationClass) {
+        return findAnnotation(element, annotationClass) != null;
+    }
+
+    /**
+     * Searches the element for an annotation of the given class and returns the first match.
+     * This is a recursive search that also considers meta-annotations.
+     *
+     * @param element the element to search
+     * @param annotationClass the type of annotation to look for
+     * @return Matching annotation, or null if not found.
+     */
+    private static <T extends Annotation> T findAnnotation(AnnotatedElement element, Class<T> annotationClass) {
+        for (Annotation a : element.getAnnotations()) {
+            T meta = findAnnotationRecursive(a, annotationClass, new HashSet<Class>());
+            if (meta != null) {
+                return meta;
+            }
+        }
+        return null;
+    }
+
+    private static <T extends Annotation> T findAnnotationRecursive(Annotation annotation, Class<T> annotationClass, Set<Class> seen) {
+        final Class c = annotation.annotationType();
+
+        // Annotations can be annotated with themselves (@Documented is common example)
+        // in which case we need to bail out to avoid stack overflow.
+        if (!seen.add(c)) {
+            return null;
+        }
+
+        if (c.equals(annotationClass)) {
+            return annotationClass.cast(annotation);
+        }
+
+        for (Annotation meta : c.getAnnotations()) {
+            T found = findAnnotationRecursive(meta, annotationClass, seen);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
     }
 }

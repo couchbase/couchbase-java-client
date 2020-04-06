@@ -172,7 +172,7 @@ public class RepositoryTest extends ClusterDependentTest {
 
     @Test
     public void shouldUpsertMetaEntity() {
-        MetaEntity entity = new MetaEntity("myid", "myname");
+        MetaEntity entity = new MetaEntity("my-meta-id", "myname");
         EntityDocument<MetaEntity> document = EntityDocument.create(entity);
 
         assertFalse(repository().exists(document));
@@ -246,7 +246,7 @@ public class RepositoryTest extends ClusterDependentTest {
     @Field
     public @interface MetaField {}
 
-    static class MetaEntity {
+    public static class MetaEntity {
         public @MetaId
         String id = null;
 
