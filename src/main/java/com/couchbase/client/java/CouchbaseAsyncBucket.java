@@ -1818,9 +1818,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                            return ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.SUCCESS, mutationOperation, element);
                                                         }
                                                     });
-                                        } else {
-                                            return Observable.error(throwable);
                                         }
+                                            return Observable.error(throwable);
                                     }
                                 };
                         return mutateIn(docId).remove("[" + index + "]")
@@ -1833,15 +1832,11 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                     @Override
                                     public E call(DocumentFragment<Mutation> documentFragment) {
                                         ResponseStatus status = documentFragment.status(0);
-                                        if (status == ResponseStatus.SUCCESS) {
+                                        if (status == ResponseStatus.SUCCESS || status == ResponseStatus.SUBDOC_PATH_NOT_FOUND ||
+                                                status == ResponseStatus.SUBDOC_PATH_INVALID) {
                                             return element;
-                                        } else {
-                                            if (status == ResponseStatus.SUBDOC_PATH_NOT_FOUND ||
-                                                    status == ResponseStatus.SUBDOC_PATH_INVALID) {
-                                                return element;
-                                            }
-                                            throw new CouchbaseException(status.toString());
                                         }
+                                        throw new CouchbaseException(status.toString());
                                     }
                                 });
                     }
@@ -1965,9 +1960,8 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                                     });
                                         } else if (throwable.getCause() instanceof PathNotFoundException) {
                                             return Observable.just(ResultMappingUtils.convertToSubDocumentResult(ResponseStatus.NOT_EXISTS, mutationOperation, null));
-                                        } else {
-                                            return Observable.error(throwable);
                                         }
+                                        return Observable.error(throwable);
                                     }
                                 };
                         return mutateIn(docId).remove("[" + index + "]")
@@ -1983,14 +1977,13 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
                                         if (status == ResponseStatus.SUCCESS) {
                                             if (documentFragment.content(0) != null) {
                                                 return (E) documentFragment.content(0);
-                                            } else {
-                                                return (E) val;
                                             }
-                                        } else if (status == ResponseStatus.NOT_EXISTS) {
+                                            return (E) val;
+                                        } 
+                                        if (status == ResponseStatus.NOT_EXISTS) {
                                             return null;
-                                        } else {
-                                            throw new CouchbaseException(status.toString());
                                         }
+                                        throw new CouchbaseException(status.toString());
                                     }
                                 });
                     }
