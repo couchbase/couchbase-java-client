@@ -244,7 +244,7 @@ public class CouchbaseCluster implements Cluster {
         );
         this.environment = environment;
         this.connectionString = connectionString;
-        this.bucketCache = new ConcurrentHashMap<String, Bucket>();
+        this.bucketCache = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -388,8 +388,7 @@ public class CouchbaseCluster implements Cluster {
             .map(new Func1<AsyncClusterManager, ClusterManager>() {
                 @Override
                 public ClusterManager call(AsyncClusterManager asyncClusterManager) {
-                    return DefaultClusterManager.create(username, password, connectionString,
-                        environment, core());
+                    return new DefaultClusterManager(asyncClusterManager, username, password, environment, core());
                 }
             })
             .toBlocking()
@@ -404,8 +403,7 @@ public class CouchbaseCluster implements Cluster {
                 .map(new Func1<AsyncClusterManager, ClusterManager>() {
                     @Override
                     public ClusterManager call(AsyncClusterManager asyncClusterManager) {
-                        return DefaultClusterManager.create(cred.login(), cred.password(), connectionString,
-                                environment, core());
+                        return new DefaultClusterManager(asyncClusterManager, cred.login(), cred.password(), environment, core());
                     }
                 })
                 .toBlocking()

@@ -18,7 +18,6 @@ package com.couchbase.client.java.cluster;
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.core.annotations.InterfaceStability;
 import com.couchbase.client.core.utils.Blocking;
-import com.couchbase.client.java.cluster.api.AsyncClusterApiClient;
 import com.couchbase.client.core.utils.ConnectionString;
 import com.couchbase.client.java.cluster.api.ClusterApiClient;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
@@ -29,19 +28,40 @@ import java.util.concurrent.TimeUnit;
 public class DefaultClusterManager implements ClusterManager {
 
     private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
-    private final DefaultAsyncClusterManager asyncClusterManager;
+    private final AsyncClusterManager asyncClusterManager;
+    private final String username;
+    private final String password;
+    private final ClusterFacade core;
     private final long timeout;
 
-    DefaultClusterManager(final String username, final String password, final ConnectionString connectionString,
+    public DefaultClusterManager(final AsyncClusterManager asyncClusterManager, final String username, final String password,
                           final CouchbaseEnvironment environment, final ClusterFacade core) {
-        asyncClusterManager = DefaultAsyncClusterManager.create(username, password, connectionString, environment,
+        this.asyncClusterManager = asyncClusterManager;
+        this.timeout = environment.managementTimeout();
+        this.username = username;
+        this.password = password;
+        this.core = core;
+    }
+
+    DefaultClusterManager(final String username, final String password, final List<ConnectionString.UnresolvedSocket> seedNodes,
+                          final CouchbaseEnvironment environment, final ClusterFacade core) {
+        asyncClusterManager = DefaultAsyncClusterManager.create(username, password, seedNodes, environment,
             core);
         this.timeout = environment.managementTimeout();
+        this.username = username;
+        this.password = password;
+        this.core = core;
+    }
+
+    @Deprecated
+    public static DefaultClusterManager create(final String username, final String password,
+                                               final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
+        return create(username, password, connectionString.hosts(), environment, core);
     }
 
     public static DefaultClusterManager create(final String username, final String password,
-                                               final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
-        return new DefaultClusterManager(username, password, connectionString, environment, core);
+                                               final List<ConnectionString.UnresolvedSocket> seedNodes, final CouchbaseEnvironment environment, final ClusterFacade core) {
+        return new DefaultClusterManager(username, password, seedNodes, environment, core);
     }
 
     @Override
@@ -162,7 +182,7 @@ public class DefaultClusterManager implements ClusterManager {
     @Override
     @InterfaceStability.Experimental
     public ClusterApiClient apiClient() {
-        return new ClusterApiClient(asyncClusterManager.username, asyncClusterManager.password, asyncClusterManager.core,
-                this.timeout, TIMEOUT_UNIT); //uses the management timeout as default for API calls as well
+        // uses the management timeout as default for API calls as well
+        return new ClusterApiClient(username, password, core, this.timeout, TIMEOUT_UNIT);
     }
 }

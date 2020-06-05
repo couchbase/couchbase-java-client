@@ -77,20 +77,26 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     final String username;
     final String password;
     final CouchbaseEnvironment environment;
-    private final ConnectionString connectionString;
+    private final List<ConnectionString.UnresolvedSocket> seedNodes;
 
-    DefaultAsyncClusterManager(final String username, final String password, final ConnectionString connectionString,
+    DefaultAsyncClusterManager(final String username, final String password, final List<ConnectionString.UnresolvedSocket> seedNodes,
                                final CouchbaseEnvironment environment, final ClusterFacade core) {
         this.username = username;
         this.password = password;
         this.core = core;
         this.environment = environment;
-        this.connectionString = connectionString;
+        this.seedNodes = seedNodes;
+    }
+
+    @Deprecated
+    public static DefaultAsyncClusterManager create(final String username, final String password,
+                                                    final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
+        return create(username, password, connectionString.hosts(), environment, core);
     }
 
     public static DefaultAsyncClusterManager create(final String username, final String password,
-                                                    final ConnectionString connectionString, final CouchbaseEnvironment environment, final ClusterFacade core) {
-        return new DefaultAsyncClusterManager(username, password, connectionString, environment, core);
+                                                    final List<ConnectionString.UnresolvedSocket> seedNodes, final CouchbaseEnvironment environment, final ClusterFacade core) {
+        return new DefaultAsyncClusterManager(username, password, seedNodes, environment, core);
     }
 
     @Override
@@ -695,17 +701,17 @@ public class DefaultAsyncClusterManager implements AsyncClusterManager {
     }
 
     private Observable<Boolean> ensureServiceEnabled() {
-        if (connectionString.hosts().isEmpty()) {
-            return Observable.error(new IllegalStateException("No host found in the connection string! " + connectionString.toString()));
+        if (seedNodes.isEmpty()) {
+            return Observable.error(new IllegalStateException("No host found in the seed nodes!"));
         }
 
         final AtomicInteger integer = new AtomicInteger(0);
-        return Observable.just(connectionString.hosts())
+        return Observable.just(seedNodes)
                 .flatMap(new Func1<List<ConnectionString.UnresolvedSocket>, Observable<Boolean>>() {
                     @Override
                     public Observable<Boolean> call(List<ConnectionString.UnresolvedSocket> inetSocketAddresses) {
                         int hostIndex = integer.getAndIncrement();
-                        if (hostIndex >= connectionString.hosts().size()) {
+                        if (hostIndex >= seedNodes.size()) {
                             integer.set(0);
                             return Observable.error(new CouchbaseException("Could not enable ClusterManager service to function properly."));
                         }

@@ -137,9 +137,9 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
 
     private final ClusterFacade core;
     private final CouchbaseEnvironment environment;
-    private final ConnectionString connectionString;
     private final Map<String, AsyncBucket> bucketCache;
     private final boolean sharedEnvironment;
+    private final List<String> seedNodes;
     private Authenticator authenticator;
 
     /**
@@ -271,14 +271,12 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
         if(connectionString.username() != null && !connectionString.username().equals("")) {
             this.authenticator = new PasswordAuthenticator(connectionString.username(), "");
         }
-        core = new CouchbaseCore(environment);
-        SeedNodesRequest request = new SeedNodesRequest(
-            assembleSeedNodes(connectionString, environment)
-        );
-        core.send(request).toBlocking().single();
+        this.core = new CouchbaseCore(environment);
+        this.seedNodes = assembleSeedNodes(connectionString, environment);
         this.environment = environment;
-        this.connectionString = connectionString;
-        this.bucketCache = new ConcurrentHashMap<String, AsyncBucket>();
+        this.bucketCache = new ConcurrentHashMap<>();
+
+        core.send(new SeedNodesRequest(seedNodes)).toBlocking().single();
     }
 
     /**
@@ -294,7 +292,7 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
      */
     private static List<String> assembleSeedNodes(ConnectionString connectionString,
         CouchbaseEnvironment environment) {
-        List<String> seedNodes = new ArrayList<String>();
+        List<String> seedNodes = new ArrayList<>();
 
         if (environment.dnsSrvEnabled()) {
             seedNodesViaDnsSrv(connectionString, environment, seedNodes);
@@ -481,9 +479,16 @@ public class CouchbaseAsyncCluster implements AsyncCluster {
     @Override
     public Observable<AsyncClusterManager> clusterManager(final String username,
         final String password) {
+
+        // To not change too much code, just turn the resolved hosts into a new
+        // connection string and resolve the hosts from there.
+        final List<ConnectionString.UnresolvedSocket> seedNodes = ConnectionString
+          .fromHostnames(this.seedNodes)
+          .hosts();
+
         return Observable.just(
             (AsyncClusterManager) DefaultAsyncClusterManager.create(
-                username, password, connectionString, environment, core
+                username, password, seedNodes, environment, core
             )
         );
     }
