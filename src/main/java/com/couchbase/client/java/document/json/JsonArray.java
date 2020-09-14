@@ -21,10 +21,7 @@ import com.couchbase.client.java.transcoder.JacksonTransformers;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a JSON array that can be stored and loaded from Couchbase Server.
@@ -113,6 +110,35 @@ public class JsonArray extends JsonValue implements Iterable<Object>, Serializab
     public static JsonArray from(List<?> items) {
         if (items == null) {
             throw new NullPointerException("Null list unsupported");
+        }
+
+        JsonArray array = new JsonArray(items.size());
+        for (Object item : items) {
+            array.add(coerce(item));
+        }
+        return array;
+    }
+
+    /**
+     * Creates a new {@link JsonArray} and populates it with the values in the supplied {@link Set}.
+     *
+     * If the type of an item is not supported, an {@link IllegalArgumentException} is thrown.
+     * If the set is null, a {@link NullPointerException} is thrown, but null items are supported.
+     *
+     * *Sub Maps and Lists*
+     * If possible, Maps and Lists contained in items will be converted to JsonObject and
+     * JsonArray respectively. However, same restrictions apply. Any non-convertible collection
+     * will raise a {@link ClassCastException}. If the sub-conversion raises an exception (like an
+     * IllegalArgumentException) then it is put as cause for the ClassCastException.
+     *
+     * @param items the list of items to be stored in the {@link JsonArray}.
+     * @return a populated {@link JsonArray}.
+     * @throws IllegalArgumentException if at least one item is of unsupported type.
+     * @throws NullPointerException if the list of items is null.
+     */
+    public static JsonArray from(Set<?> items) {
+        if (items == null) {
+            throw new NullPointerException("Null set unsupported");
         }
 
         JsonArray array = new JsonArray(items.size());

@@ -21,11 +21,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -327,6 +323,21 @@ public class JsonObjectTest {
         list.add("value1");
         list.add(true);
         JsonObject obj = JsonObject.create().put("sub", list);
+
+        assertTrue(obj.containsKey("sub"));
+        assertNotNull(obj.get("sub"));
+        assertTrue(obj.get("sub") instanceof JsonArray);
+        assertEquals(2, obj.getArray("sub").size());
+        assertEquals("value1", obj.getArray("sub").get(0));
+        assertEquals(Boolean.TRUE, obj.getArray("sub").get(1));
+    }
+
+    @Test
+    public void shouldPutSetAsAJsonArray() {
+        Set<Object> set = new HashSet<Object>(2);
+        set.add("value1");
+        set.add(true);
+        JsonObject obj = JsonObject.create().put("sub", set);
 
         assertTrue(obj.containsKey("sub"));
         assertNotNull(obj.get("sub"));

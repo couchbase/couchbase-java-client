@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a JSON value (either a {@link JsonObject} or a {@link JsonArray}.
@@ -83,6 +84,9 @@ public abstract class JsonValue {
         }
         if (value instanceof List) {
             return JsonArray.from((List) value);
+        }
+        if (value instanceof Set) {
+            return JsonArray.from((Set) value);
         }
         if (value instanceof JsonNull) {
             return null;
