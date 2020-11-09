@@ -1,5 +1,7 @@
 # Official Couchbase Java SDK
 
+**NOTE: This repository contains the 2.x SDK series, which is currently in maintenance mode. We recommend that you check out our 3.x series, which can be found here: https://github.com/couchbase/couchbase-jvm-clients**
+
 This project is the official driver for Couchbase when working with Java (or on the JVM). It provides management, CRUD and query facilities through both asynchronous and synchronous APIs.
 
 ## Features ##
@@ -24,7 +26,7 @@ The easiest way is to download the jar as well as its transitive dependencies (o
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.7.16</version>
+    <version>2.7.17</version>
 </dependency>
 ```
 
