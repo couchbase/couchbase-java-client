@@ -54,18 +54,17 @@ import java.util.zip.CRC32;
 @InterfaceAudience.Public
 public class NodeLocatorHelper {
 
-    private final ConfigurationProvider configProvider;
     private final AtomicReference<BucketConfig> bucketConfig;
 
     private NodeLocatorHelper(final Bucket bucket) {
-        configProvider = bucket
-            .core()
-            .<GetConfigProviderResponse>send(new GetConfigProviderRequest())
-            .toBlocking()
-            .single()
-            .provider();
+        ConfigurationProvider configProvider = bucket
+          .core()
+          .<GetConfigProviderResponse>send(new GetConfigProviderRequest())
+          .toBlocking()
+          .single()
+          .provider();
 
-        bucketConfig = new AtomicReference<BucketConfig>(configProvider.config().bucketConfig(bucket.name()));
+        bucketConfig = new AtomicReference<>(configProvider.config().bucketConfig(bucket.name()));
 
         configProvider
             .configs()
@@ -121,9 +120,33 @@ public class NodeLocatorHelper {
 
         if (config instanceof CouchbaseBucketConfig) {
             CouchbaseBucketConfig cbc = (CouchbaseBucketConfig) config;
-            List<InetAddress> replicas = new ArrayList<InetAddress>();
+            List<InetAddress> replicas = new ArrayList<>();
             for (int i = 1; i <= cbc.numberOfReplicas(); i++) {
                 replicas.add(replicaNodeForId(id, i));
+            }
+            return replicas;
+        } else {
+            throw new UnsupportedOperationException("Bucket type not supported: " + config.getClass().getName());
+        }
+    }
+
+    /**
+     * Returns all target replica nodes {@link InetAddress} which are currently available on the bucket.
+     *
+     * @param id the document ID to check.
+     * @return the list of nodes for the given document ID.
+     */
+    public List<InetAddress> availableReplicaNodesForId(final String id) {
+        BucketConfig config = bucketConfig.get();
+
+        if (config instanceof CouchbaseBucketConfig) {
+            CouchbaseBucketConfig cbc = (CouchbaseBucketConfig) config;
+            List<InetAddress> replicas = new ArrayList<>();
+            for (int i = 1; i <= cbc.numberOfReplicas(); i++) {
+                InetAddress foundReplica = replicaNodeForId(id, i, false);
+                if (foundReplica != null) {
+                    replicas.add(foundReplica);
+                }
             }
             return replicas;
         } else {
@@ -139,6 +162,19 @@ public class NodeLocatorHelper {
      * @return the node for the given document id.
      */
     public InetAddress replicaNodeForId(final String id, int replicaNum) {
+        return replicaNodeForId(id, replicaNum, true);
+    }
+
+
+    /**
+     * Returns the target replica node {@link InetAddress} for a given document ID and replica number on the bucket.
+     *
+     * @param id the document id to convert.
+     * @param replicaNum the replica number.
+     * @param throwOnNotAvailable if on -1 and -2 an exception should be thrown.
+     * @return the node for the given document id.
+     */
+    private InetAddress replicaNodeForId(final String id, int replicaNum, boolean throwOnNotAvailable) {
         if (replicaNum < 1 || replicaNum > 3) {
             throw new IllegalArgumentException("Replica number must be between 1 and 3.");
         }
@@ -150,10 +186,18 @@ public class NodeLocatorHelper {
             int partitionId = (int) hashId(id) & cbc.numberOfPartitions() - 1;
             int nodeId = cbc.nodeIndexForReplica(partitionId, replicaNum - 1, false);
             if (nodeId == -1) {
-                throw new IllegalStateException("No partition assigned to node for Document ID: " + id);
+                if (throwOnNotAvailable) {
+                    throw new IllegalStateException("No partition assigned to node for Document ID: " + id);
+                } else {
+                    return null;
+                }
             }
             if (nodeId == -2) {
-                throw new IllegalStateException("Replica not configured for this bucket.");
+                if (throwOnNotAvailable) {
+                    throw new IllegalStateException("Replica not configured for this bucket.");
+                } else {
+                    return null;
+                }
             }
             try {
                 return InetAddress.getByName(cbc.nodeAtIndex(nodeId).hostname());
@@ -171,7 +215,7 @@ public class NodeLocatorHelper {
      * @return all currently known nodes.
      */
     public List<InetAddress> nodes() {
-        List<InetAddress> allNodes = new ArrayList<InetAddress>();
+        List<InetAddress> allNodes = new ArrayList<>();
         BucketConfig config = bucketConfig.get();
         for (NodeInfo nodeInfo : config.nodes()) {
             try {
