@@ -2045,23 +2045,23 @@ public class CouchbaseAsyncBucket implements AsyncBucket {
 
     @Override
     public Single<PingReport> ping(String reportId, long timeout, TimeUnit timeUnit) {
-        return HealthPinger.ping(environment, bucket, password, core, reportId, timeout, timeUnit);
+        return HealthPinger.ping(environment, bucket, password, username, core, reportId, timeout, timeUnit);
     }
 
     @Override
     public Single<PingReport> ping(long timeout, TimeUnit timeUnit) {
-        return HealthPinger.ping(environment, bucket, password, core, null, timeout, timeUnit);
+        return HealthPinger.ping(environment, bucket, password, username, core, null, timeout, timeUnit);
     }
 
     @Override
     public Single<PingReport> ping(Collection<ServiceType> services, long timeout, TimeUnit timeUnit) {
-        return HealthPinger.ping(environment, bucket, password, core, null, timeout, timeUnit,
+        return HealthPinger.ping(environment, bucket, password, username, core, null, timeout, timeUnit,
           services.toArray(new ServiceType[services.size()]));
     }
 
     @Override
     public Single<PingReport> ping(String reportId, Collection<ServiceType> services, long timeout, TimeUnit timeUnit) {
-        return HealthPinger.ping(environment, bucket, password, core, reportId, timeout, timeUnit,
+        return HealthPinger.ping(environment, bucket, password, username, core, reportId, timeout, timeUnit,
           services.toArray(new ServiceType[services.size()]));
     }
 
