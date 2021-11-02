@@ -21,12 +21,11 @@ The primary way to ask questions is through our official [Forums](http://forums.
 ## Quick Start ##
 The easiest way is to download the jar as well as its transitive dependencies (only 2) through maven:
 
-
 ```xml
 <dependency>
     <groupId>com.couchbase.client</groupId>
     <artifactId>java-client</artifactId>
-    <version>2.7.21</version>
+    <version>2.7.22</version>
 </dependency>
 ```
 
