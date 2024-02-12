@@ -1,6 +1,7 @@
-# Official Couchbase Java SDK
+# (OBSOLETE) Official Couchbase Java SDK
 
-**NOTE: This repository contains the 2.x SDK series, which is currently in maintenance mode. We recommend that you check out our 3.x series, which can be found here: https://github.com/couchbase/couchbase-jvm-clients**
+**NOTE: This repository contains the 2.x SDK series, which reached End of Life in March 2022.
+We recommend that you check out our 3.x series, which can be found here: https://github.com/couchbase/couchbase-jvm-clients**
 
 This project is the official driver for Couchbase when working with Java (or on the JVM). It provides management, CRUD and query facilities through both asynchronous and synchronous APIs.
 
